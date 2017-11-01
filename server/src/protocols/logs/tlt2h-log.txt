@@ -1,0 +1,1006 @@
+src/controllers/service.controller.js -> dist/controllers/service.controller.js
+src/controllers/services.controller.js -> dist/controllers/services.controller.js
+src/controllers/users.controller.js -> dist/controllers/users.controller.js
+src/middlewares/auth-guard.middleware.js -> dist/middlewares/auth-guard.middleware.js
+src/middlewares/base-path.middleware.js -> dist/middlewares/base-path.middleware.js
+src/middlewares/chips.middleware.js -> dist/middlewares/chips.middleware.js
+src/models/mongodb/DeviceGeofence.js -> dist/models/mongodb/DeviceGeofence.js
+src/models/mongodb/Position.js -> dist/models/mongodb/Position.js
+src/models/mongodb/Service.js -> dist/models/mongodb/Service.js
+src/models/mongodb/index.js -> dist/models/mongodb/index.js
+src/models/mysql/Address.js -> dist/models/mysql/Address.js
+src/models/mysql/Client.js -> dist/models/mysql/Client.js
+src/models/mysql/ClientAddress.js -> dist/models/mysql/ClientAddress.js
+src/models/mysql/ClientPhone.js -> dist/models/mysql/ClientPhone.js
+src/models/mysql/Company.js -> dist/models/mysql/Company.js
+src/models/mysql/CompanySetting.js -> dist/models/mysql/CompanySetting.js
+src/models/mysql/CompanyUser.js -> dist/models/mysql/CompanyUser.js
+src/models/mysql/CompanyUserPermission.js -> dist/models/mysql/CompanyUserPermission.js
+src/models/mysql/Device.js -> dist/models/mysql/Device.js
+src/models/mysql/DeviceSetting.js -> dist/models/mysql/DeviceSetting.js
+src/models/mysql/Enderecos.js -> dist/models/mysql/Enderecos.js
+src/models/mysql/Product.js -> dist/models/mysql/Product.js
+src/models/mysql/User.js -> dist/models/mysql/User.js
+src/models/mysql/UserAccessToken.js -> dist/models/mysql/UserAccessToken.js
+src/models/mysql/UserRefreshToken.js -> dist/models/mysql/UserRefreshToken.js
+src/models/mysql/index.js -> dist/models/mysql/index.js
+src/models/oauth2.js -> dist/models/oauth2.js
+src/protocols/Protocol.js -> dist/protocols/Protocol.js
+src/protocols/agiliza.js -> dist/protocols/agiliza.js
+src/protocols/gps103.js -> dist/protocols/gps103.js
+src/protocols/gt06.js -> dist/protocols/gt06.js
+src/protocols/tk103.js -> dist/protocols/tk103.js
+src/protocols/tlt2h.js -> dist/protocols/tlt2h.js
+src/routes/addresses.js -> dist/routes/addresses.js
+src/routes/clients-addresses.js -> dist/routes/clients-addresses.js
+src/routes/clients-phones.js -> dist/routes/clients-phones.js
+src/routes/clients.js -> dist/routes/clients.js
+src/routes/companies.js -> dist/routes/companies.js
+src/routes/devices.js -> dist/routes/devices.js
+src/routes/import.js -> dist/routes/import.js
+src/routes/index.js -> dist/routes/index.js
+src/routes/oauth.js -> dist/routes/oauth.js
+src/routes/positions.js -> dist/routes/positions.js
+src/routes/products.js -> dist/routes/products.js
+src/routes/service.js -> dist/routes/service.js
+src/routes/services.js -> dist/routes/services.js
+src/routes/sms.js -> dist/routes/sms.js
+src/routes/users.js -> dist/routes/users.js
+src/utils.js -> dist/utils.js
+[2017-09-13 12:56:50] (info) Loading routes
+[2017-09-13 12:56:50] (info) GPS103 listening on port: 6001
+[2017-09-13 12:56:50] (info) TLT2H listening on port: 6030
+[2017-09-13 12:56:50] (info) AGILIZA listening on port: 6150
+[2017-09-13 12:56:50] (info) ElasticSearch is running
+[2017-09-13 12:56:50] (info) Successfully connected to MySQL
+[2017-09-13 12:56:50] (info) Successfully connected to MongoDB
+[2017-09-13 12:56:50] (info) Server v1.0.0 running on port: 8080
+Connected f222468be453589ea418f9b204f68203e728d88f
+Acimar Takahashi Vaz da Rocha connected to room: device/357671031808774
+^C
+thyoity@thyoity:~/Projects/agiliza-gps/server$ npm start
+
+> ba-tracker-server@1.0.0 start /home/thyoity/Projects/agiliza-gps/server
+> npm run build && node dist/app.js
+
+
+> ba-tracker-server@1.0.0 build /home/thyoity/Projects/agiliza-gps/server
+> babel src -d dist
+
+src/app.js -> dist/app.js
+src/config.js -> dist/config.js
+src/controllers/addresses.controller.js -> dist/controllers/addresses.controller.js
+src/controllers/clients-addresses.controller.js -> dist/controllers/clients-addresses.controller.js
+src/controllers/clients-phones.controller.js -> dist/controllers/clients-phones.controller.js
+src/controllers/clients.controller.js -> dist/controllers/clients.controller.js
+src/controllers/commands.controller.js -> dist/controllers/commands.controller.js
+src/controllers/companies.controller.js -> dist/controllers/companies.controller.js
+src/controllers/devices.controller.js -> dist/controllers/devices.controller.js
+src/controllers/import.controller.js -> dist/controllers/import.controller.js
+src/controllers/positions.controller.js -> dist/controllers/positions.controller.js
+src/controllers/products.controller.js -> dist/controllers/products.controller.js
+src/controllers/service.controller.js -> dist/controllers/service.controller.js
+src/controllers/services.controller.js -> dist/controllers/services.controller.js
+src/controllers/users.controller.js -> dist/controllers/users.controller.js
+src/middlewares/auth-guard.middleware.js -> dist/middlewares/auth-guard.middleware.js
+src/middlewares/base-path.middleware.js -> dist/middlewares/base-path.middleware.js
+src/middlewares/chips.middleware.js -> dist/middlewares/chips.middleware.js
+src/models/mongodb/DeviceGeofence.js -> dist/models/mongodb/DeviceGeofence.js
+src/models/mongodb/Position.js -> dist/models/mongodb/Position.js
+src/models/mongodb/Service.js -> dist/models/mongodb/Service.js
+src/models/mongodb/index.js -> dist/models/mongodb/index.js
+src/models/mysql/Address.js -> dist/models/mysql/Address.js
+src/models/mysql/Client.js -> dist/models/mysql/Client.js
+src/models/mysql/ClientAddress.js -> dist/models/mysql/ClientAddress.js
+src/models/mysql/ClientPhone.js -> dist/models/mysql/ClientPhone.js
+src/models/mysql/Company.js -> dist/models/mysql/Company.js
+src/models/mysql/CompanySetting.js -> dist/models/mysql/CompanySetting.js
+src/models/mysql/CompanyUser.js -> dist/models/mysql/CompanyUser.js
+src/models/mysql/CompanyUserPermission.js -> dist/models/mysql/CompanyUserPermission.js
+src/models/mysql/Device.js -> dist/models/mysql/Device.js
+src/models/mysql/DeviceSetting.js -> dist/models/mysql/DeviceSetting.js
+src/models/mysql/Enderecos.js -> dist/models/mysql/Enderecos.js
+src/models/mysql/Product.js -> dist/models/mysql/Product.js
+src/models/mysql/User.js -> dist/models/mysql/User.js
+src/models/mysql/UserAccessToken.js -> dist/models/mysql/UserAccessToken.js
+src/models/mysql/UserRefreshToken.js -> dist/models/mysql/UserRefreshToken.js
+src/models/mysql/index.js -> dist/models/mysql/index.js
+src/models/oauth2.js -> dist/models/oauth2.js
+src/protocols/Protocol.js -> dist/protocols/Protocol.js
+src/protocols/agiliza.js -> dist/protocols/agiliza.js
+src/protocols/gps103.js -> dist/protocols/gps103.js
+src/protocols/gt06.js -> dist/protocols/gt06.js
+src/protocols/tk103.js -> dist/protocols/tk103.js
+src/protocols/tlt2h.js -> dist/protocols/tlt2h.js
+src/routes/addresses.js -> dist/routes/addresses.js
+src/routes/clients-addresses.js -> dist/routes/clients-addresses.js
+src/routes/clients-phones.js -> dist/routes/clients-phones.js
+src/routes/clients.js -> dist/routes/clients.js
+src/routes/companies.js -> dist/routes/companies.js
+src/routes/devices.js -> dist/routes/devices.js
+src/routes/import.js -> dist/routes/import.js
+src/routes/index.js -> dist/routes/index.js
+src/routes/oauth.js -> dist/routes/oauth.js
+src/routes/positions.js -> dist/routes/positions.js
+src/routes/products.js -> dist/routes/products.js
+src/routes/service.js -> dist/routes/service.js
+src/routes/services.js -> dist/routes/services.js
+src/routes/sms.js -> dist/routes/sms.js
+src/routes/users.js -> dist/routes/users.js
+src/utils.js -> dist/utils.js
+[2017-09-13 13:05:46] (info) Loading routes
+[2017-09-13 13:05:46] (info) GPS103 listening on port: 6001
+[2017-09-13 13:05:46] (info) TLT2H listening on port: 6030
+[2017-09-13 13:05:46] (info) AGILIZA listening on port: 6150
+[2017-09-13 13:05:47] (info) ElasticSearch is running
+[2017-09-13 13:05:47] (info) Successfully connected to MySQL
+[2017-09-13 13:05:47] (info) Successfully connected to MongoDB
+[2017-09-13 13:05:47] (info) Server v1.0.0 running on port: 8080
+Mongoose: mpromise (mongoose's default promise library) is deprecated, plug in your own promise library instead: http://mongoosejs.com/docs/promises.html
+Acimar Takahashi Vaz da Rocha leaves device/357671031808774.
+Acimar Takahashi Vaz da Rocha leaves device/357671031808774.
+Acimar Takahashi Vaz da Rocha joins device/357671031808774.
+Acimar Takahashi Vaz da Rocha leaves device/357671030987280.
+Acimar Takahashi Vaz da Rocha joins device/357671030987280.
+Thiago Yoithi Vaz da Rocha leaves device/357671030987280.
+Thiago Yoithi Vaz da Rocha joins device/357671030987280.
+^C
+thyoity@thyoity:~/Projects/agiliza-gps/server$ npm start
+
+> ba-tracker-server@1.0.0 start /home/thyoity/Projects/agiliza-gps/server
+> npm run build && node dist/app.js
+
+
+> ba-tracker-server@1.0.0 build /home/thyoity/Projects/agiliza-gps/server
+> babel src -d dist
+
+src/app.js -> dist/app.js
+src/config.js -> dist/config.js
+src/controllers/addresses.controller.js -> dist/controllers/addresses.controller.js
+src/controllers/clients-addresses.controller.js -> dist/controllers/clients-addresses.controller.js
+src/controllers/clients-phones.controller.js -> dist/controllers/clients-phones.controller.js
+src/controllers/clients.controller.js -> dist/controllers/clients.controller.js
+src/controllers/commands.controller.js -> dist/controllers/commands.controller.js
+src/controllers/companies.controller.js -> dist/controllers/companies.controller.js
+src/controllers/devices.controller.js -> dist/controllers/devices.controller.js
+src/controllers/import.controller.js -> dist/controllers/import.controller.js
+src/controllers/positions.controller.js -> dist/controllers/positions.controller.js
+src/controllers/products.controller.js -> dist/controllers/products.controller.js
+src/controllers/service.controller.js -> dist/controllers/service.controller.js
+src/controllers/services.controller.js -> dist/controllers/services.controller.js
+src/controllers/users.controller.js -> dist/controllers/users.controller.js
+src/middlewares/auth-guard.middleware.js -> dist/middlewares/auth-guard.middleware.js
+src/middlewares/base-path.middleware.js -> dist/middlewares/base-path.middleware.js
+src/middlewares/chips.middleware.js -> dist/middlewares/chips.middleware.js
+src/models/mongodb/DeviceGeofence.js -> dist/models/mongodb/DeviceGeofence.js
+src/models/mongodb/Position.js -> dist/models/mongodb/Position.js
+src/models/mongodb/Service.js -> dist/models/mongodb/Service.js
+src/models/mongodb/index.js -> dist/models/mongodb/index.js
+src/models/mysql/Address.js -> dist/models/mysql/Address.js
+src/models/mysql/Client.js -> dist/models/mysql/Client.js
+src/models/mysql/ClientAddress.js -> dist/models/mysql/ClientAddress.js
+src/models/mysql/ClientPhone.js -> dist/models/mysql/ClientPhone.js
+src/models/mysql/Company.js -> dist/models/mysql/Company.js
+src/models/mysql/CompanySetting.js -> dist/models/mysql/CompanySetting.js
+src/models/mysql/CompanyUser.js -> dist/models/mysql/CompanyUser.js
+src/models/mysql/CompanyUserPermission.js -> dist/models/mysql/CompanyUserPermission.js
+src/models/mysql/Device.js -> dist/models/mysql/Device.js
+src/models/mysql/DeviceSetting.js -> dist/models/mysql/DeviceSetting.js
+src/models/mysql/Enderecos.js -> dist/models/mysql/Enderecos.js
+src/models/mysql/Product.js -> dist/models/mysql/Product.js
+src/models/mysql/User.js -> dist/models/mysql/User.js
+src/models/mysql/UserAccessToken.js -> dist/models/mysql/UserAccessToken.js
+src/models/mysql/UserRefreshToken.js -> dist/models/mysql/UserRefreshToken.js
+src/models/mysql/index.js -> dist/models/mysql/index.js
+src/models/oauth2.js -> dist/models/oauth2.js
+src/protocols/Protocol.js -> dist/protocols/Protocol.js
+src/protocols/agiliza.js -> dist/protocols/agiliza.js
+src/protocols/gps103.js -> dist/protocols/gps103.js
+src/protocols/gt06.js -> dist/protocols/gt06.js
+src/protocols/tk103.js -> dist/protocols/tk103.js
+src/protocols/tlt2h.js -> dist/protocols/tlt2h.js
+src/routes/addresses.js -> dist/routes/addresses.js
+src/routes/clients-addresses.js -> dist/routes/clients-addresses.js
+src/routes/clients-phones.js -> dist/routes/clients-phones.js
+src/routes/clients.js -> dist/routes/clients.js
+src/routes/companies.js -> dist/routes/companies.js
+src/routes/devices.js -> dist/routes/devices.js
+src/routes/import.js -> dist/routes/import.js
+src/routes/index.js -> dist/routes/index.js
+src/routes/oauth.js -> dist/routes/oauth.js
+src/routes/positions.js -> dist/routes/positions.js
+src/routes/products.js -> dist/routes/products.js
+src/routes/service.js -> dist/routes/service.js
+src/routes/services.js -> dist/routes/services.js
+src/routes/sms.js -> dist/routes/sms.js
+src/routes/users.js -> dist/routes/users.js
+src/utils.js -> dist/utils.js
+[2017-09-13 13:33:50] (info) Loading routes
+[2017-09-13 13:33:51] (info) GPS103 listening on port: 6001
+[2017-09-13 13:33:51] (info) TLT2H listening on port: 6030
+[2017-09-13 13:33:51] (info) AGILIZA listening on port: 6150
+[2017-09-13 13:33:51] (info) ElasticSearch is running
+[2017-09-13 13:33:51] (info) Successfully connected to MySQL
+[2017-09-13 13:33:51] (info) Successfully connected to MongoDB
+[2017-09-13 13:33:51] (info) Server v1.0.0 running on port: 8080
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:11:22
+#357671030993387#V500#0000#AUTOSTART#1
+#041437ca$GPRMC,171039.00,V,,,,,,,130917,,,N*7D
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:12:34
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171235.00,A,2326.14557,S,05155.58731,W,0.342,,130917,,,A*7F
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:13:05
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171306.00,A,2326.14178,S,05155.58672,W,0.148,,130917,,,A*79
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Mongoose: mpromise (mongoose's default promise library) is deprecated, plug in your own promise library instead: http://mongoosejs.com/docs/promises.html
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:13:34
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171336.00,A,2326.14100,S,05155.58584,W,0.215,,130917,,,A*74
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:14:05
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171406.00,A,2326.14026,S,05155.58528,W,0.206,,130917,,,A*71
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Thiago Yoithi Vaz da Rocha joins device/357671030993387.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:14:35
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171436.00,A,2326.14072,S,05155.58531,W,0.131,,130917,,,A*7C
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:15:05
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171506.00,A,2326.14274,S,05155.58495,W,0.148,,130917,,,A*7B
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:15:35
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171536.00,A,2326.14342,S,05155.58473,W,0.117,,130917,,,A*7E
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+^C
+thyoity@thyoity:~/Projects/agiliza-gps/server$ npm start
+
+> ba-tracker-server@1.0.0 start /home/thyoity/Projects/agiliza-gps/server
+> npm run build && node dist/app.js
+
+
+> ba-tracker-server@1.0.0 build /home/thyoity/Projects/agiliza-gps/server
+> babel src -d dist
+
+src/app.js -> dist/app.js
+src/config.js -> dist/config.js
+src/controllers/addresses.controller.js -> dist/controllers/addresses.controller.js
+src/controllers/clients-addresses.controller.js -> dist/controllers/clients-addresses.controller.js
+src/controllers/clients-phones.controller.js -> dist/controllers/clients-phones.controller.js
+src/controllers/clients.controller.js -> dist/controllers/clients.controller.js
+src/controllers/commands.controller.js -> dist/controllers/commands.controller.js
+src/controllers/companies.controller.js -> dist/controllers/companies.controller.js
+src/controllers/devices.controller.js -> dist/controllers/devices.controller.js
+src/controllers/import.controller.js -> dist/controllers/import.controller.js
+src/controllers/positions.controller.js -> dist/controllers/positions.controller.js
+src/controllers/products.controller.js -> dist/controllers/products.controller.js
+src/controllers/service.controller.js -> dist/controllers/service.controller.js
+src/controllers/services.controller.js -> dist/controllers/services.controller.js
+src/controllers/users.controller.js -> dist/controllers/users.controller.js
+src/middlewares/auth-guard.middleware.js -> dist/middlewares/auth-guard.middleware.js
+src/middlewares/base-path.middleware.js -> dist/middlewares/base-path.middleware.js
+src/middlewares/chips.middleware.js -> dist/middlewares/chips.middleware.js
+src/models/mongodb/DeviceGeofence.js -> dist/models/mongodb/DeviceGeofence.js
+src/models/mongodb/Position.js -> dist/models/mongodb/Position.js
+src/models/mongodb/Service.js -> dist/models/mongodb/Service.js
+src/models/mongodb/index.js -> dist/models/mongodb/index.js
+src/models/mysql/Address.js -> dist/models/mysql/Address.js
+src/models/mysql/Client.js -> dist/models/mysql/Client.js
+src/models/mysql/ClientAddress.js -> dist/models/mysql/ClientAddress.js
+src/models/mysql/ClientPhone.js -> dist/models/mysql/ClientPhone.js
+src/models/mysql/Company.js -> dist/models/mysql/Company.js
+src/models/mysql/CompanySetting.js -> dist/models/mysql/CompanySetting.js
+src/models/mysql/CompanyUser.js -> dist/models/mysql/CompanyUser.js
+src/models/mysql/CompanyUserPermission.js -> dist/models/mysql/CompanyUserPermission.js
+src/models/mysql/Device.js -> dist/models/mysql/Device.js
+src/models/mysql/DeviceSetting.js -> dist/models/mysql/DeviceSetting.js
+src/models/mysql/Enderecos.js -> dist/models/mysql/Enderecos.js
+src/models/mysql/Product.js -> dist/models/mysql/Product.js
+src/models/mysql/User.js -> dist/models/mysql/User.js
+src/models/mysql/UserAccessToken.js -> dist/models/mysql/UserAccessToken.js
+src/models/mysql/UserRefreshToken.js -> dist/models/mysql/UserRefreshToken.js
+src/models/mysql/index.js -> dist/models/mysql/index.js
+src/models/oauth2.js -> dist/models/oauth2.js
+src/protocols/Protocol.js -> dist/protocols/Protocol.js
+src/protocols/agiliza.js -> dist/protocols/agiliza.js
+src/protocols/gps103.js -> dist/protocols/gps103.js
+src/protocols/gt06.js -> dist/protocols/gt06.js
+src/protocols/tk103.js -> dist/protocols/tk103.js
+src/protocols/tlt2h.js -> dist/protocols/tlt2h.js
+src/routes/addresses.js -> dist/routes/addresses.js
+src/routes/clients-addresses.js -> dist/routes/clients-addresses.js
+src/routes/clients-phones.js -> dist/routes/clients-phones.js
+src/routes/clients.js -> dist/routes/clients.js
+src/routes/companies.js -> dist/routes/companies.js
+src/routes/devices.js -> dist/routes/devices.js
+src/routes/import.js -> dist/routes/import.js
+src/routes/index.js -> dist/routes/index.js
+src/routes/oauth.js -> dist/routes/oauth.js
+src/routes/positions.js -> dist/routes/positions.js
+src/routes/products.js -> dist/routes/products.js
+src/routes/service.js -> dist/routes/service.js
+src/routes/services.js -> dist/routes/services.js
+src/routes/sms.js -> dist/routes/sms.js
+src/routes/users.js -> dist/routes/users.js
+src/utils.js -> dist/utils.js
+[2017-09-13 14:16:31] (info) Loading routes
+[2017-09-13 14:16:32] (info) GPS103 listening on port: 6001
+[2017-09-13 14:16:32] (info) TLT2H listening on port: 6030
+[2017-09-13 14:16:32] (info) AGILIZA listening on port: 6150
+[2017-09-13 14:16:33] (info) ElasticSearch is running
+[2017-09-13 14:16:33] (info) Successfully connected to MySQL
+[2017-09-13 14:16:33] (info) Successfully connected to MongoDB
+[2017-09-13 14:16:33] (info) Server v1.0.0 running on port: 8080
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:16:46
+#357671030993387#V500#0000#AUTO#2
+#04143747$GPRMC,171606.00,A,2326.14326,S,05155.58516,W,0.169,,130917,,,A*77
+#04143747$GPRMC,171636.00,A,2326.14297,S,05155.58582,W,0.020,,130917,,,A*7E
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:17:05
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171706.00,A,2326.14346,S,05155.58627,W,0.018,,130917,,,A*76
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:17:35
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171736.00,A,2326.14262,S,05155.58698,W,0.037,,130917,,,A*7B
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Mongoose: mpromise (mongoose's default promise library) is deprecated, plug in your own promise library instead: http://mongoosejs.com/docs/promises.html
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:18:05
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171806.00,A,2326.14146,S,05155.58807,W,0.038,,130917,,,A*75
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:18:35
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,171836.00,A,2326.14049,S,05155.58862,W,0.091,,130917,,,A*78
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+^C
+thyoity@thyoity:~/Projects/agiliza-gps/server$ npm start
+
+> ba-tracker-server@1.0.0 start /home/thyoity/Projects/agiliza-gps/server
+> npm run build && node dist/app.js
+
+
+> ba-tracker-server@1.0.0 build /home/thyoity/Projects/agiliza-gps/server
+> babel src -d dist
+
+src/app.js -> dist/app.js
+src/config.js -> dist/config.js
+src/controllers/addresses.controller.js -> dist/controllers/addresses.controller.js
+src/controllers/clients-addresses.controller.js -> dist/controllers/clients-addresses.controller.js
+src/controllers/clients-phones.controller.js -> dist/controllers/clients-phones.controller.js
+src/controllers/clients.controller.js -> dist/controllers/clients.controller.js
+src/controllers/commands.controller.js -> dist/controllers/commands.controller.js
+src/controllers/companies.controller.js -> dist/controllers/companies.controller.js
+src/controllers/devices.controller.js -> dist/controllers/devices.controller.js
+src/controllers/import.controller.js -> dist/controllers/import.controller.js
+src/controllers/positions.controller.js -> dist/controllers/positions.controller.js
+src/controllers/products.controller.js -> dist/controllers/products.controller.js
+src/controllers/service.controller.js -> dist/controllers/service.controller.js
+src/controllers/services.controller.js -> dist/controllers/services.controller.js
+src/controllers/users.controller.js -> dist/controllers/users.controller.js
+src/middlewares/auth-guard.middleware.js -> dist/middlewares/auth-guard.middleware.js
+src/middlewares/base-path.middleware.js -> dist/middlewares/base-path.middleware.js
+src/middlewares/chips.middleware.js -> dist/middlewares/chips.middleware.js
+src/models/mongodb/DeviceGeofence.js -> dist/models/mongodb/DeviceGeofence.js
+src/models/mongodb/Position.js -> dist/models/mongodb/Position.js
+src/models/mongodb/Service.js -> dist/models/mongodb/Service.js
+src/models/mongodb/index.js -> dist/models/mongodb/index.js
+src/models/mysql/Address.js -> dist/models/mysql/Address.js
+src/models/mysql/Client.js -> dist/models/mysql/Client.js
+src/models/mysql/ClientAddress.js -> dist/models/mysql/ClientAddress.js
+src/models/mysql/ClientPhone.js -> dist/models/mysql/ClientPhone.js
+src/models/mysql/Company.js -> dist/models/mysql/Company.js
+src/models/mysql/CompanySetting.js -> dist/models/mysql/CompanySetting.js
+src/models/mysql/CompanyUser.js -> dist/models/mysql/CompanyUser.js
+src/models/mysql/CompanyUserPermission.js -> dist/models/mysql/CompanyUserPermission.js
+src/models/mysql/Device.js -> dist/models/mysql/Device.js
+src/models/mysql/DeviceSetting.js -> dist/models/mysql/DeviceSetting.js
+src/models/mysql/Enderecos.js -> dist/models/mysql/Enderecos.js
+src/models/mysql/Product.js -> dist/models/mysql/Product.js
+src/models/mysql/User.js -> dist/models/mysql/User.js
+src/models/mysql/UserAccessToken.js -> dist/models/mysql/UserAccessToken.js
+src/models/mysql/UserRefreshToken.js -> dist/models/mysql/UserRefreshToken.js
+src/models/mysql/index.js -> dist/models/mysql/index.js
+src/models/oauth2.js -> dist/models/oauth2.js
+src/protocols/Protocol.js -> dist/protocols/Protocol.js
+src/protocols/agiliza.js -> dist/protocols/agiliza.js
+src/protocols/gps103.js -> dist/protocols/gps103.js
+src/protocols/gt06.js -> dist/protocols/gt06.js
+src/protocols/tk103.js -> dist/protocols/tk103.js
+src/protocols/tlt2h.js -> dist/protocols/tlt2h.js
+src/routes/addresses.js -> dist/routes/addresses.js
+src/routes/clients-addresses.js -> dist/routes/clients-addresses.js
+src/routes/clients-phones.js -> dist/routes/clients-phones.js
+src/routes/clients.js -> dist/routes/clients.js
+src/routes/companies.js -> dist/routes/companies.js
+src/routes/devices.js -> dist/routes/devices.js
+src/routes/import.js -> dist/routes/import.js
+src/routes/index.js -> dist/routes/index.js
+src/routes/oauth.js -> dist/routes/oauth.js
+src/routes/positions.js -> dist/routes/positions.js
+src/routes/products.js -> dist/routes/products.js
+src/routes/service.js -> dist/routes/service.js
+src/routes/services.js -> dist/routes/services.js
+src/routes/sms.js -> dist/routes/sms.js
+src/routes/users.js -> dist/routes/users.js
+src/utils.js -> dist/utils.js
+[2017-09-13 14:19:03] (info) Loading routes
+[2017-09-13 14:19:03] (info) GPS103 listening on port: 6001
+[2017-09-13 14:19:03] (info) TLT2H listening on port: 6030
+[2017-09-13 14:19:03] (info) AGILIZA listening on port: 6150
+[2017-09-13 14:19:03] (info) ElasticSearch is running
+[2017-09-13 14:19:03] (info) Successfully connected to MySQL
+[2017-09-13 14:19:03] (info) Successfully connected to MongoDB
+[2017-09-13 14:19:03] (info) Server v1.0.0 running on port: 8080
+Acimar Takahashi Vaz da Rocha connected to room: device/357671031808774
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:19:47
+#357671030993387#V500#0000#AUTO#2
+#04142aaa$GPRMC,171903.00,A,2326.14133,S,05155.58870,W,0.339,,130917,,,A*71
+#04142aaa$GPRMC,171933.00,A,2326.14180,S,05155.58921,W,0.027,,130917,,,A*73
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:20:05
+#357671030993387#V500#0000#AUTO#1
+#04143721$GPRMC,172003.00,A,2326.13995,S,05155.58865,W,0.146,,130917,,,A*76
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:20:35
+#357671030993387#V500#0000#AUTO#1
+#04143721$GPRMC,172033.00,A,2326.14051,S,05155.58815,W,0.121,,130917,,,A*75
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:21:05
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,172103.00,A,2326.14035,S,05155.58879,W,0.080,,130917,,,A*75
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+^C
+thyoity@thyoity:~/Projects/agiliza-gps/server$ npm start
+
+> ba-tracker-server@1.0.0 start /home/thyoity/Projects/agiliza-gps/server
+> npm run build && node dist/app.js
+
+
+> ba-tracker-server@1.0.0 build /home/thyoity/Projects/agiliza-gps/server
+> babel src -d dist
+
+src/app.js -> dist/app.js
+src/config.js -> dist/config.js
+src/controllers/addresses.controller.js -> dist/controllers/addresses.controller.js
+src/controllers/clients-addresses.controller.js -> dist/controllers/clients-addresses.controller.js
+src/controllers/clients-phones.controller.js -> dist/controllers/clients-phones.controller.js
+src/controllers/clients.controller.js -> dist/controllers/clients.controller.js
+src/controllers/commands.controller.js -> dist/controllers/commands.controller.js
+src/controllers/companies.controller.js -> dist/controllers/companies.controller.js
+src/controllers/devices.controller.js -> dist/controllers/devices.controller.js
+src/controllers/import.controller.js -> dist/controllers/import.controller.js
+src/controllers/positions.controller.js -> dist/controllers/positions.controller.js
+src/controllers/products.controller.js -> dist/controllers/products.controller.js
+src/controllers/service.controller.js -> dist/controllers/service.controller.js
+src/controllers/services.controller.js -> dist/controllers/services.controller.js
+src/controllers/users.controller.js -> dist/controllers/users.controller.js
+src/middlewares/auth-guard.middleware.js -> dist/middlewares/auth-guard.middleware.js
+src/middlewares/base-path.middleware.js -> dist/middlewares/base-path.middleware.js
+src/middlewares/chips.middleware.js -> dist/middlewares/chips.middleware.js
+src/models/mongodb/DeviceGeofence.js -> dist/models/mongodb/DeviceGeofence.js
+src/models/mongodb/Position.js -> dist/models/mongodb/Position.js
+src/models/mongodb/Service.js -> dist/models/mongodb/Service.js
+src/models/mongodb/index.js -> dist/models/mongodb/index.js
+src/models/mysql/Address.js -> dist/models/mysql/Address.js
+src/models/mysql/Client.js -> dist/models/mysql/Client.js
+src/models/mysql/ClientAddress.js -> dist/models/mysql/ClientAddress.js
+src/models/mysql/ClientPhone.js -> dist/models/mysql/ClientPhone.js
+src/models/mysql/Company.js -> dist/models/mysql/Company.js
+src/models/mysql/CompanySetting.js -> dist/models/mysql/CompanySetting.js
+src/models/mysql/CompanyUser.js -> dist/models/mysql/CompanyUser.js
+src/models/mysql/CompanyUserPermission.js -> dist/models/mysql/CompanyUserPermission.js
+src/models/mysql/Device.js -> dist/models/mysql/Device.js
+src/models/mysql/DeviceSetting.js -> dist/models/mysql/DeviceSetting.js
+src/models/mysql/Enderecos.js -> dist/models/mysql/Enderecos.js
+src/models/mysql/Product.js -> dist/models/mysql/Product.js
+src/models/mysql/User.js -> dist/models/mysql/User.js
+src/models/mysql/UserAccessToken.js -> dist/models/mysql/UserAccessToken.js
+src/models/mysql/UserRefreshToken.js -> dist/models/mysql/UserRefreshToken.js
+src/models/mysql/index.js -> dist/models/mysql/index.js
+src/models/oauth2.js -> dist/models/oauth2.js
+src/protocols/Protocol.js -> dist/protocols/Protocol.js
+src/protocols/agiliza.js -> dist/protocols/agiliza.js
+src/protocols/gps103.js -> dist/protocols/gps103.js
+src/protocols/gt06.js -> dist/protocols/gt06.js
+src/protocols/tk103.js -> dist/protocols/tk103.js
+src/protocols/tlt2h.js -> dist/protocols/tlt2h.js
+src/routes/addresses.js -> dist/routes/addresses.js
+src/routes/clients-addresses.js -> dist/routes/clients-addresses.js
+src/routes/clients-phones.js -> dist/routes/clients-phones.js
+src/routes/clients.js -> dist/routes/clients.js
+src/routes/companies.js -> dist/routes/companies.js
+src/routes/devices.js -> dist/routes/devices.js
+src/routes/import.js -> dist/routes/import.js
+src/routes/index.js -> dist/routes/index.js
+src/routes/oauth.js -> dist/routes/oauth.js
+src/routes/positions.js -> dist/routes/positions.js
+src/routes/products.js -> dist/routes/products.js
+src/routes/service.js -> dist/routes/service.js
+src/routes/services.js -> dist/routes/services.js
+src/routes/sms.js -> dist/routes/sms.js
+src/routes/users.js -> dist/routes/users.js
+src/utils.js -> dist/utils.js
+[2017-09-13 14:22:16] (info) Loading routes
+[2017-09-13 14:22:16] (info) GPS103 listening on port: 6001
+[2017-09-13 14:22:16] (info) TLT2H listening on port: 6030
+[2017-09-13 14:22:16] (info) AGILIZA listening on port: 6150
+[2017-09-13 14:22:16] (info) ElasticSearch is running
+[2017-09-13 14:22:16] (info) Successfully connected to MySQL
+[2017-09-13 14:22:16] (info) Successfully connected to MongoDB
+[2017-09-13 14:22:16] (info) Server v1.0.0 running on port: 8080
+Acimar Takahashi Vaz da Rocha connected to room: device/357671031808774
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:22:21
+#357671030993387#V500#0000#AUTO#2
+#04143747$GPRMC,172134.00,A,2326.14002,S,05155.58852,W,0.365,,130917,,,A*74
+#04143747$GPRMC,172205.00,A,2326.13952,S,05155.58788,W,0.125,,130917,,,A*70
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:22:37
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,172235.00,A,2326.14010,S,05155.58681,W,0.113,,130917,,,A*76
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 14:23:07
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,172305.00,A,2326.13932,S,05155.58603,W,0.181,,130917,,,A*7B
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+^C
+thyoity@thyoity:~/Projects/agiliza-gps/server$ npm start
+
+> ba-tracker-server@1.0.0 start /home/thyoity/Projects/agiliza-gps/server
+> npm run build && node dist/app.js
+
+
+> ba-tracker-server@1.0.0 build /home/thyoity/Projects/agiliza-gps/server
+> babel src -d dist
+
+src/app.js -> dist/app.js
+src/config.js -> dist/config.js
+src/controllers/addresses.controller.js -> dist/controllers/addresses.controller.js
+src/controllers/clients-addresses.controller.js -> dist/controllers/clients-addresses.controller.js
+src/controllers/clients-phones.controller.js -> dist/controllers/clients-phones.controller.js
+src/controllers/clients.controller.js -> dist/controllers/clients.controller.js
+src/controllers/commands.controller.js -> dist/controllers/commands.controller.js
+src/controllers/companies.controller.js -> dist/controllers/companies.controller.js
+src/controllers/devices.controller.js -> dist/controllers/devices.controller.js
+src/controllers/import.controller.js -> dist/controllers/import.controller.js
+src/controllers/positions.controller.js -> dist/controllers/positions.controller.js
+src/controllers/products.controller.js -> dist/controllers/products.controller.js
+src/controllers/service.controller.js -> dist/controllers/service.controller.js
+src/controllers/services.controller.js -> dist/controllers/services.controller.js
+src/controllers/users.controller.js -> dist/controllers/users.controller.js
+src/middlewares/auth-guard.middleware.js -> dist/middlewares/auth-guard.middleware.js
+src/middlewares/base-path.middleware.js -> dist/middlewares/base-path.middleware.js
+src/middlewares/chips.middleware.js -> dist/middlewares/chips.middleware.js
+src/models/mongodb/DeviceGeofence.js -> dist/models/mongodb/DeviceGeofence.js
+src/models/mongodb/Position.js -> dist/models/mongodb/Position.js
+src/models/mongodb/Service.js -> dist/models/mongodb/Service.js
+src/models/mongodb/index.js -> dist/models/mongodb/index.js
+src/models/mysql/Address.js -> dist/models/mysql/Address.js
+src/models/mysql/Client.js -> dist/models/mysql/Client.js
+src/models/mysql/ClientAddress.js -> dist/models/mysql/ClientAddress.js
+src/models/mysql/ClientPhone.js -> dist/models/mysql/ClientPhone.js
+src/models/mysql/Company.js -> dist/models/mysql/Company.js
+src/models/mysql/CompanySetting.js -> dist/models/mysql/CompanySetting.js
+src/models/mysql/CompanyUser.js -> dist/models/mysql/CompanyUser.js
+src/models/mysql/CompanyUserPermission.js -> dist/models/mysql/CompanyUserPermission.js
+src/models/mysql/Device.js -> dist/models/mysql/Device.js
+src/models/mysql/DeviceSetting.js -> dist/models/mysql/DeviceSetting.js
+src/models/mysql/Enderecos.js -> dist/models/mysql/Enderecos.js
+src/models/mysql/Product.js -> dist/models/mysql/Product.js
+src/models/mysql/User.js -> dist/models/mysql/User.js
+src/models/mysql/UserAccessToken.js -> dist/models/mysql/UserAccessToken.js
+src/models/mysql/UserRefreshToken.js -> dist/models/mysql/UserRefreshToken.js
+src/models/mysql/index.js -> dist/models/mysql/index.js
+src/models/oauth2.js -> dist/models/oauth2.js
+src/protocols/Protocol.js -> dist/protocols/Protocol.js
+src/protocols/agiliza.js -> dist/protocols/agiliza.js
+src/protocols/gps103.js -> dist/protocols/gps103.js
+src/protocols/gt06.js -> dist/protocols/gt06.js
+src/protocols/tk103.js -> dist/protocols/tk103.js
+src/protocols/tlt2h.js -> dist/protocols/tlt2h.js
+src/routes/addresses.js -> dist/routes/addresses.js
+src/routes/clients-addresses.js -> dist/routes/clients-addresses.js
+src/routes/clients-phones.js -> dist/routes/clients-phones.js
+src/routes/clients.js -> dist/routes/clients.js
+src/routes/companies.js -> dist/routes/companies.js
+src/routes/devices.js -> dist/routes/devices.js
+src/routes/import.js -> dist/routes/import.js
+src/routes/index.js -> dist/routes/index.js
+src/routes/oauth.js -> dist/routes/oauth.js
+src/routes/positions.js -> dist/routes/positions.js
+src/routes/products.js -> dist/routes/products.js
+src/routes/service.js -> dist/routes/service.js
+src/routes/services.js -> dist/routes/services.js
+src/routes/sms.js -> dist/routes/sms.js
+src/routes/users.js -> dist/routes/users.js
+src/utils.js -> dist/utils.js
+[2017-09-13 14:26:23] (info) Loading routes
+[2017-09-13 14:26:23] (info) GPS103 listening on port: 6001
+[2017-09-13 14:26:23] (info) TLT2H listening on port: 6030
+[2017-09-13 14:26:23] (info) AGILIZA listening on port: 6150
+[2017-09-13 14:26:23] (info) ElasticSearch is running
+[2017-09-13 14:26:23] (info) Successfully connected to MySQL
+[2017-09-13 14:26:23] (info) Successfully connected to MongoDB
+[2017-09-13 14:26:23] (info) Server v1.0.0 running on port: 8080
+Acimar Takahashi Vaz da Rocha connected to room: device/357671031808774
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+Acimar Takahashi Vaz da Rocha connected to room: device/357671031808774
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+Mongoose: mpromise (mongoose's default promise library) is deprecated, plug in your own promise library instead: http://mongoosejs.com/docs/promises.html
+
+
+
+
+
+Acimar Takahashi Vaz da Rocha leaves device/357671031808774.
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:00
+#357671030993387#V500#0000#AUTOLOW#50
+#04143747$GPRMC,172335.00,A,2326.13901,S,05155.58548,W,0.345,,130917,,,A*7E
+#04143747$GPRMC,172415.00,A,2326.13984,S,05155.58699,W,0.373,,130917,,,A*7C
+#04143747$GPRMC,172455.00,A,2326.14045,S,05155.58648,W,0.216,,130917,,,A*75
+#04143747$GPRMC,172535.00,A,2326.13824,S,05155.58600,W,0.221,,130917,,,A*72
+#04143747$GPRMC,172615.00,A,2326.13777,S,05155.58644,W,0.010,,130917,,,A*7A
+#04143747$GPRMC,172655.00,A,2326.13679,S,05155.58652,W,0.084,,130917,,,A*7B
+#04143747$GPRMC,172735.00,A,2326.13969,S,05155.58983,W,0.168,,130917,,,A*72
+#04143747$GPRMC,172815.00,A,2326.14062,S,05155.58834,W,0.284,,130917,,,A*76
+#04143747$GPRMC,172856.00,A,2326.13792,S,05155.58619,W,0.234,,130917,,,A*74
+#04143747$GPRMC,172937.00,A,2326.13896,S,05155.58756,W,0.028,,130917,,,A*7C
+#04143747$GPRMC,173017.00,A,2326.13964,S,05155.58576,W,0.066,,130917,,,A*70
+#04143747$GPRMC,173107.00,A,2326.14160,S,05155.58575,W,0.108,,130917,,,A*71
+#04143747$GPRMC,173147.00,A,2326.14459,S,05155.58452,W,0.292,,130917,,,A*7E
+#04143747$GPRMC,173227.00,A,2326.14395,S,05155.59179,W,2.418,221.64,130917,,,A*6A
+#041437ca$GPRMC,173306.00,A,2326.14530,S,05155.59437,W,1.410,214.60,130917,,,A*67
+#041437ca$GPRMC,173346.00,A,2326.14130,S,05155.59595,W,0.067,,130917,,,A*74
+#04142aaa$GPRMC,173426.00,A,2326.14100,S,05155.59570,W,0.086,,130917,,,A*72
+#04143721$GPRMC,173506.00,A,2326.14117,S,05155.59414,W,0.632,,130917,,,A*7D
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:01
+#04
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Data unparseable.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:02
+143721$GPRMC,173545.00,A,2326.14016,S,05155.59150,W,0.076,,130917,,,A*79
+#041437ca$GPRMC,173626.00,A,2326.14416,S,05155.59432,W,0.249,,130917,,,A*74
+#041437d4$GPRMC,173706.00,A,2326.14119,S,05155.60885,W,15.195,326.37,130917,,,A*5C
+#041437d4$GPRMC,173745.00,A,2326.00912,S,05155.71032,W,0.786,,130917,,,A*74
+#041437ca$GPRMC,173825.00,A,2325.92395,S,05155.58784,W,24.893,72.10,130917,,,A*66
+#04143720$GPRMC,173904.00,A,2325.88890,S,05155.47456,W,28.735,301.10,130917,,,A*5B
+#04143720$GPRMC,173943.00,A,2325.66316,S,05155.62590,W,16.478,348.80,130917,,,A*52
+#04142dfc$GPRMC,174022.00,A,2325.45200,S,05155.67123,W,8.473,348.53,130917,,,A*6F
+#0414371f$GPRMC,174101.00,A,2325.34080,S,05155.69273,W,10.875,354.38,130917,,,A*58
+#0414371f$GPRMC,174141.00,A,2325.23351,S,05155.69212,W,0.048,,130917,,,A*72
+#041431a2$GPRMC,174222.00,A,2325.19072,S,05155.67412,W,19.400,22.33,130917,,,A*69
+#0414371f$GPRMC,174303.00,A,2325.09708,S,05155.64100,W,0.494,,130917,,,A*7E
+#0414371f$GPRMC,174343.00,A,2325.03120,S,05155.61380,W,22.601,20.52,130917,,,A*66
+#0414371f$GPRMC,174423.00,A,2324.92093,S,05155.56803,W,0.753,31.53,130917,,,A*54
+#04142f72$GPRMC,174503.00,A,2324.91805,S,05155.56518,W,0.064,,130917,,,A*7D
+#04142f72$GPRMC,174543.00,A,2324.87433,S,05155.54681,W,19.237,24.67,130917,,,A*63
+#04142f72$GPRMC,174623.00,A,2324.69601,S,05155.47796,W,0.169,,130917,,,A*79
+#04142f72$GPRMC,174703.00,A,2324.69849,S,05155.48352,W,8.387,223.17,130
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Data unparseable.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:03
+917,,,A*6A
+#04142f72$GPRMC,174743.00,A,2324.77393,S,05155.51295,W,0.023,,130917,,,A*71
+#04142f72$GPRMC,174823.00,A,2324.81869,S,05155.52963,W,0.071,,130917,,,A*79
+#04142f72$GPRMC,174903.00,A,2324.81852,S,05155.53010,W,0.095,,130917,,,A*74
+#04142f72$GPRMC,174943.00,A,2324.86418,S,05155.55914,W,1.700,,130917,,,A*74
+#04142f72$GPRMC,175023.00,A,2324.85769,S,05155.56368,W,1.095,,130917,,,A*75
+#04142f72$GPRMC,175104.00,A,2324.86270,S,05155.56740,W,2.036,,130917,,,A*7B
+#04142f72$GPRMC,175145.00,A,2324.85770,S,05155.56602,W,0.160,,130917,,,A*7F
+#0414371f$GPRMC,175225.00,A,2324.85330,S,05155.56726,W,0.387,,130917,,,A*76
+#0414371f$GPRMC,175305.00,A,2324.85626,S,05155.56970,W,0.589,,130917,,,A*72
+#0414371f$GPRMC,175345.00,A,2324.85868,S,05155.57155,W,0.217,,130917,,,A*7C
+#04142f72$GPRMC,175425.00,A,2324.85599,S,05155.56463,W,0.215,,130917,,,A*7D
+#04142f6f$GPRMC,175505.00,A,2324.85709,S,05155.56806,W,0.403,,130917,,,A*7B
+#04142f6f$GPRMC,175545.00,A,2324.86276,S,05155.57029,W,0.300,,130917,,,A*71
+#0414371f$GPRMC,175625.00,A,2324.85519,S,05155.57127,W,1.116,,130917,,,A*72
+##
+#357671030993387#V500#0000#AUTOLOW#50
+#041437d4$GPRMC,175705.00,A,2324.85822,S,05155.56135,W,0.588,,130917,,,A*74
+#041437d4$GPRMC,175746.00,A,2324.85831,S,05155.56954,W,1.108,,130917,,,A*73
+#04142f72$GPRMC,175827.00,A,2324.85386,S,05155.56809,W,0.798,,130917,,,A*7B
+#04142f72$GPRMC,175907.00,A,2324.86013,S,05155.56812,W,0.675,,130917,,,A*
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Data unparseable.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:03
+7C
+#04142f72$GPRMC,175947.00,A,2324.84772,S,05155.57721,W,1.426,,130917,,,A*71
+#04142f72$GPRMC,180027.00,A,2324.85517,S,05155.57369,W,0.551,,130917,,,A*7C
+#$GPRMC,180107.00,A,2324.85936,S,05155.57234,W,0.322,,130917,,,A*7B
+#04142f72$GPRMC,180147.00,A,2324.85422,S,05155.57095,W,0.560,,130917,,,A*7E
+#0414371f$GPRMC,180227.00,A,2324.85915,S,05155.55847,W,1.120,,130917,,,A*76
+#0414371f$GPRMC,180307.00,A,2324.85958,S,05155.56311,W,0.916,,130917,,,A*7B
+#0414371f$GPRMC,180347.00,A,2324.85734,S,05155.56712,W,0.253,,130917,,,A*76
+#0414371f$GPRMC,180428.00,A,2324.85503,S,05155.56742,W,0.394,,130917,,,A*71
+#04142f72$GPRMC,180509.00,A,2324.85352,S,05155.56668,W,0.618,,130917,,,A*79
+#04142f72$GPRMC,180549.00,A,2324.85459,S,05155.56559,W,0.861,,130917,,,A*70
+#04142f72$GPRMC,180629.00,A,2324.85503,S,05155.57267,W,0.384,,130917,,,A*70
+#04142f6f$GPRMC,180709.00,A,2324.85581,S,05155.57204,W,0.578,,130917,,,A*79
+#04142f6f$GPRMC,180749.00,A,2324.85440,S,05155.56711,W,0.139,,130917,,,A*70
+#0414371f$GPRMC,180829.00,A,2324.85359,S,05155.56974,W,0.436,,130917,,,A*71
+#0414371f$GPRMC,180909.00,A,2324.85338,S,05155.57329,W,0.732,,130917,,,A*71
+#0414371f$GPRMC,180949.00,A,2324.85258,S,05155.56962,W,0.208,,130917,,,A*7A
+#0414371f$GPRMC,181029.00,A,2324.85786,S,05155.56952,W,0.275,,130917,,,A*7B
+#0414371f$GPRMC,181110.00,A,2324.85483,S,05155.56892,W,0.774,,130917,,,A*7F
+#0414371f$GPRMC,181151.00,A,2324.85420,S,05155.56553,W,0.5
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Data unparseable.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:04
+73,,130917,,,A*76
+#041431f8$GPRMC,181231.00,A,2324.85215,S,05155.56587,W,1.617,,130917,,,A*7A
+#041431f8$GPRMC,181311.00,A,2324.86120,S,05155.56979,W,0.289,,130917,,,A*70
+#041431f8$GPRMC,181351.00,A,2324.86109,S,05155.57061,W,0.197,,130917,,,A*72
+#04142f72$GPRMC,181431.00,A,2324.86500,S,05155.57377,W,0.121,,130917,,,A*77
+#04142795$GPRMC,181511.00,A,2324.86823,S,05155.56822,W,0.313,,130917,,,A*71
+#04142795$GPRMC,181551.00,A,2324.86326,S,05155.56867,W,0.321,,130917,,,A*7B
+#041437ca$GPRMC,181631.00,A,2324.86063,S,05155.56536,W,0.830,,130917,,,A*7E
+#0414371f$GPRMC,181711.00,A,2324.85882,S,05155.57247,W,0.372,,130917,,,A*74
+#0414371f$GPRMC,181751.00,A,2324.85956,S,05155.56870,W,0.396,,130917,,,A*7D
+#04142f72$GPRMC,181832.00,A,2324.87710,S,05155.56776,W,1.462,,130917,,,A*7D
+#04142f72$GPRMC,181912.00,A,2324.86607,S,05155.56599,W,0.108,,130917,,,A*73
+#04142f72$GPRMC,181952.00,A,2324.85851,S,05155.57120,W,1.932,339.01,130917,,,A*68
+#04142f72$GPRMC,182032.00,A,2324.85940,S,05155.56872,W,0.746,,130917,,,A*70
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Data unparseable.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:05
+#04142f72$GPRMC,182112.00,A,2324.85979,S,05155.57088,W,0.195,,130917,,,A*7D
+#04142f72$GPRMC,182152.00,A,2324.86231,S,05155.56181,W,0.191,,130917,,,A*70
+#0414371f$GPRMC,182232.00,A,2324.86733,S,05155.55321,W,0.654,,130917,,,A*77
+#04142f72$GPRMC,182312.00,A,2324.87818,S,05155.55335,W,0.071,,130917,,,A*77
+#04142f72$GPRMC,182352.00,A,2324.88894,S,05155.55624,W,14.608,199.27,130917,,,A*5A
+#04142f72$GPRMC,182432.00,A,2324.99925,S,05155.60811,W,13.240,184.13,130917,,,A*5A
+#0414319d$GPRMC,182513.00,A,2325.07114,S,05155.63209,W,8.815,207.94,130917,,,A*63
+#0414319d$GPRMC,182554.00,A,2325.17541,S,05155.68172,W,4.866,205.94,130917,,,A*6B
+#04143724$GPRMC,182634.00,A,2325.29742,S,05155.71676,W,16.136,123.10,130917,,,A*5D
+#0414371f$GPRMC,182714.00,A,2325.51173,S,05155.66355,W,26.725,166.41,130917,,,A*55
+#0414371f$GPRMC,182754.00,A,2325.77470,S,05155.59209,W,31.973,153.89,130917,,,A*5E
+#04143723$GPRMC,182834.00,A,2325.90582,S,05155.45590,W,16.265,108.84,130917,,,A*52
+#0414374d$GPRMC,182933.00,A,2326.10527,S,05155.52730,W,26.737,234.50,130917,,,A*5A
+#041437ca$GPRMC,183013.00,A,2326.15258,S,05155.58834,W,0.315,,130917,,,A*75
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Data unparseable.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:06
+#357671030993387#V500#0000#AUTOLOW#42
+#041437ca$GPRMC,183053.00,A,2326.15389,S,05155.58754,W,0.146,,130917,,,A*71
+#04143747$GPRMC,183133.00,A,2326.15111,S,05155.58855,W,0.069,,130917,,,A*77
+#041437d4$GPRMC,183213.00,A,2326.14781,S,05155.59197,W,0.012,,130917,,,A*72
+#041437d4$GPRMC,183253.00,A,2326.14711,S,05155.59325,W,0.139,,130917,,,A*7C
+#041437d4$GPRMC,183333.00,A,2326.14941,S,05155.59183,W,0.158,,130917,,,A*79
+#041437d4$GPRMC,183413.00,A,2326.15091,S,05155.59238,W,0.038,,130917,,,A*7D
+#041437d4$GPRMC,183453.00,A,2326.14915,S,05155.59266,W,0.198,,130917,,,A*7D
+#041437d4$GPRMC,183533.00,A,2326.15011,S,05155.59176,W,0.067,,130917,,,A*75
+#04143747$GPRMC,183613.00,A,2326.14692,S,05155.59255,W,0.011,,130917,,,A*7B
+#04143747$GPRMC,184035.00,A,2326.13823,S,05155.59419,W,0.348,,130917,,,A*7C
+#04143747$GPRMC,184125.00,A,2326.14264,S,05155.59324,W,0.160,,130917,,,A*73
+#041437ca$GPRMC,184215.00,A,2326.13818,S,05155.59420,W,0.005,,130917,,,A*74
+#041437ca$GPRMC,184305.00,A,2326.14162,S,05155.59327,W,0.045,,130917,,,A*73
+#041437ca$GPRMC,184355.00,A,2326.14010,S,05155.59360,W,0.048,,130917,,,A*7C
+#041437ca$GPRMC,184445.00,A,2326.14041,S,05155.59380,W,0.029,,130917,,,A*77
+#041437ca$GPRMC,184535.00,A,2326.14109,S,05155.59354,W,0.073,,130917,,,A*7A
+#041437ca$GPRMC,184625.00,A,2326.14314,S,05155.59339,W,0.021,,130917,,,A*7A
+#041437d4$GPRMC,185429.00,A,2326.13393,S,05155.59682,W,0.302,,130917,,,A*7A
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:07
+#04143747$GPRMC,185519.00,A,2326.13488,S,05155.59729,W,0.131,,130917,,,A*77
+#041437ca$GPRMC,185614.00,A,2326.13358,S,05155.59888,W,0.192,,130917,,,A*7E
+#$GPRMC,185709.00,A,2326.13735,S,05155.59593,W,0.005,,130917,,,A*74
+#041437d4$GPRMC,185759.00,A,2326.13276,S,05155.59735,W,0.063,,130917,,,A*7D
+#041437d4$GPRMC,185846.00,A,2326.13406,S,05155.59727,W,0.040,,130917,,,A*7F
+#04143747$GPRMC,185936.00,A,2326.13537,S,05155.59698,W,0.123,,130917,,,A*7B
+#04143725$GPRMC,190026.00,A,2326.13435,S,05155.59733,W,0.153,,130917,,,A*73
+#04142aaa$GPRMC,190115.00,A,2326.13490,S,05155.59613,W,0.104,,130917,,,A*7C
+#041437ce$GPRMC,190205.00,A,2326.13638,S,05155.59602,W,0.025,,130917,,,A*7C
+#041437ce$GPRMC,190255.00,A,2326.13646,S,05155.59522,W,0.195,,130917,,,A*7B
+#04142aae$GPRMC,190345.00,A,2326.13681,S,05155.59427,W,0.151,,130917,,,A*7C
+#041437ce$GPRMC,190435.00,A,2326.13609,S,05155.59542,W,0.078,,130917,,,A*74
+#041437d4$GPRMC,190525.00,A,2326.13420,S,05155.59486,W,0.160,,130917,,,A*7C
+#041437ce$GPRMC,190615.00,A,2326.13547,S,05155.59609,W,0.202,,130917,,,A*7E
+#041437ce$GPRMC,190705.00,A,2326.13432,S,05155.59433,W,0.178,,130917,,,A*78
+#041437ce$GPRMC,190755.00,A,2326.13684,S,05155.59420,W,0.010,,130917,,,A*7F
+#04143725$GPRMC,190845.00,A,2326.13755,S,05155.59354,W,0.052,,130917,,,A*7E
+#04143725$GPRMC,190935.00,A,2326.13852,S,05155.59269,W,0.033,,130917,,,A*78
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Data unparseable.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:09
+#04143725$GPRMC,191026.00,A,2326.13869,S,05155.59361,W,0.023,,130917,,,A*72
+#04143725$GPRMC,191116.00,A,2326.13814,S,05155.59269,W,0.075,,130917,,,A*70
+#04143725$GPRMC,191206.00,A,2326.13892,S,05155.59352,W,0.051,,130917,,,A*73
+#04143723$GPRMC,191451.00,A,2326.13637,S,05155.59095,W,0.214,,130917,,,A*7D
+#04143723$GPRMC,191541.00,A,2326.13549,S,05155.59115,W,0.110,,130917,,,A*79
+#041437ca$GPRMC,191631.00,A,2326.13461,S,05155.59340,W,0.129,,130917,,,A*7E
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Data unparseable.
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:17:24
+#357671030993387#V500#0000#AUTOLOW#1
+#041437ca$GPRMC,191723.00,A,2326.13487,S,05155.59285,W,0.024,,130917,,,A*70
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:18:14
+#357671030993387#V500#0000#AUTOLOW#1
+#041437ca$GPRMC,191813.00,A,2326.13418,S,05155.59429,W,0.123,,130917,,,A*7C
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:25:16
+#357671030993387#V500#0000#AUTOLOW#1
+#04143723$GPRMC,192514.00,A,2326.13511,S,05155.59426,W,0.706,,130917,,,A*73
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:25:56
+#357671030993387#V500#0000#AUTO#1
+#04143723$GPRMC,192554.00,A,2326.13821,S,05155.59411,W,0.961,,130917,,,A*72
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+Acimar Takahashi Vaz da Rocha connected to room: device/357671030993387
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:26:36
+#357671030993387#V500#0000#AUTO#1
+#04143747$GPRMC,192634.00,A,2326.14510,S,05155.59266,W,6.813,226.55,130917,,,A*63
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:27:16
+#357671030993387#V500#0000#AUTO#1
+#04142aae$GPRMC,192714.00,A,2326.03507,S,05155.69236,W,9.117,323.04,130917,,,A*64
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:27:56
+#357671030993387#V500#0000#AUTO#1
+#04142aae$GPRMC,192754.00,A,2325.97742,S,05155.67657,W,23.483,59.21,130917,,,A*69
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:28:35
+#357671030993387#V500#0000#AUTO#1
+#04143725$GPRMC,192833.00,A,2325.93370,S,05155.34255,W,27.971,94.40,130917,,,A*64
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:29:16
+#357671030993387#V500#0000#AUTO#1
+#$GPRMC,192915.00,A,2325.84369,S,05155.09516,W,14.958,53.67,130917,,,A*64
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:29:56
+#357671030993387#V500#0000#AUTO#1
+#04142aaa$GPRMC,192955.00,A,2325.69835,S,05154.89382,W,25.037,51.72,130917,,,A*67
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:30:35
+#357671030993387#V500#0000#AUTO#1
+#04142795$GPRMC,193034.00,A,2325.59976,S,05154.73812,W,15.689,354.31,130917,,,A*5B
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:31:15
+#357671030993387#V500#0000#AUTO#1
+#04142795$GPRMC,193114.00,A,2325.51789,S,05154.64153,W,0.058,,130917,,,A*74
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:31:56
+#357671030993387#V500#0000#AUTO#1
+#04142795$GPRMC,193154.00,A,2325.48127,S,05154.58932,W,25.988,57.46,130917,,,A*67
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:32:36
+#357671030993387#V500#0000#AUTO#1
+#04142795$GPRMC,193234.00,A,2325.18447,S,05154.42554,W,28.149,31.85,130917,,,A*64
+##
+
+--- ON FINISHED DATA FROM TLT2H ----------------------------------------
+--- ON RECEIVED DATA FROM TLT2H ----------------------------------------
+13/09/2017 16:33:16
+#357671030993387#V500#0000#AUTO#1

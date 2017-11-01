@@ -1,0 +1,247 @@
+html, body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Montserrat Light', 'Montserrat', sans-serif;
+    overflow: hidden;
+}
+
+fieldset {
+    border: 0;
+}
+
+input {
+    background: transparent;
+    border: 0;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(150,150,150,0.1);
+    text-transform: uppercase;
+    color: #FFF;
+    outline: 0;
+    width: 100%;
+    font-size: 14px;
+}
+
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px white inset;
+    -webkit-text-fill-color: #333 !important;
+}
+
+p, span, a, li, div {
+    font-size: 12px;
+}
+
+h1 {
+    font-size: 20px;
+}
+
+h3 {
+    font-size: 16px;
+}
+
+a {
+    color: #AAA;
+    outline: 0 none;
+    box-shadow: 0 0 0;
+}
+
+a:hover, a:active, a:focus {
+    color: #FFF;
+    outline: 0 none;
+    box-shadow: 0 0 0;
+}
+
+button.button {
+    background: #FFF;
+    border: 0;
+    border-radius: 0;
+    text-transform: uppercase;
+    color: #2D3142;
+}
+
+button.button:hover {
+    color: #34E5FF;
+}
+
+/* para bulma */
+
+.button {
+    border-radius: 20px!important;
+    line-height: normal;
+    border: 0;
+    font-weight: normal;
+    background: rgba(150,150,150,0.1);
+    color: #AAA;
+    outline: 0px;
+    box-shadow: 0;
+}
+
+.button:hover, .button:active, .button:focus {
+    color: #FFF;
+    outline: 0;
+    box-shadow: 0 0 0;
+}
+
+.button i{
+    position: relative;
+    margin-right: 3px
+}
+
+.button.is-primary, .button.is-primary:hover {
+    background: #61AFEF;
+    color: #FFF;
+}
+
+.button.is-red, .button.is-red:hover {
+    background: #D46C63;
+    color: #FFF;
+}
+
+.button.is-yellow, .button.is-yellow:hover {
+    background: #D19A66;
+    color: #FFF;
+}
+
+.is-primary, .is-primary:hover {
+    color: #61AFEF;
+}
+.is-secondary, .is-secondary:hover {
+    color: #D19A66;
+}
+.is-green, .is-green:hover {
+    color: #8AC363;
+}
+.is-red, .is-red:hover {
+    color: #D46C63;
+}
+
+/* for modals */
+.modal-container {
+    padding: 20px;
+}
+
+/* panels */
+
+div.module-panel *::-webkit-input-placeholder {
+    color: rgba(255,255,255,0.5);
+}
+div.module-panel *:-moz-placeholder {
+    color: rgba(255,255,255,0.5);
+}
+div.module-panel *::-moz-placeholder {
+    color: rgba(255,255,255,0.5);
+}
+div.module-panel *:-ms-input-placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+/* tags */
+
+.tag {
+    background: #222;
+    color: #AAA;
+}
+
+.tag.is-small {
+    font-size: 12px;
+    padding: 0px 8px;
+    height: auto;
+}
+
+/* tables */
+
+.table {
+    background-color: transparent;
+    margin-bottom: 0;
+    display: flex;
+}
+
+.table tr:hover {
+    background-color: #212128;
+}
+
+.table th {
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: bold;
+    background: #212128;
+}
+
+.table td, .table th {
+    padding: 6px 10px 4px;
+}
+
+table.table.is-transparent {
+    background: rgba(255,255,255,0.2);
+    margin-bottom: 0;
+}
+
+table.table.is-transparent th {
+    background: rgba(255,255,255,0.5);
+}
+
+table.table.is-transparent tr:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+table.table.is-transparent td {
+    color: #FFF;
+}
+
+table.table.is-transparent td.obs {
+    color: #FFF;
+}
+
+table.table.is-transparent td.obs {
+    opacity: 0.2;
+    color: #FFF;
+}
+
+table.table.is-transparent td.obs.active {
+    opacity: 1;
+    font-weight: bold;
+    color: #CFFFB3;
+}
+
+table.table.is-transparent th,
+table.table.is-transparent td {
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 5px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    font-size: 10px;
+}
+
+table.table.is-transparent th {
+    border-bottom: 0;
+}
+
+table.table.is-transparent tr:last-child td,
+table.table.is-transparent tbody tr:last-child th {
+    border-bottom-width: 0;
+}
+
+.table-navigation a {
+    border-radius: 0;
+    background: rgba(255,255,255,0.4);
+    border: 0px;
+    font-weight: bold;
+    color: #FFF;
+    width: 32px;
+}
+
+/* remove googlemaps copyrights */
+
+a[href^="http://maps.google.com/maps"]{display:none !important}
+a[href^="https://maps.google.com/maps"]{display:none !important}
+
+.gmnoprint a, .gmnoprint span, .gm-style-cc {
+    display:none;
+}
+.gm-iv-address {
+    display: none!important;
+}
+.gm-iv-container {
+    border-right: 0 none!important;
+}
+

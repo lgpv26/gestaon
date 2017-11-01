@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Blue Agile Tracker</title>
+        <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+        <link rel="stylesheet" href="src/assets/styles/loading.css" />
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDGLBaF4d3v24LFjoQOFbpFF12C5IKjTwQ&libraries=drawing"></script>
+    </head>
+    <body>
+        <!-- app loading screen -->
+        <div id="loading-app" class="loading-app">
+            <div class="loading-container">
+                <div class="cssload-loader">
+                    <div class="cssload-inner cssload-one"></div>
+                    <div class="cssload-inner cssload-two"></div>
+                    <div class="cssload-inner cssload-three"></div>
+                </div>
+                <h3 id="loading-app-text"></h3>
+            </div>
+        </div>
+        <script type="text/javascript">
+            let appLoading = true;
+            let appLoadingText = 'Carregando app...';
+            window.setAppLoadingText = function(text){
+                appLoadingText = text;
+                document.getElementById("loading-app-text").innerHTML = text;
+            };
+            window.removeAppLoading = function(){
+                appLoading = false;
+                fadeOut(document.getElementById('loading-app'), 1);
+            };
+            window.isAppLoading = function(){
+                return appLoading;
+            };
+            window.setAppLoadingText(appLoadingText);
+            function fadeOut(element,time){
+                executeFading(element,time,100,0);
+            }
+            function executeFading(element,time,initial,end){
+                let increment;
+                if(initial === 0){
+                    increment = 2;
+                    element.style.display = "block";
+                } else {
+                    increment = -2;
+                }
+                let opc = initial;
+                let interval = setInterval(function(){
+                    if((opc === end)){
+                        if(end === 0){
+                            element.style.display = "none";
+                        }
+                        clearInterval(interval);
+                    } else {
+                        opc += increment;
+                        element.style.opacity = opc/100;
+                        element.style.filter = "alpha(opacity="+opc+")";
+                    }
+                }, time * 10);
+            }
+        </script>
+        <!-- app -->
+        <div id="app"></div>
+        <!-- the js bundle -->
+        <script src="/dist/build.js"></script>
+    </body>
+</html>

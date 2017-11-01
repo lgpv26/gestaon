@@ -1,0 +1,420 @@
+body {
+    width:100%;
+    height: 100%;
+    position: fixed;
+    background: #26272E;
+    color: #AAA;
+}
+
+/* Components */
+
+.v--modal-overlay {
+    background: rgba(0,0,0,.8)!important;
+}
+
+.v--modal-overlay .vue-modal-resizer {
+    right: 3px;
+    bottom: 3px;
+}
+
+.v--modal-overlay .vue-modal-resizer::after {
+    border-bottom: 0 none;
+}
+
+.app-modal {
+    background: #36373F;
+    border-radius: 10px;
+    display: flex;
+}
+
+.app-select-add-form {
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.app-select-add-form a {
+    display: flex;
+    flex-direction: row;
+    margin-left: 10px;
+    font-size: 20px;
+}
+
+/* Resources */
+
+a.circle-button, button.circle-button {
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    background-color: #FFF;
+    overflow: hidden;
+}
+
+a.circle-button i, button.circle-button i {
+    font-size: 18px;
+    align-self: center;
+}
+
+/* Overall */
+
+.module-panel header {
+    display: flex;
+    flex-direction: row;
+    margin: 10px 20px;
+    position: relative;
+    flex-shrink: 0;
+    flex-basis: 1;
+}
+
+.module-panel header h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #FFF;
+}
+
+.module-header {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.table-navigation {
+    display: flex;
+    justify-content: space-between;
+}
+
+.table-navigation .table-pagination li {
+    display: inline;
+}
+
+div.parent {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+div.content-row {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+div.content-row div.content-panel{
+    flex-grow: 1;
+    overflow: auto;
+}
+
+div.content-row div.content-panel.content-edit-panel,
+div.content-row div.content-panel.content-new-panel {
+    width: 400px;
+    flex-grow: initial;
+    background: #FAFAFA;
+}
+
+div.content-row div.content-panel.content-edit-panel header,
+div.content-row div.content-panel.content-new-panel header {
+    display: flex;
+    padding: 10px 20px;
+    border-bottom: 1px solid #EEE;
+}
+
+div.content-row div.content-panel.content-edit-panel h3,
+div.content-row div.content-panel.content-new-panel h3 {
+    align-self: center;
+    font-weight: bold;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+div.content-row div.content-panel.content-edit-panel section,
+div.content-row div.content-panel.content-new-panel section {
+    padding: 10px 20px;
+}
+
+div.content-row div.content-panel:last-child{
+    border-right: 0 none;
+}
+
+div.content-header {
+    display: flex;
+    flex-direction: row;
+    height: 48px;
+}
+
+div.content-header h3 {
+    align-self: center;
+    padding: 10px 20px;
+    color: #666;
+    text-transform: uppercase;
+    font-size: 15px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+div.content-header ul {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+div.content-header ul li {
+    align-self: center;
+    padding: 5px 20px;
+    cursor: pointer;
+}
+
+div.content-header ul li i {
+    position: relative;
+    top: -1px;
+}
+
+/* Masonry Grid */
+
+/* Map */
+
+.company-base-label {
+    width: 120px;
+    justify-content: center;
+    font-weight: bold;
+    color: #61AFEF;
+    text-shadow: 0px 0px 2px #000, 0px 0px 2px #000, 0px 0px 2px #000, 0px 0px 3px #000, 0px 0px 4px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    font-size: 12px;
+    text-align: center;
+    margin-top: -2px!important;
+    position: relative;
+    z-index: 0;
+}
+.tracked-device-label {
+    width: 120px;
+    justify-content: center;
+    font-weight: bold;
+    color: #EEE;
+    text-shadow: 0px 0px 2px #000, 0px 0px 2px #000, 0px 0px 2px #000, 0px 0px 3px #000, 0px 0px 4px #000, 0px 0px 5px #000, 0px 0px 5px #000, 0px 0px 5px #000;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    font-size: 12px;
+    text-align: center;
+    padding-top: 2px!important;
+}
+.tracked-device-track-label {
+    width: 42px;
+    height: 12px;
+    padding-top: 2px!important;
+    padding-bottom: 1px!important;
+    display: flex!important;
+    justify-content: center;
+    color: #222;
+    border-radius: 5px;
+    font-weight: bold;
+    background: rgba(255,255,255,.6);
+    letter-spacing: 0px;
+    font-size: 10px;
+}
+.rotated-vehicle-icon {
+    text-align: center;
+    background-color: transparent;
+    border: none;
+}
+.tracker-vehicle {
+    /*-webkit-transition: all 0.5s ease-in-out;
+    -moz-transition: all 0.5s ease-in-out;
+    -o-transition: all 0.5s ease-in-out;
+    transition: all 0.5s ease-in-out;*/
+
+    transform: rotate(0deg);            /* CSS3 */
+    -moz-transform: rotate(0deg);       /* Firefox */
+    -webkit-transform: rotate(0deg);    /* Webkit */
+    -o-transform: rotate(0deg);         /* Opera */
+    -ms-transform: rotate(0deg);        /* IE 9 */
+}
+
+main td, main p{
+    color: #666;
+}
+
+main .table thead th {
+    color: #666;
+    font-weight: bold;
+    border-bottom: 0;
+    padding: 6px 20px 4px;
+}
+
+main .table td {
+    color: #AAA;
+    border-bottom: 1px solid rgba(0,0,0,.1);
+    padding: 5px 20px;
+}
+
+/* Login Page */
+
+#page-login {
+    display: flex;
+    justify-content: center;
+    min-width:100%;
+    min-height:100%;
+    position: fixed;
+}
+
+#page-login input{
+    text-transform: uppercase;
+}
+
+#page-login input[type=email]{
+    text-transform: lowercase;
+}
+
+#page-login div.login-container {
+    width: 800px;
+    display:flex;
+    align-self: center;
+    flex-direction: row;
+    border-radius: 3px;
+    border: 10px solid rgba(255,255,255,.15);
+}
+
+#page-login div.login-container h3 {
+    margin: 0;
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+#page-login div.login-container .left-side {
+    padding: 40px 30px;
+    width: 300px;
+    background: linear-gradient(45deg,#67b26f 0,#4ca2cd 100%)!important;
+    color: #FFF;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+#page-login div.login-container .left-side h3 {
+    color: rgba(255,255,255,0.9);
+}
+
+#page-login div.login-container .left-side .button {
+    margin: 10px 0;
+}
+
+#page-login div.login-container .left-side small {
+    color: rgba(255,255,255,0.7);
+}
+
+
+#page-login div.login-container .right-side {
+    padding: 40px 30px;
+    flex-grow: 1;
+    flex-basis: 0;
+    color: #333;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    background: #FFF;
+}
+
+#page-login div.login-container .right-side .button {
+    margin: 0 0 10px;
+    width:100%;
+}
+
+#page-login .input, #page-login .textarea, #page-login .button {
+    height: 40px;
+}
+
+#page-login .control small {
+    margin-top: 5px;
+    font-size: 10px;
+    color: #666;
+    display: inline-block;
+    line-height: 100%;
+}
+
+/* Settings */
+
+div.app-settings div.module-panel header {
+    margin: 0 0 10px;
+}
+
+/* Utils */
+
+.scrollable-content {
+    float: left;
+    width: 100%;
+}
+
+.push-both-sides {
+    flex-grow: 1;
+}
+
+.form-list-action {
+    font-size: 20px;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+}
+
+.form-list-action i {
+    align-self: flex-end;
+    margin-bottom: 5px;
+}
+
+/* SVG Icons */
+.primary{
+    fill:#2e76cc;
+}
+
+.secondary{
+    fill:#2e76cc;
+}
+
+.terciary {
+    fill: #777777;
+}
+
+.white{
+    fill:#eee;
+}
+
+li svg.icon{
+    -webkit-transition: all 200ms ease-in;
+    -ms-transition: all 200ms ease-in;
+    -moz-transition: all 200ms ease-in;
+    transition: all 200ms ease-in;
+}
+
+li:hover svg.icon{
+    -webkit-transform: scale(1.5) rotate(15deg);
+    -ms-transform: scale(1.5) rotate(15deg);
+    -moz-transform: scale(1.5) rotate(15deg);
+    transform: scale(1.5) rotate(15deg);
+}
+
+li:hover svg.icon .terciary{
+    fill:rgba(255,255,255,0.5)
+}
+li.router-link-active svg.icon .terciary{
+    fill:orange;
+}
+li.router-link-active svg.icon {
+    -webkit-transform: scale(1.2);
+    -ms-transform: scale(1.2);
+    -moz-transform: scale(1.2);
+    transform: scale(1.2) rotate(15deg);
+}
+
+/* scrollbar override */
+
+[data-scrollbar].sticky .scrollbar-track, [scrollbar].sticky .scrollbar-track, scrollbar.sticky .scrollbar-track {
+    background: transparent;
+}
+
+[data-scrollbar].sticky .scrollbar-track .scrollbar-thumb, [scrollbar].sticky .scrollbar-track .scrollbar-thumb {
+    /*background: transparent;*/
+}
