@@ -47,4 +47,4 @@ Como descrito nas convenções, o versionamento será adicionado no repositório
 - **Y** ou MINOR - pequena alteração/implementação, compatível com as versões anteriores
 - **Z** ou PATCH - correçaõ de bugs, compatível com as versões anteriores
 
-:D
+Qualquer detalhe adicional, perguntar nos **Issues** do GitHub.
