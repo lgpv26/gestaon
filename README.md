@@ -1,27 +1,35 @@
-Welcome to StackEdit!
+Agiliza ERP
 ===================
 
-Hey! I'm your first Markdown document in **StackEdit**[^stackedit]. Don't delete me, I'm very helpful! I can be recovered anyway in the **Utils** tab of the <i class="icon-cog"></i> **Settings** dialog.
+ERP que visa ajudar a gerência de pequenas/médias empresas, onde a atividade da mesma envolve a entrega de mercadorias.
 
 ----------
 
 
-Documents
+Convenções
 -------------
 
-StackEdit stores your documents in your browser, which means all your documents are automatically saved locally and are accessible **offline!**
+Para manter uma boa integridade do projeto, é importante seguir as seguintes convenções:
 
-> **Note:**
+- As nomenclaturas dos models, colunas/documentos/tabelas/coleções dos BDs, variáveis, nome de arquivos, classes, commits/branches do Git **deverão ser escritos no inglês**.
 
-> - StackEdit is accessible offline after the application has been loaded for the first time.
-> - Your local documents are not shared between different browsers or computers.
-> - Clearing your browser's data may **delete all your local documents!** Make sure your documents are synchronized with **Google Drive** or **Dropbox** (check out the [<i class="icon-refresh"></i> Synchronization](#synchronization) section).
+- Os branches devem ser usados para a implementação de recursos/correção de bugs. Para tais, as nomenclaturas serão: **feature/*nome-do-recurso***, **bugfix/*bug-a-ser-corrigido**.
 
-#### <i class="icon-file"></i> Create a document
+- As tags do git devem ser usadas para o versionamento. Usaremos o formato "**vX,Y,Z**" ao nomea-las. Veja a próxima seção para mais detalhes.
 
-The document panel is accessible using the <i class="icon-folder-open"></i> button in the navigation bar. You can create a new document by clicking <i class="icon-file"></i> **New document** in the document panel.
+- O título do commit deve retratar o resultado da alteração, não as especificidades. Tente colocar os detalhes da alteração na descrição do commit. Lembre-se que o Git permite ver o código das alterações, portanto as vezes os detalhes são mais fáceis de ser entendidas vendo o código do que descritas em texto.
+> **ERRADO**: "The user can now make CRUD requests to a specific endpoint only if he has those permissions."
+>  **CERTO**: "CRUD permissions for users."
 
-#### <i class="icon-folder-open"></i> Switch to another document
+#### Versionamento
+
+Como descrito nas convenções, o versionamento será adicionado no repositório no formato "**vX,Y,Z**". O projeto será iniciado na versão v0.1.0, enquanto o projeto estiver em desenvolvimento a versão será v0.X.Y; a versão inicial de produção será v1.0.0.
+
+- **X** ou MAJOR - grande alteração, incompatível com as versões anteriores
+- **Y** ou MINOR - pequena alteração, compatível com as versões anteriores
+- **Z** ou PATCH - correçaõ de bugs, compatível com as versões anteriores
+
+#### Switch to another document
 
 All your local documents are listed in the document panel. You can switch from one to another by clicking a document in the list or you can toggle documents using <kbd>Ctrl+[</kbd> and <kbd>Ctrl+]</kbd>.
 
