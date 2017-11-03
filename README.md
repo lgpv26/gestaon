@@ -13,12 +13,21 @@ Para manter uma boa integridade do projeto, é importante seguir as seguintes co
 
 - As nomenclaturas dos models, colunas/documentos/tabelas/coleções dos BDs, variáveis, nome de arquivos, classes, commits/branches do Git **deverão ser escritos no inglês**.
 
-- Os branches devem ser usados para a implementação de recursos/correção de bugs. Para tais, as nomenclaturas serão: **feature/*nome-do-recurso***, **bugfix/*bug-a-ser-corrigido**.
+- Os branches devem ser usados para a implementação de recursos/correção de bugs. Para tais, as nomenclaturas serão: **feature/*nome-do-recurso***, **bug/*bug-a-ser-corrigido** - deve ser obrigatóriamente ligado a um "issue", para isso o commit deve.
+
+| Item     | Explicação   |
+| :------- | ----: |
+| feature/nome-do-recurso | Novo recurso |
+| bug/bug-corrigido | Link do issue (#issue-id)   |
+| hotfix/erro-corrigido | Correção direto no código  |
+
 
 - As tags do git devem ser usadas para o versionamento. Usaremos o formato "**vX,Y,Z**" ao nomea-las. Veja a próxima seção para mais detalhes.
 
 - O título do commit deve retratar o resultado da alteração, não as especificidades. Tente colocar os detalhes da alteração na descrição do commit. Lembre-se que o Git permite ver o código das alterações, portanto as vezes os detalhes são mais fáceis de ser entendidas vendo o código do que descritas em texto.
+
 > **ERRADO**: "The user can now make CRUD requests to a specific endpoint only if he has those permissions."
+
 >  **CERTO**: "CRUD permissions for users."
 
 #### Versionamento
