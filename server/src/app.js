@@ -9,6 +9,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const moment = require('moment');
 const _ = require('lodash');
+const mysql = require('mysql');
+const bluebird = require('bluebird');
 
 // create restify server
 let server = restify.createServer({
@@ -31,7 +33,8 @@ const Sequelize = require('sequelize');
 const sequelize = new Sequelize(config.database.dbName, config.database.user, config.database.password, {
     logging: false,
     host: config.database.host,
-    dialect: config.database.dialect
+    dialect: config.database.dialect,
+    operatorsAliases: false
 });
 
 /* set package version to server di */
@@ -97,19 +100,21 @@ server.io.on('connection', (socket) => {
             }
         ]
     }).then((userAccessToken) => {
-        user =  userAccessToken.user;
-        user.companies.forEach((company) => {
-            server.mongodb.Device.find({
-                companyId: company.id
-            }).exec().then((devices) => {
-                devices.forEach((device) => {
-                    // console.log(user.name + " connected to room: " + 'device/' + device.code);
-                    socket.join('device/' + device.code);
+        if(userAccessToken && typeof userAccessToken.user !== 'undefined') {
+            user = userAccessToken.user;
+            user.companies.forEach((company) => {
+                server.mongodb.Device.find({
+                    companyId: company.id
+                }).exec().then((devices) => {
+                    devices.forEach((device) => {
+                        // console.log(user.name + " connected to room: " + 'device/' + device.code);
+                        socket.join('device/' + device.code);
+                    });
+                }).catch((err) => {
+                    console.log(err);
                 });
-            }).catch((err) => {
-                console.log(err);
             });
-        });
+        }
     });
     socket.on('join-device-room', (deviceCode) => {
         // console.log(user.name + " joins device/" + deviceCode + ".");
@@ -144,26 +149,56 @@ config.protocols.forEach((protocol) => {
     protocol['instance'] = new (require('./protocols/' + protocol.name))(server,protocol);
 });
 
-// connect to MySQL
-sequelize.sync({
-    logging: false
-}).then(() => {
-    log.info("Successfully connected to MySQL");
-}, (err) => {
-    log.error(err.message + " (" + err.name + ")");
-}).then(() => {
-    // connect to MongoDB
-    mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, function(err) {
-        if (err) {
-            log.error(err.message + " (" + err.name + ")");
-        }
-        else{
-            log.info("Successfully connected to MongoDB");
-            // finally, initialize server
-            const serverPort = config.mainServer.port;
-            server.listen(serverPort, () => {
-                log.info("Server v" + config.mainServer.version + " running on port: " + serverPort);
-            });
-        }
+const connectToMySQL = new Promise((resolve, reject) => {
+    const mysqlConnection = mysql.createConnection({
+        host: config.database.host,
+        user: config.database.user,
+        password: config.database.password
     });
+    let databaseCreated = false;
+    mysqlConnection.connect((err) => {
+        if(err) return reject(err);
+        mysqlConnection.query("CREATE DATABASE `" + config.database.dbName + "`;", function (err) {
+            if(err){
+                return resolve(databaseCreated);
+            }
+            log.warning("Database not found. Database \"" + config.database.dbName + "\" created.");
+            databaseCreated = true;
+            resolve(databaseCreated);
+        });
+    });
+});
+
+connectToMySQL.then((databaseCreated) => {
+    // guarantee MySQL structure
+    return sequelize.sync({
+        logging: false
+    }).then(() => {
+        log.info("Successfully connected to MySQL");
+        return new Promise((resolve, reject) => {
+            if(databaseCreated){
+                return require("./first-seed.js")(server).then(() => {
+                    resolve();
+                }).catch((err) => {
+                    reject(err);
+                });
+            }
+            return resolve();
+        }).then(() => {
+            mongoose.Promise = bluebird;
+            return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
+                useMongoClient: true,
+                promiseLibrary: bluebird
+            }).then(() => {
+                log.info("Successfully connected to MongoDB");
+                // finally, initialize server
+                const serverPort = config.mainServer.port;
+                server.listen(serverPort, () => {
+                    log.info("Server v" + config.mainServer.version + " running on port: " + serverPort);
+                });
+            });
+        });
+    });
+}).catch((err) => {
+    log.error(err.message + " (" + err.name + ")");
 });

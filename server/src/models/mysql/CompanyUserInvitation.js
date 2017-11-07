@@ -10,20 +10,16 @@ module.exports = {
                     autoIncrement: true
                 },
                 code: {
-                    type: Sequelize.STRING,
-                    field: 'code'
+                    type: Sequelize.STRING
                 },
                 createdBy: {
-                    type: Sequelize.INTEGER,
-                    field: 'created_by'
+                    type: Sequelize.INTEGER
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    field: 'date_updated'
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
-                    type: Sequelize.DATE,
-                    field: 'date_created'
+                    type: Sequelize.DATE
                 }
             }, {
                 tableName: 'company_user_invitation',

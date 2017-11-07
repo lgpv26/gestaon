@@ -6,13 +6,11 @@ module.exports = {
             instance: sequelize.define('companyUserPermission', {
                 companyUserId: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true,
-                    field: 'company_user_id'
+                    primaryKey: true
                 },
                 resourceName: {
                     type: Sequelize.STRING,
-                    primaryKey: true,
-                    field: 'resource_name'
+                    primaryKey: true
                 }
             }, {
                 tableName: 'company_user_permission',

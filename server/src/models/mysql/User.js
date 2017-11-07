@@ -14,8 +14,7 @@ module.exports = {
                 },
                 activeCompanyUserId: {
                     type: Sequelize.INTEGER,
-                    defaultValue: null,
-                    field: 'active_company_user_id'
+                    defaultValue: null
                 },
                 name: {
                     type: Sequelize.STRING,
@@ -60,16 +59,13 @@ module.exports = {
                     }
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    field: 'date_updated'
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
-                    type: Sequelize.DATE,
-                    field: 'date_created'
+                    type: Sequelize.DATE
                 },
                 dateRemoved: {
-                    type: Sequelize.DATE,
-                    field: 'date_removed'
+                    type: Sequelize.DATE
                 },
                 status: {
                     type: Sequelize.STRING,

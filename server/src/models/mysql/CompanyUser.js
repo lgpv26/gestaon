@@ -6,34 +6,29 @@ module.exports = {
             instance: sequelize.define('companyUser', {
                 id: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true
+                    primaryKey: true,
+                    autoIncrement: true
                 },
                 companyId: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true,
-                    field: 'company_id'
+                    primaryKey: true
                 },
                 userId: {
                     type: Sequelize.INTEGER,
                     primaryKey: true,
-                    field: 'user_id'
                 },
                 companyUserInvitationId: {
                     type: Sequelize.INTEGER,
-                    field: 'company_user_invitation_id',
                     defaultValue: null
                 },
                 isCreator: {
-                    type: Sequelize.BOOLEAN,
-                    field: 'is_creator'
+                    type: Sequelize.BOOLEAN
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    field: 'date_updated'
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
-                    type: Sequelize.DATE,
-                    field: 'date_created'
+                    type: Sequelize.DATE
                 }
             }, {
                 tableName: 'company_user',
