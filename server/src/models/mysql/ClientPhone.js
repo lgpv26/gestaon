@@ -6,11 +6,11 @@ module.exports = {
             instance: sequelize.define('clientPhone', {
                 id: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true
+                    primaryKey: true,
+                    autoIncrement: true
                 },
                 clientId: {
-                    type: Sequelize.INTEGER,
-                    field: 'client_id'
+                    type: Sequelize.INTEGER
                 },
                 ddd: {
                     type: Sequelize.STRING,
@@ -39,16 +39,13 @@ module.exports = {
                     }
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    field: 'date_updated'
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
-                    type: Sequelize.DATE,
-                    field: 'date_created'
+                    type: Sequelize.DATE
                 },
                 dateRemoved: {
-                    type: Sequelize.DATE,
-                    field: 'date_removed'
+                    type: Sequelize.DATE
                 },
                 status: Sequelize.STRING
             }, {

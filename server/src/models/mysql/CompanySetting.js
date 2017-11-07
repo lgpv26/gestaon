@@ -6,7 +6,6 @@ module.exports = {
             instance: sequelize.define('companySetting', {
                 companyId: {
                     type: Sequelize.INTEGER,
-                    field: 'company_id',
                     primaryKey: true
                 },
                 name: {
@@ -18,11 +17,9 @@ module.exports = {
                 },
                 dateUpdated: {
                     type: Sequelize.DATE,
-                    field: 'date_updated'
                 },
                 dateCreated: {
                     type: Sequelize.DATE,
-                    field: 'date_created'
                 }
             }, {
                 tableName: "company_setting",

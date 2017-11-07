@@ -428,7 +428,7 @@ module.exports = (server, restify) => {
                 clientId: parseInt(req.params.id)
             }, clientAddress));
             server.models.ClientAddress.bulkCreate(clientAddresses,{
-                updateOnDuplicate: ['client_id','address_id','name','number','complement']
+                updateOnDuplicate: ['clientId','addressId','name','number','complement']
             }).then((response) => {
                 server.models.Client.findOne({
                     where: {

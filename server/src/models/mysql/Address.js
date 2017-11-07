@@ -10,12 +10,10 @@ module.exports = {
                     autoIncrement: true
                 },
                 companyId: {
-                    type: Sequelize.INTEGER,
-                    field: 'company_id'
+                    type: Sequelize.INTEGER
                 },
                 originId: {
-                    type: Sequelize.INTEGER,
-                    field: 'origin_id'
+                    type: Sequelize.INTEGER
                 },
                 name: {
                     type: Sequelize.STRING,
@@ -45,20 +43,16 @@ module.exports = {
                     type: Sequelize.STRING
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    field: 'date_updated'
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
-                    type: Sequelize.DATE,
-                    field: 'date_created'
+                    type: Sequelize.DATE
                 },
                 dateRemoved: {
-                    type: Sequelize.DATE,
-                    field: 'date_removed'
+                    type: Sequelize.DATE
                 },
                 status: {
-                    type: Sequelize.STRING,
-                    defaultValue: 'activated'
+                    type: Sequelize.STRING
                 }
             }, {
                 tableName: "address",
