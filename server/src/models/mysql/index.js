@@ -9,7 +9,8 @@ module.exports = function(Sequelize, sequelize){
         "Client.js","Product.js",
         "ClientAddress.js","Address.js",
         "ClientPhone.js","Device.js", "DeviceSetting.js",
-        "UserAccessToken.js","UserRefreshToken.js"
+        "UserAccessToken.js","UserRefreshToken.js",
+        "Order.js","OrderProduct.js"
     ];
 
     modelFiles.forEach(function(fileName) {

@@ -1,21 +1,23 @@
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
-        const modelName = 'Product';
+        const modelName = 'OrderProduct';
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
-                id: {
+                orderId: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true,
-                    autoIncrement: true
+                    primaryKey: true
                 },
-                name: {
-                    type: Sequelize.STRING,
-                    set(val) {
-                        this.setDataValue('name', (val == '' | val == null) ? null : val.toUpperCase().trim());
-                    }
+                productId: {
+                    type: Sequelize.INTEGER,
+                    primaryKey: true
                 },
-                price: {
+                quantity: Sequelize.INTEGER,
+                unitPrice: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
+                },
+                unitDiscount: {
                     type: Sequelize.DECIMAL(10,2),
                     default: 0
                 },
@@ -27,23 +29,19 @@ module.exports = {
                 },
                 dateRemoved: {
                     type: Sequelize.DATE
-                },
-                status: {
-                    type: Sequelize.STRING,
-                    default: 'activated'
                 }
             }, {
-                tableName: "product",
+                tableName: 'order_product',
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
                 deletedAt: 'dateRemoved',
-                paranoid: true,
                 freezeTableName: true
             })
         }
     },
-    postSettings: ({Product,OrderProduct,Order}) => {
-        Product.belongsToMany(Order, {through: OrderProduct, as: 'productOrders', foreignKey: 'productId'});
+    postSettings: ({OrderProduct, Order, Product}) => {
+        OrderProduct.belongsTo(Order, {as: 'order', foreignKey: 'orderId'});
+        OrderProduct.belongsTo(Product, {as: 'product', foreignKey: 'productId'});
     }
-}
+};
