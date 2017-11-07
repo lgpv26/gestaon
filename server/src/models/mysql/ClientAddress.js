@@ -6,15 +6,14 @@ module.exports = {
             instance: sequelize.define('clientAddress', {
                 id: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true
+                    primaryKey: true,
+                    autoIncrement: true
                 },
                 clientId: {
-                    type: Sequelize.INTEGER,
-                    field: 'client_id'
+                    type: Sequelize.INTEGER
                 },
                 addressId: {
-                    type: Sequelize.INTEGER,
-                    field: 'address_id'
+                    type: Sequelize.INTEGER
                 },
                 name: {
                     type: Sequelize.STRING,
@@ -32,16 +31,13 @@ module.exports = {
                     }
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    field: 'date_updated'
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
-                    type: Sequelize.DATE,
-                    field: 'date_created'
+                    type: Sequelize.DATE
                 },
                 dateRemoved: {
-                    type: Sequelize.DATE,
-                    field: 'date_removed'
+                    type: Sequelize.DATE
                 },
                 status: Sequelize.STRING
             }, {

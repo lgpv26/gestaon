@@ -6,7 +6,8 @@ module.exports = {
             instance: sequelize.define(modelName, {
                 id: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true
+                    primaryKey: true,
+                    autoIncrement: true
                 },
                 cep: Sequelize.STRING,
                 logradouro: Sequelize.STRING,

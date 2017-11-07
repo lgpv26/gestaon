@@ -6,7 +6,6 @@ module.exports = {
             instance: sequelize.define('deviceSetting', {
                 deviceId: {
                     type: Sequelize.INTEGER,
-                    field: 'device_id',
                     primaryKey: true
                 },
                 name: {
@@ -17,12 +16,10 @@ module.exports = {
                     type: Sequelize.STRING,
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    field: 'date_updated'
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
-                    type: Sequelize.DATE,
-                    field: 'date_created'
+                    type: Sequelize.DATE
                 }
             }, {
                 tableName: "device_setting",

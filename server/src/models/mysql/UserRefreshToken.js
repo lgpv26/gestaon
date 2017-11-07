@@ -7,31 +7,25 @@ module.exports = {
             instance: sequelize.define(modelName, {
                 refreshToken: {
                     type: Sequelize.STRING,
-                    primaryKey: true,
-                    field: 'refresh_token'
+                    primaryKey: true
                 },
                 appId: {
-                    type: Sequelize.STRING,
-                    field: 'app_id'
+                    type: Sequelize.STRING
                 },
                 scope: {
                     type: Sequelize.STRING
                 },
                 userId: {
-                    type: Sequelize.INTEGER,
-                    field: 'user_id'
+                    type: Sequelize.INTEGER
                 },
                 expiresAt: {
-                    type: TIMESTAMP,
-                    field: 'expires_at'
+                    type: TIMESTAMP
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    field: 'date_updated'
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
-                    type: Sequelize.DATE,
-                    field: 'date_created'
+                    type: Sequelize.DATE
                 }
             }, {
                 tableName: "user_refresh_token",
