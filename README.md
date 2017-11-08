@@ -1,7 +1,8 @@
-Agiliza ERP
+Agiliza ERP - Introdução
 ===================
 
-ERP que visa ajudar a gerência de pequenas/médias empresas, onde a atividade da mesma envolve a entrega de mercadorias.
+ERP que visa ajudar a gerência de pequenas/médias empresas, onde a atividade da mesma envolve vendas e logística.
+Além da agilidade em lançar e acompanhar pedidos, relatórios objetivos e inteligentes ajudam a traçar estratégias do tipo: qual o custo de deslocamento dos veículos em cada entrega, quantos preciso vender para atingir o ponto de equilíbrio, melhor aumentar o preço dos podutos ou o volume de vendas?
 
 ----------
 
