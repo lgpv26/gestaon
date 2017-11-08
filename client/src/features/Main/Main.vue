@@ -134,7 +134,7 @@
                 'loadDevices'
             ]),
             ...mapActions('toast', [
-                'showToast'
+                'showToast', 'showError'
             ]),
             logout(){
                 const vm = this;
@@ -264,14 +264,18 @@
                         vm.log("Token set using Refresh Token.", "info");
                         vm.countdownToRefreshToken();
                         resolve("Token set using Refresh Token.");
+                    }).catch((err) => {
+                        reject(new Error("Refresh token expired or invalid."));
                     });
                 }
                 else{
                     vm.stopLoading();
                     console.log("Auto-logout possibly due to refresh token expiration.");
-                    vm.logout();
                     reject(new Error("Logout due to Access and Refresh Token expiration."));
                 }
+            }).catch((err) => {
+                vm.showError(err);
+                vm.logout();
             }).then(() => { // Connect to socket.io
                 return new Promise((resolve, reject) => {
                     window.setAppLoadingText("Carregando tecnologia real-time...");

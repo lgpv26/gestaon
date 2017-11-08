@@ -182,8 +182,6 @@ module.exports = class TLT2H extends Protocol {
 
         const deviceIndex = _.findIndex(context.devices, { deviceCode: positionDeviceCode });
 
-        console.log(positionState);
-
         // verify if it is the newest position
         if(deviceIndex >= 0){
             if(positionState === "AUTOSTOP" || positionState === "AUTOLOW"){

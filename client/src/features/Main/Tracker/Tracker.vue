@@ -2,11 +2,14 @@
     <div class="tracker-page">
         <app-panel-loading :loading="loading" :loadingText="'Carregando dispositivos...'"></app-panel-loading>
         <div class="vertical-align">
-            <div id="map-height" class="horizontal-align">
-                <div class="map-container">
-                    <resize-observer @notify="handleMapResize" />
-                    <app-tracker-controls :map.sync="map"></app-tracker-controls>
-                    <div id="map">
+            <div class="horizontal-align">
+                <app-request-panel></app-request-panel>
+                <div id="map-height" class="horizontal-align">
+                    <div class="map-container">
+                        <resize-observer @notify="handleMapResize" />
+                        <app-tracker-controls :map.sync="map"></app-tracker-controls>
+                        <div id="map">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -22,6 +25,8 @@
     import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
 
     import MarkerWithLabel from 'marker-with-label';
+
+    import RequestPanel from './RequestPanel/RequestPanel.vue';
 
     import PanelLoadingComponent from '../../../components/Utilities/PanelLoading.vue';
     import TrackerControls from './TrackerControls.vue';
@@ -39,7 +44,8 @@
             'app-panel-loading': PanelLoadingComponent,
             'app-tracker-controls': TrackerControls,
             'app-bottom-panel': BottomPanel,
-            'app-device-details': DeviceDetails
+            'app-device-details': DeviceDetails,
+            'app-request-panel': RequestPanel
         },
         data(){
             return {
@@ -921,6 +927,7 @@
         display: flex;
         flex-direction: row;
         flex-grow: 1;
+        position: relative;
     }
 
     div.map-container {
