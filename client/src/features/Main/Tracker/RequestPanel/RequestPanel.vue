@@ -27,7 +27,6 @@
 </template>
 
 <script>
-    import dragula from 'dragula';
     import { mapState, mapGetters, mapActions } from 'vuex';
 
     export default {
@@ -84,12 +83,12 @@
                 if(this.boardSections[index].size === 1) return;
                 this.boardSections[index].size --;
             },
-            removeDragulaInstance(){
+            destroyBoard(){
                 /*if(this.dragula.boardColumns){
                     this.dragula.boardColumns.destroy();
                 }*/
             },
-            mountDragulaInstance(){
+            mountBoard(){
                 const vm = this;
                 /*vm.removeDragulaInstance();
                 vm.dragula.boardColumns = dragula([vm.$refs.board], {
@@ -117,10 +116,10 @@
             }
         },
         mounted(){
-            this.mountDragulaInstance();
+            this.mountBoard();
         },
         destroyed(){
-            this.removeDragulaInstance();
+            this.destroyBoard();
         }
     }
 </script>
