@@ -1,5 +1,6 @@
 /* CSS imports */
 
+import 'dragula/dist/dragula.css'
 import 'bulma/css/bulma.css'
 import 'material-icons/css/material-icons.min.css'
 import 'izitoast/dist/css/iziToast.min.css'

@@ -1,10 +1,9 @@
 <template>
     <div id="request-panel" ref="requestPanel">
-        <div class="board">
+        <div class="board" ref="board">
             <div class="board-section" v-for="(boardSection, index) in boardSections" ref="boardSections"
-                 :style="{ width: (boardSection.size * boardOptions.columnWidth) + 'px' }" :key="index" draggable="true"
-                 @mousedown="onBoardSectionMouseDown($event)" @dragstart="onBoardSectionHeaderDrag($event)" @dragend="onBoardSectionHeaderDragEnd($event)" >
-                <div class="board-section-header" >
+                 :style="{ width: ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize)) + 'px' }" :key="index" :class="{dragging: isDraggingBoardColumn}">
+                <div class="board-header-section" >
                     <div class="summary">
                         <span>0 pedidos nesta coluna</span>
                     </div>
@@ -12,14 +11,14 @@
                         <h3>{{ boardSection.name }}</h3>
                         <span class="push-both-sides"></span>
                         <ul>
-                            <li>E</li>
-                            <li>D</li>
+                            <li @click="expandColumn(index)">E</li>
+                            <li @click="collapseColumn(index)">D</li>
                         </ul>
                     </div>
                 </div>
-                <div class="board-section-cards">
-                    <div class="board-card">
-                        sadasd
+                <div class="board-cards-container" :style="{'margin-left': boardOptions.gutterSize + 'px', 'margbin-bottom': boardOptions.gutterSize + 'px'}">
+                    <div class="column-card" v-for="card in boardSection.cards" :style="{ width: boardOptions.columnWidth + 'px', 'margin-top': boardOptions.gutterSize + 'px', 'margin-right': boardOptions.gutterSize + 'px'}">
+                        <h3 class="card-title">{{ card.request.client.name }}</h3>
                     </div>
                 </div>
             </div>
@@ -28,6 +27,7 @@
 </template>
 
 <script>
+    import dragula from 'dragula';
     import { mapState, mapGetters, mapActions } from 'vuex';
 
     export default {
@@ -36,21 +36,38 @@
                 boardSections: [
                     {
                         name: 'Fila de espera',
-                        size: 1
+                        size: 3,
+                        cards: [
+                            { request: { client: { name: 'THIAGO YOITHI' } } },
+                            { request: { client: { name: 'ACIMAR ROCHA' } } },
+                            { request: { client: { name: 'MAILON RUAN' } } }
+                        ]
                     },
                     {
                         name: 'Com o entregador',
-                        size: 1
+                        size: 2,
+                        cards: [
+                            { request: { client: { name: 'THAIS THIEMI' } } },
+                            { request: { client: { name: 'DANIEL ROCHA' } } }
+                        ]
                     },
                     {
                         name: 'Entregue',
-                        size: 1
+                        size: 1,
+                        cards: [
+                            { request: { client: { name: 'TÂNIA MARA' } } }
+                        ]
                     }
                 ],
                 boardOptions: {
-                    columnWidth: 262
+                    columnWidth: 250,
+                    gutterSize: 10
                 },
-                currentMouseDownTarget: false
+                dragula: {
+                    boardColumns: null,
+                    cardsColumns: null
+                },
+                isDraggingBoardColumn: false
             }
         },
         computed: {
@@ -59,37 +76,51 @@
             ])
         },
         methods: {
-            onBoardSectionMouseDown(ev){
-                this.currentMouseDownTarget = ev.target;
+            expandColumn(index){
+                if(this.boardSections[index].size === 3) return;
+                this.boardSections[index].size ++;
             },
-            onBoardSectionHeaderDrag(ev){
+            collapseColumn(index){
+                if(this.boardSections[index].size === 1) return;
+                this.boardSections[index].size --;
+            },
+            removeDragulaInstance(){
+                /*if(this.dragula.boardColumns){
+                    this.dragula.boardColumns.destroy();
+                }*/
+            },
+            mountDragulaInstance(){
                 const vm = this;
-                const isDraggingBoardSection = _.some(this.$refs.boardSections, (boardSectionEl) => {
-                    const el = boardSectionEl.querySelector(".board-section-header");
-                    if(el.contains(vm.currentMouseDownTarget)){
-                        return true;
+                /*vm.removeDragulaInstance();
+                vm.dragula.boardColumns = dragula([vm.$refs.board], {
+                    direction: 'horizontal',
+                    mirrorContainer: vm.$refs.board,
+                    moves: function (el, container, handle) {
+                        return _.first(el.getElementsByClassName('board-header-section')).contains(handle);
                     }
                 });
-                if(isDraggingBoardSection){
-                    ev.dataTransfer.setData('text/plain', 'handle');
-                    ev.target.style.opacity = 0.3;
-                }
-                else {
-                    ev.preventDefault();
-                }
-            },
-            onBoardSectionHeaderDragEnd(ev){
-                ev.target.style.opacity = 1;
+                vm.dragula.boardColumns.on('drag', (el, source) => {
+                    vm.isDraggingBoardColumn = true;
+                    el.classList.add("dragging-this-one");
+                });
+                vm.dragula.boardColumns.on('dragend', (el) => {
+                    vm.isDraggingBoardColumn = false;
+                });
+
+                vm.dragula.cardsColumns = dragula(vm.$refs.cardsColumns, {
+                    direction: 'vertical',
+                    mirrorContainer: vm.$refs.board
+                });
+                vm.dragula.cardsColumns.on('dragend', (el) => {
+                    console.log();
+                });*/
             }
         },
         mounted(){
-            /*const boardSectionHeaderEls = this.$refs.requestPanel.querySelectorAll(".board .board-section .board-section-header");
-            if(boardSectionHeaderEls.length > 0) {
-                boardSectionHeaderEls.forEach((boardSectionHeaderEl) => {
-                    const boardSectionEl = boardSectionHeaderEl.parentElement;
-                    boardSectionHeaderEl
-                });
-            }*/
+            this.mountDragulaInstance();
+        },
+        destroyed(){
+            this.removeDragulaInstance();
         }
     }
 </script>
@@ -98,60 +129,56 @@
     #request-panel {
         position: absolute;
         z-index: 999;
-        background: rgba(0,0,0,.3);
         height: 100%;
-        overflow: auto;
     }
     #request-panel > .board {
-        margin: 10px;
+        margin: 0 0 0 10px;
         display: flex;
         flex-direction: row;
+        height: 100%;
     }
     #request-panel > .board > .board-section {
-        margin: 0 10px 0 0;
-        padding: 10px 0;
-        background: #26272E;
+        margin: 10px 10px 10px 0;
+        padding: 0;
+        background: rgba(21,23,28,.5);
+        overflow: hidden;
+        flex-shrink: 0;
     }
-    #request-panel > .board > .board-section[draggable] {
-        -moz-user-select: none;
-        -webkit-user-select: none;
-        user-select: none;
-        /* Required to make elements draggable in old WebKit */
-        -webkit-user-drag: element;
+    #request-panel > .board > .board-section.dragging {
+        opacity: .9
     }
-    #request-panel > .board > .board-section:first-child {
-        margin-left: 0;
-    }
-    #request-panel > .board > .board-section:last-child {
-        margin-right: 0;
-    }
-    #request-panel > .board > .board-section > .board-section-header {
+    #request-panel > .board > .board-section > .board-header-section {
         cursor: -webkit-grab;
         cursor: -moz-grab;
         cursor: grab;
-        padding: 0 10px;
+        padding: 10px;
         padding-bottom: 8px;
-        margin-bottom: 8px;
         border-bottom: 1px solid #222;
+        background: #2C313B;
     }
-    #request-panel > .board > .board-section > .board-section-header > .title-section {
+    #request-panel > .board > .board-section > .board-header-section > .title-section {
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
     }
-    #request-panel > .board > .board-section > .board-section-header > .title-section ul li {
+    #request-panel > .board > .board-section > .board-header-section > .title-section ul li {
         display: inline;
         cursor: pointer;
         position: relative;
         z-index: 1000;
     }
-    #request-panel > .board > .board-section.grabbing > .board-section-header {
-        cursor: -webkit-grabbing;
-        cursor: -moz-grabbing;
-        cursor: grabbing;
+    #request-panel > .board .board-cards-container {
+        display: flex;
+        flex-flow: row wrap;
     }
-    #request-panel > .board > .board-section > .board-section-cards {
-        padding: 0 10px;
+    #request-panel > .board .column-card {
+        min-height: 120px;
+        background: #3A3F4B;
+        cursor: pointer;
+        padding: 10px;
+    }
+    #request-panel > .board .column-card h3.card-title {
+        font-size: 14px;
     }
 </style>
