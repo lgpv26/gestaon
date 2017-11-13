@@ -2,11 +2,11 @@
     <div class="tracker-page">
         <app-panel-loading :loading="loading" :loadingText="'Carregando dispositivos...'"></app-panel-loading>
         <div class="vertical-align">
-            <div class="horizontal-align">
+            <div id="main-content-area" class="horizontal-align">
+                <resize-observer @notify="mainContentContainerResized()" />
                 <app-request-panel></app-request-panel>
                 <div id="map-height" class="horizontal-align">
                     <div class="map-container">
-                        <resize-observer @notify="handleMapResize" />
                         <app-tracker-controls :map.sync="map"></app-tracker-controls>
                         <div id="map">
                         </div>
@@ -121,6 +121,7 @@
             }
         },
         methods: {
+            ...mapMutations(['setMainContentArea']),
             ...mapMutations('tracker', [
                 'setMapContextMenu'
             ]),
@@ -635,7 +636,11 @@
                 if(device) return device;
                 else return false;
             },
-            handleMapResize(){
+            mainContentContainerResized(){
+                this.setMainContentArea({
+                    height: document.getElementById('main-content-area').clientHeight,
+                    width: document.getElementById('main-content-area').clientWidth
+                });
                 this.calculateMapHeight();
             }
         },
@@ -834,6 +839,8 @@
             setTimeout(function(){
                 vm.calculateMapHeight();
             }, 1000);
+
+            vm.mainContentContainerResized();
 
             /* --- if the system was initially loaded in another page, so the system-initialized event won't occur -------- */
             if(vm.system.initialized){
