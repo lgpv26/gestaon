@@ -8,6 +8,8 @@ import './assets/theme/slider.css'
 import './assets/styles/reset.css'
 import './assets/styles/main.css'
 
+import './utils/resize-listener'
+
 /* Vue imports */
 
 import Vue from 'vue'

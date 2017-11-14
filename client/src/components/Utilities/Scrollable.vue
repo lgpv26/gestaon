@@ -21,7 +21,8 @@
                 viewportEl: null,
                 contentEl: null,
                 trackEl: null,
-                scrollEl: null
+                scrollEl: null,
+                resizeObserver: null
             }
         },
         computed: {
@@ -31,18 +32,40 @@
                 this.viewportEl = this.$refs.scrollable.firstElementChild;
                 this.contentEl = this.viewportEl.firstElementChild;
                 this.trackEl = this.$refs.track;
-                this.scrollEl = this.trackEl.firstElementChild;
+                this.scrollEl = _.first(this.trackEl.getElementsByClassName('track__scroll'));
             },
             scrolled(ev){
                 if(!this.scrollEl.style.top){
                     this.scrollEl.style.top = 0 + 'px';
                 }
+                const amountToScroll = 20;
                 if(ev.deltaY > 0){ // scroll down
-                    this.scrollEl.style.top = Math.abs(parseFloat(this.scrollEl.style.top)) + 10 + 'px';
+                    if(this.scrollDistanceToBottom() >= 0){ // if before bottom limit
+                        if(this.scrollDistanceToBottom() >= amountToScroll){ // scroll only if the available space is bigger than the amount
+                            this.scrollEl.style.top = Math.abs(parseFloat(this.scrollEl.style.top)) + amountToScroll + 'px';
+                        }
+                        else { // fit to bottom if the available space is lesser than the amount
+                            this.scrollEl.style.top = this.trackEl.offsetHeight - this.scrollEl.offsetHeight + 'px';
+                        }
+                    }
+                    else { // if over bottom limit, fit to bottom
+                        this.scrollEl.style.top = this.trackEl.offsetHeight - this.scrollEl.offsetHeight + 'px';
+                    }
                 }
-                else { // scroll up
-                    this.scrollEl.style.top = Math.abs(parseFloat(this.scrollEl.style.top)) - 10 + 'px';
+                else if(ev.deltaY < 0) { // scroll up
+                    if(this.scrollDistanceToTop() >= 0){ // if before top limit
+                        if(this.scrollDistanceToTop() >= amountToScroll){ // scroll only if the available space is bigger than the amount
+                            this.scrollEl.style.top = Math.abs(parseFloat(this.scrollEl.style.top)) - amountToScroll + 'px';
+                        }
+                        else { // fit to top if the available space is lesser than the amount
+                            this.scrollEl.style.top = 0 + 'px';
+                        }
+                    }
+                    else { // if over top limit, fit to top
+                        this.scrollEl.style.top = 0 + 'px';
+                    }
                 }
+                this.contentEl.style.top = - (this.scrollDistanceToTop() / (this.trackEl.offsetHeight - this.scrollEl.offsetHeight) * (this.contentEl.offsetHeight - this.viewportEl.offsetHeight)) + 'px';
             },
             scrollMouseDown(ev){
                 const vm = this;
@@ -81,7 +104,6 @@
                     else { // if scroll moved
                         scrollOffsetToTop = (status.body.cursorY - status.scroll.cursorY - status.viewport.divY);
                         ev.target.style.top = scrollOffsetToTop + 'px';
-                        // console.log((boardSectionViewport.offsetHeight / boardSectionCards.offsetHeight) * boardSectionCards.offsetHeight + 'px')
                     }
                     vm.contentEl.style.top = - (scrollOffsetToTop / (status.viewport.height - status.scroll.height)) * (vm.contentEl.offsetHeight - vm.viewportEl.offsetHeight) + 'px';
                 };
@@ -93,28 +115,34 @@
                 document.addEventListener('mouseup', mouseUpEventListener);
             },
             updateScroll(){
-                setTimeout(() => {
-                    const vm = this;
-                    vm.setElements();
-                    const contentAndViewportHeightDifference = Math.round(vm.viewportEl.offsetHeight / vm.contentEl.offsetHeight * 100) / 100;
+                const vm = this;
 
-                    if(contentAndViewportHeightDifference > 1 || contentAndViewportHeightDifference < 0){
-                        vm.scrollEl.style.height = vm.trackEl.offsetHeight + 'px';
-                    }
-                    else {
-                        vm.scrollEl.style.height = contentAndViewportHeightDifference * vm.viewportEl.offsetHeight + 'px'
-                    }
-                    /*
-                    if(!vm.contentEl.style.top){
-                        vm.contentEl.style.top = 0;
-                    }
-                    if(Math.abs(parseFloat(vm.contentEl.style.top)) + vm.viewportEl.offsetHeight > vm.contentEl.offsetHeight){
-                        console.log("caiu aqui");
-                        const overAmount = Math.abs(parseFloat(vm.contentEl.style.top)) + vm.viewportEl.offsetHeight - vm.contentEl.offsetHeight;
-                        vm.contentEl.style.top = - (Math.abs(parseFloat(vm.contentEl.style.top)) - overAmount) + 'px';
-                    }
-                    */
-                }, 0);
+                const contentAndViewportHeightDifference = Math.round(vm.viewportEl.offsetHeight / vm.contentEl.offsetHeight * 100) / 100;
+
+                if(!parseFloat(vm.contentEl.style.top)){ // set top 0 if no top is set
+                    vm.contentEl.style.top = 0 + 'px';
+                }
+                if(vm.contentEl.offsetHeight > vm.viewportEl.offsetHeight && Math.abs(parseFloat(vm.contentEl.style.top)) + vm.viewportEl.offsetHeight >= vm.contentEl.offsetHeight){
+                    vm.contentEl.style.top = - (vm.contentEl.offsetHeight - vm.viewportEl.offsetHeight) + 'px';
+                }
+
+                if(contentAndViewportHeightDifference >= 1 || contentAndViewportHeightDifference <= 0){
+                    vm.trackEl.classList.add('disabled');
+                    vm.contentEl.style.top = 0 + 'px';
+                    vm.scrollEl.style.height = vm.trackEl.offsetHeight + 'px';
+                }
+                else {
+                    vm.trackEl.classList.remove('disabled');
+                    vm.scrollEl.style.top = (Math.abs(parseFloat(vm.contentEl.style.top)) / vm.contentEl.offsetHeight) * vm.trackEl.offsetHeight + 'px';
+                    vm.scrollEl.style.height = contentAndViewportHeightDifference * vm.viewportEl.offsetHeight + 'px'
+                }
+            },
+            scrollDistanceToTop(){
+                return this.scrollEl.offsetTop;
+            },
+            scrollDistanceToBottom(){
+                const distanceToBeReversed = (this.scrollEl.offsetTop + this.scrollEl.offsetHeight) - this.trackEl.offsetHeight;
+                return distanceToBeReversed - (distanceToBeReversed * 2);
             },
             getElPositionInScreen(el){
                 let xPos = 0;
@@ -143,10 +171,15 @@
             }
         },
         mounted(){
-            this.updateScroll();
+            const vm = this;
+            vm.setElements(); // attr elements
+            setImmediate(() => {
+                vm.updateScroll();
+                addResizeListener(vm.contentEl, this.updateScroll);
+            });
         },
-        updated(){
-            this.updateScroll();
+        beforeDestroy(){
+            removeResizeListener(vm.contentEl, this.updateScroll);
         }
     }
 </script>
@@ -154,6 +187,10 @@
     .app-scrollable {
         position: relative;
         display: flex;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
     .scrollable__track {
         position: absolute;
@@ -166,11 +203,16 @@
         top: 0;
         bottom: 0;
     }
+    .scrollable__track.disabled {
+    }
     .scrollable__track > .track__scroll {
         position: absolute;
         top: 0;
         width: 100%;
         opacity: .5;
-        background-color: #990000;
+        background-color: #61AFEF;
+    }
+    .scrollable__track.disabled > .track__scroll {
+        background-color: transparent;
     }
 </style>

@@ -1,9 +1,9 @@
 <template>
     <div id="request-panel" ref="requestPanel">
-        <app-draggable class="board" ref="board" v-model="boardSections" :options="{ handle: '.board-section__header', forceFallback: true }">
-            <div class="board-section" v-for="(boardSection, index) in boardSections" ref="boardSections"
+        <app-draggable class="board" ref="board" v-model="boardSections" :options="{ handle: '.board-section__header', forceFallback: true }" @sort="onMoveSection">
+            <div class="board-section" v-for="(boardSection, index) in boardSections" :key="boardSection.name" ref="boardSections"
                  :style="{ width: boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize)) + 'px' }"
-                 :key="index" :class="{dragging: isDraggingBoardColumn}">
+                 :class="{dragging: isDraggingBoardColumn}">
                 <div class="board-section__header" :style="{ height: boardOptions.headerHeight }">
                     <div class="summary">
                         <span>0 pedidos nesta coluna</span>
@@ -21,10 +21,10 @@
                 <div class="scrollable-content">
                     <app-scrollable ref="scrollables">
                         <div class="board-section__viewport" :style="{ 'width': (boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize))) - (boardOptions.gutterSize * 2) + 'px', 'height': mainContentArea.height - boardOptions.headerHeight - (boardOptions.gutterSize * 2) + 'px' }">
-                            <app-draggable class="board-section__cards" v-model="boardSection.cards" :options="{ scroll: false, forceFallback: true, ghostClass: 'ghost', group: 'cards' }"
+                            <app-draggable class="board-section__cards" v-model="boardSection.cards" :options="{ scroll: false, forceFallback: true, ghostClass: 'ghost', group: 'cards', draggable: '.request-card' }"
                                 :style="{'padding-bottom': boardOptions.gutterSize + 'px', 'margin-left': boardOptions.gutterSize + 'px'}"
-                                :move="onMove"  @start="isDraggingCard=true" @end="isDraggingCard=false" >
-                                <div class="request-card" v-for="card in boardSection.cards" :style="{ height: boardOptions.cardHeight, width: boardOptions.columnWidth + boardOptions.gutterSize + 'px', 'padding-top': boardOptions.gutterSize + 'px', 'padding-right': boardOptions.gutterSize + 'px'}">
+                                :move="onMove" @start="isDraggingCard=true" @end="isDraggingCard=false" >
+                                <div class="request-card" v-for="card in boardSection.cards" :key="card.request.client.name" :style="{ height: boardOptions.cardHeight, width: boardOptions.columnWidth + boardOptions.gutterSize + 'px', 'padding-top': boardOptions.gutterSize + 'px', 'padding-right': boardOptions.gutterSize + 'px'}">
                                     <div class="request-card__main" :style="{ height: boardOptions.cardHeight + 'px' }">
                                         <h3 class="card-title">{{ card.request.client.name }}</h3>
                                     </div>
@@ -97,162 +97,42 @@
             ])
         },
         methods: {
-            mainContentContainerResized(){
-                console.log("Resized");
-            },
             addRequest(index){
                 this.boardSections[index].cards.push({
                     request: {
                         client: { name: 'PEDIDO ' + (this.boardSections[index].cards.length + 1) }
                     }
-                })
+                });
+                this.updateScrolls();
             },
             expandColumn(index){
                 if(this.boardSections[index].size === 3) return;
                 this.boardSections[index].size ++;
+                this.updateScrolls();
             },
             collapseColumn(index){
                 if(this.boardSections[index].size === 1) return;
                 this.boardSections[index].size --;
+                this.updateScrolls();
+            },
+            onMoveSection(ev, originalEv){
+                this.updateScrolls();
             },
             onMove(ev, originalEv){
-                console.log("moving");
-            },
-            boardSectionScrollbar(boardSection, boardSectionIndex){
-                const vm = this;
-                /*
-                const boardSectionHeader = _.first(boardSection.el.getElementsByClassName('board-section__header'));
-                const boardSectionViewport = _.first(boardSection.el.getElementsByClassName('board-section__viewport'));
-                const boardSectionScrollbar = _.first(boardSection.el.getElementsByClassName('board-section__scrollbar'));
-                const boardSectionCards = _.first(boardSection.el.getElementsByClassName('board-section__cards'));
-                return {
-                    onScrollableMouseDown(ev){
-                        const boardSectionDraggable = ev.target;
-
-                        boardSection.scrollbar = boardSection.scrollbar || {};
-                        boardSection.scrollbar.viewport = {
-                            x: vm.getElPositionInScreen(boardSectionViewport).x,
-                            y: vm.getElPositionInScreen(boardSectionViewport).y
-                        };
-
-                        boardSection.scrollbar.mouseMoveEventListener = (mouseMoveEv) => {
-
-                            // ev.offsetY - Posição vertical do ponteiro do mouse dentro do draggable
-                            const status = new function(){
-                                this.body = {
-                                    cursorY: mouseMoveEv.clientY
-                                };
-                                this.draggable = {
-                                    height: boardSectionDraggable.offsetHeight,
-                                    cursorY: ev.offsetY
-                                };
-                                this.viewport ={
-                                    height: boardSectionViewport.offsetHeight,
-                                    divY: boardSection.scrollbar.viewport.y,
-                                    divX: boardSection.scrollbar.viewport.x,
-                                };
-                                this.content ={
-                                    height: boardSectionCards.offsetHeight
-                                };
-                            };
-                            let draggableOffsetToTop = 0;
-                            if((status.body.cursorY - status.draggable.cursorY) < status.viewport.divY){
-                                ev.target.style.top = '0px';
-                            }
-                            else if((status.body.cursorY - status.draggable.cursorY) - status.viewport.divY > boardSectionViewport.clientHeight - status.draggable.height){
-                                draggableOffsetToTop = boardSectionViewport.clientHeight - status.draggable.height;
-                                ev.target.style.top = draggableOffsetToTop + 'px';
-                            }
-                            else { // if draggable moved
-                                draggableOffsetToTop = (status.body.cursorY - status.draggable.cursorY - status.viewport.divY);
-                                ev.target.style.top = draggableOffsetToTop + 'px';
-                                // console.log((boardSectionViewport.offsetHeight / boardSectionCards.offsetHeight) * boardSectionCards.offsetHeight + 'px')
-                            }
-                            boardSectionCards.style.top = - (draggableOffsetToTop / (status.viewport.height - status.draggable.height)) * (boardSectionCards.offsetHeight - boardSectionViewport.offsetHeight) + 'px';
-                        };
-                        boardSection.scrollbar.mouseUpEventListener = () => {
-                            document.removeEventListener('mousemove', boardSection.scrollbar.mouseMoveEventListener);
-                            document.removeEventListener('mouseup', boardSection.scrollbar.mouseUpEventListener);
-                        };
-                        document.addEventListener('mousemove', boardSection.scrollbar.mouseMoveEventListener);
-                        document.addEventListener('mouseup', boardSection.scrollbar.mouseUpEventListener);
-                    },
-                    onScrollableMouseUp(ev){
-                    },
-                    onScrollableMouseMove(ev){
-                        /*if(boardSection.scrollbar.isHolding){
-                            console.log("segurando e movendo");
-                        }
-                    }
-                }
-                */
-
+                this.updateScrolls();
             },
             updateScrolls(){
-                const vm = this;
-                /*
-                vm.boardSections.forEach((boardSection, index) => {
-                    boardSection.el = vm.$refs.boardSections[index];
-                    const boardSectionHeader = _.first(boardSection.el.getElementsByClassName('board-section__header'));
-                    const boardSectionViewport = _.first(boardSection.el.getElementsByClassName('board-section__viewport'));
-                    const boardSectionScrollbar = _.first(boardSection.el.getElementsByClassName('board-section__scrollbar'));
-                    const scrollbarScrollable = _.first(boardSectionScrollbar.getElementsByClassName('scrollbar__scrollable'));
-                    const boardSectionCards = _.first(boardSection.el.getElementsByClassName('board-section__cards'));
-                    setTimeout(() => {
-                        let contentAndViewportHeightDifference = Math.round(boardSectionViewport.offsetHeight / boardSectionCards.offsetHeight* 100) / 100;
-                        if(contentAndViewportHeightDifference > 1 || contentAndViewportHeightDifference < 0){
-                            scrollbarScrollable.style.height = boardSectionScrollbar.style.height;
-                        }
-                        else {
-                            scrollbarScrollable.style.height = contentAndViewportHeightDifference * boardSectionViewport.offsetHeight + 'px'
-                        }
-
-                        if(!boardSectionCards.style.top){
-                            boardSectionCards.style.top = 0;
-                        }
-                        if(Math.abs(parseFloat(boardSectionCards.style.top)) + boardSectionViewport.offsetHeight > boardSectionCards.offsetHeight){
-                            if(index === 0) {
-                                const overAmount = Math.abs(parseFloat(boardSectionCards.style.top)) + boardSectionViewport.offsetHeight - boardSectionCards.offsetHeight;
-                                console.log(overAmount);
-                                boardSectionCards.style.top = - (Math.abs(parseFloat(boardSectionCards.style.top)) - overAmount) + 'px';
-                            }
-                        }
-
-                    }, 0);
+                setImmediate(() => {
+                    this.boardSections.forEach((boardSection) => {
+                        boardSection.scrollable.updateScroll();
+                    });
                 });
-                */
-            },
-            getElPositionInScreen(el) {
-                let xPos = 0;
-                let yPos = 0;
-
-                while (el) {
-                    if (el.tagName == "BODY") {
-                        // deal with browser quirks with body/window/document and page scroll
-                        let xScroll = el.scrollLeft || document.documentElement.scrollLeft;
-                        let yScroll = el.scrollTop || document.documentElement.scrollTop;
-
-                        xPos += (el.offsetLeft - xScroll + el.clientLeft);
-                        yPos += (el.offsetTop - yScroll + el.clientTop);
-                    } else {
-                        // for all other non-BODY elements
-                        xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
-                        yPos += (el.offsetTop - el.scrollTop + el.clientTop);
-                    }
-
-                    el = el.offsetParent;
-                }
-                return {
-                    x: xPos,
-                    y: yPos
-                };
             }
         },
         mounted(){
-            const vm = this;
-            setTimeout(() => {
-                vm.updateScrolls();
-            }, 0)
+            this.boardSections.forEach((boardSection, index) => {
+                this.boardSections[index].scrollable = this.$refs.scrollables[index];
+            });
         }
     }
 </script>
@@ -310,7 +190,7 @@
     #request-panel > .board .board-section__viewport .board-section__cards {
         display: flex;
         flex-flow: row wrap;
-        min-height: 200px;
+        min-height: 100%;
         align-content: flex-start;
         width: 100%;
         position: absolute;
