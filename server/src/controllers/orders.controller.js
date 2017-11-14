@@ -3,8 +3,8 @@ const _ = require('lodash');
 module.exports = (server, restify) => {
     return {
         getAll: (req, res, next) => {
-            server.models.Order.findAll().then((orders) => {
-                if (!orders) {
+            server.models.Order.findAndCountAll(req.queryParser).then((orders) => {
+                if (orders.count === 0) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                     );
@@ -12,6 +12,16 @@ module.exports = (server, restify) => {
                 return res.send(200, {
                     data: orders
                 });
+            }).catch((err) => {
+                return next(
+                    new restify.InternalError({
+                        body: {
+                            "code": err.name,
+                            "message": err.message,
+                            "detailed": err
+                        }
+                    })
+                );
             });
         },
         getOne: (req, res, next) => {
@@ -155,7 +165,7 @@ module.exports = (server, restify) => {
                     },
                     transaction: t
                 }).then((order) => {
-                    if(!order){
+                    if (!order) {
                         return next(
                             new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                         );
@@ -194,13 +204,13 @@ module.exports = (server, restify) => {
                 return res.send(200, {
                     data: product
                 });
-                }).catch((err) => {
-                    next(err);
-                });
+            }).catch((err) => {
+                next(err);
+            });
         },
 
         removeOneProduct: (req, res, next) => {
-            return server.sequelize.transaction(function(t){
+            return server.sequelize.transaction(function (t) {
                 return server.models.OrderProduct.destroy({
                     where: {
                         productId: req.params.productId,
@@ -208,7 +218,7 @@ module.exports = (server, restify) => {
                     },
                     transaction: t
                 }).then((product) => {
-                    if(!product){
+                    if (!product) {
                         throw new restify.ResourceNotFoundError("Registro não encontrado.");
                     }
                     return product
@@ -228,7 +238,7 @@ module.exports = (server, restify) => {
 
     // CHANCE STATUS DATA WHEN DELET (with paranoid)
 
-    function deleteStatus(id){
+    function deleteStatus(id) {
         let statusData = { status: "deleted" }
         server.models.Order.update(statusData, {
             where: {
@@ -249,7 +259,7 @@ module.exports = (server, restify) => {
             }, orderProduct));
 
             server.models.OrderProduct.bulkCreate(orderProducts, {
-                updateOnDuplicate: ['id','productId','orderId','quantity', 'unitPrice', 'unitDiscount', 'status']                
+                updateOnDuplicate: ['id', 'productId', 'orderId', 'quantity', 'unitPrice', 'unitDiscount', 'status']
             }).then((response) => {
                 server.models.Order.findOne({
                     where: {
