@@ -131,7 +131,7 @@
                 </div>
             </div>
         </div>
-        <div class="close-settings" @click="closeSettings" v-tippy="{ position: 'left', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Fechar configurações'">
+        <div class="close-settings" @click="closeSettings">
             <i class="mi mi-arrow-back"></i>
         </div>
     </div>

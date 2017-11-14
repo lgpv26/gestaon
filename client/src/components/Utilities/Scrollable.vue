@@ -179,7 +179,7 @@
             });
         },
         beforeDestroy(){
-            removeResizeListener(vm.contentEl, this.updateScroll);
+            removeResizeListener(this.contentEl, this.updateScroll);
         }
     }
 </script>
@@ -209,7 +209,7 @@
         position: absolute;
         top: 0;
         width: 100%;
-        opacity: .5;
+        opacity: .9;
         background-color: #61AFEF;
     }
     .scrollable__track.disabled > .track__scroll {

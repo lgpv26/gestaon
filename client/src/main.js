@@ -102,11 +102,20 @@ Vue.component("app-checkbox", CheckboxInputComponent);
 
 /* icons from src/assets/svgs */
 
-const svgFiles = require.context('./assets/svgs/', true, /\.svg$/).keys();
-svgFiles.forEach((svgFile) => {
-    const svgFileName = svgFile.split('.')[1].replace('/','');
-    Vue.component('icon-' + svgFileName, require('./assets/svgs/' + svgFileName + '.svg'));
+require.context('./assets/svgs/', true, /\.svg$/).keys().forEach((svgFile) => {
+    const svgFilePath = svgFile.split('.')[1].replace('/','');
+    const svgFileName = _.last(svgFilePath.split('/'));
+    console.log(svgFileName);
+    Vue.component('icon-' + svgFileName, require('./assets/svgs/' + svgFilePath + '.svg'));
 });
+
+/*
+require.context('./assets/svgs/menu-icons/', true, /\.svg$/).keys().forEach((svgFile) => {
+    const svgFileName = svgFile.split('.')[1].replace('/','');
+    console.log(svgFileName);
+    Vue.component('menu-icon-' + svgFileName, require('./assets/svgs/menu-icons/' + svgFileName + '.svg'));
+});
+*/
 
 /* Global configs */
 

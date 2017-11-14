@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mapbox/polyline": "^0.2.0",
+    "animejs": "^2.2.0",
     "bulma": "^0.3.1",
     "element-ui": "^1.4.2",
     "geolib": "^2.0.22",
@@ -24,7 +25,6 @@
     "popper.js": "^1.12.5",
     "smooth-scrollbar": "^7.3.0",
     "socket.io-client": "^2.0.3",
-    "vuedraggable": "^2.15.0",
     "v-money": "^0.8.0",
     "vue": "^2.3.3",
     "vue-color": "^2.4.1",

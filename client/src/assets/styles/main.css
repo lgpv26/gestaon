@@ -383,6 +383,9 @@ div.app-settings div.module-panel header {
 }
 
 li svg.icon{
+    font-size: initial;
+    height: initial;
+    width: initial;
     -webkit-transition: all 200ms ease-in;
     -ms-transition: all 200ms ease-in;
     -moz-transition: all 200ms ease-in;
@@ -390,10 +393,10 @@ li svg.icon{
 }
 
 li:hover svg.icon{
-    -webkit-transform: scale(1.5) rotate(15deg);
-    -ms-transform: scale(1.5) rotate(15deg);
-    -moz-transform: scale(1.5) rotate(15deg);
-    transform: scale(1.5) rotate(15deg);
+    -webkit-transform: scale(1.2);
+    -ms-transform: scale(1.2);
+    -moz-transform: scale(1.2);
+    transform: scale(1.2);
 }
 
 li:hover svg.icon .terciary{
@@ -403,10 +406,7 @@ li.router-link-active svg.icon .terciary{
     fill:orange;
 }
 li.router-link-active svg.icon {
-    -webkit-transform: scale(1.2);
-    -ms-transform: scale(1.2);
-    -moz-transform: scale(1.2);
-    transform: scale(1.2) rotate(15deg);
+
 }
 
 /* scrollbar override */

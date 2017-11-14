@@ -1,5 +1,6 @@
 <template>
     <div class="body">
+        <app-morph-screen></app-morph-screen>
         <app-modals></app-modals>
         <app-device-details-window></app-device-details-window>
         <app-map-context-menu></app-map-context-menu>
@@ -17,20 +18,25 @@
                             <!--
                             <router-link to="/dashboard" exact tag="li"><i class="mi mi-dashboard"></i></router-link>
                             -->
-                            <router-link to="/tracker" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Rastreamento'">
-                                <icon-tracker class="icon"></icon-tracker>
+                            <router-link to="/tracker" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimento'">
+                                <icon-dashboard class="icon"></icon-dashboard>
                             </router-link>
-                            <router-link to="/users" exact tag="li" v-if="user.type === 'admin'" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Gerenciar usuários'">
-                                <icon-groups class="icon"></icon-groups>
-                            </router-link>
-                            <router-link to="/companies" exact tag="li" v-if="user.type === 'admin'" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Gerenciar empresas'">
-                                <icon-companies class="icon"></icon-companies>
-                            </router-link>
-                            <li @click="showSettings = true" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Configurações'">
-                                <icon-edit class="icon"></icon-edit></li>
-                            <li @click="logout" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Sair do sistema'">
-                                <icon-logout class="icon"></icon-logout>
-                            </li>
+                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Ligações'">
+                                <icon-sale class="icon"></icon-sale></li>
+                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Caixa / conferência'">
+                                <icon-cash-check class="icon"></icon-cash-check></li>
+                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Financeiro'">
+                                <icon-finance class="icon"></icon-finance></li>
+                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Nota fiscal'">
+                                <icon-nfe class="icon"></icon-nfe></li>
+                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Estoque'">
+                                <icon-stock class="icon"></icon-stock></li>
+                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Relatórios'">
+                                <icon-chart class="icon"></icon-chart></li>
+                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Lalala'">
+                                <icon-phone class="icon"></icon-phone></li>
+                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Rastreamento'">
+                                <icon-track class="icon"></icon-track></li>
                         </ul>
                     </nav>
                     <span class="push-both-sides"></span>
@@ -62,6 +68,7 @@
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import { MorphScreen } from "./MorphScreen/index";
     import Modals from "./Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
     import SettingsComponent from "./Settings/Settings.vue";
@@ -75,12 +82,14 @@
     import DeviceDetails from './Tracker/DeviceDetailsWindow.vue';
     import MapContextMenu from './Tracker/MapContextMenu.vue';
     import Howler from 'howler';
+
     const alarmSound = require('../../assets/sounds/alarm.mp3');
 
     export default {
         name: 'app-main',
         components: {
             "app-modals": Modals,
+            "app-morph-screen": MorphScreen,
             "app-settings": SettingsComponent,
             "app-dropdown-menu": DropdownMenuComponent,
             "app-device-details-window": DeviceDetails,
@@ -426,7 +435,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 0 20px;
         height: 48px;
         cursor: pointer;
         color: #CCC;

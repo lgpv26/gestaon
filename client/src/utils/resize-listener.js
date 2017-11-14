@@ -1,7 +1,6 @@
 (function(){
     var attachEvent = document.attachEvent;
     var isIE = navigator.userAgent.match(/Trident/);
-    console.log(isIE);
     var requestFrame = (function(){
         var raf = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame ||
             function(fn){ return window.setTimeout(fn, 20); };
@@ -26,8 +25,10 @@
     }
 
     function objectLoad(e){
-        this.contentDocument.defaultView.__resizeTrigger__ = this.__resizeElement__;
-        this.contentDocument.defaultView.addEventListener('resize', resizeListener);
+        if(this.contentDocument.defaultView){
+            this.contentDocument.defaultView.__resizeTrigger__ = this.__resizeElement__;
+            this.contentDocument.defaultView.addEventListener('resize', resizeListener);
+        }
     }
 
     window.addResizeListener = function(element, fn){
@@ -57,7 +58,9 @@
         if (!element.__resizeListeners__.length) {
             if (attachEvent) element.detachEvent('onresize', resizeListener);
             else {
-                element.__resizeTrigger__.contentDocument.defaultView.removeEventListener('resize', resizeListener);
+                if(element.__resizeTrigger__.contentDocument.defaultView) {
+                    element.__resizeTrigger__.contentDocument.defaultView.removeEventListener('resize', resizeListener);
+                }
                 element.__resizeTrigger__ = !element.removeChild(element.__resizeTrigger__);
             }
         }

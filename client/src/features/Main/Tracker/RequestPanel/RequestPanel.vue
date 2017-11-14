@@ -1,6 +1,7 @@
 <template>
     <div id="request-panel" ref="requestPanel">
-        <app-draggable class="board" ref="board" v-model="boardSections" :options="{ handle: '.board-section__header', forceFallback: true }" @sort="onMoveSection">
+        <app-draggable class="board" ref="board" v-model="boardSections" :options="{ handle: '.board-section__header', forceFallback: true }"
+            @start="onSectionDragStart" @end="onSectionDragEnd">
             <div class="board-section" v-for="(boardSection, index) in boardSections" :key="boardSection.name" ref="boardSections"
                  :style="{ width: boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize)) + 'px' }"
                  :class="{dragging: isDraggingBoardColumn}">
@@ -21,11 +22,11 @@
                 <div class="scrollable-content">
                     <app-scrollable ref="scrollables">
                         <div class="board-section__viewport" :style="{ 'width': (boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize))) - (boardOptions.gutterSize * 2) + 'px', 'height': mainContentArea.height - boardOptions.headerHeight - (boardOptions.gutterSize * 2) + 'px' }">
-                            <app-draggable class="board-section__cards" v-model="boardSection.cards" :options="{ scroll: false, forceFallback: true, ghostClass: 'ghost', group: 'cards', draggable: '.request-card' }"
+                            <app-draggable class="board-section__cards" v-model="boardSection.cards" :options="{ scroll: false, forceFallback: true, ghostClass: 'ghost', group: 'cards', draggable: '.request-card', fallbackTolerance: 10 }"
                                 :style="{'padding-bottom': boardOptions.gutterSize + 'px', 'margin-left': boardOptions.gutterSize + 'px'}"
                                 :move="onMove" @start="isDraggingCard=true" @end="isDraggingCard=false" >
                                 <div class="request-card" v-for="card in boardSection.cards" :key="card.request.client.name" :style="{ height: boardOptions.cardHeight, width: boardOptions.columnWidth + boardOptions.gutterSize + 'px', 'padding-top': boardOptions.gutterSize + 'px', 'padding-right': boardOptions.gutterSize + 'px'}">
-                                    <div class="request-card__main" :style="{ height: boardOptions.cardHeight + 'px' }">
+                                    <div class="request-card__main" @click="requestCardClicked(card, $event)" :style="{ height: boardOptions.cardHeight + 'px' }">
                                         <h3 class="card-title">{{ card.request.client.name }}</h3>
                                     </div>
                                 </div>
@@ -39,7 +40,7 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions } from 'vuex';
+    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import DraggableComponent from 'vuedraggable';
     import Scrollbar from 'smooth-scrollbar';
     import _ from 'lodash';
@@ -92,11 +93,19 @@
         },
         computed: {
             ...mapState(['mainContentArea']),
-            ...mapState('auth', [
-                'user', 'token', 'company'
-            ])
+            ...mapState('auth', ['user', 'token', 'company']),
+            ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' })
         },
         methods: {
+            ...mapMutations('morph-screen', ['showMorphScreen']),
+            requestCardClicked(card, ev){
+                if(!this.isDraggingBoardColumn && !this.isDraggingCard){
+                    (!this.isShowingMorphScreen) ? this.showMorphScreen({
+                        show: true,
+                        sourceEl: ev.target
+                    }) : this.showMorphScreen(false);
+                }
+            },
             addRequest(index){
                 this.boardSections[index].cards.push({
                     request: {
@@ -108,15 +117,21 @@
             expandColumn(index){
                 if(this.boardSections[index].size === 3) return;
                 this.boardSections[index].size ++;
-                this.updateScrolls();
             },
             collapseColumn(index){
                 if(this.boardSections[index].size === 1) return;
                 this.boardSections[index].size --;
-                this.updateScrolls();
             },
-            onMoveSection(ev, originalEv){
-                this.updateScrolls();
+            onSectionDragStart(ev){
+                const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
+                viewport.style.display = 'none';
+                const draggingElement = _.first(ev.from.getElementsByClassName('sortable-drag'));
+                const draggingElementViewport = _.first(draggingElement.getElementsByClassName('board-section__viewport'));
+                draggingElementViewport.style.display = 'none';
+            },
+            onSectionDragEnd(ev){
+                const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
+                viewport.style.display = 'initial';
             },
             onMove(ev, originalEv){
                 this.updateScrolls();
