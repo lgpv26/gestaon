@@ -75,6 +75,8 @@ module.exports = class PROTOCOL {
                                 }
                             })
                         }
+                    }).catch((err) => {
+                        console.log(err);
                     });
                 }
             });
@@ -111,6 +113,8 @@ module.exports = class PROTOCOL {
                                 }
                             })
                         }
+                    }).catch((err) => {
+                        console.log(err);
                     });
                 }
             });
@@ -156,9 +160,9 @@ module.exports = class PROTOCOL {
                     code: incomingPositions[0].deviceCode
                 }).then((device) => {
                     if(device){
-                        context.server.mongodb.Position.create(incomingPositions, function (mongodbErr, positions) {
+                        return context.server.mongodb.Position.create(incomingPositions, function (mongodbErr, positions) {
                             if(mongodbErr){
-                                reject(mongodbErr);
+                                return reject(mongodbErr);
                             }
                             else {
                                 let unsortedPositions = positions.map((position, index) => {
@@ -181,23 +185,25 @@ module.exports = class PROTOCOL {
                                             context.broadcastPosition(sortedPosition.position);
                                         }
                                     });
-                                    resolve({
+                                    return resolve({
                                         success: true
                                     });
                                 }
-                                reject(
+                                return reject(
                                     new Error("No positions to be saved.")
                                 );
                             }
                         });
                     }
                     else {
-                        reject(
+                        return reject(
                             new Error("Invalid device code.")
                         );
                     }
                 });
             });
+        }).catch((err) => {
+            console.log(err);
         });
     }
 
@@ -231,11 +237,13 @@ module.exports = class PROTOCOL {
                     });
                 }
                 else {
-                    reject(
+                    return reject(
                         new Error("Invalid device code.")
                     );
                 }
             });
+        }).catch((err) => {
+            console.log(err);
         });
     }
 

@@ -5,3 +5,7 @@ export const setAppTitle = (state, appTitle) => {
 export const setSystemInitialized = (state, initialized) => {
     state.system.initialized = initialized;
 };
+
+export const setMainContentArea = (state, mainContentArea) => {
+    state.mainContentArea = mainContentArea;
+};

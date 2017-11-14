@@ -13,6 +13,10 @@ export default new Vuex.Store({
     },
     system: {
       initialized: false
+    },
+    mainContentArea: {
+      height: 0,
+      width: 0
     }
   },
   mutations,

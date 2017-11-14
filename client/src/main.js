@@ -1,6 +1,5 @@
 /* CSS imports */
 
-import 'dragula/dist/dragula.css'
 import 'bulma/css/bulma.css'
 import 'material-icons/css/material-icons.min.css'
 import 'izitoast/dist/css/iziToast.min.css'
@@ -8,6 +7,8 @@ import 'smooth-scrollbar/dist/smooth-scrollbar.css'
 import './assets/theme/slider.css'
 import './assets/styles/reset.css'
 import './assets/styles/main.css'
+
+import './utils/resize-listener'
 
 /* Vue imports */
 
@@ -92,6 +93,8 @@ import SwitchComponent from './components/Forms/Switch.vue';
 Vue.component("app-switch", SwitchComponent);
 import PermissionComponent from './components/Utilities/Permission.vue';
 Vue.component("app-permission", PermissionComponent);
+import ScrollableComponent from './components/Utilities/Scrollable.vue';
+Vue.component("app-scrollable", ScrollableComponent);
 import DatetimePickerComponent from './components/Inputs/DatetimePicker.vue';
 Vue.component("app-datetime-picker", DatetimePickerComponent);
 import CheckboxInputComponent from './components/Inputs/CheckboxInput.vue';

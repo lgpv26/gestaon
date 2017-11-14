@@ -397,6 +397,10 @@
         flex-direction: column;
         display: flex;
         flex-shrink: 0;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
 
     .left-column header {
@@ -459,6 +463,10 @@
         flex-direction: column;
         flex-basis: 0;
         flex-shrink: 0;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
 
     .main-column header {
