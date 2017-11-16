@@ -7,7 +7,7 @@ module.exports = (server, restify) => {
 
         return new Promise((resolve, reject) => {
             const queryObj = { limit: _.has(req.query, "limit") ? _.parseInt(req.query.limit) : 2 };
-           
+
             if (_.has(req.query, "offset")) queryObj.offset = _.parseInt(req.query.offset)
 
             if (_.has(req.query, "filter")) {
@@ -15,10 +15,12 @@ module.exports = (server, restify) => {
                 let filterQuery = req.query.filter.split('|')
                 filterQuery = (filterQuery.length > 1) ? filterQuery : req.query.filter;
                 const operandShouldOne = ['gt', 'gte', 'lt', 'lte', 'ne', 'eq']
+                const regexFilter = /[a-zA-Z0-9]+/g
                 queryObj.where = {}
 
-                const filterFunction = (arrayFilters) => {                    
-                    if (!_.includes(arrayFilters, ":")) {
+                const filterFunction = (filtersParams) => {
+                    
+                    if (!_.includes(filtersParams, ":")) {
                         return reject(new restify.BadDigestError({
                             body: {
                                 "code": 'BAD_REQUEST',
@@ -26,10 +28,16 @@ module.exports = (server, restify) => {
                             }
                         }));
                     }
+                    let arrayFilters = filtersParams.split(':')
+                    const colunmFilter = arrayFilters[0]
                     const operatorObj = {}
-                    _.last(arrayFilters.split(':')).split(';').forEach((dataQuery) => {                        
-                        const operatorQuery = _.first(dataQuery.split("(")) // returns string => dataQuery = operator((paramsOne,paramsTwo,paramsThree)
-                        const paramsQuery = (dataQuery.slice((dataQuery).indexOf('(') + 1, dataQuery.indexOf(')'))).split(',') // VER PARA FAZER EM EXPRESSAO REGULAR QUE MAIS MIO DE BAO
+
+                    _.last(arrayFilters).split(';').forEach((dataQuery) => {
+                        const dataArrayFilter = dataQuery.match(regexFilter)
+                        const operatorQuery = dataArrayFilter[0]
+                        dataArrayFilter.splice(0, 1) // returns string => dataQuery = operator(paramsOne,paramsTwo,paramsThree)
+                        const paramsQuery = dataArrayFilter//return => filter's params with REGEX
+             
                         if (_.includes(operandShouldOne, operatorQuery) && paramsQuery.length > 1) {
                             return reject(new restify.BadDigestError({
                                 body: {
@@ -39,7 +47,7 @@ module.exports = (server, restify) => {
                             }));
                         }
 
-                        if(!_.includes(dataQuery, "(")){
+                        if (!_.includes(dataQuery, "(")) {
                             return reject(new restify.BadDigestError({
                                 body: {
                                     "code": 'BAD_REQUEST',
@@ -47,50 +55,34 @@ module.exports = (server, restify) => {
                                 }
                             }));
                         }
-                        // Comentar em ingles burro | To be reviewed
+                        // To be reviewed because te paramsQuery change to timestamp when filter pass number above 1000000001
                         operatorObj[Op[operatorQuery]] = (paramsQuery > 1000000001) ? moment.unix(_.parseInt(paramsQuery)).format().toString() : paramsQuery
                     })
-                    queryObj.where[_.first(arrayFilters.split(':'))] = operatorObj ? operatorObj : {}
+                    queryObj.where[colunmFilter] = operatorObj ? operatorObj : {}
                 }
 
 
-                if (_.isArray(filterQuery)) {
+                if(_.isArray(filterQuery)) {
                     filterQuery.forEach((arrayFilters) => {
-                        filterFunction(arrayFilters);
+                        filterFunction(arrayFilters)
                     })
                 }
                 else {
-                    filterFunction(filterQuery);
+                    filterFunction(filterQuery)
                 }
             }
 
             if (_.has(req.query, "sort")) {
                 //sort=key1:asc,key2
-                // OBJ order: { [ ['dateCreated', 'DESC'], [KEY1] , ['userId', 'ASC'] ] }
-                const sortQuery = (req.query.sort.split(',').length > 1) ? req.query.sort.split(',') : req.query.sort;
+                let sortQuery = req.query.sort.split(',')
+                sortQuery = (sortQuery.length > 1) ? sortQuery : req.query.sort;
 
                 let arrayOrder = []
-                if (_.isArray(sortQuery)) {
-                    sortQuery.forEach((arraySort) => {
-                        if (_.includes(arraySort, ":")) {
-                            if (!_.includes(['asc', 'desc'], _.last(arraySort.split(":")))) {
-                                return reject(new restify.BadDigestError({
-                                    body: {
-                                        "code": 'BAD_REQUEST',
-                                        "message": 'Sort format is not correct.'
-                                    }
-                                }));
-                            }
-                            arrayOrder = _.concat(arrayOrder, [[_.first(arraySort.split(":")), _.last(arraySort.split(":"))]])
-                        }
-                        else {
-                            arrayOrder = _.concat(arrayOrder, [[arraySort]])
-                        }
-                    })
-                }
-                else {
-                    if (_.includes(sortQuery, ":")) {
-                        if (!_.includes(['asc', 'desc'], _.last(sortQuery.split(":")))) {
+                const sortFunction = (arraySort) => {
+                    if (_.includes(arraySort, ":")) {
+                        const sortKey = arraySort.split(":")[0]
+                        const sortOrder = arraySort.split(":")[1]
+                        if (!_.includes(['asc', 'desc'], sortOrder)) {
                             return reject(new restify.BadDigestError({
                                 body: {
                                     "code": 'BAD_REQUEST',
@@ -98,11 +90,20 @@ module.exports = (server, restify) => {
                                 }
                             }));
                         }
-                        arrayOrder = _.concat(arrayOrder, [[_.first(sortQuery.split(":")), _.last(sortQuery.split(":"))]])
+                        arrayOrder = _.concat(arrayOrder, [[sortKey, sortOrder]])
                     }
                     else {
-                        arrayOrder = _.concat(arrayOrder, [[sortQuery]])
+                        arrayOrder = _.concat(arrayOrder, [[arraySort]])
                     }
+                }
+
+                if (_.isArray(sortQuery)) {
+                    sortQuery.forEach((arraySort) => {
+                        sortFunction(arraySort)
+                    })
+                }
+                else {
+                    sortFunction(sortQuery)
                 }
                 queryObj.order = arrayOrder
             }
