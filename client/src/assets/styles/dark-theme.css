@@ -1,0 +1,28 @@
+:root {
+
+    /* Background colors */
+
+    --bg-color-0: #000;
+    --bg-color-1: #020203;
+    --bg-color-2: #0a0b0c;
+    --bg-color-3: #121315;
+    --bg-color-4: #191b1f;
+    --bg-color-5-d: #1b1e23; /* Header and left menu bg color */
+    --bg-color-5: #212328; /* Header and left menu bg color */
+    --bg-color-5-l: #26282d; /* Header and left menu bg color */
+    --bg-color-6: #292b31;
+    --bg-color-7: #30333b;
+    --bg-color-8: #383b44;
+    --bg-color-9: #40444d;
+
+    /* General colors */
+
+    --primary-color: #4d76c8;
+    --secondary-color: #197379;
+    --terciary-color: #F5A623;
+
+    --success-color: #59d68a;
+    --danger-color: #e0422a;
+    --warning-color: #ed6d3b;
+
+}

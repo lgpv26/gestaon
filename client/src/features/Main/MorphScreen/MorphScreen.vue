@@ -47,6 +47,7 @@
                         vm.$refs.morphScreen.style.top = sourceElementPosition.y + 'px';
                         vm.$refs.morphScreen.style.left = sourceElementPosition.x + 'px';
                         vm.$refs.morphScreen.style.opacity = 0.3;
+                        vm.$refs.morphScreen.style.backgroundColor = vm.sourceElBgColor;
                         const animation = anime.timeline();
                         animation.add({
                             targets: vm.$refs.morphScreen,
@@ -63,11 +64,7 @@
                             duration: 250,
                             offset: 0,
                             easing: 'easeInExpo',
-                            backgroundColor: [
-                                {
-                                    value: '#26272E'
-                                }
-                            ],
+                            backgroundColor: '#212328',
                             complete: function(anim){
 
                                 vm.$refs.morphScreen.style.width = '100%';
@@ -87,7 +84,7 @@
             }
         },
         computed: {
-            ...mapState('morph-screen', ['sourceEl','isShowing']),
+            ...mapState('morph-screen', ['sourceEl','isShowing','sourceElBgColor']),
             ...mapState('auth', [
                 'user', 'token', 'company'
             ])
@@ -99,6 +96,7 @@
                 anime({
                     targets: vm.$refs.morphScreen,
                     duration: 300,
+                    elasticity: 0,
                     opacity: {
                         value: 0
                     },
@@ -160,7 +158,6 @@
         left: 0px;
         position: absolute;
         z-index: 999999;
-        background-color: #3A3F4B
     }
     .container {
         width: 1200px;

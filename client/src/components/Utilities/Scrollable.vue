@@ -66,6 +66,7 @@
                     }
                 }
                 this.contentEl.style.top = - (this.scrollDistanceToTop() / (this.trackEl.offsetHeight - this.scrollEl.offsetHeight) * (this.contentEl.offsetHeight - this.viewportEl.offsetHeight)) + 'px';
+                this.emitUpdatedEvent();
             },
             scrollMouseDown(ev){
                 const vm = this;
@@ -106,6 +107,7 @@
                         ev.target.style.top = scrollOffsetToTop + 'px';
                     }
                     vm.contentEl.style.top = - (scrollOffsetToTop / (status.viewport.height - status.scroll.height)) * (vm.contentEl.offsetHeight - vm.viewportEl.offsetHeight) + 'px';
+                    vm.emitUpdatedEvent();
                 };
                 const mouseUpEventListener = () => {
                     document.removeEventListener('mousemove', mouseMoveEventListener);
@@ -136,6 +138,16 @@
                     vm.scrollEl.style.top = (Math.abs(parseFloat(vm.contentEl.style.top)) / vm.contentEl.offsetHeight) * vm.trackEl.offsetHeight + 'px';
                     vm.scrollEl.style.height = contentAndViewportHeightDifference * vm.viewportEl.offsetHeight + 'px'
                 }
+                vm.emitUpdatedEvent();
+            },
+            emitUpdatedEvent(){
+                const vm = this;
+                vm.$emit('updated', {
+                    scrollElement: vm.scrollEl,
+                    trackElement: vm.trackEl,
+                    contentElement: vm.contentEl,
+                    viewportElement: vm.viewportEl
+                });
             },
             scrollDistanceToTop(){
                 return this.scrollEl.offsetTop;
@@ -145,29 +157,20 @@
                 return distanceToBeReversed - (distanceToBeReversed * 2);
             },
             getElPositionInScreen(el){
-                let xPos = 0;
-                let yPos = 0;
-
+                let xPos = 0, yPos = 0;
                 while (el) {
-                    if (el.tagName == "BODY") {
-                        // deal with browser quirks with body/window/document and page scroll
+                    if (el.tagName.toLowerCase() === "body") {
                         let xScroll = el.scrollLeft || document.documentElement.scrollLeft;
                         let yScroll = el.scrollTop || document.documentElement.scrollTop;
-
                         xPos += (el.offsetLeft - xScroll + el.clientLeft);
                         yPos += (el.offsetTop - yScroll + el.clientTop);
                     } else {
-                        // for all other non-BODY elements
                         xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
                         yPos += (el.offsetTop - el.scrollTop + el.clientTop);
                     }
-
                     el = el.offsetParent;
                 }
-                return {
-                    x: xPos,
-                    y: yPos
-                };
+                return { x: xPos, y: yPos };
             }
         },
         mounted(){
@@ -209,8 +212,8 @@
         position: absolute;
         top: 0;
         width: 100%;
-        opacity: .9;
-        background-color: #61AFEF;
+        opacity: .7;
+        background-color: var(--primary-color);
     }
     .scrollable__track.disabled > .track__scroll {
         background-color: transparent;

@@ -3,6 +3,7 @@ import _ from 'lodash';
 const state = {
     screens: [],
     sourceEl: null,
+    sourceElBgColor: null,
     isShowing: false
 };
 
@@ -23,6 +24,7 @@ const mutations = {
             const obj = value;
             if(obj.show) {
                 state.sourceEl = obj.sourceEl;
+                state.sourceElBgColor = obj.sourceElBgColor;
                 state.isShowing = true;
             }
             else {

@@ -132,7 +132,7 @@
         display: flex;
         flex-shrink: 0;
         flex-direction: column;
-        background: #2A2B33;
+        background: var(--bg-color-5);
         position: relative;
         padding: 0;
     }

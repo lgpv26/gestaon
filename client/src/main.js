@@ -7,6 +7,7 @@ import 'smooth-scrollbar/dist/smooth-scrollbar.css'
 import './assets/theme/slider.css'
 import './assets/styles/reset.css'
 import './assets/styles/main.css'
+import './assets/styles/dark-theme.css'
 
 import './utils/resize-listener'
 

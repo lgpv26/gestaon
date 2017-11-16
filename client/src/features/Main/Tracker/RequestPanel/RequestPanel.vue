@@ -20,17 +20,19 @@
                     </div>
                 </div>
                 <div class="scrollable-content">
-                    <app-scrollable ref="scrollables">
-                        <div class="board-section__viewport" :style="{ 'width': (boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize))) - (boardOptions.gutterSize * 2) + 'px', 'height': mainContentArea.height - boardOptions.headerHeight - (boardOptions.gutterSize * 2) + 'px' }">
-                            <app-draggable class="board-section__cards" v-model="boardSection.cards" :options="{ scroll: false, forceFallback: true, ghostClass: 'ghost', group: 'cards', draggable: '.request-card', fallbackTolerance: 10 }"
-                                :style="{'padding-bottom': boardOptions.gutterSize + 'px', 'margin-left': boardOptions.gutterSize + 'px'}"
+                    <app-scrollable ref="scrollables" @updated="onSectionScrollUpdated($event)">
+                        <div class="board-section__viewport" :style="{ 'width': (boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize))) + 'px', 'height': mainContentArea.height - boardOptions.headerHeight - (boardOptions.gutterSize * 2) + 'px' }">
+                            <app-draggable class="board-section__cards" v-model="boardSection.cards" :options="{ handle: '.request-card__main', scroll: false, forceFallback: false, ghostClass: 'ghost', group: 'cards' }"
+                                :style="{'padding-bottom': boardOptions.gutterSize + 'px', 'padding-left': boardOptions.gutterSize + 'px'}"
                                 :move="onMove" @start="isDraggingCard=true" @end="isDraggingCard=false" >
-                                <div class="request-card" v-for="card in boardSection.cards" :key="card.request.client.name" :style="{ height: boardOptions.cardHeight, width: boardOptions.columnWidth + boardOptions.gutterSize + 'px', 'padding-top': boardOptions.gutterSize + 'px', 'padding-right': boardOptions.gutterSize + 'px'}">
-                                    <div class="request-card__main" @click="requestCardClicked(card, $event)" :style="{ height: boardOptions.cardHeight + 'px' }">
+                                <div class="request-card" v-for="card in boardSection.cards" :key="card.request.client.name" :style="{ height: boardOptions.cardHeight + 'px', width: boardOptions.columnWidth + 'px', 'margin-top': boardOptions.gutterSize + 'px', 'margin-right': boardOptions.gutterSize + 'px'}">
+                                    <div class="request-card__main" @click="requestCardClicked(card, $event)">
                                         <h3 class="card-title">{{ card.request.client.name }}</h3>
                                     </div>
                                 </div>
                             </app-draggable>
+                            <div class="drag-space-hider" :style="{ width: '100%', position: 'absolute', top: 0, height: boardOptions.gutterSize + (Math.floor((boardSection.cards.length / boardSection.size)) * (boardOptions.cardHeight + boardOptions.gutterSize)) + 'px' }">
+                            </div>
                         </div>
                     </app-scrollable>
                 </div>
@@ -100,10 +102,15 @@
             ...mapMutations('morph-screen', ['showMorphScreen']),
             requestCardClicked(card, ev){
                 if(!this.isDraggingBoardColumn && !this.isDraggingCard){
-                    (!this.isShowingMorphScreen) ? this.showMorphScreen({
-                        show: true,
-                        sourceEl: ev.target
-                    }) : this.showMorphScreen(false);
+                    if(!this.isShowingMorphScreen){
+                        this.showMorphScreen({
+                            show: true,
+                            sourceEl: ev.target,
+                            sourceElBgColor: 'var(--bg-color-7)'
+                        })
+                    } else {
+                        this.showMorphScreen(false)
+                    }
                 }
             },
             addRequest(index){
@@ -122,10 +129,14 @@
                 if(this.boardSections[index].size === 1) return;
                 this.boardSections[index].size --;
             },
+            onSectionScrollUpdated(els){
+                const dragSpaceHiderEl = _.first(els.viewportElement.getElementsByClassName('drag-space-hider'));
+                dragSpaceHiderEl.style.top = els.contentElement.style.top;
+            },
             onSectionDragStart(ev){
                 const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
                 viewport.style.display = 'none';
-                const draggingElement = _.first(ev.from.getElementsByClassName('sortable-drag'));
+                const draggingElement = _.last(ev.from.getElementsByClassName('board-section'));
                 const draggingElementViewport = _.first(draggingElement.getElementsByClassName('board-section__viewport'));
                 draggingElementViewport.style.display = 'none';
             },
@@ -183,7 +194,7 @@
         cursor: grab;
         padding: 10px;
         padding-bottom: 8px;
-        background: #2C313B;
+        background:  var(--bg-color-5);
     }
     #request-panel > .board .board-section > .board-section__header > .title-section {
         display: flex;
@@ -219,11 +230,15 @@
         width: 10px;
     }
     #request-panel > .board .request-card {
+        display: flex;
+        position: relative;
+        z-index: 9;
     }
     #request-panel > .board .request-card > .request-card__main {
-        background: #3A3F4B;
         cursor: pointer;
         padding: 10px;
+        flex-grow:1;
+        background: var(--bg-color-7);
     }
     #request-panel > .board .request-card.ghost > .request-card__main {
         border: 2px dashed rgba(255,255,255,.1);

@@ -351,7 +351,7 @@
         display: flex;
         position: fixed;
         flex-direction: row;
-        background: #26272E;
+        background: var(--bg-color-5);
     }
 
     div.body div.app-settings {
@@ -361,7 +361,7 @@
         position: fixed;
         z-index: 99;
         flex-direction: row;
-        background: #26272E;
+        background: var(--bg-color-5);
     }
 
     .settings-animation-enter-active {
@@ -397,10 +397,14 @@
     }
 
     .left-column, .left-column header, .main-column header {
-        background-color: #26272E;
+        background-color: var(--bg-color-5);
     }
 
     .left-column {
+        -webkit-box-shadow: 0 0 15px -5px var(--bg-color-2);
+        box-shadow: 0 0 15px -5px var(--bg-color-2);
+        position: relative;
+        z-index: 3;
         width: 64px;
         min-height: 100%;
         flex-direction: column;
@@ -438,7 +442,7 @@
         height: 48px;
         cursor: pointer;
         color: #CCC;
-        border-bottom: 1px solid #252525;
+        border-bottom: 1px solid var(--bg-color-5-d);
         transition: all 0.3s;
         font-size: 18px;
         text-align: center;
@@ -449,11 +453,11 @@
     }
 
     .left-column nav.main-menu ul li:hover {
-        background: #212128;
+        background: var(--bg-color-4);
     }
 
     .left-column nav.main-menu ul li.router-link-active {
-        background: #212128;
+        background: var(--bg-color-4);
         color: #61AFEF;
     }
 
