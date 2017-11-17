@@ -87,9 +87,15 @@ module.exports = (server, restify) => {
                         );
                     }
                     if ((_.has(createData, "orderProducts") && createData.orderProducts.length > 0)) {
-                        return res.send(200, {
-                            data: order.id
-                        })
+                        req.params['id'] = order.id;
+                        saveProducts(req, res, next).then((order) => {
+                            return res.send(200, {
+                                data: order
+                            });
+                        }).catch((err) => {
+                            console.log(err);
+                            next(err);
+                        });
                     }
                     else {
                         return res.send(200, {
@@ -199,6 +205,30 @@ module.exports = (server, restify) => {
                 });
             });
         },
+
+        getAllProducts: (req, res, next) => {
+            server.models.OrderProduct.findAndCountAll(req.queryParser).then((products) => {
+                if (products.count === 0) {
+                    return next(
+                        new restify.ResourceNotFoundError("Nenhum registro encontrado.")
+                    );
+                }
+                return res.send(200, {
+                    data: products
+                });
+            }).catch((err) => {
+                return next(
+                    new restify.InternalError({
+                        body: {
+                            "code": err.name,
+                            "message": err.message,
+                            "detailed": err
+                        }
+                    })
+                );
+            });
+        },
+
         saveProducts(req, res, next) {
             saveProducts(req, res, next).then((product) => {
                 return res.send(200, {
@@ -259,7 +289,7 @@ module.exports = (server, restify) => {
             }, orderProduct));
 
             server.models.OrderProduct.bulkCreate(orderProducts, {
-                updateOnDuplicate: ['id', 'productId', 'orderId', 'quantity', 'unitPrice', 'unitDiscount', 'status']
+                updateOnDuplicate: ['productId', 'orderId', 'quantity', 'unitPrice', 'unitDiscount', 'status']
             }).then((response) => {
                 server.models.Order.findOne({
                     where: {
