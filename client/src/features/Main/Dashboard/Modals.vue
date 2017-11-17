@@ -20,11 +20,11 @@
 
 <script>
     import { mapState, mapGetters, mapActions } from 'vuex';
-    import CompanyFormComponent from "../../components/Forms/CompanyForm.vue";
-    import UserFormComponent from "../../components/Forms/UserForm.vue";
-    import DeviceFormComponent from "../../components/Forms/DeviceForm.vue";
-    import OnMapLoadFormComponent from "../../components/Forms/OnMapLoadForm.vue";
-    import GeofenceFormComponent from "../../components/Forms/GeofenceForm.vue";
+    import CompanyFormComponent from "../../../components/Forms/CompanyForm.vue";
+    import UserFormComponent from "../../../components/Forms/UserForm.vue";
+    import DeviceFormComponent from "../../../components/Forms/DeviceForm.vue";
+    import OnMapLoadFormComponent from "../../../components/Forms/OnMapLoadForm.vue";
+    import GeofenceFormComponent from "../../../components/Forms/GeofenceForm.vue";
 
     export default {
         components: {

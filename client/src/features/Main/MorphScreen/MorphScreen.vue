@@ -46,45 +46,47 @@
                         vm.$refs.morphScreen.style.height = vm.sourceEl.clientHeight + 'px';
                         vm.$refs.morphScreen.style.top = sourceElementPosition.y + 'px';
                         vm.$refs.morphScreen.style.left = sourceElementPosition.x + 'px';
-                        vm.$refs.morphScreen.style.opacity = 0.3;
+                        vm.$refs.morphScreen.style.borderRadius = vm.mimicBorderRadius + 'px';
                         vm.$refs.morphScreen.style.backgroundColor = vm.sourceElBgColor;
                         const animation = anime.timeline();
                         animation.add({
-                            targets: vm.$refs.morphScreen,
-                            duration: 500,
-                            opacity: {
-                                value: 1
-                            }
-                        }).add({
                             targets: vm.$refs.morphScreen,
                             top: '0px',
                             left: '0px',
                             width: window.innerWidth,
                             height: window.innerHeight,
-                            duration: 250,
+                            borderRadius: 0,
+                            duration: 200,
                             offset: 0,
-                            easing: 'easeInExpo',
-                            backgroundColor: '#212328',
+                            easing: 'easeInQuint',
                             complete: function(anim){
-
                                 vm.$refs.morphScreen.style.width = '100%';
                                 vm.$refs.morphScreen.style.height = '100%';
                             }
-                        })
+                        }).add({
+                                targets: vm.$refs.morphScreen,
+                                easing: 'easeInQuad',
+                                duration: 500,
+                                offset: 0,
+                                backgroundColor: '#212328',
+                                opacity: {
+                                    value: [.9, 1]
+                                }
+                            })
                         .add({
                             targets: vm.$refs.container,
                             easing: 'easeOutExpo',
                             opacity: [0, 1],
-                            scale: [.8, 1],
-                            duration: 300,
-                            offset: 300
+                            scale: [.9, 1],
+                            duration: 200,
+                            offset: 200
                         });
                     });
                 }
             }
         },
         computed: {
-            ...mapState('morph-screen', ['sourceEl','isShowing','sourceElBgColor']),
+            ...mapState('morph-screen', ['sourceEl','isShowing','sourceElBgColor','mimicBorderRadius']),
             ...mapState('auth', [
                 'user', 'token', 'company'
             ])

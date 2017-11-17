@@ -9,13 +9,13 @@
                     <div class="summary">
                         <span>0 pedidos nesta coluna</span>
                     </div>
-                    <div class="title-section">
+                    <div class="header__section-title">
                         <h3>{{ boardSection.name }}</h3>
                         <span class="push-both-sides"></span>
                         <ul>
-                            <li @click="expandColumn(index)">E</li>
-                            <li @click="collapseColumn(index)">D</li>
-                            <li @click="addRequest(index)">+</li>
+                            <li @click="collapseSection(index)"><icon-section-collapse></icon-section-collapse></li>
+                            <li @click="expandSection(index)" class="section-title__expand-button"><icon-section-expand></icon-section-expand></li>
+                            <li @click="addRequest(index)" class="section-title__settings-button"><icon-section-settings></icon-section-settings></li>
                         </ul>
                     </div>
                 </div>
@@ -106,7 +106,8 @@
                         this.showMorphScreen({
                             show: true,
                             sourceEl: ev.target,
-                            sourceElBgColor: 'var(--bg-color-7)'
+                            sourceElBgColor: 'var(--bg-color-7)',
+                            mimicBorderRadius: 0
                         })
                     } else {
                         this.showMorphScreen(false)
@@ -121,11 +122,11 @@
                 });
                 this.updateScrolls();
             },
-            expandColumn(index){
+            expandSection(index){
                 if(this.boardSections[index].size === 3) return;
                 this.boardSections[index].size ++;
             },
-            collapseColumn(index){
+            collapseSection(index){
                 if(this.boardSections[index].size === 1) return;
                 this.boardSections[index].size --;
             },
@@ -194,19 +195,35 @@
         cursor: grab;
         padding: 10px;
         padding-bottom: 8px;
-        background:  var(--bg-color-5);
+        background:  var(--bg-color-7);
     }
-    #request-panel > .board .board-section > .board-section__header > .title-section {
+    #request-panel > .board .board-section > .board-section__header {
+        color: var(--base-color);
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title {
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: center;
     }
-    #request-panel > .board .board-section > .board-section__header > .title-section ul li {
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li {
         display: inline;
         cursor: pointer;
         position: relative;
         z-index: 1000;
+        margin-right: 4px;
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li.section-title__expand-button {
+        margin-right: 0;
+        margin-left: 5px;
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li.section-title__settings-button {
+        margin-right: 0;
+        margin-left: 4px;
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li.section-title__settings-button svg {
+        position: relative;
+        top: 1px;
     }
     #request-panel > .board .board-section__viewport {
         position: relative;

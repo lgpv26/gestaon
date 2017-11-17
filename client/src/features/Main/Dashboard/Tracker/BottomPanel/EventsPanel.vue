@@ -32,12 +32,12 @@
 <script>
     import moment from 'moment';
     import _ from 'lodash';
-    import utils from '../../../../utils';
+    import utils from '../../../../../utils/index';
     import geolib from 'geolib/dist/geolib';
     import Scrollbar from 'smooth-scrollbar';
 
     import { mapGetters, mapState, mapActions } from 'vuex';
-    import EventsAPI from '../../../../api/events';
+    import EventsAPI from '../../../../../api/events';
 
     import resize from 'vue-resize-directive';
 
@@ -139,7 +139,6 @@
         display: flex;
         flex-shrink: 0;
         flex-direction: column;
-        background: #2A2B33;
         position: relative;
         padding: 0 0 20px;
     }

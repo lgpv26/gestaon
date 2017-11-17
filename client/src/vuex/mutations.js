@@ -1,3 +1,9 @@
+import _ from 'lodash';
+
+export const setApp = (state, app) => {
+    state.app = _.assign({}, state.app, app);
+};
+
 export const setAppTitle = (state, appTitle) => {
   state.app.title = appTitle;
 };

@@ -15,9 +15,7 @@
                     </header>
                     <nav class="main-menu">
                         <ul>
-                            <!--
-                            <router-link to="/dashboard" exact tag="li"><i class="mi mi-dashboard"></i></router-link>
-                            -->
+                            <!-- <router-link to="/dashboard" exact tag="li"><i class="mi mi-dashboard"></i></router-link> -->
                             <router-link to="/tracker" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimento'">
                                 <icon-dashboard class="icon"></icon-dashboard>
                             </router-link>
@@ -44,19 +42,75 @@
                     </div>
                 </div>
                 <div class="main-column">
-                    <header id="main-column-header">
-                        <div class="header-app-title">
-                            <h3>Olá, {{ truncatedName }}!</h3>
+                    <header class="main-column__header">
+                        <div class="header__container" v-if="app.header === 'request-board'">
+                            <div class="container__request-board">
+                                <app-datetime-picker class="request-board__filter  filter--date" :offset="{ bottom: 15 }">
+                                    <div class="filter-item__target">
+                                        <span class="target__title">Data</span>
+                                        <div class="target__amount">
+                                            <div></div>
+                                            <span>05</span>
+                                        </div>
+                                    </div>
+                                </app-datetime-picker>
+                                <app-new-select class="request-board__filter filter--type" :sections="requestBoardFilter.type">
+                                    <div class="filter-item__target">
+                                        <span class="target__title">Tipo</span>
+                                    </div>
+                                    <template slot="section" slot-scope="sectionProps">
+                                        <h3>{{ sectionProps.text }}</h3>
+                                    </template>
+                                    <template slot="item" slot-scope="itemProps">
+                                        <span>{{itemProps.text }}</span>
+                                    </template>
+                                </app-new-select>
+                                <app-new-select class="request-board__filter filter--users-in-charge" :items="requestBoardFilter.usersInCharge">
+                                    <div class="filter-item__target">
+                                        <span class="target__title">Responsável</span>
+                                        <div class="target__amount">
+                                            <div></div>
+                                            <span>05</span>
+                                        </div>
+                                    </div>
+                                    <template slot="item" slot-scope="itemProps">
+                                        <span>{{itemProps.text }}</span>
+                                    </template>
+                                </app-new-select>
+                                <app-new-select class="request-board__filter filter--filter" :sections="requestBoardFilter.filter">
+                                    <div class="filter-item__target">
+                                        <span class="target__title">Filtro</span>
+                                        <div class="target__amount">
+                                            <div></div>
+                                            <span>05</span>
+                                        </div>
+                                    </div>
+                                    <template slot="section" slot-scope="sectionProps">
+                                        <h3>{{ sectionProps.text }}</h3>
+                                    </template>
+                                    <template slot="item" slot-scope="itemProps">
+                                        <span>{{itemProps.text }}</span>
+                                    </template>
+                                </app-new-select>
+                            </div>
+                        </div>
+                        <div class="header__container" v-else>
+                            <div class="container__title">
+                                <h3>Olá, {{ truncatedName }}!</h3>
+                            </div>
                         </div>
                         <span class="push-both-sides"></span>
-                        <div class="header-dropdown-menu" style="padding-right: 20px;">
+                        <app-search></app-search>
+                        <div class="header__dropdown-menu">
                             <app-dropdown-menu :menuList="menuList">
-                                <h3>menu</h3>
+                                <div class="dropdown-menu__company-name">
+                                    <h3>{{ shortCompanyName }}</h3>
+                                </div>
                             </app-dropdown-menu>
                         </div>
                     </header>
                     <main id="main">
-                        <keep-alive include="app-tracker">
+                        <keep-alive include="app-dashboard">
                             <router-view></router-view>
                         </keep-alive>
                     </main>
@@ -69,7 +123,9 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import { MorphScreen } from "./MorphScreen/index";
-    import Modals from "./Modals.vue";
+    import { Select } from "../../components/Inputs/Select/index";
+    import Search from "./Main/Search.vue";
+    import Modals from "./Dashboard/Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
     import SettingsComponent from "./Settings/Settings.vue";
     import MeAPI from "../../api/me";
@@ -79,8 +135,8 @@
     import _ from 'lodash';
     import moment from 'moment';
     import config from '../../config';
-    import DeviceDetails from './Tracker/DeviceDetailsWindow.vue';
-    import MapContextMenu from './Tracker/MapContextMenu.vue';
+    import DeviceDetails from './Dashboard/Tracker/DeviceDetailsWindow.vue';
+    import MapContextMenu from './Dashboard/Tracker/MapContextMenu.vue';
     import Howler from 'howler';
 
     const alarmSound = require('../../assets/sounds/alarm.mp3');
@@ -94,11 +150,57 @@
             "app-dropdown-menu": DropdownMenuComponent,
             "app-device-details-window": DeviceDetails,
             "app-map-context-menu": MapContextMenu,
+            "app-new-select": Select,
+            "app-search": Search
         },
         data(){
             return {
                 accessTokenExpirationTimer: null,
                 showSettings: false,
+                requestBoardFilter: {
+                    usersInCharge: [
+                        { text: "Thiago Yoithi" },
+                        { text: "Acimar Rocha" },
+                        { text: "Mailon Ruan" }
+                    ],
+                    filter: [
+                        {
+                            text: "Status",
+                            items: [
+                                { text: "Pendente" },
+                                { text: "Em andamento" }
+                            ]
+                        },
+                        {
+                            text: "Canal",
+                            items: [
+                                { text: "Tele-entrega" },
+                                { text: "Comércio" },
+                                { text: "WhatsApp" },
+                                { text: "Tele-marketing" },
+                            ]
+                        },
+                    ],
+                    type: [
+                        {
+                            text: "Tipo de cliente",
+                            items: [
+                                { text: "Todos" },
+                                { text: "Varejo Disk" },
+                                { text: "Atacado" },
+                                { text: "Venda Automática" }
+                            ]
+                        },
+                        {
+                            text: "Tipo de operação",
+                            items: [
+                                { text: "Todos" },
+                                { text: "Tarefa" },
+                                { text: "Orçamento" }
+                            ]
+                        },
+                    ]
+                },
                 menuList: [
                     {text: 'Add. empresa', type: 'system', action: this.addCompany, onlyAdmin: true},
                     {text: 'Configurações', type: 'system', action: this.toggleSettings, onlyAdmin: false},
@@ -107,9 +209,8 @@
             }
         },
         computed: {
-            ...mapState('auth', [
-                'user', 'token', 'company'
-            ]),
+            ...mapState(['app']),
+            ...mapState('auth', ['user','token','company']),
             shortCompanyName(){
                 if(_.has(this.company, 'name')){
                     const words = _.upperCase(this.company.name).split(" ");
@@ -129,7 +230,7 @@
             }
         },
         methods: {
-            ...mapMutations(['setSystemInitialized']),
+            ...mapMutations(['setApp','setSystemInitialized']),
             ...mapActions('auth', {
                 logoutAction: 'logout',
                 setAuthUser: 'setAuthUser',
@@ -290,16 +391,12 @@
                     window.setAppLoadingText("Carregando tecnologia real-time...");
                     if(socket.connected){
                         vm.log("Socket connection succeeded.", "info");
-                        setTimeout(() => {
-                            resolve("Socket connection succeeded.");
-                        }, 1000)
+                        resolve("Socket connection succeeded.");
                     }
                     else {
                         socket.on('connect', () => {
                             vm.log("Socket connection succeeded.", "info");
-                            setTimeout(() => {
-                                resolve("Socket connection succeeded.");
-                            }, 1000)
+                            resolve("Socket connection succeeded.");
                         });
                     }
                 });
@@ -364,6 +461,8 @@
         background: var(--bg-color-5);
     }
 
+    /*
+
     .settings-animation-enter-active {
       transition: all .15s ease-in;
     }
@@ -395,6 +494,8 @@
     .router-animation-enter, .router-animation-leave-to {
       opacity: 0;
     }
+
+    */
 
     .left-column, .left-column header, .main-column header {
         background-color: var(--bg-color-5);
@@ -481,7 +582,7 @@
         user-select: none;
     }
 
-    .main-column header {
+    .main-column__header {
         display: flex;
         flex-direction: row;
         height: 64px;
@@ -489,24 +590,112 @@
         box-shadow: 0 5px 5px -5px #333;
     }
 
-    .main-column header .header-app-title {
+    .main-column__header .container__request-board {
+        display: flex;
+        flex-direction: row;
+        min-height: 64px;
+        align-items: center;
+    }
+
+    .main-column__header .container__request-board .request-board__filter.filter--type .target__title {
+        margin-right: 0;
+    }
+
+    .main-column__header .container__request-board .request-board__filter {
+        display: flex;
+        flex-direction: row;
+        height: 40px;
+        cursor: pointer;
+        padding: 0 0 0 10px;
+    }
+
+    .main-column__header .container__request-board .request-board__filter h3 {
+        color: var(--secondary-color--d);
+    }
+
+    .request-board__filter .filter-item__target {
+        display: flex;
+        flex-direction: row;
+        height: 40px;
+        padding: 0 20px;
+        border-radius: 20px;
+        border: 1px solid var(--bg-color-7);
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .filter-item__target .target__title {
+        margin-right: 8px;
+        font-weight: 600;
+        color: var(--base-color--d)
+    }
+
+    .filter-item__target .target__amount {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .filter-item__target .target__amount > div {
+        width: 3px;
+        height: 3px;
+        border-radius: 3px;
+        margin-right: 2px;
+        background-color: var(--secondary-color);
+    }
+
+    .filter-item__target .target__amount > span {
+        color: var(--secondary-color);
+        font-weight: bold;
+    }
+
+    .filter--filter .filter-item__target .target__amount > div {
+        background-color: var(--terciary-color);
+    }
+    .filter--filter .filter-item__target .target__amount > span {
+        color: var(--terciary-color);
+    }
+
+    .filter--date .filter-item__target .target__amount > div {
+        background-color: var(--primary-color);
+    }
+    .filter--date .filter-item__target .target__amount > span {
+        color: var(--primary-color);
+    }
+
+    .main-column__header .container__title {
         display: flex;
         flex-direction: row;
         min-height: 64px;
         padding: 0 0 0 20px;
     }
 
-    .main-column header .header-dropdown-menu {
+    .main-column__header > .header__dropdown-menu {
         display: flex;
         flex-direction: row;
         justify-content: flex-end;
+        padding-right: 15px;
     }
 
-    .main-column header h3 {
+    .main-column__header > .header__dropdown-menu div.dropdown-menu__company-name {
         align-self: center;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 40px;
+        background-color: var(--bg-color-7)
+    }
+
+    .main-column__header > .header__dropdown-menu div.dropdown-menu__company-name h3 {
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: #CCC;
+        color: var(--base-color);
+        position: relative;
+        top: 1px;
     }
 
     .main-column main {

@@ -1,5 +1,7 @@
 /* CSS imports */
 
+import './assets/fonts/montserrat.css'
+
 import 'bulma/css/bulma.css'
 import 'material-icons/css/material-icons.min.css'
 import 'izitoast/dist/css/iziToast.min.css'
@@ -106,7 +108,6 @@ Vue.component("app-checkbox", CheckboxInputComponent);
 require.context('./assets/svgs/', true, /\.svg$/).keys().forEach((svgFile) => {
     const svgFilePath = svgFile.split('.')[1].replace('/','');
     const svgFileName = _.last(svgFilePath.split('/'));
-    console.log(svgFileName);
     Vue.component('icon-' + svgFileName, require('./assets/svgs/' + svgFilePath + '.svg'));
 });
 

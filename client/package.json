@@ -22,7 +22,7 @@
     "masonry-layout": "^4.2.0",
     "material-icons": "^0.1.0",
     "moment": "^2.17.1",
-    "popper.js": "^1.12.5",
+    "popper.js": "^1.12.9",
     "smooth-scrollbar": "^7.3.0",
     "socket.io-client": "^2.0.3",
     "v-money": "^0.8.0",

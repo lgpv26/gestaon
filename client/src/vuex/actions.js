@@ -1,3 +1,3 @@
 export const setAppTitle = ({ commit }, payload) => {
-  commit('setAppTitle',payload)
-}
+  commit('setAppTitle', payload)
+};

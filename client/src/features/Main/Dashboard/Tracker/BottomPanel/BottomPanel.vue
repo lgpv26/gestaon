@@ -59,16 +59,16 @@
 <script>
     import moment from 'moment';
     import _ from 'lodash';
-    import utils from '../../../../utils';
+    import utils from '../../../../../utils/index';
     import Scrollbar from 'smooth-scrollbar';
 
     import TrackerControls from '../TrackerControls.vue';
     import DevicesPanel from './DevicesPanel.vue';
     import PositionHistoryPanel from './PositionHistoryPanel.vue';
-    import FencesPanel from './FencesPanel.vue';
+    import FencesPanel from './GeofencesPanel.vue';
     import EventsPanel from './EventsPanel.vue';
 
-    import GeofencesAPI from '../../../../api/geofences';
+    import GeofencesAPI from '../../../../../api/geofences';
 
     import { mapGetters, mapState, mapActions } from 'vuex';
 

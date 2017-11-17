@@ -13,11 +13,11 @@
 <script>
     import moment from 'moment';
     import _ from 'lodash';
-    import utils from '../../../utils';
+    import utils from '../../../../utils/index';
     import geolib from 'geolib/dist/geolib';
     import Scrollbar from 'smooth-scrollbar';
 
-    import DevicesAPI from '../../../api/devices';
+    import DevicesAPI from '../../../../api/devices';
 
     import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
 

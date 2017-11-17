@@ -9,7 +9,8 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     app: {
-      title: "Elomax Client"
+      title: "ERP",
+      header: "request-board"
     },
     system: {
       initialized: false

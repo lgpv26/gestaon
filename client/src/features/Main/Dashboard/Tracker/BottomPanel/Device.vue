@@ -32,12 +32,12 @@
 </template>
 <script>
     import moment from 'moment';
-    import utils from '../../../../utils';
+    import utils from '../../../../../utils/index';
     import geolib from 'geolib/dist/geolib';
     import _ from 'lodash';
 
     import { mapState, mapActions, mapMutations } from 'vuex';
-    import DevicesAPI from '../../../../api/devices';
+    import DevicesAPI from '../../../../../api/devices';
 
     export default {
         data(){

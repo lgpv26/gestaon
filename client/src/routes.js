@@ -1,7 +1,7 @@
 const LoginRoute = () => import('./features/Auth/Login.vue');
 const RegisterRoute = () => import('./features/Auth/Register.vue');
 const MainRoute = () => import('./features/Main/Main.vue');
-const TrackerRoute = () => import('./features/Main/Tracker/Tracker.vue');
+const DashboardRoute = () => import('./features/Main/Dashboard/Dashboard.vue');
 const UsersRoute = () => import('./features/Main/Users/Users.vue');
 const CompaniesRoute = () => import('./features/Main/Companies/Companies.vue');
 
@@ -25,10 +25,10 @@ export default [
         component: MainRoute,
         children: [
             {
-                path: 'tracker',
-                component: TrackerRoute,
+                path: 'dashboard',
+                component: DashboardRoute,
                 meta: {
-                    title: 'GPS - Agiliza.me'
+                    title: 'Agiliza ERP'
                 }
             },
             {
@@ -47,12 +47,12 @@ export default [
             },
             {
                 path: '*',
-                redirect: '/tracker'
+                redirect: '/dashboard'
             }
         ]
     },
     {
         path: '*',
-        redirect: '/tracker'
+        redirect: '/dashboard'
     }
 ]

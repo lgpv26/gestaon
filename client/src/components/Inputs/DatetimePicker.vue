@@ -1,9 +1,9 @@
 <template>
     <div class="ag-datetime-picker">
-        <div class="input-area">
-            <input type="text" placeholder="Select" v-model="displayDatetime" ref="popperReference" @click="openPopper" />
+        <div class="input-area" @click="openPopper" ref="popperReference">
+            <slot></slot>
         </div>
-        <div class="popper-container" :class="{active: active}" ref="popperContainer">
+        <div class="picker__container" :class="{active: active}" ref="popperContainer">
             <div class="calendar" v-show="step === 'date'">
                 <div class="month">
                     <a class="prev-month" @click="navigateToPrevMonth()"><</a>
@@ -62,7 +62,7 @@
                 datetime: null
             }
         },
-        props: ['value'],
+        props: ['value', 'offset'],
         watch: {
             value(){
                 this.setDateAndTime(this.value);
@@ -187,8 +187,8 @@
             },
             clickEvent(e){
                 const vm = this;
-                if(vm.$refs.popperReference.contains(e.target)){}
-                else if(!vm.$refs.popperContainer.contains(e.target)){
+                if(vm.$refs.popperReference.contains(e.target) || vm.$refs.popperReference === e.target){}
+                else if(!vm.$refs.popperContainer.contains(e.target) && vm.$refs.popperReference !== e.target){
                     vm.active = false;
                 }
             }
@@ -200,6 +200,7 @@
             const vm = this;
             this.popper.referenceEl = this.$refs['popperReference']; this.popper.containerEl = this.$refs['popperContainer'];
             this.popper.instance = new Popper(this.popper.referenceEl, this.popper.containerEl, {
+                placement: 'bottom-start',
                 onUpdate(){
                     if(_.hasIn(vm.$refs, 'timePicker') && _.hasIn(vm.$refs.timePicker, 'popperUpdated')){
                         vm.$refs.timePicker.popperUpdated();
@@ -214,6 +215,14 @@
                     }
                 }
             });
+            if(typeof this.offset !== 'undefined') {
+                if (_.has(this.offset, 'bottom')) {
+                    this.popper.containerEl.style.marginTop = this.offset.bottom + 'px';
+                }
+                if (_.has(this.offset, 'top')) {
+                    this.popper.containerEl.style.marginBottom = this.offset.top + 'px';
+                }
+            }
             window.addEventListener('click', this.clickEvent);
         },
         destroyed(){
@@ -226,17 +235,19 @@
     .ag-datetime-picker {
         position: relative;
     }
-    .popper-container {
+    .picker__container {
+        z-index: 99999;
         width: 280px;
-        background: #2A2B33;
-        box-shadow: 0px 1px 3px #151515;
+        background: var(--bg-color-5);
+        -webkit-box-shadow: var(--popover-shadow);
+        box-shadow: var(--popover-shadow);
         padding: 15px;
         transition: .2s opacity;
         visibility: hidden;
         display: flex;
         opacity: 0;
     }
-    .popper-container.active {
+    .picker__container.active {
         visibility: visible;
         transition: .2s opacity;
         opacity: 1;

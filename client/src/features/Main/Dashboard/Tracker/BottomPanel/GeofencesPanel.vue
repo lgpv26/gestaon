@@ -74,14 +74,14 @@
 <script>
     import moment from 'moment';
     import _ from 'lodash';
-    import utils from '../../../../utils';
+    import utils from '../../../../../utils/index';
     import geolib from 'geolib/dist/geolib';
     import Scrollbar from 'smooth-scrollbar';
 
     import { mapGetters, mapState, mapMutations, mapActions } from 'vuex';
-    import PositionsAPI from '../../../../api/positions';
-    import GeofencesAPI from '../../../../api/geofences';
-    import ColorPickerComponent from '../../../../components/Inputs/ColorPicker.vue';
+    import PositionsAPI from '../../../../../api/positions';
+    import GeofencesAPI from '../../../../../api/geofences';
+    import ColorPickerComponent from '../../../../../components/Inputs/ColorPicker.vue';
 
     import resize from 'vue-resize-directive';
 
@@ -379,7 +379,6 @@
         display: flex;
         flex-shrink: 0;
         flex-direction: column;
-        background: #2A2B33;
         position: relative;
         padding: 0 0 20px;
     }

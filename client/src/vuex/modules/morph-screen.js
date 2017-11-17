@@ -4,6 +4,7 @@ const state = {
     screens: [],
     sourceEl: null,
     sourceElBgColor: null,
+    mimicBorderRadius: 0,
     isShowing: false
 };
 
@@ -25,6 +26,7 @@ const mutations = {
             if(obj.show) {
                 state.sourceEl = obj.sourceEl;
                 state.sourceElBgColor = obj.sourceElBgColor;
+                state.mimicBorderRadius = obj.mimicBorderRadius;
                 state.isShowing = true;
             }
             else {
