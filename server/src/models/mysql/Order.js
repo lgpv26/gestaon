@@ -66,6 +66,6 @@ module.exports = {
         Order.belongsTo(User, {as: 'user', foreignKey: 'userId'});
         
         Order.hasMany(OrderProduct, {as: 'orderProducts', foreignKey: 'orderId'});
-        Order.belongsToMany(Product, {through: OrderProduct, as: 'products', foreignKey: 'productId'});
+        Order.belongsToMany(Product, {through: OrderProduct, as: 'products', foreignKey: 'orderId'});
     }
 }

@@ -20,7 +20,7 @@ module.exports = (server, restify) => {
     server.patch('/orders/:id', permissionGuard('orders.edit'), ordersController.updateOne);
     server.del('/orders/:id', permissionGuard('orders.remove'), ordersController.removeOne);
 
-    server.get('/orders/:id/products', permissionGuard('orders.list'), queryParser, ordersController.getAllProducts);
+    server.get('/orders/:id/products', permissionGuard('orders.list'), queryParser('orderId'), ordersController.getAllProducts);
     server.patch('/orders/:id/products', permissionGuard('orders.add'), ordersController.saveProducts);
     server.del('/orders/:id/products/:productId', permissionGuard('orders.add'), ordersController.removeOneProduct);
 
