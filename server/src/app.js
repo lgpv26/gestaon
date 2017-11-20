@@ -80,55 +80,9 @@ server['mongodb'] = require('./models/mongodb')(mongoose);
 // load MySQL/Sequelize models
 server['models'] = require('./models/mysql')(Sequelize, sequelize);
 
-// clients connected to real-time features
-server.io.on('connection', (socket) => {
-    let token = socket.handshake.query.token, user;
-    server.models.UserAccessToken.findOne({
-        where: {
-            accessToken: token
-        },
-        include: [
-            {
-                model: server.models.User,
-                as: 'user',
-                include: [
-                    {
-                        model: server.models.Company,
-                        as: 'companies'
-                    }
-                ]
-            }
-        ]
-    }).then((userAccessToken) => {
-        if(userAccessToken && typeof userAccessToken.user !== 'undefined') {
-            user = userAccessToken.user;
-            user.companies.forEach((company) => {
-                server.mongodb.Device.find({
-                    companyId: company.id
-                }).exec().then((devices) => {
-                    devices.forEach((device) => {
-                        // console.log(user.name + " connected to room: " + 'device/' + device.code);
-                        socket.join('device/' + device.code);
-                    });
-                }).catch((err) => {
-                    console.log(err);
-                });
-            });
-
-
-
-
-        }
-    });
-    socket.on('join-device-room', (deviceCode) => {
-        // console.log(user.name + " joins device/" + deviceCode + ".");
-        socket.join('device/' + deviceCode);
-    });
-    socket.on('leave-device-room', (deviceCode) => {
-        // console.log(user.name + " leaves device/" + deviceCode + ".");
-        socket.leave('device/' + deviceCode);
-    });
-});
+// loading all sockets
+log.info("Loading sockets");
+require('./sockets')(server);
 
 // OAuth server
 server['oAuth2'] = require('./models/oauth2')(server);

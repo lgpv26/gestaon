@@ -5,7 +5,7 @@ module.exports = function(mongoose){
     let tMongodbModels = [];
     let mongodbModels = {};
     let modelFiles = [
-        "Device.js", "Position.js", "Service.js", "Geofence.js", "Event.js"
+        "Device.js", "Position.js", "Service.js", "Geofence.js", "Event.js", "Draft.js"
     ];
     const filesInDirectory = fs.readdirSync(__dirname);
     modelFiles.forEach(function(fileName) {

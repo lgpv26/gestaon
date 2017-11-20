@@ -356,9 +356,7 @@ module.exports = (server, restify) => {
 
         }
     };
-
     
-
     // CHANCE STATUS DATA WHEN DELET (with paranoid)
 
     function deleteStatus(id) {
