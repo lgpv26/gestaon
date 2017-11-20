@@ -406,8 +406,7 @@
                     vm.setAuthUser().then((me) => {
                         vm.menuList = _.filter(vm.menuList, (menuItem) => {
                             if(menuItem.type === 'system'){
-                                if(menuItem.onlyAdmin && vm.user.type !== 'admin') return false;
-                                return true;
+                                return (menuItem.onlyAdmin && vm.user.type !== 'admin');
                             }
                         });
                         vm.user.userCompanies.forEach((userCompany) => {

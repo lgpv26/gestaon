@@ -1,10 +1,24 @@
 <template>
     <div class="app-morph-screen" v-if="isShowing" ref="morphScreen">
-        <div class="container" ref="container">
+        <div class="morph-screen__container" ref="container">
             <div class="container__header">
-                <h1 ref="title">Pedido X</h1>
+                <div class="header__summary">
+                    <h1 class="summary__title" ref="title">ATENDIMENTO #XXXXXX</h1>
+                    <span class="summary__info">Iniciado às xx:xx por xxx</span>
+                </div>
                 <span class="push-both-sides"></span>
-                <a @click="close()">[FECHAR]</a>
+                <div class="header__tags">
+                    <ul>
+                        <li>Junho</li>
+                        <li>(44) 3268-5858</li>
+                    </ul>
+                </div>
+                <div class="header__actions">
+                    <a @click="close()">X</a>
+                </div>
+            </div>
+            <div class="container__body">
+                <app-request-form></app-request-form>
             </div>
         </div>
     </div>
@@ -13,6 +27,8 @@
 <script>
     import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
     import anime from 'animejs';
+
+    import RequestForm from "./Request/RequestForm.vue";
     /*import CompanyFormComponent from "../../components/Forms/CompanyForm.vue";
     import UserFormComponent from "../../components/Forms/UserForm.vue";
     import DeviceFormComponent from "../../components/Forms/DeviceForm.vue";
@@ -21,6 +37,7 @@
 
     export default {
         components: {
+            "app-request-form": RequestForm
             /*"app-company-form": CompanyFormComponent,
             "app-user-form": UserFormComponent,
             "app-device-form": DeviceFormComponent,
@@ -75,10 +92,11 @@
                             })
                         .add({
                             targets: vm.$refs.container,
-                            easing: 'easeOutExpo',
+                            easing: 'easeOutQuad',
                             opacity: [0, 1],
+                            translateY: [20, 0],
                             scale: [.9, 1],
-                            duration: 200,
+                            duration: 300,
                             offset: 200
                         });
                     });
@@ -161,15 +179,55 @@
         position: absolute;
         z-index: 999999;
     }
-    .container {
+    .morph-screen__container {
         width: 1200px;
-        padding-top: 50px;
         margin: 0 auto;
         opacity: 0;
+        display: flex;
+        flex-direction: column;
     }
-
-    .container .container__header {
+    .morph-screen__container .container__header {
         display: flex;
         flex-direction: row;
+        padding: 30px;
+        background-color: var(--bg-color-7);
+    }
+    .container__header .header__summary .summary__title {
+        line-height: 120%;
+    }
+    .container__header .header__tags {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .container__header .header__tags ul {
+        display: flex;
+        flex-direction: row;
+    }
+    .container__header .header__tags ul li {
+        padding: 8px 12px;
+        background-color: var(--bg-color-6);
+        border-radius: 20px;
+        border: 1px dashed var(--bg-color-9);
+        margin-left: 15px;
+        color: var(--base-color);
+        cursor: pointer;
+    }
+    .container__header .header__actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-left: 40px;
+    }
+    .container__header .header__actions > a {
+        font-size: 48px;
+        line-height: 100%;
+        color: var(--danger-color);
+        position: relative;
+    }
+    .morph-screen__container .container__body {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--bg-color-4);
     }
 </style>

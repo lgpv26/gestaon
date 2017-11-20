@@ -66,7 +66,7 @@
                 }
             },
             searchValueCommited(searchObj){
-
+                console.log(searchObj);
             },
             searchValueUpdated(){
                 const vm = this;

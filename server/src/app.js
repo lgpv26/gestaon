@@ -114,6 +114,10 @@ server.io.on('connection', (socket) => {
                     console.log(err);
                 });
             });
+
+
+
+
         }
     });
     socket.on('join-device-room', (deviceCode) => {
