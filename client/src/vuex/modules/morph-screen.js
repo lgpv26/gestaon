@@ -1,7 +1,31 @@
 import _ from 'lodash';
 
 const state = {
-    screens: [],
+    screens: [{
+        name: 'Pedido #10000',
+        draftId: 1,
+        active: false
+    }, {
+        name: 'Pedido #10001',
+        draftId: 2,
+        active: false
+    }, {
+        name: 'Pedido #10002',
+        draftId: 3,
+        active: false
+    }, {
+        name: 'Pedido #10003',
+        draftId: 4,
+        active: false
+    }, {
+        name: 'Pedido #10004',
+        draftId: 5,
+        active: false
+    }, {
+        name: 'Pedido #10004',
+        draftId: 6,
+        active: false
+    }],
     sourceEl: null,
     sourceElBgColor: null,
     mimicBorderRadius: 0,
@@ -9,17 +33,26 @@ const state = {
 };
 
 const getters = {
-    /*selectProducts(state,getters){
-        return state.products.map((product) => {
-            return {
-                value: product.id,
-                text: product.name
-            }
-        });
-    }*/
+    activeMorphScreen(state,getters){
+        return _.find(state.screens, { active: true });
+    }
 };
 
 const mutations = {
+    setAllMorphScreens(state, obj){
+        state.screens.forEach((screen) => {
+            _.assign(screen, obj);
+        });
+    },
+    setMorphScreen(state, obj){
+        state.screens.forEach((screen) => {
+            screen.active = false;
+        });
+        let draft = _.find(state.screens, { draftId: obj.draftId });
+        if(draft){
+            _.assign(draft, obj);
+        }
+    },
     showMorphScreen(state, value){
         if(_.isObject(value)) {
             const obj = value;

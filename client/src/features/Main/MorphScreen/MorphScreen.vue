@@ -1,24 +1,37 @@
 <template>
-    <div class="app-morph-screen" v-if="isShowing" ref="morphScreen">
-        <div class="morph-screen__container" ref="container">
-            <div class="container__header">
-                <div class="header__summary">
-                    <h1 class="summary__title" ref="title">ATENDIMENTO #XXXXXX</h1>
-                    <span class="summary__info">Iniciado às xx:xx por xxx</span>
+    <div class="app-morph-screen" v-show="isShowing" ref="morphScreen">
+        <a class="morph-screen__close" @click="close()">
+            Fechar
+        </a>
+        <div class="morph-screen__wrapper" ref="morphScreenWrapper">
+            <div class="morph-screen__item" v-for="screen in screens" ref="morphScreenItems" :key="screen.draftId">
+                <div class="item__option" v-show="!screen.active" @click="itemSelected(screen)">
+                    <h3 class="option__title">{{ screen.draftId }}</h3>
                 </div>
-                <span class="push-both-sides"></span>
-                <div class="header__tags">
-                    <ul>
-                        <li>Junho</li>
-                        <li>(44) 3268-5858</li>
-                    </ul>
-                </div>
-                <div class="header__actions">
-                    <a @click="close()">X</a>
-                </div>
-            </div>
-            <div class="container__body">
-                <app-request-form></app-request-form>
+                <transition name="fade">
+                    <div class="morph-screen__container" v-if="screen.active" ref="container">
+                        <div class="container__header">
+                            <div class="header__summary">
+                                <h1 class="summary__title" ref="title">{{ activeMorphScreen.name }}</h1>
+                                <span class="summary__info">Iniciado às xx:xx por xxx</span>
+                            </div>
+                            <span class="push-both-sides"></span>
+                            <div class="header__tags">
+                                <ul>
+                                    <li>Junho</li>
+                                    <li>(44) 3268-5858</li>
+                                </ul>
+                            </div>
+                            <div class="header__actions">
+                                <a @click="backToMorphScreen()">B</a>
+                                <a @click="closeScreen(screen)">X</a>
+                            </div>
+                        </div>
+                        <div class="container__body">
+                            <app-request-form></app-request-form>
+                        </div>
+                    </div>
+                </transition>
             </div>
         </div>
     </div>
@@ -26,6 +39,7 @@
 
 <script>
     import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
+    import _ from 'lodash';
     import anime from 'animejs';
 
     import RequestForm from "./Request/RequestForm.vue";
@@ -46,145 +60,305 @@
         },
         data(){
             return {
-                companyModal: { company: null },
-                userModal: { user: null },
-                deviceModal: { device: null },
-                onMapLoadModal: { defaultSettings: null },
-                geofenceModal: { geofence: null }
+                animation: null,
+                contentEl: null,
+                selectedContent: null,
+                windowResizeEventListener: null
             }
         },
         watch: {
             isShowing(isShowing){
-                const vm = this;
-                if(isShowing){  // showing Morph Screen
-                    const sourceElementPosition = vm.getElPositionInScreen(vm.sourceEl);
-                    setImmediate(() => {
-                        vm.$refs.morphScreen.style.width = vm.sourceEl.clientWidth + 'px';
-                        vm.$refs.morphScreen.style.height = vm.sourceEl.clientHeight + 'px';
-                        vm.$refs.morphScreen.style.top = sourceElementPosition.y + 'px';
-                        vm.$refs.morphScreen.style.left = sourceElementPosition.x + 'px';
-                        vm.$refs.morphScreen.style.borderRadius = vm.mimicBorderRadius + 'px';
-                        vm.$refs.morphScreen.style.backgroundColor = vm.sourceElBgColor;
-                        const animation = anime.timeline();
-                        animation.add({
-                            targets: vm.$refs.morphScreen,
-                            top: '0px',
-                            left: '0px',
-                            width: window.innerWidth,
-                            height: window.innerHeight,
-                            borderRadius: 0,
-                            duration: 200,
-                            offset: 0,
-                            easing: 'easeInQuint',
-                            complete: function(anim){
-                                vm.$refs.morphScreen.style.width = '100%';
-                                vm.$refs.morphScreen.style.height = '100%';
-                            }
-                        }).add({
-                                targets: vm.$refs.morphScreen,
-                                easing: 'easeInQuad',
-                                duration: 500,
-                                offset: 0,
-                                backgroundColor: '#212328',
-                                opacity: {
-                                    value: [.9, 1]
-                                }
-                            })
-                        .add({
-                            targets: vm.$refs.container,
-                            easing: 'easeOutQuad',
-                            opacity: [0, 1],
-                            translateY: [20, 0],
-                            scale: [.9, 1],
-                            duration: 300,
-                            offset: 200
-                        });
-                    });
-                }
+                if(isShowing) this.animateMorphScreen();
             }
         },
         computed: {
-            ...mapState('morph-screen', ['sourceEl','isShowing','sourceElBgColor','mimicBorderRadius']),
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
+            ...mapState('morph-screen', ['screens','sourceEl','isShowing','sourceElBgColor','mimicBorderRadius']),
             ...mapState('auth', [
                 'user', 'token', 'company'
             ])
         },
         methods: {
-            ...mapMutations('morph-screen', ['showMorphScreen']),
-            close(){
+            ...mapMutations('morph-screen', ['setAllMorphScreens','setMorphScreen','showMorphScreen']),
+            animateMorphScreen(){
                 const vm = this;
-                anime({
+                vm.setAllMorphScreens({
+                    active: false
+                });
+                this.$refs.morphScreenItems.forEach((morphScreen) => {
+                    morphScreen.style.height = 70 + 'px';
+                    morphScreen.style.opacity = 1;
+                    morphScreen.style.transform = 'scale(1)';
+                    morphScreen.style.marginTop = '10px';
+                    morphScreen.style.marginBottom = '10px';
+                    const morphScreenOptionTitle = _.first(morphScreen.getElementsByClassName('option__title'));
+                    morphScreenOptionTitle.style.transform = 'scale(1)';
+                });
+                vm.contentEl.classList.add('unfocused');
+                anime.timeline().add({
+                    targets: vm.contentEl,
+                    duration: 100,
+                    scale: .95,
+                    offset: 0,
+                    easing: 'easeOutSine'
+                }).add({
                     targets: vm.$refs.morphScreen,
-                    duration: 300,
-                    elasticity: 0,
+                    duration: 200,
+                    offset: 0,
+                    easing: 'easeInOutSine',
                     opacity: {
-                        value: 0
-                    },
-                    complete: function(){
-                        vm.showMorphScreen(false);
+                        value: [0, 1]
                     }
+                }).add({
+                    targets: vm.$refs.morphScreen.querySelectorAll('.morph-screen__item'),
+                    duration: 200,
+                    elasticity: 0,
+                    offset: 100,
+                    easing: 'easeInOutExpo',
+                    opacity: [0, 1],
+                    height: ['30px', '70px']
                 });
             },
-            beforeOpenCompanyForm(event){
-                if(_.has(event.params, 'company')) this.companyModal.company = event.params.company;
-            },
-            beforeOpenUserForm(event){
-                if(_.has(event.params, 'user')) this.userModal.user = event.params.user;
-            },
-            beforeOpenDeviceForm(event){
-                if(_.has(event.params, 'device')) this.deviceModal.device = event.params.device;
-            },
-            beforeOpenOnMapLoadForm(event){
-                if(_.has(event.params, 'defaultSettings')) this.deviceModal.defaultSettings = event.params.defaultSettings;
-            },
-            beforeOpenGeofenceForm(event){
-                if(_.has(event.params, 'geofence')) this.deviceModal.geofence = event.params.geofence;
-            },
-            getElPositionInScreen(el){
-                let xPos = 0;
-                let yPos = 0;
-
-                while (el) {
-                    if (el.tagName == "BODY") {
-                        // deal with browser quirks with body/window/document and page scroll
-                        let xScroll = el.scrollLeft || document.documentElement.scrollLeft;
-                        let yScroll = el.scrollTop || document.documentElement.scrollTop;
-
-                        xPos += (el.offsetLeft - xScroll + el.clientLeft);
-                        yPos += (el.offsetTop - yScroll + el.clientTop);
-                    } else {
-                        // for all other non-BODY elements
-                        xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
-                        yPos += (el.offsetTop - el.scrollTop + el.clientTop);
+            itemSelected(screen){
+                const vm = this;
+                const windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+                const allAnimationsCompleted = [];
+                let activeScreenIndex = vm.screens.indexOf(screen);
+                this.$refs.morphScreenItems.forEach((morphScreen, morphScreenIndex) => {
+                    if(activeScreenIndex === morphScreenIndex){
+                        allAnimationsCompleted.push(anime.timeline().add({
+                            targets: morphScreen,
+                            duration: 300,
+                            height: ['70px', windowHeight + 'px'],
+                            offset: 0,
+                            easing: 'easeInOutSine'
+                        }).add({
+                            targets: _.first(morphScreen.getElementsByClassName('option__title')),
+                            duration: 500,
+                            scale: [1, 2.5],
+                            offset: 0,
+                            easing: 'easeOutSine'
+                        }).finished);
                     }
+                    else {
+                        allAnimationsCompleted.push(anime({
+                            targets: morphScreen,
+                            duration: 300,
+                            opacity: 0,
+                            scale: 0,
+                            height: 0,
+                            offset: 0,
+                            marginTop: 0,
+                            marginBottom: 0,
+                            easing: 'easeInOutSine'
+                        }));
+                    }
+                });
+                Promise.all(allAnimationsCompleted).then(() => {
+                    setTimeout(() => {
+                        vm.setMorphScreen(_.assign({}, screen, { active: true }));
 
-                    el = el.offsetParent;
+                    }, 300);
+                });
+            },
+            backToMorphScreen(){
+                const vm = this;
+                const allAnimationsCompleted = [];
+                let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen);
+                setImmediate(() => {
+                    vm.setMorphScreen(_.assign({}, vm.activeMorphScreen, { active: false }));
+                    const title = _.first(this.$refs.morphScreenItems[activeScreenIndex].getElementsByClassName('option__title'));
+                    anime({
+                        targets: title,
+                        duration: 200,
+                        scale: [0, 1],
+                        opacity: [0, 1],
+                        easing: 'easeInOutSine'
+                    }).finished.then(() => {
+                        this.$refs.morphScreenItems.forEach((morphScreen, morphScreenIndex) => {
+                            if(activeScreenIndex === morphScreenIndex){
+                                allAnimationsCompleted.push(anime.timeline().add({
+                                    targets: morphScreen,
+                                    duration: 300,
+                                    height: '70px',
+                                    offset: 0,
+                                    easing: 'easeInOutSine'
+                                }).add({
+                                    targets: _.first(morphScreen.getElementsByClassName('option__title')),
+                                    duration: 500,
+                                    scale: 1,
+                                    offset: 0,
+                                    easing: 'easeOutSine'
+                                }).finished);
+                            }
+                            else {
+                                allAnimationsCompleted.push(anime({
+                                    targets: morphScreen,
+                                    duration: 300,
+                                    opacity: 1,
+                                    scale: 1,
+                                    height: '70px',
+                                    marginTop: 10 + 'px',
+                                    marginBottom: 10 + 'px',
+                                    easing: 'easeInOutSine'
+                                }));
+                            }
+                        });
+                    })
+                });
+                Promise.all(allAnimationsCompleted).then(() => {
+                    /*setTimeout(() => {
+                        vm.setMorphScreen(_.assign({}, screen, { active: true }));
+                        vm.$refs.morphScreenItems[activeScreenIndex].classList.add('active');
+                    }, 300);
+                    */
+                });
+            },
+            closeScreen(screen){
+                const vm = this;
+                let activeScreenIndex = vm.screens.indexOf(screen);
+                vm.contentEl.classList.remove('unfocused');
+                anime.timeline().add({
+                    targets: vm.contentEl,
+                    duration: 100,
+                    scale: 1,
+                    offset: 0,
+                    elasticity: 0,
+                    easing: 'easeInSine'
+                }).add({
+                    targets: vm.$refs.morphScreen,
+                    duration: 300,
+                    offset: 0,
+                    elasticity: 0,
+                    easing: 'easeInOutSine',
+                    opacity: {
+                        value: [1, 0]
+                    }
+                }).finished.then(() => {
+                    vm.showMorphScreen(false);
+                    vm.setMorphScreen(_.assign({}, screen, { active: false }));
+                });
+            },
+            close(){
+                const vm = this;
+                vm.contentEl.classList.remove('unfocused');
+                vm.animation = anime.timeline();
+                vm.animation.add({
+                    targets: vm.contentEl,
+                    duration: 100,
+                    scale: 1,
+                    offset: 0,
+                    easing: 'easeInSine'
+                }).add({
+                    targets: vm.$refs.morphScreen,
+                    duration: 300,
+                    offset: 0,
+                    easing: 'easeInOutSine',
+                    opacity: {
+                        value: [1, 0]
+                    }
+                }).add({
+                    targets: vm.$refs.morphScreen.querySelectorAll('.morph-screen__item'),
+                    duration: 300,
+                    elasticity: 0,
+                    offset: 0,
+                    easing: 'easeInOutExpo',
+                    opacity: [1, 0],
+                    height: ['70px', '30px']
+                });
+                vm.animation.finished.then(() => {
+                    vm.showMorphScreen(false);
+                });
+            },
+            calculateActiveMorphScreenHeight(){
+                const vm = this;
+                if(vm.activeMorphScreen){
+                    const windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+                    let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen);
+                    vm.$refs.morphScreenItems[activeScreenIndex].style.height = windowHeight + 'px';
                 }
-                return {
-                    x: xPos,
-                    y: yPos
-                };
             }
+        },
+        mounted(){
+            this.contentEl = document.getElementById('content');
+            window.addEventListener('resize', this.calculateActiveMorphScreenHeight);
         },
         beforeDestroy(){
             this.close();
+            window.removeEventListener('resize', this.calculateActiveMorphScreenHeight);
         }
     }
 </script>
 
 <style>
+    .fade-enter-active {
+        transition: all .3s ease;
+    }
+    .fade-leave-active {
+        transition: all .3s;
+    }
+    .fade-enter, .fade-leave-to
+        /* .slide-fade-leave-active below version 2.1.8 */ {
+        transform: translateX(10px);
+        opacity: 0;
+    }
     div.app-morph-screen {
-        top: 0px;
-        left: 0px;
+        width: 100%;
+        height: 100%;
         position: absolute;
         z-index: 999999;
-    }
-    .morph-screen__container {
-        width: 1200px;
-        margin: 0 auto;
-        opacity: 0;
+        background: rgba(0,0,0,.4);
         display: flex;
         flex-direction: column;
+        justify-content: center;
+    }
+
+    .morph-screen__close {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+
+    .morph-screen__wrapper {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .morph-screen__item {
+        display: flex;
+        background: var(--bg-color-5-l);
+        flex-shrink: 0;
+        margin: 10px 0;
+        width: 100%;
+    }
+
+    .morph-screen__item .item__option {
+        align-self: center;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .morph-screen__item .item__option h3 {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 18px;
+    }
+
+    .morph-screen__container {
+        width: 1200px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        align-self: flex-start;
     }
     .morph-screen__container .container__header {
         display: flex;

@@ -8,7 +8,7 @@
             <app-settings v-if="showSettings" :showSettings.sync="showSettings"></app-settings>
         </transition>
         <transition name="app-animation">
-            <div class="app-content" v-show="!showSettings">
+            <div id="content" class="app-content" v-show="!showSettings">
                 <div id="left-column" class="left-column">
                     <header>
                         <h1>{{ shortCompanyName }}</h1>
@@ -441,13 +441,31 @@
 
 <style scoped>
 
-    div.body div.app-content {
+    div.body #content {
         width: 100%;
         height: 100%;
         display: flex;
         position: fixed;
         flex-direction: row;
         background: var(--bg-color-5);
+        transition: .3s all;
+
+        -webkit-backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        -webkit-transform: translate3d(0,0,0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        perspective: 1000;
+        transform: translate3d(0,0,0);
+        transform: translateZ(0);
+    }
+
+    div.body #content.unfocused {
+        -webkit-filter: blur(1px);
+        -moz-filter: blur(1px);
+        -o-filter: blur(1px);
+        -ms-filter: blur(1px);
+        filter: blur(1px);
     }
 
     div.body div.app-settings {

@@ -1,10 +1,12 @@
 <template>
-  <div id="app">
-    <!-- loading -->
-    <app-loading></app-loading>
-    <!-- routes -->
-    <router-view></router-view>
-  </div>
+    <div id="app">
+        <!-- loading -->
+        <app-loading></app-loading>
+        <div id="router-view">
+            <!-- routes -->
+            <router-view></router-view>
+        </div>
+    </div>
 </template>
 
 <script>
