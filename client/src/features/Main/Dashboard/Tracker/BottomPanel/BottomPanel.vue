@@ -137,9 +137,18 @@
         padding: 0;
     }
 
+    #app-bottom-panel .bottom-panel-container {
+        display: flex;
+        flex-direction: column;
+    }
+
     #app-bottom-panel .bottom-panel-header {
         display: flex;
         flex-direction: row;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 60px;
     }
 
     h3 {
@@ -149,7 +158,7 @@
     }
 
     #app-bottom-panel .device-tabs {
-        padding: 20px;
+        padding: 0 10px;
     }
 
     #app-bottom-panel .device-tabs ul {
@@ -176,7 +185,7 @@
 
     #app-bottom-panel div.bottom-panel-actions {
         display: flex;
-        padding: 20px;
+        padding: 0 10px;
         align-items: center;
     }
 

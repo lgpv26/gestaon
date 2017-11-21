@@ -11,7 +11,13 @@
             <div id="content" class="app-content" v-show="!showSettings">
                 <div id="left-column" class="left-column">
                     <header>
-                        <h1>{{ shortCompanyName }}</h1>
+                        <div class="header__dropdown-menu">
+                            <app-dropdown-menu :menuList="menuList">
+                                <div class="dropdown-menu__company-name">
+                                    <h3>{{ shortCompanyName }}</h3>
+                                </div>
+                            </app-dropdown-menu>
+                        </div>
                     </header>
                     <nav class="main-menu">
                         <ul>
@@ -101,12 +107,10 @@
                         </div>
                         <span class="push-both-sides"></span>
                         <app-search></app-search>
-                        <div class="header__dropdown-menu">
-                            <app-dropdown-menu :menuList="menuList">
-                                <div class="dropdown-menu__company-name">
-                                    <h3>{{ shortCompanyName }}</h3>
-                                </div>
-                            </app-dropdown-menu>
+                        <div class="header__draft-menu">
+                            <div class="count">
+                                <span>3</span>
+                            </div>
                         </div>
                     </header>
                     <main id="main">
@@ -523,7 +527,7 @@
         box-shadow: 0 0 15px -5px var(--bg-color-2);
         position: relative;
         z-index: 3;
-        width: 64px;
+        width: 60px;
         min-height: 100%;
         flex-direction: column;
         display: flex;
@@ -535,17 +539,34 @@
     }
 
     .left-column header {
-        height: 64px;
+        height: 60px;
         width: 100%;
         display: flex;
         justify-content: center;
     }
 
-    .left-column header h1 {
-        color: #FFF;
-        text-transform: uppercase;
-        font-weight: bold;
+    .left-column header .header__dropdown-menu {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .left-column header .header__dropdown-menu div.dropdown-menu__company-name {
         align-self: center;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 32px;
+        background-color: var(--bg-color-7)
+    }
+
+    .left-column header .header__dropdown-menu div.dropdown-menu__company-name h3 {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--base-color);
+        font-size: 14px;
     }
 
     .left-column nav.main-menu ul {
@@ -602,15 +623,17 @@
     .main-column__header {
         display: flex;
         flex-direction: row;
-        height: 64px;
+        height: 60px;
         flex-shrink: 0;
         box-shadow: 0 5px 5px -5px #333;
+        align-items: center;
+        padding: 0 10px;
     }
 
     .main-column__header .container__request-board {
         display: flex;
         flex-direction: row;
-        min-height: 64px;
+        min-height: 60px;
         align-items: center;
     }
 
@@ -621,19 +644,49 @@
     .main-column__header .container__request-board .request-board__filter {
         display: flex;
         flex-direction: row;
-        height: 40px;
+        height: 32px;
         cursor: pointer;
         padding: 0 0 0 10px;
+    }
+
+    .main-column__header .container__request-board .request-board__filter:first-child {
+        padding-left: 0;
     }
 
     .main-column__header .container__request-board .request-board__filter h3 {
         color: var(--secondary-color--d);
     }
 
+    .main-column__header .header__draft-menu {
+        width: 32px;
+        height: 32px;
+        background-color: #EEE;
+        position: relative;
+    }
+
+    .main-column__header .header__draft-menu .count {
+        bottom: -2px;
+        left: -2px;
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        background-color: var(--terciary-color);
+        color: #FFF;
+        font-weight: 800;
+    }
+
+    .main-column__header .header__draft-menu .count span {
+        font-size: 12px;
+    }
+
     .request-board__filter .filter-item__target {
         display: flex;
         flex-direction: row;
-        height: 40px;
+        height: 32px;
         padding: 0 20px;
         border-radius: 20px;
         border: 1px solid var(--bg-color-7);
@@ -684,35 +737,8 @@
     .main-column__header .container__title {
         display: flex;
         flex-direction: row;
-        min-height: 64px;
+        min-height: 60px;
         padding: 0 0 0 20px;
-    }
-
-    .main-column__header > .header__dropdown-menu {
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
-        padding-right: 15px;
-    }
-
-    .main-column__header > .header__dropdown-menu div.dropdown-menu__company-name {
-        align-self: center;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 40px;
-        background-color: var(--bg-color-7)
-    }
-
-    .main-column__header > .header__dropdown-menu div.dropdown-menu__company-name h3 {
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--base-color);
-        position: relative;
-        top: 1px;
     }
 
     .main-column main {

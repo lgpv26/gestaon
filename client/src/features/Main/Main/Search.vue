@@ -12,6 +12,26 @@
         <div class="search__search-input">
             <input type="text" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
             @keydown="onSearchInputKeyDown($event)" />
+            <div class="search-input__result-box" v-if="isSearchActive">
+                <div class="result-box__items">
+                    <div class="items__item--client">
+                        <div class="item--client__detail">
+                            <span class="detail__name">THIAGO YOITHI VAZ DA ROCHA</span>
+                            <span class="detail__address">RUA 28 DE JUNHO, 1214</span>
+                            <span class="detail__phones">(44) 3268-6768, (44) 99107-8686</span>
+                        </div>
+                        <div class="item--client__actions"></div>
+                    </div>
+                    <div class="items__item--address">
+                        <div class="item--address__name"></div>
+                    </div>
+                </div>
+                <div class="result-box__settings">
+                    <app-switch style="margin-right: 8px;"></app-switch>
+                    <span style="margin-right: 8px;">Apenas endereços</span>
+                    <a class="settings__info">?</a>
+                </div>
+            </div>
         </div>
         <div class="search__dropdown-menu">
             <span>NOVO ATENDIMENTO</span>
@@ -59,7 +79,7 @@
                         show: true,
                         sourceEl: this.$refs.actionButton,
                         sourceElBgColor: 'var(--primary-color)',
-                        mimicBorderRadius: 40
+                        mimicBorderRadius: 32
                     });
                 } else {
                     this.showMorphScreen(false);
@@ -238,22 +258,23 @@
 
 <style scoped>
     div.app-search {
-        height: 40px;
+        height: 32px;
         align-self: center;
         display: flex;
         flex-direction: row;
         justify-content: center;
         align-items: center;
         margin-right: 10px;
+        position: relative;
     }
     div.app-search > .search__search-chips {
-        height: 40px;
+        height: 32px;
         display: flex;
         justify-content: center;
         align-items: center;
         background-color: var(--bg-color-7);
-        border-bottom-left-radius: 40px;
-        border-top-left-radius: 40px;
+        border-bottom-left-radius: 32px;
+        border-top-left-radius: 32px;
         padding-left: 20px;
     }
     div.app-search > .search__search-chips .search-chips__chip {
@@ -275,22 +296,68 @@
         margin-right: 0;
     }
     div.app-search > .search__search-input {
-        height: 40px;
+        height: 32px;
         width: 0;
         display: flex;
         justify-content: center;
         align-items: center;
+        position: relative;
+    }
+    div.app-search > .search__search-input .search-input__result-box {
+        display: flex;
+        flex-direction: column;
+        width: 420px;
+        background: var(--bg-color-5);
+        z-index: 999999;
+        top: 47px;
+        position: absolute;
+        left: 0;
+        border-radius: 10px;
+        padding: 20px 20px;
+    }
+    .search-input__result-box .result-box__items {
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .search-input__result-box .result-box__items .items__item--client {
+        display: flex;
+        flex-direction: row;
+    }
+    .search-input__result-box .result-box__items .items__item--client .item--client__detail {
+        display: flex;
+        flex-direction: column;
+    }
+    .search-input__result-box .result-box__items .items__item--client .item--client__detail span {
+        line-height: 120%;
+    }
+    .search-input__result-box .result-box__settings {
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+    }
+    .search-input__result-box .result-box__settings .settings__info {
+        background-color: var(--bg-color-7);
+        width: 20px;
+        height: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 20px;
+        border: 1px solid var(--base-color--d);
     }
     div.app-search > .search__search-button {
         width: 50px;
-        height: 40px;
+        height: 32px;
         display: flex;
         padding-left: 3px;
         justify-content: center;
         align-items: center;
         background-color: var(--bg-color-7);
-        border-bottom-left-radius: 40px;
-        border-top-left-radius: 40px;
+        border-bottom-left-radius: 32px;
+        border-top-left-radius: 32px;
         cursor: pointer;
     }
     div.app-search.active.has-chips > .search__search-button {
@@ -298,7 +365,7 @@
         border-top-left-radius: 0px;
     }
     div.app-search > .search__search-input {
-        height: 40px;
+        height: 32px;
         width: 0;
         display: flex;
         justify-content: center;
@@ -307,12 +374,12 @@
         transition: .2s all;
     }
     div.app-search.active > .search__search-input {
-        width: 240px;
+        width: 320px;
         padding-right: 20px;
     }
     div.app-search > .search__dropdown-menu {
         padding: 0 20px;
-        height: 40px;
+        height: 32px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -321,30 +388,33 @@
     }
     div.app-search > .search__dropdown-menu span {
         color: var(--base-color--l);
-        font-size: 14px;
+        font-size: 12px;
+        font-weight: 600;
+        position: relative;
+        top: 1px;
     }
     div.app-search > .search__separator {
         width: 1px;
-        height: 40px;
+        height: 32px;
         display: flex;
         justify-content: center;
         align-items: center;
         background-color: var(--primary-color);
     }
     div.app-search > .search__separator > .separator--line {
-        height: 30px;
+        height: 20px;
         border-left: 1px solid rgba(255,255,255,.2);
     }
     div.app-search > .search__action-button {
         padding-right: 2px;
         width: 50px;
-        height: 40px;
+        height: 32px;
         display: flex;
         justify-content: center;
         align-items: center;
         background-color: var(--primary-color);
-        border-bottom-right-radius: 40px;
-        border-top-right-radius: 40px;
+        border-bottom-right-radius: 32px;
+        border-top-right-radius: 32px;
         cursor: pointer;
     }
 </style>

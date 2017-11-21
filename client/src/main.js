@@ -111,6 +111,12 @@ require.context('./assets/svgs/', true, /\.svg$/).keys().forEach((svgFile) => {
     Vue.component('icon-' + svgFileName, require('./assets/svgs/' + svgFilePath + '.svg'));
 });
 
+require.context('./assets/imgs/form-instructions/', true, /\.svg$/).keys().forEach((svgFile) => {
+    const svgFilePath = svgFile.split('.')[1].replace('/','');
+    const svgFileName = _.last(svgFilePath.split('/'));
+    Vue.component('img-' + svgFileName, require('./assets/imgs/form-instructions/' + svgFilePath + '.svg'));
+});
+
 /*
 require.context('./assets/svgs/menu-icons/', true, /\.svg$/).keys().forEach((svgFile) => {
     const svgFileName = svgFile.split('.')[1].replace('/','');
