@@ -109,7 +109,7 @@
                         <app-search></app-search>
                         <div class="header__draft-menu">
                             <div class="count">
-                                <span>3</span>
+                                <span>{{ screens.length }}</span>
                             </div>
                         </div>
                     </header>
@@ -133,6 +133,7 @@
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
     import SettingsComponent from "./Settings/Settings.vue";
     import MeAPI from "../../api/me";
+    import DraftsAPI from "../../api/drafts";
     import Vue from 'vue';
     import io from 'socket.io-client';
     import VueSocketio from 'vue-socket.io'
@@ -215,6 +216,7 @@
         computed: {
             ...mapState(['app']),
             ...mapState('auth', ['user','token','company']),
+            ...mapState('morph-screen', ['screens']),
             shortCompanyName(){
                 if(_.has(this.company, 'name')){
                     const words = _.upperCase(this.company.name).split(" ");
@@ -246,6 +248,9 @@
             ]),
             ...mapActions('tracker', [
                 'loadDevices'
+            ]),
+            ...mapActions('morph-screen', [
+                'loadMorphScreenData'
             ]),
             ...mapActions('toast', [
                 'showToast', 'showError'
@@ -428,6 +433,10 @@
                         console.log("Couldn't get authenticated user.");
                         vm.logout();
                     });
+                });
+            }).then(() => {
+                return vm.loadMorphScreenData(vm.company.id).catch((err) => {
+                    console.log("The current user doesn't have any drafts created.");
                 });
             }).then(() => {
                 if(window.isAppLoading()) {

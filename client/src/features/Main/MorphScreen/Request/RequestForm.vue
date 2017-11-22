@@ -93,6 +93,9 @@
 
     export default {
         sockets: {
+            presenceDraft(data){
+                console.log("CHEGOU UM EVENTO NO PRESENCE", data);
+            },
             draftSaved(){
                 this.saving = false;
                 console.log("DRAFT SALVO!");
@@ -100,8 +103,6 @@
             updateDraft(data){
                 _.mergeWith(this.form, data.form);
             }
-        },
-        watch: {
         },
         data(){
             return {
@@ -125,6 +126,8 @@
             }
         },
         computed: {
+            ...mapState('auth', ['user']),
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
         },
         methods: {
             getIsolatedFormPathObj(path){
@@ -137,6 +140,11 @@
             }
         },
         mounted(){
+            const vm = this;
+            this.$socket.emit('presence-update-draft', {
+                draftId: vm.activeMorphScreen.draftId,
+                userId: vm.user.id
+            });
         }
     }
 </script>

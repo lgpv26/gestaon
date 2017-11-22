@@ -1,44 +1,22 @@
 import _ from 'lodash';
+import DraftsAPI from '../../api/drafts';
 
-const state = {
-    screens: [{
-        name: 'Pedido #10000',
-        draftId: 1,
-        active: false
-    }, {
-        name: 'Pedido #10001',
-        draftId: 2,
-        active: false
-    }, {
-        name: 'Pedido #10002',
-        draftId: 3,
-        active: false
-    }, {
-        name: 'Pedido #10003',
-        draftId: 4,
-        active: false
-    }, {
-        name: 'Pedido #10004',
-        draftId: 5,
-        active: false
-    }, {
-        name: 'Pedido #10004',
-        draftId: 6,
-        active: false
-    }],
-    sourceEl: null,
-    sourceElBgColor: null,
-    mimicBorderRadius: 0,
+const state = () => ({
+    screens: [],
     isShowing: false
-};
+});
 
 const getters = {
-    activeMorphScreen(state,getters){
+    activeMorphScreen(state, getters){
         return _.find(state.screens, { active: true });
     }
 };
 
 const mutations = {
+    RESET(currentState){
+        const initialState = state();
+        Object.keys(initialState).forEach(k => { currentState[k] = initialState[k] })
+    },
     setAllMorphScreens(state, obj){
         state.screens.forEach((screen) => {
             _.assign(screen, obj);
@@ -57,9 +35,6 @@ const mutations = {
         if(_.isObject(value)) {
             const obj = value;
             if(obj.show) {
-                state.sourceEl = obj.sourceEl;
-                state.sourceElBgColor = obj.sourceElBgColor;
-                state.mimicBorderRadius = obj.mimicBorderRadius;
                 state.isShowing = true;
             }
             else {
@@ -70,9 +45,10 @@ const mutations = {
             state.isShowing = value;
         }
     },
-    addMorphScreen(state){
+    ADD_DRAFT(state, draft){
         state.screens.push({
-            name: 'Screen ' + state.screens.length
+            draft: draft,
+            active: false
         });
     },
     removeMorthScreen(state, index){
@@ -84,6 +60,15 @@ const mutations = {
 };
 
 const actions = {
+    loadMorphScreenData(context, companyId){
+        return DraftsAPI.getAll({ companyId: companyId }).then((response) => {
+            context.commit('RESET');
+            response.data.forEach((draft) => {
+                context.commit('ADD_DRAFT', draft);
+            });
+            return true;
+        });
+    }
     /*
     createMorphScreen(context, productId){
         return productsAPI.removeOne(productId).then((response) => {
@@ -96,7 +81,7 @@ const actions = {
 
 export default {
     namespaced: true,
-    state,
+    state: state(),
     getters,
     mutations,
     actions

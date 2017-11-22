@@ -6,13 +6,13 @@
         <div class="morph-screen__wrapper" ref="morphScreenWrapper">
             <div class="morph-screen__item" v-for="screen in screens" ref="morphScreenItems" :key="screen.draftId">
                 <div class="item__option" v-show="!screen.active" @click="itemSelected(screen)">
-                    <h3 class="option__title">{{ screen.draftId }}</h3>
+                    <h3 class="option__title">{{ screen.draft.draftId }}</h3>
                 </div>
                 <transition name="fade">
                     <div class="morph-screen__container" v-if="screen.active" ref="container">
                         <div class="container__header">
                             <div class="header__summary">
-                                <h1 class="summary__title" ref="title">{{ activeMorphScreen.name }}</h1>
+                                <h1 class="summary__title" ref="title">{{ screen.draft.draftId }}</h1>
                                 <span class="summary__info">Iniciado às xx:xx por xxx</span>
                             </div>
                             <span class="push-both-sides"></span>
@@ -43,20 +43,10 @@
     import anime from 'animejs';
 
     import RequestForm from "./Request/RequestForm.vue";
-    /*import CompanyFormComponent from "../../components/Forms/CompanyForm.vue";
-    import UserFormComponent from "../../components/Forms/UserForm.vue";
-    import DeviceFormComponent from "../../components/Forms/DeviceForm.vue";
-    import OnMapLoadFormComponent from "../../components/Forms/OnMapLoadForm.vue";
-    import GeofenceFormComponent from "../../components/Forms/GeofenceForm.vue";*/
 
     export default {
         components: {
             "app-request-form": RequestForm
-            /*"app-company-form": CompanyFormComponent,
-            "app-user-form": UserFormComponent,
-            "app-device-form": DeviceFormComponent,
-            "app-on-map-load-form": OnMapLoadFormComponent,
-            "app-geofence-form": GeofenceFormComponent*/
         },
         data(){
             return {
@@ -66,9 +56,21 @@
                 windowResizeEventListener: null
             }
         },
+        sockets: {
+            draftCreated(data){
+                console.log(data);
+            }
+        },
         watch: {
             isShowing(isShowing){
-                if(isShowing) this.animateMorphScreen();
+                if(isShowing){
+                    if(!this.activeMorphScreen){
+                        this.animateMorphScreen();
+                    }
+                    else {
+                        this.animateMorphScreenDirectlyToDraft();
+                    }
+                }
             }
         },
         computed: {
@@ -80,6 +82,51 @@
         },
         methods: {
             ...mapMutations('morph-screen', ['setAllMorphScreens','setMorphScreen','showMorphScreen']),
+            ...mapActions('morph-screen', ['createMorphScreen']),
+            animateMorphScreenDirectlyToDraft(){
+                const vm = this;
+                const screenToBeActivated = vm.activeMorphScreen;
+                vm.setAllMorphScreens({
+                    active: false
+                });
+                setImmediate(() => {
+                    this.$refs.morphScreenItems.forEach((morphScreen) => {
+                        morphScreen.style.height = 70 + 'px';
+                        morphScreen.style.opacity = 1;
+                        morphScreen.style.transform = 'scale(1)';
+                        morphScreen.style.marginTop = '10px';
+                        morphScreen.style.marginBottom = '10px';
+                        const morphScreenOptionTitle = _.first(morphScreen.getElementsByClassName('option__title'));
+                        morphScreenOptionTitle.style.transform = 'scale(1)';
+                    });
+                    vm.contentEl.classList.add('unfocused');
+                    anime.timeline().add({
+                        targets: vm.contentEl,
+                        duration: 100,
+                        scale: .95,
+                        offset: 0,
+                        easing: 'easeOutSine'
+                    }).add({
+                        targets: vm.$refs.morphScreen,
+                        duration: 200,
+                        offset: 0,
+                        easing: 'easeInOutSine',
+                        opacity: {
+                            value: [0, 1]
+                        }
+                    }).add({
+                        targets: vm.$refs.morphScreen.querySelectorAll('.morph-screen__item'),
+                        duration: 200,
+                        elasticity: 0,
+                        offset: 100,
+                        easing: 'easeInOutExpo',
+                        opacity: [0, 1],
+                        height: ['30px', '70px']
+                    }).finished.then(() => {
+                        vm.itemSelected(screenToBeActivated);
+                    });
+                })
+            },
             animateMorphScreen(){
                 const vm = this;
                 vm.setAllMorphScreens({
@@ -157,7 +204,6 @@
                 Promise.all(allAnimationsCompleted).then(() => {
                     setTimeout(() => {
                         vm.setMorphScreen(_.assign({}, screen, { active: true }));
-
                     }, 300);
                 });
             },
@@ -165,6 +211,11 @@
                 const vm = this;
                 const allAnimationsCompleted = [];
                 let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen);
+                vm.$socket.emit('presence-update-draft', {
+                    draftId: vm.activeMorphScreen.draftId,
+                    userId: vm.user.id,
+                    leave: true
+                });
                 setImmediate(() => {
                     vm.setMorphScreen(_.assign({}, vm.activeMorphScreen, { active: false }));
                     const title = _.first(this.$refs.morphScreenItems[activeScreenIndex].getElementsByClassName('option__title'));
@@ -216,6 +267,11 @@
             },
             closeScreen(screen){
                 const vm = this;
+                vm.$socket.emit('presence-update-draft', {
+                    draftId: vm.activeMorphScreen.draftId,
+                    userId: vm.user.id,
+                    leave: true
+                });
                 let activeScreenIndex = vm.screens.indexOf(screen);
                 vm.contentEl.classList.remove('unfocused');
                 anime.timeline().add({

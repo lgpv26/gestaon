@@ -46,6 +46,7 @@
 </template>
 
 <script>
+    import DraftsAPI from '../../../api/drafts';
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
 
@@ -63,6 +64,7 @@
             }
         },
         computed: {
+            ...mapState('auth', ['company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
             searchObject(){
                 return {
@@ -72,15 +74,24 @@
             }
         },
         methods: {
+            ...mapActions('morph-screen', ['createMorphScreen']),
             ...mapMutations('morph-screen', ['showMorphScreen']),
             addRequestClicked(ev){
-                if(!this.isShowingMorphScreen){
-                    this.showMorphScreen({
-                        show: true,
-                        sourceEl: this.$refs.actionButton,
-                        sourceElBgColor: 'var(--primary-color)',
-                        mimicBorderRadius: 32
+                const vm = this;
+                if(!vm.isShowingMorphScreen){
+                    DraftsAPI.createOne({
+                        type: 'request'
+                    }, {
+                        companyId: vm.company.id
+                    }).then((response) => {
+                        /*console.log(response);*/
+                        /*const draft = response.data;
+                        _.assign(draft, { active: true })
+                        vm.createMorphScreen(draft).then((draft) => {
+                            vm.showMorphScreen(true);
+                        });*/
                     });
+
                 } else {
                     this.showMorphScreen(false);
                 }
