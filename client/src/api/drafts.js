@@ -7,5 +7,8 @@ export default {
     },
     createOne(body, params){
         return Vue.http.post(config.apiBaseUrl + '/drafts', body, { params }).then((response) => response.json());
+    },
+    removeAll(params){
+        return Vue.http.delete(config.apiBaseUrl + '/drafts').then((response) => response.json());
     }
 }

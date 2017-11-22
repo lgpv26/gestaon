@@ -1,6 +1,6 @@
 <template>
     <div class="app-morph-screen" v-show="isShowing" ref="morphScreen">
-        <a class="morph-screen__close" @click="close()">
+        <a class="morph-screen__close" v-if="!activeMorphScreen" @click="close()">
             Fechar
         </a>
         <div class="morph-screen__wrapper" ref="morphScreenWrapper">
@@ -12,7 +12,7 @@
                     <div class="morph-screen__container" v-if="screen.active" ref="container">
                         <div class="container__header">
                             <div class="header__summary">
-                                <h1 class="summary__title" ref="title">{{ screen.draft.draftId }}</h1>
+                                <h1 class="summary__title" ref="title">PEDIDO #{{ screen.draft.draftId }}</h1>
                                 <span class="summary__info">Iniciado às xx:xx por xxx</span>
                             </div>
                             <span class="push-both-sides"></span>
@@ -23,8 +23,12 @@
                                 </ul>
                             </div>
                             <div class="header__actions">
-                                <a @click="backToMorphScreen()">B</a>
-                                <a @click="closeScreen(screen)">X</a>
+                                <div class="actions__draft-menu" @click="backToMorphScreen()">
+                                    <div class="count">
+                                        <span>{{ screens.length }}</span>
+                                    </div>
+                                    <icon-draft-list></icon-draft-list>
+                                </div>
                             </div>
                         </div>
                         <div class="container__body">
@@ -81,17 +85,17 @@
             ])
         },
         methods: {
-            ...mapMutations('morph-screen', ['setAllMorphScreens','setMorphScreen','showMorphScreen']),
+            ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS_SCREEN','SHOW_MS']),
             ...mapActions('morph-screen', ['createMorphScreen']),
             animateMorphScreenDirectlyToDraft(){
                 const vm = this;
                 const screenToBeActivated = vm.activeMorphScreen;
-                vm.setAllMorphScreens({
+                vm.SET_ALL_MS_SCREENS({
                     active: false
                 });
                 setImmediate(() => {
                     this.$refs.morphScreenItems.forEach((morphScreen) => {
-                        morphScreen.style.height = 70 + 'px';
+                        morphScreen.style.height = 50 + 'px';
                         morphScreen.style.opacity = 1;
                         morphScreen.style.transform = 'scale(1)';
                         morphScreen.style.marginTop = '10px';
@@ -121,7 +125,7 @@
                         offset: 100,
                         easing: 'easeInOutExpo',
                         opacity: [0, 1],
-                        height: ['30px', '70px']
+                        height: ['30px', '50px']
                     }).finished.then(() => {
                         vm.itemSelected(screenToBeActivated);
                     });
@@ -129,11 +133,11 @@
             },
             animateMorphScreen(){
                 const vm = this;
-                vm.setAllMorphScreens({
+                vm.SET_ALL_MS_SCREENS({
                     active: false
                 });
                 this.$refs.morphScreenItems.forEach((morphScreen) => {
-                    morphScreen.style.height = 70 + 'px';
+                    morphScreen.style.height = 50 + 'px';
                     morphScreen.style.opacity = 1;
                     morphScreen.style.transform = 'scale(1)';
                     morphScreen.style.marginTop = '10px';
@@ -163,7 +167,7 @@
                     offset: 100,
                     easing: 'easeInOutExpo',
                     opacity: [0, 1],
-                    height: ['30px', '70px']
+                    height: ['30px', '50px']
                 });
             },
             itemSelected(screen){
@@ -176,8 +180,10 @@
                         allAnimationsCompleted.push(anime.timeline().add({
                             targets: morphScreen,
                             duration: 300,
-                            height: ['70px', windowHeight + 'px'],
+                            height: ['50px', windowHeight + 'px'],
                             offset: 0,
+                            marginTop: 0,
+                            marginBottom: 0,
                             easing: 'easeInOutSine'
                         }).add({
                             targets: _.first(morphScreen.getElementsByClassName('option__title')),
@@ -203,7 +209,7 @@
                 });
                 Promise.all(allAnimationsCompleted).then(() => {
                     setTimeout(() => {
-                        vm.setMorphScreen(_.assign({}, screen, { active: true }));
+                        vm.SET_MS_SCREEN(_.assign({}, screen, { active: true }));
                     }, 300);
                 });
             },
@@ -217,7 +223,7 @@
                     leave: true
                 });
                 setImmediate(() => {
-                    vm.setMorphScreen(_.assign({}, vm.activeMorphScreen, { active: false }));
+                    vm.SET_MS_SCREEN(_.assign({}, vm.activeMorphScreen, { active: false }));
                     const title = _.first(this.$refs.morphScreenItems[activeScreenIndex].getElementsByClassName('option__title'));
                     anime({
                         targets: title,
@@ -231,8 +237,10 @@
                                 allAnimationsCompleted.push(anime.timeline().add({
                                     targets: morphScreen,
                                     duration: 300,
-                                    height: '70px',
+                                    height: '50px',
                                     offset: 0,
+                                    marginTop: 10 + 'px',
+                                    marginBottom: 10 + 'px',
                                     easing: 'easeInOutSine'
                                 }).add({
                                     targets: _.first(morphScreen.getElementsByClassName('option__title')),
@@ -248,7 +256,7 @@
                                     duration: 300,
                                     opacity: 1,
                                     scale: 1,
-                                    height: '70px',
+                                    height: '50px',
                                     marginTop: 10 + 'px',
                                     marginBottom: 10 + 'px',
                                     easing: 'easeInOutSine'
@@ -259,7 +267,7 @@
                 });
                 Promise.all(allAnimationsCompleted).then(() => {
                     /*setTimeout(() => {
-                        vm.setMorphScreen(_.assign({}, screen, { active: true }));
+                        vm.SET_MS_SCREEN(_.assign({}, screen, { active: true }));
                         vm.$refs.morphScreenItems[activeScreenIndex].classList.add('active');
                     }, 300);
                     */
@@ -291,8 +299,8 @@
                         value: [1, 0]
                     }
                 }).finished.then(() => {
-                    vm.showMorphScreen(false);
-                    vm.setMorphScreen(_.assign({}, screen, { active: false }));
+                    vm.SHOW_MS(false);
+                    vm.SET_MS_SCREEN(_.assign({}, screen, { active: false }));
                 });
             },
             close(){
@@ -320,10 +328,10 @@
                     offset: 0,
                     easing: 'easeInOutExpo',
                     opacity: [1, 0],
-                    height: ['70px', '30px']
+                    height: ['50px', '30px']
                 });
                 vm.animation.finished.then(() => {
-                    vm.showMorphScreen(false);
+                    vm.SHOW_MS(false);
                 });
             },
             calculateActiveMorphScreenHeight(){
@@ -366,20 +374,27 @@
         background: rgba(0,0,0,.4);
         display: flex;
         flex-direction: column;
+        overflow-y: overlay;
         justify-content: center;
     }
 
     .morph-screen__close {
-        position: absolute;
-        top: 15px;
-        right: 15px;
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        z-index: 1000000;
+        color: var(--primary-color);
+        padding: 5px 8px;
+        background-color: var(--bg-color-7);
+        font-weight: 500;
+        border-radius: 8px;
     }
 
     .morph-screen__wrapper {
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
+        justify-content: flex-start;
     }
 
     .morph-screen__item {
@@ -408,12 +423,11 @@
     }
 
     .morph-screen__container {
-        width: 1200px;
+        width: 80%;
         position: absolute;
         height: 100%;
         left: 50%;
         transform: translateX(-50%);
-        padding-top: 20px;
         display: flex;
         flex-direction: column;
         align-self: flex-start;
@@ -422,7 +436,6 @@
         display: flex;
         flex-direction: row;
         padding: 0 30px;
-        background-color: var(--bg-color-7);
         height: 112px;
         flex-shrink: 0;
         align-items: center;
@@ -454,17 +467,41 @@
         align-items: center;
         margin-left: 40px;
     }
-    .container__header .header__actions > a {
-        font-size: 48px;
-        line-height: 100%;
-        color: var(--danger-color);
+    .container__header .header__actions .actions__draft-menu {
+        width: 32px;
+        height: 32px;
         position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
     }
+
+    .container__header .header__actions .actions__draft-menu .count {
+        bottom: -2px;
+        left: -2px;
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        background-color: var(--terciary-color);
+        color: #FFF;
+        font-weight: 800;
+    }
+
+    .container__header .header__actions .actions__draft-menu .count span {
+        font-size: 12px;
+    }
+
+
     .morph-screen__container .container__body {
         display: flex;
         flex-grow: 1;
         flex-direction: column;
-        background-color: var(--bg-color-4);
+        background-color: var(--bg-color-5);
         overflow-y: auto;
     }
 </style>

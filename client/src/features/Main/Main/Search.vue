@@ -74,26 +74,21 @@
             }
         },
         methods: {
-            ...mapActions('morph-screen', ['createMorphScreen']),
-            ...mapMutations('morph-screen', ['showMorphScreen']),
+            ...mapActions('morph-screen', ['createDraft']),
+            ...mapMutations('morph-screen', ['SHOW_MS', 'SET_MS_SCREEN']),
             addRequestClicked(ev){
                 const vm = this;
                 if(!vm.isShowingMorphScreen){
-                    DraftsAPI.createOne({
-                        type: 'request'
-                    }, {
-                        companyId: vm.company.id
-                    }).then((response) => {
-                        /*console.log(response);*/
-                        /*const draft = response.data;
-                        _.assign(draft, { active: true })
-                        vm.createMorphScreen(draft).then((draft) => {
-                            vm.showMorphScreen(true);
-                        });*/
+                    const createDraftArgs = { body: {type: 'request'}, companyId: vm.companyId };
+                    vm.createDraft(createDraftArgs).then((response) => {
+                        vm.SET_MS_SCREEN({
+                            active: true,
+                            draft: response.data
+                        });
+                        vm.SHOW_MS(true);
                     });
-
                 } else {
-                    this.showMorphScreen(false);
+                    this.SHOW_MS(false);
                 }
             },
             searchValueCommited(searchObj){

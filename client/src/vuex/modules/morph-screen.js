@@ -17,21 +17,38 @@ const mutations = {
         const initialState = state();
         Object.keys(initialState).forEach(k => { currentState[k] = initialState[k] })
     },
-    setAllMorphScreens(state, obj){
+    SET_ALL_MS_SCREENS(state, screenObj){
         state.screens.forEach((screen) => {
-            _.assign(screen, obj);
+            _.assign(screen, screenObj);
         });
     },
-    setMorphScreen(state, obj){
+    SHOW_MS(state, value){
+        if(_.isObject(value)) {
+            const obj = value;
+            if(obj.show) {
+                state.isShowing = true;
+            }
+            else {
+                state.isShowing = false;
+            }
+        }
+        else {
+            state.isShowing = value;
+        }
+    },
+    SET_MS_SCREEN(state, screenObj){
         state.screens.forEach((screen) => {
             screen.active = false;
         });
-        let draft = _.find(state.screens, { draftId: obj.draftId });
-        if(draft){
-            _.assign(draft, obj);
+        let screen = _.find(state.screens, (screen) => {
+            if(screen.draft.draftId === screenObj.draft.draftId) return true;
+        });
+        if(screen){
+            delete screenObj.draft;
+            _.assign(screen, screenObj);
         }
     },
-    showMorphScreen(state, value){
+    SHOW_DRAFT(state, value){
         if(_.isObject(value)) {
             const obj = value;
             if(obj.show) {
@@ -61,22 +78,20 @@ const mutations = {
 
 const actions = {
     loadMorphScreenData(context, companyId){
-        return DraftsAPI.getAll({ companyId: companyId }).then((response) => {
+        return DraftsAPI.getAll({companyId}).then((response) => {
             context.commit('RESET');
             response.data.forEach((draft) => {
                 context.commit('ADD_DRAFT', draft);
             });
-            return true;
+            return response;
         });
-    }
-    /*
-    createMorphScreen(context, productId){
-        return productsAPI.removeOne(productId).then((response) => {
-            context.commit('removeOne', productId);
+    },
+    createDraft(context, {body, companyId}){
+        return DraftsAPI.createOne(body, {companyId}).then((response) => {
+            context.commit('ADD_DRAFT', response.data);
             return response;
         });
     }
-    */
 };
 
 export default {

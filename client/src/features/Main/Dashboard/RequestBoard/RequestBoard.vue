@@ -99,8 +99,9 @@
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' })
         },
         methods: {
-            ...mapMutations('morph-screen', ['showMorphScreen']),
+            ...mapMutations('morph-screen', []),
             requestCardClicked(card, ev){
+                /*
                 if(!this.isDraggingBoardColumn && !this.isDraggingCard){
                     if(!this.isShowingMorphScreen){
                         this.showMorphScreen({
@@ -113,6 +114,7 @@
                         this.showMorphScreen(false)
                     }
                 }
+                */
             },
             addRequest(index){
                 this.boardSections[index].cards.push({

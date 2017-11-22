@@ -107,10 +107,11 @@
                         </div>
                         <span class="push-both-sides"></span>
                         <app-search></app-search>
-                        <div class="header__draft-menu">
+                        <div class="header__draft-menu" @click="showMorphScreen()">
                             <div class="count">
                                 <span>{{ screens.length }}</span>
                             </div>
+                            <icon-draft-list></icon-draft-list>
                         </div>
                     </header>
                     <main id="main">
@@ -237,6 +238,7 @@
         },
         methods: {
             ...mapMutations(['setApp','setSystemInitialized']),
+            ...mapMutations('morph-screen', ['SHOW_MS', 'SET_ALL_MS_SCREENS']),
             ...mapActions('auth', {
                 logoutAction: 'logout',
                 setAuthUser: 'setAuthUser',
@@ -263,6 +265,12 @@
                         vm.$router.replace("/login");
                     }
                 });
+            },
+            showMorphScreen(){
+                this.SET_ALL_MS_SCREENS({
+                    active: false
+                });
+                this.SHOW_MS(true);
             },
             changeCompany(userCompany){
                 const vm = this;
@@ -669,8 +677,11 @@
     .main-column__header .header__draft-menu {
         width: 32px;
         height: 32px;
-        background-color: #EEE;
         position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
     }
 
     .main-column__header .header__draft-menu .count {
