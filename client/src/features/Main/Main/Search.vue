@@ -10,8 +10,26 @@
             <icon-header-search></icon-header-search>
         </div>
         <div class="search__search-input">
-            <input type="text" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
-            @keydown="onSearchInputKeyDown($event)" />
+            <app-search :items="searchItems" :shouldStayOpen="isInputFocused" :query="q">
+                <input type="text" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
+                @keydown="onSearchInputKeyDown($event)" />
+                <template slot="item" slot-scope="props">
+                    <div class="search-input__item">
+                        <span class="detail__name">{{ props.item.text }}</span>
+                        <span class="detail__address">RUA 28 DE JUNHO, 1214</span>
+                        <span class="detail__phones">(44) 3268-6768, (44) 99107-8686</span>
+                    </div>
+                </template>
+                <template slot="settings">
+                    <div class="search-input__settings">
+                        <app-switch style="margin-right: 8px;"></app-switch>
+                        <span style="margin-right: 8px;">Apenas endereços</span>
+                        <a class="settings__info">?</a>
+                    </div>
+                </template>
+            </app-search>
+
+            <!--
             <div class="search-input__result-box" v-if="isSearchActive">
                 <div class="result-box__items">
                     <div class="items__item--client">
@@ -32,6 +50,7 @@
                     <a class="settings__info">?</a>
                 </div>
             </div>
+            -->
         </div>
         <div class="search__dropdown-menu">
             <span>NOVO ATENDIMENTO</span>
@@ -47,20 +66,32 @@
 
 <script>
     import DraftsAPI from '../../../api/drafts';
+    import SearchComponent from '../../../components/Inputs/Search.vue';
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
+    import markjs from 'mark.js';
 
     export default {
         components: {
+            'app-search': SearchComponent
         },
         data(){
             return {
+                q: '',
                 lastSearchObj: {},
                 inputValue: '',
                 chips: [],
                 isInputFocused: false,
                 isSearchActive: false,
-                commitTimeout: null
+                commitTimeout: null,
+                markJs: null,
+                searchItems: [
+                    { text: "THIAGO YOITHI VAZ DA ROCHA" },
+                    { text: "ACIMAR TAKAHASHI VAZ DA ROCHA" },
+                    { text: "MAILON RUAN" },
+                    { text: "TÂNIA MARA TAKAKO WATANABE VAZ DA ROCHA" },
+                    { text: "THAIS THIEMI VAZ DA ROCHA" },
+                ],
             }
         },
         computed: {
@@ -92,7 +123,7 @@
                 }
             },
             searchValueCommited(searchObj){
-                console.log(searchObj);
+                this.q = searchObj.inputValue;
             },
             searchValueUpdated(){
                 const vm = this;
@@ -228,6 +259,7 @@
                 this.isInputFocused = true;
             },
             onSearchInputBlur(){
+                this.isInputFocused = false;
                 /*this.isInputFocused = false; this.hideSearch(); */
             },
             onSearchButtonClicked(){
@@ -255,14 +287,12 @@
             toggleSearch(){
                 this.isSearchActive = !this.isSearchActive;
             }
-        },
-        created(){
-
         }
     }
 </script>
 
 <style scoped>
+
     div.app-search {
         height: 32px;
         align-self: center;
@@ -273,6 +303,9 @@
         margin-right: 10px;
         position: relative;
     }
+
+    /* search chips */
+
     div.app-search > .search__search-chips {
         height: 32px;
         display: flex;
@@ -301,50 +334,43 @@
     div.app-search > .search__search-chips .search-chips__chip:last-child {
         margin-right: 0;
     }
-    div.app-search > .search__search-input {
+
+    /* search input */
+
+    div.app-search.active .search__search-input {
+        width: 320px;
+        padding-right: 20px;
+    }
+    .search__search-input {
         height: 32px;
         width: 0;
         display: flex;
         justify-content: center;
         align-items: center;
-        position: relative;
+        background-color: var(--bg-color-7);
+        transition: .2s all;
     }
-    div.app-search > .search__search-input .search-input__result-box {
-        display: flex;
-        flex-direction: column;
-        width: 420px;
-        background: var(--bg-color-5);
-        z-index: 999999;
-        top: 47px;
-        position: absolute;
-        left: 0;
-        border-radius: 10px;
-        padding: 20px 20px;
-    }
-    .search-input__result-box .result-box__items {
-        display: flex;
-        flex-direction: column;
-        padding-bottom: 20px;
-        margin-bottom: 20px;
-        border-bottom: 1px solid rgba(255,255,255,.1);
-    }
-    .search-input__result-box .result-box__items .items__item--client {
-        display: flex;
-        flex-direction: row;
-    }
-    .search-input__result-box .result-box__items .items__item--client .item--client__detail {
+    .search__search-input .search-input__item {
         display: flex;
         flex-direction: column;
     }
-    .search-input__result-box .result-box__items .items__item--client .item--client__detail span {
-        line-height: 120%;
+    .search__search-input .search-input__item span {
+        line-height: 150%;
+        font-size: 13px;
     }
-    .search-input__result-box .result-box__settings {
+    .search__search-input .search-input__item span em {
+        font-style: initial;
+        color: red;
+    }
+    .search__search-input .search-input__settings {
         display: flex;
         align-items: center;
         flex-direction: row;
+        padding-top: 15px;
+        margin-top: 8px;
+        border-top: 1px solid var(--bg-color-8);
     }
-    .search-input__result-box .result-box__settings .settings__info {
+    .search__search-input .search-input__settings .settings__info {
         background-color: var(--bg-color-7);
         width: 20px;
         height: 20px;
@@ -354,6 +380,9 @@
         border-radius: 20px;
         border: 1px solid var(--base-color--d);
     }
+
+    /* search button */
+
     div.app-search > .search__search-button {
         width: 50px;
         height: 32px;
@@ -369,19 +398,6 @@
     div.app-search.active.has-chips > .search__search-button {
         border-bottom-left-radius: 0px;
         border-top-left-radius: 0px;
-    }
-    div.app-search > .search__search-input {
-        height: 32px;
-        width: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: var(--bg-color-7);
-        transition: .2s all;
-    }
-    div.app-search.active > .search__search-input {
-        width: 320px;
-        padding-right: 20px;
     }
     div.app-search > .search__dropdown-menu {
         padding: 0 20px;
@@ -423,4 +439,5 @@
         border-top-right-radius: 32px;
         cursor: pointer;
     }
+
 </style>
