@@ -10,7 +10,7 @@
             <icon-header-search></icon-header-search>
         </div>
         <div class="search__search-input">
-            <app-search :items="searchItems" :shouldStayOpen="isInputFocused" :query="query">
+            <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :query="query">
                 <input type="text" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
                 @keydown="onSearchInputKeyDown($event)" />
                 <template slot="item" slot-scope="props">
@@ -128,13 +128,14 @@
                 const vm = this;
                 AddressesAPI.search({
                     actingCities: ['MARINGA'],
-                    q: this.query
+                    q: vm.query
                 }).then((result) => {
-                    vm.searchItems = result.data.map((address) => {
+                    const searchItems = result.data.map((address) => {
                         return {
                             text: address.name
                         };
                     });
+                    vm.$refs.search.search(vm.query, searchItems);
                 }).catch((err) => {})
             },
             searchValueCommited(searchObj){

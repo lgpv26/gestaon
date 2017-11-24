@@ -7,7 +7,7 @@
             <div class="search-input__result-box" ref="container" v-if="isShowing">
                 <a class="container__close-button" ref="closeButton">X</a>
                 <slot name="no-results"></slot>
-                <div class="result-box__items" v-show="items && items.length > 0">
+                <div class="result-box__items" v-show="searchItems && items.length > 0">
                     <div v-for="item in items" class="items__item">
                         <slot name="item" :item="item"></slot>
                     </div>
@@ -25,6 +25,7 @@
     export default {
         data(){
             return {
+                searchItems: [],
                 popperInstance: null,
                 closeTimeout: null,
                 isShowing: false,
@@ -36,6 +37,14 @@
         },
         watch: {
             query(){
+                /**/
+            }
+        },
+        methods: {
+            search(query, searchItems){
+                console.log(query, searchItems);
+                this.searchItems
+                /*
                 if(this.markJs){
                     this.markJs.unmark();
                     this.markJs = null;
@@ -45,9 +54,8 @@
                 this.markJs.mark(this.query, {
                     element: 'em'
                 });
-            }
-        },
-        methods: {
+                */
+            },
             onMouseOver(ev){
                 if(this.closeTimeout){
                     clearTimeout(this.closeTimeout);
