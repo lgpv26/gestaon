@@ -23,6 +23,19 @@ module.exports = (server, restify) => {
                 req.body.userId = req.auth.id
                 req.body.companyId = req.query.companyId
                 return server.mongodb.Draft.create(req.body).then((draft) => {
+                    // check socket connections and emit 
+                    let ids = Object.keys(server.io.sockets.connected)
+                    ids.forEach(function(id) {
+                        const socket = server.io.sockets.connected[id]
+                        if(_.includes(socket.user.companies, parseInt(req.query.companyId))){
+                            socket.join('draft/' + draft.draftId)
+                        }
+                        const companyActiveId = (socket.user.activeCompanyUserId) ? socket.user.activeCompanyUserId : socket.user.companies[0]
+                        if(parseInt(req.query.companyId) === parseInt(companyActiveId)){
+                            socket.emit('draftCreated', {data: draft, emittedBy: draft.userId})
+                        } 
+                    })
+                   
                     return draft
                 }).catch((err) => {
                     return err
@@ -45,7 +58,6 @@ module.exports = (server, restify) => {
                 });
             })
         },
-
         /*
 
 

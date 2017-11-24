@@ -23,6 +23,11 @@ server['io'] = require('socket.io')(server.server, {
     pingTimeout: 8000
 });
 
+// set event bus
+const EventEmitter = require('events');
+server['bus'] = new EventEmitter();
+server['bus'].setMaxListeners(0)
+
 // elastic search
 const elasticSearch = new require('elasticsearch').Client({
     host: config.elasticSearch.host + ':' + config.elasticSearch.port

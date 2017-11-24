@@ -5,8 +5,8 @@ module.exports = (server, restify) => {
     return {
         search: (req, res, next) => {
             let actingCitiesString = "";
-            if(typeof req.params.actingCities !== "undefined"){
-                req.params.actingCities.forEach(function(actingCity, index){
+            if (typeof req.params.actingCities !== "undefined") {
+                req.params.actingCities.forEach(function (actingCity, index) {
                     actingCitiesString += " " + actingCity;
                 });
                 actingCitiesString = utils.removeDiacritics(actingCitiesString.trim());
@@ -16,14 +16,15 @@ module.exports = (server, restify) => {
                     index: 'main',
                     type: 'address',
                     body: {
-                        "from" : 0, "size" : 10,
+                        "from": 0, "size": 10,
                         "query": {
                             "bool": {
                                 "must": {
                                     "multi_match": {
-                                        "query":  utils.removeDiacritics(req.params.q.trim()),
-                                        "fields": ["name","cep"],
-                                        "analyzer": "standard"
+                                        "query": utils.removeDiacritics(req.params.q.trim()),
+                                        "fields": ["name", "cep"],
+                                        "analyzer": "standard",
+                                        "operator": "AND"
                                     }
                                 },
                                 "filter": {
@@ -37,17 +38,26 @@ module.exports = (server, restify) => {
                         }
                     }
                 },
-                function (esErr,esRes,esStatus) {
-                    if (esErr){
+                function (esErr, esRes, esStatus) {
+                    if (esErr) {
                         console.error("Search error: ", esErr);
                         return next(
                             new restify.ResourceNotFoundError("Erro no ElasticSearch.")
                         );
                     }
-                    else{
-                        return res.send(200, {
-                            data: esRes
-                        });
+                    else {
+                        let dataSearch = _.map(esRes.hits.hits, hit => hit._source);
+                                                
+                        if (dataSearch < 1) {
+                            return next(
+                                new restify.ResourceNotFoundError("Nenhum registro encontrado.")
+                            );
+                        }
+                        else{
+                            return res.send(200, {
+                                data: dataSearch
+                            });
+                        }                      
                     }
                 }
             )
@@ -59,7 +69,7 @@ module.exports = (server, restify) => {
                     status: 'activated'
                 }
             }).then((address) => {
-                if(!address){
+                if (!address) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum dado encontrado.")
                     );
@@ -69,7 +79,7 @@ module.exports = (server, restify) => {
                 });
             });
         },
-        exportToES(req, res, next){
+        exportToES(req, res, next) {
             let esRequestBody = [];
             server.models.Address.findAll({}).then((addresses) => {
                 addresses.forEach((address) => {
@@ -96,7 +106,7 @@ module.exports = (server, restify) => {
                 server.elasticSearch.bulk({
                     body: esRequestBody
                 }, function (esErr, esRes) {
-                    if(esErr){
+                    if (esErr) {
                         console.error(esErr);
                         return next(
                             new restify.ResourceNotFoundError(esErr)
