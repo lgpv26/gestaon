@@ -1,7 +1,7 @@
 const basePath = require('./../middlewares/base-path.middleware');
 const _ = require('lodash');
 
-module.exports = (server, socket, company) => {
+module.exports = (server, channels, socket, company) => {
     
     const draftsController = require('./../controllers/drafts.controller')(server);
 
@@ -14,6 +14,60 @@ module.exports = (server, socket, company) => {
     }).catch((err) => {
         console.log(err);
     });
+
+    socket.on('presence-update-draft', (presenceUser) => {
+        socket.join('presence-draft/' + presenceUser.draftId)
+        let objPresenceUser = {}
+
+        if(presenceUser.userId === socket.user.id){
+            objPresenceUser.name = socket.user.name
+            objPresenceUser.email = socket.user.email
+        }
+
+        let draft = _.find(channels.presences.drafts, {draftId: presenceUser.draftId})
+        if(draft) {
+            const presenceUserIndex = channels.presences.drafts.indexOf(draft)
+            const repeatUser = _.find(channels.presences.drafts[presenceUserIndex].users, (user) => {
+                return JSON.stringify(user) === JSON.stringify(objPresenceUser)
+            })
+
+            if(!repeatUser) channels.presences.drafts[presenceUserIndex].users.push(objPresenceUser)
+                
+        }
+        else {
+            draft = {draftId: presenceUser.draftId, users: [objPresenceUser]}
+            channels.presences.drafts.push(draft)
+        }
+        
+        socket.on('disconnect', () => {
+            _.map(channels.presences.drafts, (tempDraft) => {
+                const userFound = _.some(tempDraft.users, (disconnectUser) => {
+                    if(disconnectUser.name === socket.user.name && disconnectUser.email === socket.user.email){
+                        return true
+                    }
+                })
+
+                tempDraft.users = _.filter(tempDraft.users, (disconnectUser) => {
+                    return (disconnectUser.name !== socket.user.name && disconnectUser.email !== socket.user.email)
+                })
+                if(userFound) server.io.in('presence-draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.users)
+                return tempDraft
+            })
+        })
+        
+        if(presenceUser.leave){
+            socket.leave('presence-draft/' + presenceUser.draftId)
+            draft = _.find(channels.presences.drafts, {draftId: presenceUser.draftId})
+            
+            _.map(draft.users, (user, index) => {
+                if(JSON.stringify(user) === JSON.stringify(objPresenceUser)){
+                    draft.users.splice(index, 1)
+                }
+            })
+        }
+        
+        server.io.in('presence-draft/' + presenceUser.draftId).emit('presenceDraft', draft.users)
+    })
 
     let timer = null;
     let draftUpdate = []

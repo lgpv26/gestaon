@@ -18,7 +18,13 @@ module.exports = function (server) {
         // Require all files inside this directory
         sockets.push(require('./' + fileName));
     });
-
+    
+    let channels = { 
+            presences: {
+                drafts: []
+            }
+        }
+   
     // clients connected to real-time features
     server.io.on('connection', (socket) => {
         let token = socket.handshake.query.token, user;
@@ -41,11 +47,11 @@ module.exports = function (server) {
         }).then((userAccessToken) => {
             if (userAccessToken && typeof userAccessToken.user !== 'undefined') {
                 user = userAccessToken.user;
-                socket.user = {id: user.id, companies: []}
+                socket.user = {id: user.id, name: user.name, email: user.email, activeCompanyUserId: user.activeCompanyUserId, companies: []}
                 user.companies.forEach((company) => {
                     socket.user.companies.push(company.id)
                     sockets.forEach((s) => {
-                        s(server, socket, company);
+                        s(server, channels, socket, company);
                     });
                     server.mongodb.Device.find({
                         companyId: company.id
