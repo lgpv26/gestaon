@@ -2,8 +2,8 @@ import Vue from "vue"
 import config from '../config'
 
 export default {
-    search(body){
-        return Vue.http.get(config.apiBaseUrl + '/addresses/search', body).then((response) => response.json());
+    search(params){
+        return Vue.http.get(config.apiBaseUrl + '/addresses/search', { params }).then((response) => response.json());
     },
     createOne(body){
         return Vue.http.post(config.apiBaseUrl + '/addresses', body).then((response) => response.json());

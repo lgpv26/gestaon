@@ -23,24 +23,24 @@
                         <ul>
                             <!-- <router-link to="/dashboard" exact tag="li"><i class="mi mi-dashboard"></i></router-link> -->
                             <router-link to="/tracker" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimento'">
-                                <icon-dashboard class="icon"></icon-dashboard>
+                                <menu-icon-dashboard class="icon"></menu-icon-dashboard>
                             </router-link>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Ligações'">
-                                <icon-sale class="icon"></icon-sale></li>
+                                <menu-icon-sale class="icon"></menu-icon-sale></li>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Caixa / conferência'">
-                                <icon-cash-check class="icon"></icon-cash-check></li>
+                                <menu-icon-cash-check class="icon"></menu-icon-cash-check></li>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Financeiro'">
-                                <icon-finance class="icon"></icon-finance></li>
+                                <menu-icon-finance class="icon"></menu-icon-finance></li>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Nota fiscal'">
-                                <icon-nfe class="icon"></icon-nfe></li>
+                                <menu-icon-nfe class="icon"></menu-icon-nfe></li>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Estoque'">
-                                <icon-stock class="icon"></icon-stock></li>
+                                <menu-icon-stock class="icon"></menu-icon-stock></li>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Relatórios'">
-                                <icon-chart class="icon"></icon-chart></li>
+                                <menu-icon-chart class="icon"></menu-icon-chart></li>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Lalala'">
-                                <icon-phone class="icon"></icon-phone></li>
+                                <menu-icon-phone class="icon"></menu-icon-phone></li>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Rastreamento'">
-                                <icon-track class="icon"></icon-track></li>
+                                <menu-icon-track class="icon"></menu-icon-track></li>
                         </ul>
                     </nav>
                     <span class="push-both-sides"></span>
@@ -107,7 +107,7 @@
                         </div>
                         <span class="push-both-sides"></span>
                         <app-search></app-search>
-                        <div class="header__draft-menu" @click="showMorphScreen()">
+                        <div class="header__draft-menu" v-if="screens.length > 0" @click="showMorphScreen()">
                             <div class="count">
                                 <span>{{ screens.length }}</span>
                             </div>
@@ -682,6 +682,7 @@
         justify-content: center;
         align-items: center;
         cursor: pointer;
+        margin-left: 10px;
     }
 
     .main-column__header .header__draft-menu .count {

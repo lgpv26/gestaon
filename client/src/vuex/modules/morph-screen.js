@@ -88,6 +88,7 @@ const actions = {
     },
     createDraft(context, {body, companyId}){
         return DraftsAPI.createOne(body, {companyId}).then((response) => {
+            console.log(response.data);
             context.commit('ADD_DRAFT', response.data);
             return response;
         });

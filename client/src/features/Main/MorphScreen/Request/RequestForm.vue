@@ -29,26 +29,82 @@
                     <div class="form-groups">
                         <div class="form-group">
                             Locais
+                            <div class="form-columns">
+                                <div class="form-column" style="flex: 1 1 60%;">
+                                    Endereço
+                                    <input type="text" />
+                                </div>
+                                <div class="form-column" style="flex: 1 1 10%;">
+                                    Número
+                                    <input type="text" />
+                                </div>
+                                <div class="form-column" style="flex: 1 1 25%;">
+                                    Complemento
+                                    <input type="text" />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-columns">
-                        <div class="form-column">
-
-                        </div>
-                        <div class="form-column">
-
+                    <div class="form-groups">
+                        <div class="form-group">
+                            <div class="form-columns">
+                                <div class="form-column" style="flex-grow: 1;">
+                                    Apelido deste endereço
+                                    <input type="text" placeholder="EX: CASA DA MÃE" />
+                                </div>
+                                <div class="form-column" style="width: 180px;">
+                                    <a class="button is-small">Tipo de local</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="form__side-column">
                     <div class="form-groups">
                         <div class="form-group">
-                            Locais
+                            <div class="form-group__header">
+                                <icon-phone class="header__icon"></icon-phone>
+                                <input type="text" placeholder="(XX) XXXXX-XXXX" />
+                                <div class="header__mini-circle"></div>
+                                <input type="text" placeholder="fixo/celular" />
+                                <span class="push-both-sides"></span>
+                                <icon-add class="header__action-icon"></icon-add>
+                            </div>
+                            <div class="form-group__content">
+                                <ul class="content__list">
+                                    <li class="list__item">
+                                        <div class="item__check"></div>
+                                        <span>(44) 99107-8686</span>
+                                        <div class="item__mini-circle"></div>
+                                        <span>WhatsApp</span>
+                                        <span class="push-both-sides"></span>
+                                        <icon-add></icon-add>
+                                    </li>
+                                    <li class="list__item">
+                                        <div class="item__check"></div>
+                                        <span>(44) 99107-8686</span>
+                                        <div class="item__mini-circle"></div>
+                                        <span>Casa</span>
+                                        <span class="push-both-sides"></span>
+                                        <icon-add></icon-add>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     <div class="form-groups">
                         <div class="form-group">
-                            Locais
+                            <div class="form-group__header">
+                                <icon-phone class="header__icon"></icon-phone>
+                                <h3>Informações adicionais</h3>
+                                <span class="push-both-sides"></span>
+                                <icon-dropdown class="header__action-icon"></icon-dropdown>
+                            </div>
+                            <div class="form-group__content">
+                                <ul>
+                                    <li></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -98,6 +154,7 @@
                 </div>
                 <div class="form__side-column">
                     <div class="side-column__header">
+
                     </div>
                 </div>
             </div>
@@ -123,8 +180,10 @@
                 this.saving = false;
                 console.log("DRAFT SALVO!");
             },
-            updateDraft(data){
-                _.mergeWith(this.form, data.form);
+            updateDraft({draftId, form}){
+                if(draftId === this.activeMorphScreen.draft.draftId) {
+                    _.mergeWith(this.form, form);
+                }
             }
         },
         data(){
@@ -159,14 +218,15 @@
             },
             sendSocket(path){
                 this.saving = true;
-                const toBeEmitted = { draftId: 1, form: this.getIsolatedFormPathObj(path)};
+                const toBeEmitted = { draftId: this.activeMorphScreen.draft.draftId, form: this.getIsolatedFormPathObj(path)};
+                console.log(toBeEmitted);
                 this.$socket.emit('update-draft', toBeEmitted);
             }
         },
         mounted(){
             const vm = this;
             this.$socket.emit('presence-update-draft', {
-                draftId: vm.activeMorphScreen.draftId,
+                draftId: vm.activeMorphScreen.draft.draftId,
                 userId: vm.user.id
             });
         }
@@ -193,8 +253,73 @@
         margin-right: 10px;
         border-radius: 5px;
     }
+
     .form-group:last-child {
         margin-right: 0;
+    }
+
+    .form-group > .form-group__header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed var(--bg-color-7);
+        margin-bottom: 15px;
+    }
+
+    .form-group > .form-group__header > span {
+        font-size: 12px;
+    }
+
+    .form-group > .form-group__header > h3 {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .form-group > .form-group__header > input[type=text] {
+    }
+
+    .form-group > .form-group__header > .header__icon {
+        flex-shrink: 0;
+        margin-right: 10px;
+    }
+
+    .form-group > .form-group__header > .header__mini-circle {
+        flex-shrink: 0;
+        height: 4px;
+        width: 4px;
+        background-color: var(--base-color--d);
+        border-radius: 2px;
+        margin: 0 10px;
+    }
+
+    .form-group > .form-group__header > .header__action-icon {
+        flex-shrink: 0;
+    }
+
+    .form-group > .form-group__content > ul.content__list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group > .form-group__content > ul.content__list > li.list__item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .form-group > .form-group__content > ul.content__list > li.list__item:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group > .form-group__content > ul.content__list > li.list__item > .item__mini-circle {
+        flex-shrink: 0;
+        height: 4px;
+        width: 4px;
+        background-color: var(--secondary-color);
+        border-radius: 2px;
+        margin: 0 10px;
     }
 
     .form-columns {
@@ -205,13 +330,17 @@
     .form-column {
         display: flex;
         flex-direction: column;
+        margin-right: 20px;
+    }
+
+    .form-column:last-child {
+        margin-right: 0px;
     }
 
     div.ms-form {
         padding: 0 30px;
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
         flex-grow: 1;
         flex-shrink: 0;
         position: relative;
@@ -310,6 +439,6 @@
     }
     div.ms-form form .form__side-column {
         margin-left: 35px;
-        width: 320px;
+        width: 350px;
     }
 </style>

@@ -105,6 +105,12 @@ Vue.component("app-checkbox", CheckboxInputComponent);
 
 /* icons from src/assets/svgs */
 
+require.context('./assets/svgs/icons/', true, /\.svg$/).keys().forEach((svgFile) => {
+    const svgFilePath = svgFile.split('.')[1].replace('/','');
+    const svgFileName = _.last(svgFilePath.split('/'));
+    Vue.component('icon-' + svgFileName, require('./assets/svgs/icons/' + svgFilePath + '.svg'));
+});
+
 require.context('./assets/svgs/header-icons/', true, /\.svg$/).keys().forEach((svgFile) => {
     const svgFilePath = svgFile.split('.')[1].replace('/','');
     const svgFileName = _.last(svgFilePath.split('/'));
@@ -114,7 +120,7 @@ require.context('./assets/svgs/header-icons/', true, /\.svg$/).keys().forEach((s
 require.context('./assets/svgs/menu-icons/', true, /\.svg$/).keys().forEach((svgFile) => {
     const svgFilePath = svgFile.split('.')[1].replace('/','');
     const svgFileName = _.last(svgFilePath.split('/'));
-    Vue.component('icon-' + svgFileName, require('./assets/svgs/menu-icons/' + svgFilePath + '.svg'));
+    Vue.component('menu-icon-' + svgFileName, require('./assets/svgs/menu-icons/' + svgFilePath + '.svg'));
 });
 
 require.context('./assets/svgs/section-icons/', true, /\.svg$/).keys().forEach((svgFile) => {

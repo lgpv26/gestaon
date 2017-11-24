@@ -137,6 +137,8 @@
         margin: 15px 0;
         -webkit-box-shadow: 0 2px 4px 0px rgba(0,0,0,.2);
         box-shadow: 0px 2px 4px 0px rgba(0,0,0,.2);
+        max-height: 350px;
+        overflow-y: auto;
     }
     .search-input__result-box .result-box__items {
         display: flex;
@@ -148,6 +150,7 @@
         padding-bottom: 8px;
         margin-bottom: 8px;
         border-bottom: 1px solid var(--bg-color-8);
+        flex-shrink: 0;
     }
     .search-input__result-box .result-box__items .items__item:last-child {
         padding-bottom: 0;

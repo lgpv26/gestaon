@@ -4,7 +4,7 @@
             Fechar
         </a>
         <div class="morph-screen__wrapper" ref="morphScreenWrapper">
-            <div class="morph-screen__item" v-for="screen in screens" ref="morphScreenItems" :key="screen.draftId">
+            <div class="morph-screen__item" v-for="screen in screens" ref="morphScreenItems" :key="screen.draft.draftId">
                 <div class="item__option" v-show="!screen.active" @click="itemSelected(screen)">
                     <h3 class="option__title">{{ screen.draft.draftId }}</h3>
                 </div>
@@ -12,14 +12,16 @@
                     <div class="morph-screen__container" v-if="screen.active" ref="container">
                         <div class="container__header">
                             <div class="header__summary">
-                                <h1 class="summary__title" ref="title">PEDIDO #{{ screen.draft.draftId }}</h1>
-                                <span class="summary__info">Iniciado às xx:xx por xxx</span>
+                                <h1 class="summary__title" ref="title">PEDIDO <span>#{{ screen.draft.draftId }}</span>
+                                <icon-log style="margin-left: 3px; position: relative; top: 1px;"></icon-log></h1>
+                                <span class="summary__info">Iniciado às <em>xx:xx</em> por <em>xxx</em></span>
                             </div>
                             <span class="push-both-sides"></span>
                             <div class="header__tags">
+                                <span>Termos da busca: </span>
                                 <ul>
-                                    <li>Junho</li>
-                                    <li>(44) 3268-5858</li>
+                                    <li><span>Junho</span><icon-copy></icon-copy></li>
+                                    <li><span>(44) 3268-5858</span><icon-copy></icon-copy></li>
                                 </ul>
                             </div>
                             <div class="header__actions">
@@ -61,8 +63,8 @@
             }
         },
         sockets: {
-            draftCreated(data){
-                console.log(data);
+            draftCreated({data,emittedBy}){
+                if(emittedBy !== this.user.id) this.ADD_DRAFT(data);
             }
         },
         watch: {
@@ -85,7 +87,7 @@
             ])
         },
         methods: {
-            ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS_SCREEN','SHOW_MS']),
+            ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS_SCREEN','SHOW_MS', 'ADD_DRAFT']),
             ...mapActions('morph-screen', ['createMorphScreen']),
             animateMorphScreenDirectlyToDraft(){
                 const vm = this;
@@ -218,7 +220,7 @@
                 const allAnimationsCompleted = [];
                 let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen);
                 vm.$socket.emit('presence-update-draft', {
-                    draftId: vm.activeMorphScreen.draftId,
+                    draftId: vm.activeMorphScreen.draft.draftId,
                     userId: vm.user.id,
                     leave: true
                 });
@@ -276,7 +278,7 @@
             closeScreen(screen){
                 const vm = this;
                 vm.$socket.emit('presence-update-draft', {
-                    draftId: vm.activeMorphScreen.draftId,
+                    draftId: vm.activeMorphScreen.draft.draftId,
                     userId: vm.user.id,
                     leave: true
                 });
@@ -440,8 +442,22 @@
         flex-shrink: 0;
         align-items: center;
     }
-    .container__header .header__summary .summary__title {
+    .container__header .header__summary > .summary__title {
+        font-weight: 600;
         line-height: 120%;
+        font-size: 14px;
+    }
+
+    .container__header .header__summary > .summary__title span {
+        color: var(--base-color);
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .container__header .header__summary > .summary__info > em {
+        font-style: initial;
+        color: var(--primary-color);
+        font-weight: 600;
     }
     .container__header .header__tags {
         display: flex;
@@ -452,14 +468,18 @@
         display: flex;
         flex-direction: row;
     }
-    .container__header .header__tags ul li {
-        padding: 8px 12px;
-        background-color: var(--bg-color-6);
-        border-radius: 20px;
-        border: 1px dashed var(--bg-color-9);
+    .container__header .header__tags ul li > span {
+        padding: 5px 2px;
+        border-bottom: 1px dashed var(--bg-color-9);
         margin-left: 15px;
-        color: var(--base-color);
         cursor: pointer;
+        margin-right: 5px;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    .container__header .header__tags ul li > svg {
+        position: relative;
+        top: -5px;
     }
     .container__header .header__actions {
         display: flex;

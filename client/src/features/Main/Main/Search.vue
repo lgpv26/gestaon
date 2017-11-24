@@ -10,7 +10,7 @@
             <icon-header-search></icon-header-search>
         </div>
         <div class="search__search-input">
-            <app-search :items="searchItems" :shouldStayOpen="isInputFocused" :query="q">
+            <app-search :items="searchItems" :shouldStayOpen="isInputFocused" :query="query">
                 <input type="text" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
                 @keydown="onSearchInputKeyDown($event)" />
                 <template slot="item" slot-scope="props">
@@ -66,6 +66,7 @@
 
 <script>
     import DraftsAPI from '../../../api/drafts';
+    import AddressesAPI from '../../../api/addresses';
     import SearchComponent from '../../../components/Inputs/Search.vue';
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
@@ -77,7 +78,7 @@
         },
         data(){
             return {
-                q: '',
+                query: '',
                 lastSearchObj: {},
                 inputValue: '',
                 chips: [],
@@ -107,10 +108,11 @@
         methods: {
             ...mapActions('morph-screen', ['createDraft']),
             ...mapMutations('morph-screen', ['SHOW_MS', 'SET_MS_SCREEN']),
+            ...mapActions('toast', ['showError']),
             addRequestClicked(ev){
                 const vm = this;
                 if(!vm.isShowingMorphScreen){
-                    const createDraftArgs = { body: {type: 'request'}, companyId: vm.companyId };
+                    const createDraftArgs = { body: {type: 'request'}, companyId: vm.company.id };
                     vm.createDraft(createDraftArgs).then((response) => {
                         vm.SET_MS_SCREEN({
                             active: true,
@@ -122,18 +124,49 @@
                     this.SHOW_MS(false);
                 }
             },
-            searchValueCommited(searchObj){
-                this.q = searchObj.inputValue;
+            search(){
+                const vm = this;
+                AddressesAPI.search({
+                    actingCities: ['MARINGA'],
+                    q: this.query
+                }).then((result) => {
+                    vm.searchItems = result.data.map((address) => {
+                        return {
+                            text: address.name
+                        };
+                    });
+                }).catch((err) => {})
             },
-            searchValueUpdated(){
+            searchValueCommited(searchObj){
+                let query = '';
+                if(searchObj.chips.length > 0){
+                    const chips = searchObj.chips.map(chip => chip.text);
+                    query += chips.join(" ");
+                }
+                if(searchObj.inputValue.trim()){
+                    query += " " + searchObj.inputValue;
+                }
+                this.query = query;
+                this.search();
+            },
+            commitUpdatedValue(){
+                const vm = this;
+                if(JSON.stringify(vm.searchObject) !== JSON.stringify(vm.lastSearchObj)){
+                    vm.lastSearchObj = vm.searchObject;
+                    vm.searchValueCommited(vm.searchObject);
+                }
+            },
+            searchValueUpdated(ignoreTimeout = false){
                 const vm = this;
                 if(vm.commitTimeout) clearTimeout(vm.commitTimeout);
-                vm.commitTimeout = setTimeout(() => {
-                    if(JSON.stringify(vm.searchObject) !== JSON.stringify(vm.lastSearchObj)){
-                        vm.lastSearchObj = vm.searchObject;
-                        vm.searchValueCommited(vm.searchObject);
-                    }
-                }, 500)
+                if(ignoreTimeout){
+                    vm.searchValueCommited(vm.searchObject);
+                }
+                else{
+                    vm.commitTimeout = setTimeout(() => {
+                        vm.commitUpdatedValue();
+                    }, 500)
+                }
             },
             selectPrev(){
                 const activeChip = _.find(this.chips, { isActive: true });
@@ -184,6 +217,7 @@
                         isActive: false
                     });
                     this.inputValue = '';
+                    this.searchValueUpdated(true);
                 }
             },
             removeChipAndSelectPrev(chip = null){
@@ -192,13 +226,13 @@
                     if(activeChip){
                         this.selectPrev();
                         this.chips.splice(this.chips.indexOf(activeChip), 1);
-                        this.searchValueUpdated();
+                        this.searchValueUpdated(true);
                     }
                     return true;
                 }
                 this.selectPrev();
                 this.chips.splice(this.chips.indexOf(chip), 1);
-                this.searchValueUpdated();
+                this.searchValueUpdated(true);
             },
             removeChipAndSelectNext(chip = null){
                 if(!chip){
@@ -206,11 +240,13 @@
                     if(activeChip){
                         this.selectNext();
                         this.chips.splice(this.chips.indexOf(activeChip), 1);
+                        this.searchValueUpdated(true);
                     }
                     return true;
                 }
                 this.selectNext();
                 this.chips.splice(this.chips.indexOf(chip), 1);
+                this.searchValueUpdated(true);
             },
             onSearchChipKeyDown(ev){
                 if(ev.code === 'ArrowLeft'){
@@ -260,7 +296,6 @@
             },
             onSearchInputBlur(){
                 this.isInputFocused = false;
-                /*this.isInputFocused = false; this.hideSearch(); */
             },
             onSearchButtonClicked(){
                 this.toggleSearch();
@@ -300,7 +335,6 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        margin-right: 10px;
         position: relative;
     }
 
