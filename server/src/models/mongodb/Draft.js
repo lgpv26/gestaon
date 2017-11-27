@@ -7,7 +7,7 @@ module.exports = {
         const schema = new Schema({
             draftId: Number, 
             companyId: Number,
-            userId: Number,
+            createdBy: Number,
             type: {
                 type: String,
                 enum: {

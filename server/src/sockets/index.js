@@ -50,9 +50,6 @@ module.exports = function (server) {
                 socket.user = {id: user.id, name: user.name, email: user.email, activeCompanyUserId: user.activeCompanyUserId, companies: []}
                 user.companies.forEach((company) => {
                     socket.user.companies.push(company.id)
-                    sockets.forEach((s) => {
-                        s(server, channels, socket, company);
-                    });
                     server.mongodb.Device.find({
                         companyId: company.id
                     }).exec().then((devices) => {
@@ -63,6 +60,9 @@ module.exports = function (server) {
                     }).catch((err) => {
                         console.log(err);
                     });
+                });
+                sockets.forEach((s) => {
+                    s(server, channels, socket);
                 });
             }
         });
