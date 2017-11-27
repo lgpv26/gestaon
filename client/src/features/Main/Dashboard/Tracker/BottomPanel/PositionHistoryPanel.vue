@@ -24,10 +24,10 @@
                 <app-switch v-model="form.showTimes"></app-switch>
             </div>
             <div class="filter-critery">
-                <button class="button is-primary is-small" @click="applyFilter()">Aplicar Filtro</button>
+                <button class="btn btn--primary" @click="applyFilter()">Aplicar Filtro</button>
             </div>
             <div class="filter-critery">
-                <button class="button is-red is-small" @click="cleanFilter()">Limpar</button>
+                <button class="btn btn--terciary" @click="cleanFilter()">Limpar</button>
             </div>
         </div>
         <div class="table" v-show="historyPanel">

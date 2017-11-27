@@ -1,6 +1,6 @@
 <template>
     <div class="app-morph-screen" v-show="isShowing" ref="morphScreen">
-        <a class="morph-screen__close" v-if="!activeMorphScreen" @click="close()">
+        <a class="morph-screen__close btn" v-if="!activeMorphScreen" @click="close()">
             Fechar
         </a>
         <div class="morph-screen__wrapper" ref="morphScreenWrapper">
@@ -14,7 +14,7 @@
                             <div class="header__summary">
                                 <h1 class="summary__title" ref="title">PEDIDO <span>#{{ screen.draft.draftId }}</span>
                                 <icon-log style="margin-left: 3px; position: relative; top: 1px;"></icon-log></h1>
-                                <span class="summary__info">Iniciado às <em>xx:xx</em> por <em>xxx</em></span>
+                                <span class="summary__info">Iniciado às <em>{{ formatedCreatedAt }}</em> por <em>{{ screen.draft.createdBy }}</em></span>
                             </div>
                             <span class="push-both-sides"></span>
                             <div class="header__tags">
@@ -47,6 +47,7 @@
     import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
     import _ from 'lodash';
     import anime from 'animejs';
+    import moment from 'moment';
 
     import RequestForm from "./Request/RequestForm.vue";
 
@@ -63,8 +64,11 @@
             }
         },
         sockets: {
-            draftCreated({data,emittedBy}){
-                if(emittedBy !== this.user.id) this.ADD_DRAFT(data);
+            draftCreated(socketData){
+                if(socketData.emittedBy !== this.user.id){
+                    console.log(socketData);
+                    this.ADD_DRAFT(socketData.data);
+                }
             }
         },
         watch: {
@@ -84,7 +88,10 @@
             ...mapState('morph-screen', ['screens','sourceEl','isShowing','sourceElBgColor','mimicBorderRadius']),
             ...mapState('auth', [
                 'user', 'token', 'company'
-            ])
+            ]),
+            formatedCreatedAt(){
+                return moment(this.activeMorphScreen.draft.createdAt).format("DD/MM/YYYY HH:mm");
+            }
         },
         methods: {
             ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS_SCREEN','SHOW_MS', 'ADD_DRAFT']),
@@ -385,11 +392,6 @@
         top: 30px;
         right: 30px;
         z-index: 1000000;
-        color: var(--primary-color);
-        padding: 5px 8px;
-        background-color: var(--bg-color-7);
-        font-weight: 500;
-        border-radius: 8px;
     }
 
     .morph-screen__wrapper {
@@ -401,14 +403,13 @@
 
     .morph-screen__item {
         display: flex;
-        background: var(--bg-color-5-l);
+        background: var(--bg-color--8);
         flex-shrink: 0;
         margin: 10px 0;
         width: 100%;
     }
 
     .morph-screen__item .item__option {
-        overflow-y: auto;
         align-self: center;
         width: 100%;
         height: 100%;
@@ -470,7 +471,7 @@
     }
     .container__header .header__tags ul li > span {
         padding: 5px 2px;
-        border-bottom: 1px dashed var(--bg-color-9);
+        border-bottom: 1px dashed var(--bg-color--9);
         margin-left: 15px;
         cursor: pointer;
         margin-right: 5px;
@@ -513,7 +514,9 @@
     }
 
     .container__header .header__actions .actions__draft-menu .count span {
-        font-size: 12px;
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--font-color--10);
     }
 
 
@@ -521,7 +524,7 @@
         display: flex;
         flex-grow: 1;
         flex-direction: column;
-        background-color: var(--bg-color-5);
+        background-color: var(--bg-color--5);
         overflow-y: auto;
     }
 </style>

@@ -1,7 +1,13 @@
+/* html */
+
+* {
+    box-sizing: border-box;
+}
+
 html, body {
     padding: 0;
     margin: 0;
-    font-family: 'Montserrat Light', 'Montserrat', sans-serif;
+    font-family: Montserrat, sans-serif;
     overflow: hidden;
 }
 
@@ -26,53 +32,78 @@ input:-webkit-autofill {
     -webkit-text-fill-color: #333 !important;
 }
 
-p, span, a, li, div {
+h1, h2, h3, h4, h5, p, span, a, li, div {
+    color: var(--font-color);
+    font-weight: initial;
     font-size: 12px;
+    margin: 0;
+    padding: 0;
 }
 
-h1 {
-    font-size: 20px;
+h1, h2, h3 {
+    font-weight: 600;
 }
 
-h3 {
-    font-size: 16px;
-}
+h1 {  font-size: 18px;  }
+h3 {  font-size: 16px;  }
 
 a {
-    color: #AAA;
+    color: var(--font-color--7);
     outline: 0 none;
     box-shadow: 0 0 0;
 }
 
 a:hover, a:active, a:focus {
-    color: #FFF;
+    color: var(--font-color--9);
     outline: 0 none;
     box-shadow: 0 0 0;
 }
 
-button.button {
-    background: #FFF;
-    border: 0;
-    border-radius: 0;
-    text-transform: uppercase;
-    color: #2D3142;
+ul {
+    margin: 0;
+    padding: 0;
 }
 
-button.button:hover {
-    color: #34E5FF;
+ul li {
+    list-style: none;
 }
 
-/* para bulma */
+/* classes */
 
-.button {
-    border-radius: 20px!important;
+.btn {
+    cursor: pointer;
+    border-radius: 5px;
     line-height: normal;
     border: 0;
     font-weight: normal;
-    background: rgba(150,150,150,0.1);
-    color: #AAA;
-    outline: 0px;
-    box-shadow: 0;
+    background: var(--bg-color--10);
+    color: var(--font-color--9);
+    outline: 0;
+    box-shadow: none;
+    padding: 0 15px;
+    margin: 0;
+    height: 24px;
+    display: flex;
+    align-items: center;
+}
+
+.btn.btn--circle  {
+    border-radius: 24px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    padding: 0;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn.btn--mini-circle  {
+    border-radius: 15px;
+    width: 15px;
+    height: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .button:hover, .button:active, .button:focus {
@@ -86,33 +117,31 @@ button.button:hover {
     margin-right: 3px
 }
 
-.button.is-primary, .button.is-primary:hover {
-    background: #61AFEF;
-    color: #FFF;
+/* color classes */
+
+.btn.btn--primary {
+    background: var(--bg-color--primary);
+}
+.btn.btn--secondary {
+    background: var(--bg-color--secondary);
+}
+.btn.btn--terciary {
+    background: var(--bg-color--terciary);
 }
 
-.button.is-red, .button.is-red:hover {
-    background: #D46C63;
-    color: #FFF;
+.btn.btn--bordered.btn--primary {
+    background: transparent;
+    border: 1px solid var(--bg-color--primary);
+}
+.btn.btn--bordered.btn--secondary {
+    background: transparent;
+    border: 1px solid var(--bg-color--secondary);
+}
+.btn.btn--bordered.btn--terciary {
+    background: transparent;
+    border: 1px solid var(--bg-color--terciary);
 }
 
-.button.is-yellow, .button.is-yellow:hover {
-    background: #D19A66;
-    color: #FFF;
-}
-
-.is-primary, .is-primary:hover {
-    color: #61AFEF;
-}
-.is-secondary, .is-secondary:hover {
-    color: #D19A66;
-}
-.is-green, .is-green:hover {
-    color: #8AC363;
-}
-.is-red, .is-red:hover {
-    color: #D46C63;
-}
 
 /* for modals */
 .modal-container {

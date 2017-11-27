@@ -30,10 +30,10 @@
                 <input type="text" style="width: 20px;" v-model="form.interval" />
             </div>
             <div class="form-item">
-                <a class="button is-small" v-if="!geofenceDrawn" @click="drawOnMap()">
+                <a class="btn btn--circle" v-if="!geofenceDrawn" @click="drawOnMap()">
                     <i class="mi mi-edit" style="margin: 0;"></i>
                 </a>
-                <a class="button is-yellow is-small" v-else @click="redrawOnMap()">
+                <a class="btn btn--circle" v-else @click="redrawOnMap()">
                     <i class="mi mi-edit" style="margin: 0;"></i>
                 </a>
             </div>

@@ -2,11 +2,11 @@
 
 import './assets/fonts/montserrat.css'
 
-import 'bulma/css/bulma.css'
+/*import 'bulma/css/bulma.css'*/
 import 'material-icons/css/material-icons.min.css'
 import 'izitoast/dist/css/iziToast.min.css'
 import 'smooth-scrollbar/dist/smooth-scrollbar.css'
-import './assets/theme/slider.css'
+/*import './assets/theme/slider.css'*/
 import './assets/styles/reset.css'
 import './assets/styles/main.css'
 import './assets/styles/dark-theme.css'

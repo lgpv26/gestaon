@@ -2,20 +2,47 @@
 
     /* Background colors */
 
-    --bg-color-0: #000;
-    --bg-color-1: #020203;
-    --bg-color-2: #0a0b0c;
-    --bg-color-3: #121315;
-    --bg-color-4: #191b1f;
-    --bg-color-5-d: #1b1e23; /* Header and left menu bg color */
-    --bg-color-5: #212328; /* Header and left menu bg color */
-    --bg-color-5-l: #26282d; /* Header and left menu bg color */
-    --bg-color-6: #292b31;
-    --bg-color-7: #30333b;
-    --bg-color-8: #383b44;
-    --bg-color-9: #40444d;
+    --bg-color--0:    #070708; /* 3% */
+    --bg-color--1:    #101114; /* 7% */
+    --bg-color--2:    #17181c; /* 10% */
+    --bg-color--3:    #1c1d22; /* 12% */
+    --bg-color--4:    #1e2024; /* 13% */
+    --bg-color--5:    #212328; /* Origin color and starting at 14% */
+    --bg-color--6:    #23252a; /* 15% */
+    --bg-color--7:    #25272d; /* 16% */
+    --bg-color--8:    #292c32; /* 18% */
+    --bg-color--9:    #30333b; /* 21% */
+    --bg-color--10:   #3a3d46 ; /* 25% */
 
-    --bg-secondary-color: #197379;
+    --bg-color--primary: #4d76c8;
+    --bg-color--secondary: #197379;
+    --bg-color--terciary: #E0634A;
+
+    --bg-color--success: #59d68a;
+    --bg-color--danger: #e0422a;
+    --bg-color--warning: #ed6d3b;
+
+    /* Font colors */
+
+    --font-color--0: #1d1e20; /* 12% */
+    --font-color--1: #313235; /* 20% */
+    --font-color--2: #44464b; /* 28% */
+    --font-color--3: #55585e; /* 35% */
+    --font-color--4: #61656b; /* 40% */
+    --font-color--5: #6c7077; /* Origin color and starting at 45% */
+    --font-color--6: #797e86; /* 50% */
+    --font-color--7: #94989e; /* 60% */
+    --font-color--8: #cacbce; /* 70% */
+    --font-color--9: #e4e5e7; /* 80% */
+    --font-color--10: #efefef; /* 90% */
+
+    --font-color--primary: #4d76c8;
+    --font-color--secondary: #50E3C2;
+    --font-color--terciary: #E0634A;
+
+    --font-color--success: #59d68a;
+    --font-color--danger: #e0422a;
+    --font-color--warning: #ed6d3b;
 
     /* General colors */
 
@@ -27,12 +54,17 @@
     --secondary-color: #50E3C2;
     --terciary-color: #E0634A;
 
-    --success-color: #59d68a;
-    --danger-color: #e0422a;
-    --warning-color: #ed6d3b;
+    /* Shadows */
 
-    /* Popover shadows */
+    --popover-shadow: 0 2px 5px 0 var(--bg-color--2);
+    --card-shadow: 0 2px 5px 0 var(--bg-color--3);
+    --main-menu-shadow: 0 0 15px -5px var(--bg-color--0);
+    --main-header-shadow: 0 0 15px -5px var(--bg-color--0);
+    --bottom-panel-shadow: 0 0px 15px -7px var(--bg-color--0);
 
-    --popover-shadow: 0px 2px 4px 0px rgba(0,0,0,.2);
+    /* Alias */
+
+    --bg-color: var(--bg-color--5);
+    --font-color: var(--font-color--5);
 
 }

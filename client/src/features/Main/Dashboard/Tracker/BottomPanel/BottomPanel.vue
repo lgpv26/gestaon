@@ -16,7 +16,7 @@
                     <div v-if="activeBottomPanel === 'devices'" class="bottom-panel-actions">
                         <ul>
                             <li v-if="hasPermission('devices.add')">
-                                <a @click="executePanelMethod('showDeviceFormModal')" v-tippy="{ theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Adicionar dispositivo'">
+                                <a class="btn btn--circle" @click="executePanelMethod('showDeviceFormModal')" v-tippy="{ theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Adicionar dispositivo'">
                                     <i class="mi mi-add"></i>
                                 </a>
                             </li>
@@ -25,7 +25,7 @@
                     <div v-if="activeBottomPanel === 'events'" class="bottom-panel-actions">
                         <ul>
                             <li>
-                                <a @click="executePanelMethod('refreshEvents')" v-tippy="{ theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Atualizar eventos'">
+                                <a class="btn btn--circle" @click="executePanelMethod('refreshEvents')" v-tippy="{ theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Atualizar eventos'">
                                     <i class="mi mi-refresh"></i>
                                 </a>
                             </li>
@@ -34,14 +34,14 @@
                     <div v-if="activeBottomPanel === 'geofences'" class="bottom-panel-actions">
                         <ul>
                             <li>
-                                <a @click="executePanelMethod('refreshData')"  v-tippy="{ theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Atualizar cercas'">
+                                <a class="btn btn--circle" @click="executePanelMethod('refreshData')"  v-tippy="{ theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Atualizar cercas'">
                                     <i class="mi mi-refresh"></i>
                                 </a>
                             </li>
                         </ul>
                     </div>
                     <div class="bottom-panel-actions" style="padding-left: 0;">
-                        <a class="button is-small" @click="toggleBottomPanel()" :class="{'is-primary': showBottomPanel}">
+                        <a class="btn btn--circle" @click="toggleBottomPanel()" :class="{'is-primary': showBottomPanel}">
                             <i class="mi" :class="{'mi-expand-less': showBottomPanel,'mi-expand-more': !showBottomPanel}" style="font-size: 16px;"></i>
                         </a>
                     </div>
@@ -128,11 +128,11 @@
 <style scoped>
 
     #app-bottom-panel {
-        box-shadow: 0 0px 12px 0px #212128;
+        box-shadow: var(--bottom-panel-shadow);
         display: flex;
         flex-shrink: 0;
         flex-direction: column;
-        background: var(--bg-color-5);
+        background: var(--bg-color--5);
         position: relative;
         padding: 0;
     }
@@ -170,8 +170,8 @@
     #app-bottom-panel .device-tabs ul li {
         list-style: none;
         display: flex;
-        background: rgba(255,255,255,.1);
-        color: #FFF;
+        background: var(--bg-color--9);
+        color: var(--font-color--9);
         align-items: center;
         margin-right: 5px;
         padding: 0 20px;
@@ -202,16 +202,13 @@
     }
 
     #app-bottom-panel div.bottom-panel-actions ul li a{
-        height: 22px;
         color: #FFF;
-        font-size: 18px;
-        border: 2px solid #FFF;
-        border-radius: 22px;
+        font-size: 16px;
     }
 
     #app-bottom-panel div.bottom-panel-actions ul li a > i{
         position: relative;
-        top: -1px
+        top: 0;
     }
 
 </style>

@@ -11,12 +11,12 @@
         </div>
         <div class="search__search-input">
             <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :query="query">
-                <input type="text" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
+                <input type="text" class="search-input__field" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
                 @keydown="onSearchInputKeyDown($event)" />
                 <template slot="item" slot-scope="props">
                     <div class="search-input__item">
-                        <span class="detail__name">{{ props.item.text }}</span>
-                        <span class="detail__address">RUA 28 DE JUNHO, 1214</span>
+                        <span class="detail__name">TRÁ TRÁ ---</span>
+                        <span class="detail__address" v-html="props.item.text">RUA 28 DE JUNHO, 1214</span>
                         <span class="detail__phones">(44) 3268-6768, (44) 99107-8686</span>
                     </div>
                 </template>
@@ -27,30 +27,10 @@
                         <a class="settings__info">?</a>
                     </div>
                 </template>
+                <template slot="no-results">
+                    <span>Nenhum resulado encontrado...</span>
+                </template>
             </app-search>
-
-            <!--
-            <div class="search-input__result-box" v-if="isSearchActive">
-                <div class="result-box__items">
-                    <div class="items__item--client">
-                        <div class="item--client__detail">
-                            <span class="detail__name">THIAGO YOITHI VAZ DA ROCHA</span>
-                            <span class="detail__address">RUA 28 DE JUNHO, 1214</span>
-                            <span class="detail__phones">(44) 3268-6768, (44) 99107-8686</span>
-                        </div>
-                        <div class="item--client__actions"></div>
-                    </div>
-                    <div class="items__item--address">
-                        <div class="item--address__name"></div>
-                    </div>
-                </div>
-                <div class="result-box__settings">
-                    <app-switch style="margin-right: 8px;"></app-switch>
-                    <span style="margin-right: 8px;">Apenas endereços</span>
-                    <a class="settings__info">?</a>
-                </div>
-            </div>
-            -->
         </div>
         <div class="search__dropdown-menu">
             <span>NOVO ATENDIMENTO</span>
@@ -126,17 +106,20 @@
             },
             search(){
                 const vm = this;
+                const searchComponent = vm.$refs.search;
                 AddressesAPI.search({
                     actingCities: ['MARINGA'],
                     q: vm.query
                 }).then((result) => {
-                    const searchItems = result.data.map((address) => {
+                    vm.searchItems = result.data.map((address) => {
                         return {
                             text: address.name
                         };
                     });
-                    vm.$refs.search.search(vm.query, searchItems);
-                }).catch((err) => {})
+                    searchComponent.search();
+                }).catch((err) => {
+                    vm.searchItems = [];
+                })
             },
             searchValueCommited(searchObj){
                 let query = '';
@@ -166,7 +149,7 @@
                 else{
                     vm.commitTimeout = setTimeout(() => {
                         vm.commitUpdatedValue();
-                    }, 500)
+                    }, 300)
                 }
             },
             selectPrev(){
@@ -346,7 +329,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: var(--bg-color-7);
+        background-color: var(--bg-color--7);
         border-bottom-left-radius: 32px;
         border-top-left-radius: 32px;
         padding-left: 20px;
@@ -382,8 +365,11 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: var(--bg-color-7);
+        background-color: var(--bg-color--9);
         transition: .2s all;
+    }
+    .search__search-input .search-input__field {
+        border-bottom: 0;
     }
     .search__search-input .search-input__item {
         display: flex;
@@ -402,11 +388,11 @@
         align-items: center;
         flex-direction: row;
         padding-top: 15px;
-        margin-top: 8px;
-        border-top: 1px solid var(--bg-color-8);
+        margin-top: 15px;
+        border-top: 1px solid var(--bg-color--8);
     }
     .search__search-input .search-input__settings .settings__info {
-        background-color: var(--bg-color-7);
+        background-color: var(--bg-color--7);
         width: 20px;
         height: 20px;
         display: flex;
@@ -425,14 +411,14 @@
         padding-left: 3px;
         justify-content: center;
         align-items: center;
-        background-color: var(--bg-color-7);
+        background-color: var(--bg-color--9);
         border-bottom-left-radius: 32px;
         border-top-left-radius: 32px;
         cursor: pointer;
     }
     div.app-search.active.has-chips > .search__search-button {
-        border-bottom-left-radius: 0px;
-        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0;
+        border-top-left-radius: 0;
     }
     div.app-search > .search__dropdown-menu {
         padding: 0 20px;
@@ -447,8 +433,6 @@
         color: var(--base-color--l);
         font-size: 12px;
         font-weight: 600;
-        position: relative;
-        top: 1px;
     }
     div.app-search > .search__separator {
         width: 1px;

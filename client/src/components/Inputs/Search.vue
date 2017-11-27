@@ -4,11 +4,11 @@
             <slot></slot>
         </div>
         <transition name="fade">
-            <div class="search-input__result-box" ref="container" v-if="isShowing">
+            <div class="search-input__result-box" ref="container" v-show="isShowing">
                 <a class="container__close-button" ref="closeButton">X</a>
-                <slot name="no-results"></slot>
-                <div class="result-box__items" v-show="searchItems && items.length > 0">
-                    <div v-for="item in items" class="items__item">
+                <slot name="no-results" v-if="!items || items.length <= 0"></slot>
+                <div class="result-box__items" v-show="items && items.length > 0">
+                    <div v-for="item in items" class="items__item" ref="searchable">
                         <slot name="item" :item="item"></slot>
                     </div>
                 </div>
@@ -25,36 +25,42 @@
     export default {
         data(){
             return {
-                searchItems: [],
                 popperInstance: null,
-                closeTimeout: null,
                 isShowing: false,
+                closeTimeout: null,
                 markJs: null
             }
         },
         props: ['items', 'shouldStayOpen', 'query'],
-        computed: {
-        },
         watch: {
             query(){
-                /**/
+                if(this.query.trim() !== ''){
+                    this.openSearch();
+                }
             }
         },
         methods: {
-            search(query, searchItems){
-                console.log(query, searchItems);
-                this.searchItems
-                /*
-                if(this.markJs){
-                    this.markJs.unmark();
-                    this.markJs = null;
-                }
-                const highlightableElements = this.$refs.search.querySelectorAll(".detail__name, .detail__address, .detail__phones");
-                this.markJs = new MarkJS(highlightableElements);
-                this.markJs.mark(this.query, {
-                    element: 'em'
-                });
-                */
+            search(){
+                const vm = this;
+                Vue.nextTick(() => {
+                    if(vm.$refs.searchable){
+                        if(vm.markJs){
+                            vm.markJs.unmark({
+                                done(){
+                                    vm.markJs.mark(vm.query, {
+                                        element: 'em'
+                                    });
+                                }
+                            });
+                        }
+                        else {
+                            vm.markJs = new MarkJS(vm.$refs.searchable);
+                            vm.markJs.mark(vm.query, {
+                                element: 'em'
+                            });
+                        }
+                    }
+                })
             },
             onMouseOver(ev){
                 if(this.closeTimeout){
@@ -64,24 +70,23 @@
             onMouseLeave(ev){
                 if(this.shouldStayOpen) return;
                 this.closeTimeout = setTimeout(() => {
-                    this.closeSelect();
+                    this.closeSearch();
                 }, 1200);
             },
             onClickTarget(ev){
-                this.openSelect();
+                this.openSearch();
             },
             onClick(ev){
                 const vm = this;
                 if(vm.isShowing && (vm.$refs.target === ev.target || vm.$refs.target.contains(ev.target))){}
                 else if(vm.isShowing && vm.$refs.container && ((vm.$refs.container !== ev.target && !vm.$refs.container.contains(ev.target)) ||
                     ev.target === vm.$refs.closeButton || vm.$refs.closeButton.contains(ev.target))){
-                    vm.closeSelect();
+                    vm.closeSearch();
                 }
 
             },
-            openSelect(){
+            openSearch(){
                 this.isShowing = true;
-                /*document.addEventListener("click", this.onClick);*/
                 Vue.nextTick(() => {
                     if(this.popperInstance) {
                         this.popperInstance.destroy();
@@ -91,12 +96,12 @@
                     });
                 });
             },
-            closeSelect(){
+            closeSearch(){
                 this.isShowing = false;
             },
             toggleSelect(){
-                if(this.isShowing) return this.closeSelect();
-                this.openSelect();
+                if(this.isShowing) return this.closeSearch();
+                this.openSearch();
             }
         },
         mounted(){
@@ -138,7 +143,7 @@
         width: 420px;
         position: absolute;
         z-index: 99999;
-        background-color: var(--bg-color-5);
+        background-color: var(--bg-color);
         padding: 20px;
         border-radius: 10px;
         cursor: initial;
@@ -157,7 +162,7 @@
         flex-direction: row;
         padding-bottom: 8px;
         margin-bottom: 8px;
-        border-bottom: 1px solid var(--bg-color-8);
+        border-bottom: 1px solid var(--bg-color--8);
         flex-shrink: 0;
     }
     .search-input__result-box .result-box__items .items__item:last-child {
@@ -177,14 +182,14 @@
         align-items: center;
         border-radius: 100%;
         line-height: 100%;
-        background-color: var(--bg-color-7)
+        background-color: var(--bg-color--7)
     }
 </style>
 
 <style>
     em {
         color: var(--primary-color);
-        background-color: var(--bg-color-7);
+        background-color: var(--bg-color--7);
         font-style: initial;
         font-weight: 600;
     }

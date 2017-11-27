@@ -1,42 +1,30 @@
 <template>
-    <div id="page-login" :style="pageLoginStyle">
-        <div class="login-container">
-            <div class="left-side">
-                <h3>NOVO USUÁRIO?</h3>
-                <p>Crie uma nova conta em menos de 2 minutos!</p>
-                <div>
-                    <router-link to="/register" exact tag="button" class="button is-warning">CRIAR NOVA CONTA</router-link>
-                </div>
-                <small>* Experimente por 15 dias</small>
+    <div id="page-login">
+        <div class="login__container">
+            <div class="container__header">
+                <h3>AGILIZA ERP</h3>
             </div>
-            <div class="right-side">
-                <h3>ENTRAR</h3>
+            <div class="container__body">
                 <form autocomplete="off">
-                    <div class="columns">
-                        <div class="column">
-                            <p class="control">
-                                <label class="label">E-mail</label>
-                                <input type="email" class="input" placeholder="email@dominio.com.br" autocomplete="false" v-model="form.email" >
-                            </p>
-                        </div>
+                    <div>
+                        <label>E-mail</label>
+                        <input type="email" class="input" placeholder="email@dominio.com.br" autocomplete="false" v-model="form.email" >
                     </div>
-                    <div class="columns">
-                        <div class="column">
-                            <p class="control">
-                                <label class="label">Senha</label>
-                                <input type="password" class="input" placeholder="*******" v-model="form.password" >
-                            </p>
-                        </div>
+                    <div>
+                        <label>Senha</label>
+                        <input type="password" class="input" placeholder="*******" v-model="form.password" >
                     </div>
-                    <div class="columns" style="margin-top: 0px;">
-                        <div class="column">
-                            <p class="control">
-                                <button class="button is-primary" @click.prevent="login">ENTRAR</button>
-                            </p>
-                        </div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn" @click.prevent="login">entrar</button>
                     </div>
                 </form>
-                <small><a href="#">Esqueci minha senha</a></small>
+                <div class="body__action-buttons">
+                    <a href="#">esqueci minha senha</a>
+                    <!--
+                    <router-link to="/register" exact tag="button" class="btn btn--secondary" style="margin-right: 10px;">nova conta</router-link>
+                    <button class="btn btn--terciary">esqueci a senha</button>
+                    -->
+                </div>
             </div>
         </div>
     </div>
@@ -52,9 +40,6 @@
                 form: {
                     email: "",
                     password: ""
-                },
-                pageLoginStyle: {
-                    background: "#26272E"
                 }
             }
         },
@@ -101,4 +86,155 @@
 </script>
 
 <style scoped>
+    #page-login {
+        background: transparent url('../../assets/imgs/bg-login.jpg') no-repeat center;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        position: fixed;
+        overflow-y: overlay;
+        align-items: center;
+    }
+
+    /* Login Page */
+    #page-login input{
+        text-transform: uppercase;
+    }
+
+    #page-login input[type=email]{
+        text-transform: lowercase;
+    }
+
+    #page-login div.login__container {
+        background-image: url('../../assets/imgs/bg-login-form.jpg');
+        background-size: cover;
+        background-position: center;
+        width: 460px;
+        display: flex;
+        flex-direction: column;
+        border-radius: 5px;
+        box-shadow: 0 0 60px rgba(0,0,0,.4);
+        flex-shrink: 0;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+    }
+
+    #page-login div.login__container h3 {
+        margin: 0;
+        text-align: center;
+        font-size: 30px;
+        font-weight: 600;
+    }
+
+    #page-login div.login__container .container__header {
+        width: 300px;
+        color: #FFF;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+
+    #page-login div.login__container .container__header h3 {
+        color: rgba(255,255,255,0.9);
+        text-shadow: 1px 1px #222;
+    }
+
+    #page-login div.login__container .container__header .btn {
+        margin: 10px 0;
+    }
+
+    #page-login div.login__container .container__header small {
+        color: rgba(255,255,255,0.7);
+    }
+
+
+    #page-login div.login__container .container__body {
+        flex-shrink: 0;
+        padding: 40px 30px 20px;
+        color: #333;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    #page-login div.login__container .container__body form {
+        margin-bottom: 20px;
+    }
+
+    #page-login div.login__container .container__body form > div {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+
+    #page-login div.login__container .container__body form > div label {
+        color: #FFF;
+        font-weight: 600;
+    }
+
+    #page-login div.login__container .container__body form input.input {
+        margin-bottom: 5px;
+        border-bottom: 1px solid rgba(255,255,255,.4);
+    }
+
+    input.input::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+        color: rgba(255,255,255,.5);
+    }
+
+    input.input::-moz-placeholder { /* Firefox 19+ */
+        color: rgba(255,255,255,.5);
+    }
+    input.input:-ms-input-placeholder { /* IE 10+ */
+        color: rgba(255,255,255,.5);
+    }
+    input.input:-moz-placeholder { /* Firefox 18- */
+        color: rgba(255,255,255,.5);
+    }
+
+    #page-login div.login__container .container__body .body__action-buttons {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    #page-login div.login__container .container__body .btn {
+        margin: 0;
+        width: 100%;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+    }
+
+    #page-login div.login__container .container__body a {
+        text-align: center;
+        color: rgba(255,255,255,.7);
+    }
+
+    #page-login .input, #page-login .textarea, #page-login .btn {
+        height: 40px;
+    }
+
+    #page-login .control small {
+        margin-top: 5px;
+        font-size: 10px;
+        color: #666;
+        display: inline-block;
+        line-height: 100%;
+    }
+
+    .btn {
+        box-shadow: 0 0 3px rgba(0,0,0,.4);
+        background-color: rgba(255,255,255,.7);
+        color: var(--font-color--primary);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
 </style>

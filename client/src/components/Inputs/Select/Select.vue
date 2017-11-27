@@ -5,7 +5,7 @@
         </div>
         <transition name="fade">
             <div class="select-input__container" v-if="isShowing" ref="container">
-                <a class="container__close-button" ref="closeButton">X</a>
+                <a class="container__close-button btn btn--mini-circle" ref="closeButton">X</a>
                 <div class="container__section" v-show="sections && sections.length > 0" v-for="section in sections">
                     <slot name="section" :text="section.text"></slot>
                     <div class="section__item" v-for="item in section.items">
@@ -110,13 +110,13 @@
         width: 200px;
         position: absolute;
         z-index: 99999;
-        background-color: var(--bg-color-5);
+        background-color: var(--bg-color);
         padding: 20px;
         border-radius: 10px;
         cursor: initial;
         margin: 15px 0;
-        -webkit-box-shadow: 0 2px 4px 0px rgba(0,0,0,.2);
-        box-shadow: 0px 2px 4px 0px rgba(0,0,0,.2);
+        -webkit-box-shadow: var(--popover-shadow);
+        box-shadow: var(--popover-shadow);
     }
     .ag-select-input .container__close-button {
         position: absolute;
@@ -130,7 +130,7 @@
         align-items: center;
         border-radius: 100%;
         line-height: 100%;
-        background-color: var(--bg-color-7)
+        background-color: var(--bg-color--7)
     }
     .ag-select-input .container__section {
         margin-bottom: 10px;

@@ -6,9 +6,6 @@
                  :style="{ width: boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize)) + 'px' }"
                  :class="{dragging: isDraggingBoardColumn}">
                 <div class="board-section__header" :style="{ height: boardOptions.headerHeight }">
-                    <div class="summary">
-                        <span>0 pedidos nesta coluna</span>
-                    </div>
                     <div class="header__section-title">
                         <h3>{{ boardSection.name }}</h3>
                         <span class="push-both-sides"></span>
@@ -107,7 +104,7 @@
                         this.showMorphScreen({
                             show: true,
                             sourceEl: ev.target,
-                            sourceElBgColor: 'var(--bg-color-7)',
+                            sourceElBgColor: 'var(--bg-color--7)',
                             mimicBorderRadius: 0
                         })
                     } else {
@@ -195,11 +192,12 @@
         cursor: -webkit-grab;
         cursor: -moz-grab;
         cursor: grab;
-        padding: 10px;
-        padding-bottom: 8px;
-        background:  var(--bg-color-7);
+        padding: 10px 10px 8px;
+        height: 60px;
+        background: var(--bg-color--9);
     }
     #request-panel > .board .board-section > .board-section__header {
+        display: flex;
         color: var(--base-color);
     }
     #request-panel > .board .board-section > .board-section__header > .header__section-title {
@@ -207,6 +205,11 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        width: 100%;
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title > h3 {
+        color: var(--font-color--8);
+        flex-grow: 1;
     }
     #request-panel > .board .board-section > .board-section__header > .header__section-title ul li {
         display: inline;
@@ -257,13 +260,15 @@
         cursor: pointer;
         padding: 10px;
         flex-grow:1;
-        background: var(--bg-color-7);
+        background: var(--bg-color--9);
+        box-shadow: var(--card-shadow);
     }
     #request-panel > .board .request-card.ghost > .request-card__main {
         border: 2px dashed rgba(255,255,255,.1);
         opacity: .8;
     }
     #request-panel > .board .request-card > .request-card__main h3.card-title {
+        color: var(--font-color--7);
         font-size: 14px;
     }
 </style>

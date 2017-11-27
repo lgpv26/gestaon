@@ -52,7 +52,7 @@
     div.tracker-controls ul li{
         list-style: none;
         cursor: pointer;
-        color: #2A2B33;
+        color: var(--font-color--10);
         font-size: 20px;
         padding: 0 5px;
         display: flex;
@@ -61,9 +61,6 @@
         position: relative;
         top: -1px;
         transition: .3s all;
-    }
-    div.tracker-controls ul li.dark{
-        color: #FFF;
     }
     div.tracker-controls ul li:hover {
     }
