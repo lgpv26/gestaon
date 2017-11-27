@@ -4,16 +4,7 @@ const utils = require('../utils');
 module.exports = (server, restify) => {
     return {
         search: (req, res, next) => {
-
-            /* mounting search string */
-            let searchString = "";
-            if(typeof req.params.chips !== "undefined"){
-                req.params.chips.forEach(function(chip, index){
-                    searchString += " " + chip;
-                });
-                searchString = utils.removeDiacritics(searchString.trim());
-            }
-
+            
             /* preparing settings data */
 
             let actingCitiesString = "";
@@ -41,9 +32,10 @@ module.exports = (server, restify) => {
                                             "inner_hits" : {},
                                             "query": {
                                                 "multi_match": {
-                                                    "query": searchString,
+                                                    "query": utils.removeDiacritics(req.params.q.trim()),
                                                     "fields": ["addresses.address^3","addresses.number^2","addresses.complement^2"],
-                                                    "analyzer": "standard"
+                                                    "analyzer": "standard",
+                                                    "operator": "OR"
                                                 }
                                             },
                                             "boost": 2
@@ -51,9 +43,10 @@ module.exports = (server, restify) => {
                                     },
                                     {
                                         "multi_match": {
-                                            "query": searchString,
+                                            "query": utils.removeDiacritics(req.params.q.trim()),
                                             "fields": ["name","obs"],
-                                            "analyzer": "standard"
+                                            "analyzer": "standard",
+                                            "operator": "OR"
                                         }
                                     }
                                 ]
@@ -70,9 +63,10 @@ module.exports = (server, restify) => {
                             "bool": {
                                 "must": {
                                     "multi_match": {
-                                        "query": searchString,
+                                        "query": utils.removeDiacritics(req.params.q.trim()),
                                         "fields": ["name","cep"],
-                                        "analyzer": "standard"
+                                        "analyzer": "standard",
+                                        "operator": "AND"
                                     }
                                 },
                                 "filter": {
