@@ -12,7 +12,7 @@
                 <div id="left-column" class="left-column">
                     <header>
                         <div class="header__dropdown-menu">
-                            <app-dropdown-menu :menuList="menuList">
+                            <app-dropdown-menu :menuList="menuList" placement="bottom-start" :verticalOffset="-10">
                                 <div class="dropdown-menu__company-name">
                                     <h3>{{ shortCompanyName }}</h3>
                                 </div>
@@ -60,7 +60,7 @@
                                         </div>
                                     </div>
                                 </app-datetime-picker>
-                                <app-new-select class="request-board__filter filter--type" :sections="requestBoardFilter.type">
+                                <app-new-select class="request-board__filter filter--type" :sections="requestBoardFilter.type"  :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Tipo</span>
                                     </div>
@@ -71,7 +71,7 @@
                                         <span>{{itemProps.text }}</span>
                                     </template>
                                 </app-new-select>
-                                <app-new-select class="request-board__filter filter--users-in-charge" :items="requestBoardFilter.usersInCharge">
+                                <app-new-select class="request-board__filter filter--users-in-charge" :items="requestBoardFilter.usersInCharge" :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Responsável</span>
                                         <div class="target__amount">
@@ -83,7 +83,7 @@
                                         <span>{{itemProps.text }}</span>
                                     </template>
                                 </app-new-select>
-                                <app-new-select class="request-board__filter filter--filter" :sections="requestBoardFilter.filter">
+                                <app-new-select class="request-board__filter filter--filter" :sections="requestBoardFilter.filter" :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Filtro</span>
                                         <div class="target__amount">
@@ -423,7 +423,12 @@
                     vm.setAuthUser().then((me) => {
                         vm.menuList = _.filter(vm.menuList, (menuItem) => {
                             if(menuItem.type === 'system'){
-                                return (menuItem.onlyAdmin && vm.user.type !== 'admin');
+                                if(menuItem.onlyAdmin && vm.user.type === 'admin'){
+                                    return true;
+                                }
+                                else if(!menuItem.onlyAdmin){
+                                    return true;
+                                }
                             }
                         });
                         vm.user.userCompanies.forEach((userCompany) => {
@@ -468,7 +473,7 @@
         display: flex;
         position: fixed;
         flex-direction: row;
-        background: var(--bg-color---5);
+        background: var(--bg-color--5);
         transition: .3s all;
 
         -webkit-backface-visibility: hidden;
@@ -498,8 +503,6 @@
         flex-direction: row;
         background: var(--bg-color--5);
     }
-
-    /*
 
     .settings-animation-enter-active {
       transition: all .15s ease-in;
@@ -533,8 +536,6 @@
       opacity: 0;
     }
 
-    */
-
     .left-column, .left-column header, .main-column header {
         background-color: var(--bg-color--5);
     }
@@ -543,7 +544,7 @@
         -webkit-box-shadow: var(--main-menu-shadow);
         box-shadow: var(--main-menu-shadow);
         position: relative;
-        z-index: 3;
+        z-index: 9999;
         width: 60px;
         min-height: 100%;
         flex-direction: column;

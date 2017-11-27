@@ -1,68 +1,70 @@
 <template>
-    <div class="ms-form">
-        <div class="ms-form__spinner" v-if="saving && !form.client.active && !form.order.active && !form.task.active">
-            <span>Salvando...</span>
-        </div>
-        <div class="form__instruction" v-if="!form.client.active && !form.order.active && !form.task.active">
-            <div class="instruction__container">
-                <div class="container__area">
-                    <small>O que vamos fazer?</small>
-                    <span>Monte o atendimento de forma ágil usando os painéis abaixo</span>
-                </div>
-                <img-request-form></img-request-form>
+    <div ref="scrollbar">
+        <div class="ms-form">
+            <div class="ms-form__spinner" v-if="saving && !form.client.active && !form.order.active && !form.task.active">
+                <span>Salvando...</span>
             </div>
-        </div>
-        <div class="separator" v-if="!form.client.active && !form.order.active && !form.task.active"></div>
-        <app-client-form v-model="form.client" @sync="sync($event)"></app-client-form>
-        <div class="separator"></div>
-        <form :class="{'active': form.order.active}">
-            <div class="form__content">
-                <div class="form__main-column" v-show="form.order.active">
-                    <div class="main-column__form">
-                        <div class="columns">
-                            <div class="column">
-                                Nome / Empresa
-                                <input type="text" v-model="form.order.name" @input="sendSocket('order.name')" />
+            <div class="form__instruction" v-if="!form.client.active && !form.order.active && !form.task.active">
+                <div class="instruction__container">
+                    <div class="container__area">
+                        <small>O que vamos fazer?</small>
+                        <span>Monte o atendimento de forma ágil usando os painéis abaixo</span>
+                    </div>
+                    <img-request-form></img-request-form>
+                </div>
+            </div>
+            <div class="separator" v-if="!form.client.active && !form.order.active && !form.task.active"></div>
+            <app-client-form v-model="form.client" @sync="sync($event)"></app-client-form>
+            <div class="separator"></div>
+            <form :class="{'active': form.order.active}">
+                <div class="form__content">
+                    <div class="form__main-column" v-show="form.order.active">
+                        <div class="main-column__form">
+                            <div class="columns">
+                                <div class="column">
+                                    Nome / Empresa
+                                    <input type="text" v-model="form.order.name" @input="sync('order.name')" />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="form__side-column">
-                    <div class="side-column__header">
-                    </div>
-                </div>
-            </div>
-            <div class="form__header">
-                <span v-if="!form.order.active">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
-                <span class="push-both-sides"></span>
-                <h3>VENDA</h3> <app-switch style="float: right;" v-model="form.order.active" @changed="sendSocket('order.active')"></app-switch>
-            </div>
-        </form>
-        <div class="separator"></div>
-        <form :class="{'active': form.task.active}">
-            <div class="form__content">
-                <div class="form__main-column" v-show="form.task.active">
-                    <div class="main-column__form">
-                        <div class="columns">
-                            <div class="column">
-                                Nome / Empresa
-                                <input type="text" v-model="form.task.name" @input="sendSocket('task.name')" />
-                            </div>
+                    <div class="form__side-column">
+                        <div class="side-column__header">
                         </div>
                     </div>
                 </div>
-                <div class="form__side-column">
-                    <div class="side-column__header">
+                <div class="form__header">
+                    <span v-if="!form.order.active">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
+                    <span class="push-both-sides"></span>
+                    <h3>VENDA</h3> <app-switch style="float: right;" v-model="form.order.active" @changed="sync('order.active')"></app-switch>
+                </div>
+            </form>
+            <div class="separator"></div>
+            <form :class="{'active': form.task.active}">
+                <div class="form__content">
+                    <div class="form__main-column" v-show="form.task.active">
+                        <div class="main-column__form">
+                            <div class="columns">
+                                <div class="column">
+                                    Nome / Empresa
+                                    <input type="text" v-model="form.task.name" @input="sync('task.name')" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form__side-column">
+                        <div class="side-column__header">
 
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="form__header">
-                <span v-if="!form.task.active">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
-                <span class="push-both-sides"></span>
-                <h3>TAREFA</h3> <app-switch style="float: right;" v-model="form.task.active" @changed="sendSocket('task.active')"></app-switch>
-            </div>
-        </form>
+                <div class="form__header">
+                    <span v-if="!form.task.active">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
+                    <span class="push-both-sides"></span>
+                    <h3>TAREFA</h3> <app-switch style="float: right;" v-model="form.task.active" @changed="sync('task.active')"></app-switch>
+                </div>
+            </form>
+        </div>
     </div>
 </template>
 
@@ -70,6 +72,7 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
     import ClientForm from './ClientForm.vue';
+    import Scrollbar from 'smooth-scrollbar';
 
     export default {
         sockets: {
@@ -92,6 +95,8 @@
         },
         data(){
             return {
+                scrollbar: null,
+
                 lastForm: null,
 
                 draftId: null, // requestId
@@ -181,10 +186,17 @@
         },
         mounted(){
             const vm = this;
+            this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
+                overscrollEffect: 'bounce',
+                alwaysShowTracks: true
+            });
             this.$socket.emit('presence-update-draft', {
                 draftId: vm.activeMorphScreen.draft.draftId,
                 userId: vm.user.id
             });
+        },
+        updated(){
+            this.scrollbar.update();
         }
     }
 </script>
@@ -219,7 +231,7 @@
         flex-direction: row;
         align-items: center;
         padding-bottom: 15px;
-        border-bottom: 2px dashed var(--bg-color--7);
+        border-bottom: 1px dashed var(--border-color--2);
         margin-bottom: 15px;
     }
 
@@ -244,6 +256,7 @@
         flex-shrink: 0;
         height: 4px;
         width: 4px;
+        background-color: var(--font-color--7);
         border-radius: 2px;
         margin: 0 10px;
     }
@@ -324,6 +337,11 @@
         display: flex;
         flex-direction: column;
         margin-right: 20px;
+        justify-content: center;
+    }
+
+    .form-column label {
+        margin-bottom: 3px;
     }
 
     .form-column:last-child {
@@ -435,7 +453,7 @@
         font-weight: 600;
     }
     div.ms-form form .form__side-column {
-        margin-left: 35px;
+        margin-left: 10px;
         width: 350px;
     }
 </style>

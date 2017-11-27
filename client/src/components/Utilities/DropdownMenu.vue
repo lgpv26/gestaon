@@ -1,10 +1,11 @@
 <template>
-    <div class="parent" ref="dropdownMenu" @mouseleave="mouseLeave($event)" @mouseover="mouseOver($event)">
-        <div class="dropdown-target">
+    <div class="ag-dropdown-menu" ref="dropdownMenu" @mouseleave="onMouseLeave($event)" @mouseover="onMouseOver($event)">
+        <div class="dropdown-target" @mousedown="onClickTarget($event)" ref="target">
             <slot></slot>
         </div>
         <transition>
-            <div class="dropdown-menu" v-if="isOpen">
+            <div class="dropdown-menu" v-if="isOpen" ref="popover"
+                 :style="{'margin-top': (verticalOffset) ? verticalOffset + 'px' : '0px', 'margin-left': (horizontalOffset) ? horizontalOffset + 'px' : '0px'}">
                 <ul>
                     <li v-for="menuItem in menuList" @click="menuItem.action(menuItem.param)">{{ menuItem.text }}</li>
                 </ul>
@@ -14,69 +15,92 @@
 </template>
 <script>
     import { mapState } from 'vuex';
+    import Vue from 'vue';
+    import Popper from 'popper.js';
 
     export default {
         data(){
             return {
-                mouseLeaveTimeout: null,
-                isOpen: false
+                popperInstance: null,
+                isOpen: false,
+                closeTimeout: null
             }
         },
-        props: ['menuList'],
+        props: ['menuList', 'placement', 'verticalOffset', 'horizontalOffset'],
         methods: {
-            mouseOver(ev){
-                clearTimeout(this.mouseLeaveTimeout);
+            onMouseOver(ev){
+                if(this.closeTimeout){
+                    clearTimeout(this.closeTimeout);
+                }
             },
-            mouseLeave(ev){
+            onMouseLeave(ev){
+                this.closeTimeout = setTimeout(() => {
+                    this.closeSelect();
+                }, 1200);
+            },
+            onClickTarget(ev){
+                this.openSelect();
+            },
+            onClick(ev){
                 const vm = this;
-                vm.mouseLeaveTimeout = setTimeout(() => {
-                    vm.isOpen = false;
-                }, 500);
+                if(vm.isOpen && vm.$refs.popover && (vm.$refs.popover !== ev.target && !vm.$refs.popover.contains(ev.target))){
+                    vm.closeSelect();
+                }
+            },
+            openSelect(){
+                this.isOpen = true;
+                /*document.addEventListener("click", this.onClick);*/
+                Vue.nextTick(() => {
+                    if(this.popperInstance) {
+                        this.popperInstance.destroy();
+                    }
+                    this.popperInstance = new Popper(this.$refs.target, this.$refs.popover, {
+                        placement: (!this.placement) ? 'bottom-start' : this.placement
+                    });
+                });
+            },
+            closeSelect(){
+                this.isOpen = false;
+            },
+            toggleSelect(){
+                if(this.isOpen) return this.closeSelect();
+                this.openSelect();
             }
         },
         mounted(){
-            const vm = this;
-            window.addEventListener('click', function(e){
-                if(typeof vm.$refs.dropdownMenu !== 'undefined' && vm.$refs.dropdownMenu.contains(e.target)){
-                    vm.isOpen = true;
-                } else{
-                    vm.isOpen = false;
-                }
-            });
+            document.addEventListener('mousedown', this.onClick);
+        },
+        beforeDestroy(){
+            document.removeEventListener("mousedown", this.onClick);
         }
+
+
     }
 </script>
 
 <style scoped>
 
-div.parent {
+div.ag-dropdown-menu {
     display:flex;
     justify-content: flex-end;
     flex-direction: row;
-    position: relative;
 }
 
 div.dropdown-menu {
     position: absolute;
-    right: 0;
-    top: 50px;
-    z-index: 9999;
-    background: #2A2B33;
-    width: 120px;
-    text-align: right;
+    z-index: 99999;
+    background: var(--bg-color);
+    text-align: left;
     align-self: center;
-    box-shadow: 0px 1px 3px #151515;
+    box-shadow: var(--popover-shadow);
+    min-width: 120px;
 }
 
-.v-enter-active {
-  transition: all .1s ease-in;
-}
-.v-leave-active {
-  transition: all .1s ease-in;
+.v-enter-active, .v-leave-active {
+    transition: opacity .1s
 }
 .v-enter, .v-leave-to {
-  transform: translateY(-10px);
-  opacity: 0;
+    opacity: 0;
 }
 
 div.dropdown-menu li {
@@ -87,7 +111,7 @@ div.dropdown-menu li {
 }
 
 div.dropdown-menu li:hover {
-    background-color: #26272E;
+    background: var(--bg-color--7);
 }
 
 div.dropdown-menu li:last-child {

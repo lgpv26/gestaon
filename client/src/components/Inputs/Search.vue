@@ -4,12 +4,17 @@
             <slot></slot>
         </div>
         <transition name="fade">
-            <div class="search-input__result-box" ref="container" v-show="isShowing">
+            <div class="search-input__result-box" ref="container" v-show="isShowing"
+                :style="{'margin-top':(verticalOffset)? verticalOffset + 'px' : '0', 'margin-left':(horizontalOffset)? horizontalOffset + 'px' : '0'}" >
                 <a class="container__close-button" ref="closeButton">X</a>
                 <slot name="no-results" v-if="!items || items.length <= 0"></slot>
-                <div class="result-box__items" v-show="items && items.length > 0">
-                    <div v-for="item in items" class="items__item" ref="searchable">
-                        <slot name="item" :item="item"></slot>
+                <div ref="scrollbar" style="overflow-y: auto; max-height: 180px;">
+                    <div class="scrollable-content">
+                        <div class="result-box__items" v-show="items && items.length > 0">
+                            <div v-for="item in items" class="items__item" ref="searchable" @click="searchItemSelected(item)">
+                                <slot name="item" :item="item"></slot>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <slot name="settings"></slot>
@@ -22,16 +27,18 @@
     import _ from 'lodash';
     import Popper from 'popper.js';
     import MarkJS from 'mark.js';
+    import Scrollbar from 'smooth-scrollbar';
     export default {
         data(){
             return {
                 popperInstance: null,
                 isShowing: false,
                 closeTimeout: null,
-                markJs: null
+                markJs: null,
+                scrollbar: null
             }
         },
-        props: ['items', 'shouldStayOpen', 'query'],
+        props: ['items', 'shouldStayOpen', 'query', 'verticalOffset', 'horizontalOffset'],
         watch: {
             query(){
                 if(this.query.trim() !== ''){
@@ -60,7 +67,17 @@
                             });
                         }
                     }
-                })
+                    if(vm.popperInstance){
+                        vm.popperInstance.update();
+                    }
+                    if(vm.scrollbar){
+                        vm.scrollbar.update();
+                    }
+                });
+            },
+            searchItemSelected(item){
+                this.$emit("itemSelected", item);
+                this.closeSearch();
             },
             onMouseOver(ev){
                 if(this.closeTimeout){
@@ -92,7 +109,12 @@
                         this.popperInstance.destroy();
                     }
                     this.popperInstance = new Popper(this.$refs.target, this.$refs.container, {
-                        placement: 'bottom-start'
+                        placement: 'bottom-start',
+                        modifiers: {
+                            flip: {
+                                enabled: false
+                            }
+                        }
                     });
                 });
             },
@@ -110,6 +132,11 @@
                 this.markJs.unmark();
                 this.markJs = null;
             }
+            // initialize scrollbars
+            this.scrollbar = Scrollbar.init(this.$refs.scrollbar,{
+                overscrollEffect: 'bounce',
+                alwaysShowTracks: true
+            });
         },
         beforeDestroy(){
             document.removeEventListener("mousedown", this.onClick);
@@ -147,11 +174,9 @@
         padding: 20px;
         border-radius: 10px;
         cursor: initial;
-        margin: 15px 0;
+        margin: 0;
         -webkit-box-shadow: 0 2px 4px 0px rgba(0,0,0,.2);
         box-shadow: 0px 2px 4px 0px rgba(0,0,0,.2);
-        max-height: 350px;
-        overflow-y: auto;
     }
     .search-input__result-box .result-box__items {
         display: flex;
@@ -164,6 +189,7 @@
         margin-bottom: 8px;
         border-bottom: 1px solid var(--bg-color--8);
         flex-shrink: 0;
+        cursor: pointer;
     }
     .search-input__result-box .result-box__items .items__item:last-child {
         padding-bottom: 0;
@@ -172,8 +198,8 @@
     }
     .ag-search .container__close-button {
         position: absolute;
-        top: 8px;
-        right: 8px;
+        top: 3px;
+        right: 3px;
         width: 15px;
         height: 15px;
         display: flex;
@@ -182,7 +208,8 @@
         align-items: center;
         border-radius: 100%;
         line-height: 100%;
-        background-color: var(--bg-color--7)
+        background-color: var(--bg-color--7);
+        cursor: pointer;
     }
 </style>
 

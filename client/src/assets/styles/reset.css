@@ -18,18 +18,33 @@ fieldset {
 input {
     background: transparent;
     border: 0;
-    padding: 5px 0;
-    border-bottom: 1px solid rgba(150,150,150,0.1);
+    padding: 0 0 5px;
+    border-bottom: 1px solid var(--border-color--2);
     text-transform: uppercase;
-    color: #FFF;
+    color: var(--font-color--8);
     outline: 0;
     width: 100%;
+    height: 24px;
     font-size: 14px;
+    transition: all .3s;
+}
+
+input.input--borderless {
+    border-bottom: 0;
+    padding-bottom: 0;
 }
 
 input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0px 1000px white inset;
     -webkit-text-fill-color: #333 !important;
+}
+
+input:focus, input:visited {
+    border-bottom: 1px solid var(--border-color--primary);
+}
+
+input.input--borderless:focus, input.input--borderless:visited {
+    border-bottom: 0;
 }
 
 h1, h2, h3, h4, h5, p, span, a, li, div {
@@ -73,7 +88,7 @@ ul li {
 .btn {
     cursor: pointer;
     border-radius: 5px;
-    line-height: normal;
+    line-height: 100%;
     border: 0;
     font-weight: normal;
     background: var(--bg-color--10);
@@ -129,15 +144,19 @@ ul li {
     background: var(--bg-color--terciary);
 }
 
-.btn.btn--bordered.btn--primary {
+.btn.btn--border-only {
+    background: transparent;
+    border: 1px solid var(--bg-color--10);
+}
+.btn.btn--border-only.btn--primary {
     background: transparent;
     border: 1px solid var(--bg-color--primary);
 }
-.btn.btn--bordered.btn--secondary {
+.btn.btn--border-onlyd.btn--secondary {
     background: transparent;
     border: 1px solid var(--bg-color--secondary);
 }
-.btn.btn--bordered.btn--terciary {
+.btn.btn--border-only.btn--terciary {
     background: transparent;
     border: 1px solid var(--bg-color--terciary);
 }

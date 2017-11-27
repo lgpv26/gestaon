@@ -44,6 +44,28 @@
     --font-color--danger: #e0422a;
     --font-color--warning: #ed6d3b;
 
+    /* Border colors */
+
+    --border-color--0: #1d1e20; /* 12% */
+    --border-color--1: #313235; /* 20% */
+    --border-color--2: #3B3F4A;
+    --border-color--3: #55585e; /* 35% */
+    --border-color--4: #61656b; /* 40% */
+    --border-color--5: #6c7077; /* Origin color and starting at 45% */
+    --border-color--6: #797e86; /* 50% */
+    --border-color--7: #94989e; /* 60% */
+    --border-color--8: #cacbce; /* 70% */
+    --border-color--9: #e4e5e7; /* 80% */
+    --border-color--10: #efefef; /* 90% */
+
+    --border-color--primary: #4d76c8;
+    --border-color--secondary: #50E3C2;
+    --border-color--terciary: #E0634A;
+
+    --border-color--success: #59d68a;
+    --border-color--danger: #e0422a;
+    --border-color--warning: #ed6d3b;
+
     /* General colors */
 
     --base-color--d: #6C7077;
@@ -66,5 +88,6 @@
 
     --bg-color: var(--bg-color--5);
     --font-color: var(--font-color--5);
+    --border-color: var(--border-color--5);
 
 }

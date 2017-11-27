@@ -10,8 +10,8 @@
             <icon-header-search></icon-header-search>
         </div>
         <div class="search__search-input">
-            <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :query="query">
-                <input type="text" class="search-input__field" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
+            <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :query="query" :verticalOffset="19" :horizontalOffset="-20">
+                <input type="text" class="input--borderless search-input__field" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
                 @keydown="onSearchInputKeyDown($event)" />
                 <template slot="item" slot-scope="props">
                     <div class="search-input__item">

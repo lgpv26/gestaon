@@ -4,7 +4,8 @@
             <slot></slot>
         </div>
         <transition name="fade">
-            <div class="select-input__container" v-if="isShowing" ref="container">
+            <div class="select-input__container" v-if="isShowing" ref="container"
+                :style="{'margin-top': (verticalOffset) ? verticalOffset + 'px' : '0px', 'margin-left': (horizontalOffset) ? horizontalOffset + 'px' : '0px'}">
                 <a class="container__close-button btn btn--mini-circle" ref="closeButton">X</a>
                 <div class="container__section" v-show="sections && sections.length > 0" v-for="section in sections">
                     <slot name="section" :text="section.text"></slot>
@@ -38,7 +39,7 @@
                 isShowing: false
             }
         },
-        props: ['sections', 'items'],
+        props: ['sections', 'items', 'verticalOffset', 'horizontalOffset'],
         computed: {
         },
         methods: {

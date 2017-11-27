@@ -48,6 +48,7 @@
     import _ from 'lodash';
     import anime from 'animejs';
     import moment from 'moment';
+    import Scrollbar from 'smooth-scrollbar';
 
     import RequestForm from "./Request/RequestForm.vue";
 
@@ -57,7 +58,7 @@
         },
         data(){
             return {
-                animation: null,
+                scrollbar: null,
                 contentEl: null,
                 selectedContent: null,
                 windowResizeEventListener: null
@@ -177,6 +178,8 @@
                     easing: 'easeInOutExpo',
                     opacity: [0, 1],
                     height: ['30px', '50px']
+                }).finished.then(() => {
+                    vm.$refs.morphScreen.style.overflowY = 'overlay';
                 });
             },
             itemSelected(screen){
@@ -184,6 +187,7 @@
                 const windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                 const allAnimationsCompleted = [];
                 let activeScreenIndex = vm.screens.indexOf(screen);
+                this.$refs.morphScreen.style.overflowY = 'hidden';
                 this.$refs.morphScreenItems.forEach((morphScreen, morphScreenIndex) => {
                     if(activeScreenIndex === morphScreenIndex){
                         allAnimationsCompleted.push(anime.timeline().add({
@@ -275,6 +279,7 @@
                     })
                 });
                 Promise.all(allAnimationsCompleted).then(() => {
+                    vm.$refs.morphScreen.style.overflowY = 'overlay';
                     /*setTimeout(() => {
                         vm.SET_MS_SCREEN(_.assign({}, screen, { active: true }));
                         vm.$refs.morphScreenItems[activeScreenIndex].classList.add('active');
@@ -315,8 +320,7 @@
             close(){
                 const vm = this;
                 vm.contentEl.classList.remove('unfocused');
-                vm.animation = anime.timeline();
-                vm.animation.add({
+                anime.timeline().add({
                     targets: vm.contentEl,
                     duration: 100,
                     scale: 1,
@@ -338,8 +342,7 @@
                     easing: 'easeInOutExpo',
                     opacity: [1, 0],
                     height: ['50px', '30px']
-                });
-                vm.animation.finished.then(() => {
+                }).finished.then(() => {
                     vm.SHOW_MS(false);
                 });
             },
