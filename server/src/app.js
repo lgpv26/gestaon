@@ -22,11 +22,12 @@ server['io'] = require('socket.io')(server.server, {
     pingInterval: 3000,
     pingTimeout: 8000
 });
+server.io.sockets.setMaxListeners(0);
+
 
 // set event bus
 const EventEmitter = require('events');
 server['bus'] = new EventEmitter();
-server['bus'].setMaxListeners(0)
 
 // elastic search
 const elasticSearch = new require('elasticsearch').Client({

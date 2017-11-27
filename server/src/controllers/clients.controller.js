@@ -1,10 +1,62 @@
 const _ = require('lodash');
+const utils = require('../utils');
 
 module.exports = (server, restify) => {
     return {
+        search(req) {
+            if (!req.params.companyId) {
+                return false
+            };
+            return new Promise((resolve, reject) => {
+                server.elasticSearch.search(
+                    {
+                        index: 'main',
+                        type: 'client',
+                        body: {
+                            "from": 0,
+                            "size": 10,
+                            "query": {
+                                "bool": {
+                                    "should": {
+                                        "multi_match": {
+                                            "query": utils.removeDiacritics(req.params.q.trim()),
+                                            "fields": ["name", "obs", "addresses.complement", "addresses.address", "addresses.number", "phones.number"],
+                                            "analyzer": "standard"
+                                        }
+                                    },
+                                    "minimum_should_match": 1,
+                                    "must": {
+                                        "match": {
+                                            "companyId": req.params.companyId
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    function (esErr, esRes, esStatus) {
+                        if (esErr) {
+                            reject(esErr)
+                        }
+                        else {
+                            let data = []
+                            _.map(esRes.hits.hits, (hit, index) => {
+                                data[index] = { id: hit._id, data: hit._source }
+                            })
+                            resolve(data)
+                        }
+                    }
+                )
+            }).then((dataSearch) => {
+                return dataSearch
+            }).catch((err) => {
+                return err
+            })
+        },
+
         getAll: (req, res, next) => {
             server.models.Client.findAll().then((clients) => {
-                if(!clients){
+                if (!clients) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                     );
@@ -23,16 +75,23 @@ module.exports = (server, restify) => {
                 include: [{
                     model: server.models.ClientPhone,
                     as: 'clientPhones'
-                },{
+                }, {
                     model: server.models.ClientAddress,
                     as: 'clientAddresses',
                     include: [{
                         model: server.models.Address,
                         as: 'address'
                     }]
+                }, {
+                    model: server.models.ClientCustomField,
+                    as: 'clientCustomFields',
+                    include: [{
+                        model: server.models.CustomField,
+                        as: 'customField'
+                    }]
                 }]
             }).then((client) => {
-                if(!client){
+                if (!client) {
                     return next(
                         new restify.ResourceNotFoundError("Registro não encontrado.")
                     );
@@ -44,20 +103,27 @@ module.exports = (server, restify) => {
         },
         createOne: (req, res, next) => {
             const createData = _.cloneDeep(req.body);
-            server.models.Client.create(createData,{
+            server.models.Client.create(createData, {
                 include: [{
                     model: server.models.ClientPhone,
                     as: 'clientPhones'
-                },{
+                }, {
                     model: server.models.ClientAddress,
                     as: 'clientAddresses',
                     include: [{
                         model: server.models.Address,
                         as: 'address'
                     }]
+                }, {
+                    model: server.models.ClientCustomField,
+                    as: 'clientCustomFields',
+                    include: [{
+                        model: server.models.CustomField,
+                        as: 'customField'
+                    }]
                 }]
             }).then((client) => {
-                if(!client){
+                if (!client) {
                     return next(
                         new restify.ResourceNotFoundError("Registro não encontrado.")
                     );
@@ -67,20 +133,21 @@ module.exports = (server, restify) => {
                     type: 'client',
                     id: client.id,
                     body: {
-                        companyId: 1,
+                        companyId: client.companyId,
                         name: client.name,
                         obs: client.obs
                     }
-                }, function(esErr, esRes, esStatus){
-                    if(esErr){
+                }, function (esErr, esRes, esStatus) {
+                    if (esErr) {
                         console.error(esErr);
                         return next(
                             new restify.ResourceNotFoundError(esErr)
                         );
                     }
-                    if((_.has(createData,"clientAddresses") && createData.clientAddresses.length > 0) ||
-                        (_.has(createData,"clientPhones") && createData.clientPhones.length > 0)){
-                        if(_.has(createData,"clientAddresses") && createData.clientAddresses.length > 0){
+                    if ((_.has(createData, "clientAddresses") && createData.clientAddresses.length > 0) ||
+                        (_.has(createData, "clientPhones") && createData.clientPhones.length > 0) ||
+                        (_.has(createData, "clientCustomFields") && createData.clientCustomFields.length > 0)) {
+                        if (_.has(createData, "clientAddresses") && createData.clientAddresses.length > 0) {
                             req.params['id'] = client.id;
                             saveAddresses(req, res, next).then((client) => {
                                 return res.send(200, {
@@ -90,7 +157,7 @@ module.exports = (server, restify) => {
                                 next(err);
                             });
                         }
-                        else if(_.has(createData,"clientPhones") && createData.clientPhones.length > 0){
+                        else if (_.has(createData, "clientPhones") && createData.clientPhones.length > 0) {
                             req.params['id'] = client.id;
                             savePhones(req, res, next).then((client) => {
                                 return res.send(200, {
@@ -100,8 +167,19 @@ module.exports = (server, restify) => {
                                 next(err);
                             });
                         }
+                        else if (_.has(createData, "clientCustomFields") && createData.clientCustomFields.length > 0) {
+                            req.params['id'] = client.id;
+                            saveCustomFields(req, res, next).then((client) => {
+                                return res.send(200, {
+                                    data: client
+                                });
+                            }).catch((err) => {
+                                console.log(err);
+                                next(err);
+                            });
+                        }
                     }
-                    else{
+                    else {
                         return res.send(200, {
                             data: client
                         });
@@ -111,13 +189,13 @@ module.exports = (server, restify) => {
         },
         updateOne: (req, res, next) => {
             const updateData = _.cloneDeep(req.body);
-            server.models.Client.update(updateData,{
+            server.models.Client.update(updateData, {
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 }
             }).then((client) => {
-                if(!client){
+                if (!client) {
                     return next(
                         new restify.ResourceNotFoundError("Registro não encontrado.")
                     );
@@ -130,16 +208,23 @@ module.exports = (server, restify) => {
                     include: [{
                         model: server.models.ClientPhone,
                         as: 'clientPhones'
-                    },{
+                    }, {
                         model: server.models.ClientAddress,
                         as: 'clientAddresses',
                         include: [{
                             model: server.models.Address,
                             as: 'address'
                         }]
+                    }, {
+                        model: server.models.ClientCustomField,
+                        as: 'clientCustomFields',
+                        include: [{
+                            model: server.models.CustomField,
+                            as: 'customField'
+                        }]
                     }]
                 }).then((client) => {
-                    if(!client){
+                    if (!client) {
                         return next(
                             new restify.ResourceNotFoundError("Registro não encontrado.")
                         );
@@ -150,7 +235,7 @@ module.exports = (server, restify) => {
                         id: client.id,
                         body: {
                             doc: {
-                                companyId: 1,
+                                companyId: client.companyId,
                                 name: client.name,
                                 obs: client.obs,
                                 dateUpdated: client.dateUpdated,
@@ -159,15 +244,16 @@ module.exports = (server, restify) => {
                             }
                         }
                     }, function (esErr, esRes) {
-                        if(esErr){
+                        if (esErr) {
                             return next(
                                 new restify.ResourceNotFoundError(esErr)
                             );
                         }
 
-                        if((_.has(updateData,"clientAddresses") && updateData.clientAddresses.length > 0) ||
-                            (_.has(updateData,"clientPhones") && updateData.clientPhones.length > 0)){
-                            if(_.has(updateData,"clientAddresses") && updateData.clientAddresses.length > 0) {
+                        if ((_.has(updateData, "clientAddresses") && updateData.clientAddresses.length > 0) ||
+                            (_.has(updateData, "clientPhones") && updateData.clientPhones.length > 0) ||
+                            (_.has(updateData, "clientCustomFields") && updateData.clientCustomFields.length > 0)) {
+                            if (_.has(updateData, "clientAddresses") && updateData.clientAddresses.length > 0) {
                                 req.params['id'] = client.id;
                                 saveAddresses(req, res, next).then((client) => {
                                     return res.send(200, {
@@ -178,8 +264,7 @@ module.exports = (server, restify) => {
                                     next(err);
                                 });
                             }
-                            else if(_.has(updateData,"clientPhones") && updateData.clientPhones.length > 0){
-
+                            else if (_.has(updateData, "clientPhones") && updateData.clientPhones.length > 0) {
                                 req.params['id'] = client.id;
                                 savePhones(req, res, next).then((client) => {
                                     return res.send(200, {
@@ -190,8 +275,19 @@ module.exports = (server, restify) => {
                                     next(err);
                                 });
                             }
+                            else if (_.has(updateData, "clientCustomFields") && updateData.clientCustomFields.length > 0) {
+                                req.params['id'] = client.id;
+                                saveCustomFields(req, res, next).then((client) => {
+                                    return res.send(200, {
+                                        data: client
+                                    });
+                                }).catch((err) => {
+                                    console.log(err);
+                                    next(err);
+                                });
+                            }
                         }
-                        else{
+                        else {
                             return res.send(200, {
                                 data: client
                             });
@@ -200,34 +296,17 @@ module.exports = (server, restify) => {
                 })
             });
         },
-        removeOne: (req, res, next) => {
-            /*console.log('remove');
-            server.models.Device.destroy({
-                where: {
-                    id: req.params.id
-                }
-            }).then((device) => {
-                if(!device){
-                    return next(
-                        new restify.ResourceNotFoundError("Nenhum registro encontrado.")
-                    );
-                }
-                return res.send(200, {
-                    data: device
-                });
-            });*/
 
-        },
-        removeOneAddress: (req, res, next) => {
-            return server.sequelize.transaction(function(t){
+        removeOneAddress(req) {
+            return server.sequelize.transaction(function (t) {
                 return server.models.ClientAddress.destroy({
                     where: {
                         id: req.params.clientAddressId
                     },
                     transaction: t
                 }).then((clientAddress) => {
-                    if(!clientAddress){
-                        throw new restify.ResourceNotFoundError("Registro não encontrado.");
+                    if (!clientAddress) {
+                        return new restify.ResourceNotFoundError("Registro não encontrado.");
                     }
                     return server.elasticSearch.update({
                         index: 'main',
@@ -237,11 +316,11 @@ module.exports = (server, restify) => {
                             script: {
                                 lang: "groovy",
                                 inline: "item_to_remove = null; ctx._source.addresses.each { elem -> if (elem.clientAddressId == clientAddressId) { item_to_remove=elem; } }; if (item_to_remove != null) ctx._source.addresses.remove(item_to_remove);",
-                                params: {"clientAddressId": parseInt(req.params.clientAddressId)}
+                                params: { "clientAddressId": parseInt(req.params.clientAddressId) }
                             }
                         }
-                    }, function (esErr, esRes){
-                        if(esErr){
+                    }, function (esErr, esRes) {
+                        if (esErr) {
                             throw esErr;
                         }
                         return clientAddress;
@@ -249,51 +328,52 @@ module.exports = (server, restify) => {
                 });
             }).then(function (clientAddress) {
                 // Transaction has been committed
-                return res.send(200, {
-                    data: clientAddress
-                });
+                return clientAddress
             }).catch(function (err) {
-                // Transaction has been rolled back
-                console.log(err);
-                return next(err);
+                return err
             });
-
         },
-        getAddresses: (req, res, next) => {
-            server.models.ClientAddress.findAll({
+        getAddresses(req) {
+            return server.models.ClientAddress.findAll({
                 where: {
                     clientId: req.params.id,
                     status: 'activated'
-                }
+                },
+                include: [{
+                    model: server.models.Address,
+                    as: 'address'
+                }]
             }).then((clientAddresses) => {
-                if(!clientAddresses){
-                    return next(
-                        new restify.ResourceNotFoundError("Nenhum registro encontrado.")
-                    );
+                if (!clientAddresses) {
+                    return new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                 }
-                return res.send(200, {
-                    data: clientAddresses
-                });
+                return clientAddresses
             });
         },
-        saveAddresses(req, res, next){
-            saveAddresses(req, res, next).then((client) => {
-                return res.send(200, {
-                    data: client
-                });
+        saveAddresses(req, draftId) {
+            draftId = (draftId) ? draftId : null
+            return saveAddresses(req).then((address) => {
+                if (draftId) {
+                    let ids = Object.keys(server.io.sockets.connected)
+                    ids.forEach(function (id) {
+                        const socket = server.io.sockets.connected[id]       
+                        socket.in('draft/' + draftId).emit('updateDraft', {emitted: req.auth.id, form: { client: { clientAddresses: [address]}}})
+                    })
+                }
+                return address
             }).catch((err) => {
-                next(err);
+                return err
             });
         },
         removeOnePhone: (req, res, next) => {
-            return server.sequelize.transaction(function(t){
+            return server.sequelize.transaction(function (t) {
                 return server.models.ClientPhone.destroy({
                     where: {
                         id: req.params.clientPhoneId
                     },
                     transaction: t
                 }).then((clientPhone) => {
-                    if(!clientPhone){
+                    if (!clientPhone) {
                         throw new restify.ResourceNotFoundError("Registro não encontrado.");
                     }
                     return server.elasticSearch.update({
@@ -304,11 +384,11 @@ module.exports = (server, restify) => {
                             script: {
                                 lang: "groovy",
                                 inline: "item_to_remove = null; ctx._source.phones.each { elem -> if (elem.clientPhoneId == clientPhoneId) { item_to_remove=elem; } }; if (item_to_remove != null) ctx._source.phones.remove(item_to_remove);",
-                                params: {"clientPhoneId": parseInt(req.params.clientPhoneId)}
+                                params: { "clientPhoneId": parseInt(req.params.clientPhoneId) }
                             }
                         }
-                    }, function (esErr, esRes){
-                        if(esErr){
+                    }, function (esErr, esRes) {
+                        if (esErr) {
                             throw esErr;
                         }
                         return clientPhone;
@@ -333,7 +413,7 @@ module.exports = (server, restify) => {
                     status: 'activated'
                 }
             }).then((clientPhones) => {
-                if(!clientPhones){
+                if (!clientPhones) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                     );
@@ -343,10 +423,64 @@ module.exports = (server, restify) => {
                 });
             });
         },
-        savePhones(req, res, next){
+        savePhones(req, res, next) {
             savePhones(req, res, next).then((phone) => {
                 return res.send(200, {
                     data: phone
+                });
+            }).catch((err) => {
+                next(err);
+            });
+        },
+        removeOneCustomField: (req, res, next) => {
+            return server.sequelize.transaction(function (t) {
+                return server.models.ClientCustomField.destroy({
+                    where: {
+                        id: req.params.customFieldId
+                    },
+                    transaction: t
+                }).then((customField) => {
+                    if (!customField) {
+                        throw new restify.ResourceNotFoundError("Registro não encontrado.")
+                    }
+                    return customField
+                })
+            }).then((customField) => {
+                // Transaction has been committed
+                return res.send(200, {
+                    data: customField
+                });
+            }).catch((err) => {
+                // Transaction has been rolled back
+                console.log(err);
+                return next(err);
+            });
+
+        },
+        getCustomFields: (req, res, next) => {
+            server.models.ClientCustomField.findAll({
+                where: {
+                    clientId: req.params.id
+                },
+                include: [{
+                    model: server.models.CustomField,
+                    as: 'customField'
+                }]
+            }).then((customFields) => {
+                if (!customFields) {
+                    return next(
+                        new restify.ResourceNotFoundError("Nenhum registro encontrado.")
+                    );
+                }
+                return res.send(200, {
+                    data: customFields
+                });
+            });
+        },
+        saveCustomFields(req, res, next) {
+            saveCustomFields(req).then((customField) => {
+                return res.send(200, {
+                    data: customField
                 });
             }).catch((err) => {
                 next(err);
@@ -358,7 +492,7 @@ module.exports = (server, restify) => {
                 include: [{
                     model: server.models.ClientPhone,
                     as: 'clientPhones'
-                },{
+                }, {
                     model: server.models.ClientAddress,
                     as: 'clientAddresses',
                     include: [{
@@ -376,7 +510,7 @@ module.exports = (server, restify) => {
                     }
                     esRequestBody.push(metaObj);
                     let docObj = {
-                        companyId: 1,
+                        companyId: client.companyId,
                         name: client.name,
                         obs: client.obs,
                         addresses: _.map(client.clientAddresses, clientAddress => {
@@ -384,6 +518,8 @@ module.exports = (server, restify) => {
                                 clientAddressId: clientAddress.id,
                                 complement: clientAddress.complement,
                                 address: clientAddress.address.name,
+                                cep: clientAddress.address.cep,
+                                neighborhood: clientAddress.address.neighborhood,
                                 number: clientAddress.number
                             };
                         }),
@@ -403,7 +539,7 @@ module.exports = (server, restify) => {
                 server.elasticSearch.bulk({
                     body: esRequestBody
                 }, function (esErr, esRes) {
-                    if(esErr){
+                    if (esErr) {
                         console.error(esErr);
                         return next(
                             new restify.ResourceNotFoundError(esErr)
@@ -421,73 +557,57 @@ module.exports = (server, restify) => {
     /* --- Reusable request functions ------------------------------------------
     /* -------------------------------------- */
 
-    function saveAddresses(req, res, next){
+    function saveAddresses(req) {
         return new Promise((resolve, reject) => {
             let clientAddresses = _.map(req.body.clientAddresses, clientAddress => _.extend({
-                addressId: parseInt(clientAddress.address.id),
+                addressId: parseInt(clientAddress.addressId),
                 clientId: parseInt(req.params.id)
             }, clientAddress));
-            server.models.ClientAddress.bulkCreate(clientAddresses,{
-                updateOnDuplicate: ['clientId','addressId','name','number','complement']
+
+            server.models.ClientAddress.bulkCreate(clientAddresses, {
+                updateOnDuplicate: ['clientId', 'addressId', 'name', 'number', 'complement'],
+                returning: true
             }).then((response) => {
-                server.models.Client.findOne({
-                    where: {
-                        id: parseInt(req.params.id),
-                        status: 'activated'
-                    },
-                    include: [{
-                        model: server.models.ClientPhone,
-                        as: 'clientPhones'
-                    },{
-                        model: server.models.ClientAddress,
-                        as: 'clientAddresses',
-                        include: [{
-                            model: server.models.Address,
-                            as: 'address'
-                        }]
-                    }]
-                }).then((client) => {
-                    if(!client){
-                        reject(new restify.ResourceNotFoundError("Registro não encontrado."));
-                    }
-                    let clientAddresses = _.map(client.clientAddresses, clientAddress => {
-                        return {
-                            clientAddressId: clientAddress.id,
-                            complement: clientAddress.complement,
-                            address: clientAddress.address.name,
-                            number: clientAddress.number
-                        };
-                    });
-                    server.elasticSearch.update({
-                        index: 'main',
-                        type: 'client',
-                        id: client.id,
-                        body: {
-                            doc: {
-                                addresses: clientAddresses
-                            }
-                        }
-                    }, function (esErr, esRes){
-                        /*client.clientAddresses.forEach((clientAddress) => {});*/
-                        resolve(client);
-                    })
-                }).catch((error) => {
-                    reject(error);
+                if (!response) {
+                    reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                }
+                let clientAddresses = _.map(response.clientAddresses, clientAddress => {
+                    return {
+                        clientAddressId: clientAddress.id,
+                        complement: clientAddress.complement,
+                        address: clientAddress.address.name,
+                        number: clientAddress.number,
+                        cep: clientAddress.address.cep,
+                        neighborhood: clientAddress.address.neighborhood
+                    };
                 });
-            }).catch(function(error){
+                server.elasticSearch.update({
+                    index: 'main',
+                    type: 'client',
+                    id: response.clientId,
+                    body: {
+                        doc: {
+                            addresses: clientAddresses
+                        }
+                    }
+                }, (esErr, esRes) => {
+                    
+                    resolve(response);
+                })
+            }).catch((error) => {
                 reject(error);
             });
-        });
+        })
     }
 
-    function savePhones(req, res, next){
+    function savePhones(req, res, next) {
         return new Promise((resolve, reject) => {
             let clientPhones = _.map(req.body.clientPhones, clientPhone => _.extend({
                 clientId: parseInt(req.params.id)
             }, clientPhone));
             console.log(clientPhones);
-            server.models.ClientPhone.bulkCreate(clientPhones,{
-                updateOnDuplicate: ['client_id','name','ddd','number']
+            server.models.ClientPhone.bulkCreate(clientPhones, {
+                updateOnDuplicate: ['clientId', 'name', 'ddd', 'number']
             }).then((response) => {
                 server.models.Client.findOne({
                     where: {
@@ -497,7 +617,7 @@ module.exports = (server, restify) => {
                     include: [{
                         model: server.models.ClientPhone,
                         as: 'clientPhones'
-                    },{
+                    }, {
                         model: server.models.ClientAddress,
                         as: 'clientAddresses',
                         include: [{
@@ -506,7 +626,7 @@ module.exports = (server, restify) => {
                         }]
                     }]
                 }).then((client) => {
-                    if(!client){
+                    if (!client) {
                         reject(new restify.ResourceNotFoundError("Registro não encontrado."));
                     }
                     let clientPhones = _.map(client.clientPhones, clientPhone => {
@@ -525,13 +645,61 @@ module.exports = (server, restify) => {
                                 phones: clientPhones
                             }
                         }
-                    }, function (esErr, esRes){
+                    }, function (esErr, esRes) {
                         resolve(client);
                     })
                 }).catch((error) => {
                     reject(error);
                 });
-            }).catch(function(error){
+            }).catch(function (error) {
+                reject(error);
+            });
+        });
+    }
+
+    function saveCustomFields(req, res, next) {
+        return new Promise((resolve, reject) => {
+            let clientCustomFields = _.map(req.body.clientCustomFields, clientCustomField => _.extend({
+                clientId: parseInt(req.params.id)
+            }, clientCustomField));
+
+            console.log(clientCustomFields);
+
+            server.models.ClientCustomField.bulkCreate(clientCustomFields, {
+                updateOnDuplicate: ['clientId', 'customFieldId', 'value']
+            }).then(() => {
+                server.models.Client.findOne({
+                    where: {
+                        id: parseInt(req.params.id),
+                        status: 'activated'
+                    },
+                    include: [{
+                        model: server.models.ClientPhone,
+                        as: 'clientPhones'
+                    }, {
+                        model: server.models.ClientAddress,
+                        as: 'clientAddresses',
+                        include: [{
+                            model: server.models.Address,
+                            as: 'address'
+                        }]
+                    }, {
+                        model: server.models.ClientCustomField,
+                        as: 'clientCustomFields',
+                        include: [{
+                            model: server.models.CustomField,
+                            as: 'customField'
+                        }]
+                    }]
+                }).then((client) => {
+                    if (!client) {
+                        reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                    }
+                    resolve(client);
+                }).catch((error) => {
+                    reject(error);
+                });
+            }).catch(function (error) {
                 reject(error);
             });
         });
