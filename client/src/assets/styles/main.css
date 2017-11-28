@@ -343,3 +343,7 @@ li.router-link-active svg.icon {
 [data-scrollbar].sticky .scrollbar-track .scrollbar-thumb, [scrollbar].sticky .scrollbar-track .scrollbar-thumb {
     /*background: transparent;*/
 }
+
+.highcharts-credits {
+    display: none;
+}

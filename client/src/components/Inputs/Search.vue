@@ -7,11 +7,11 @@
             <div class="search-input__result-box" ref="container" v-show="isShowing"
                 :style="{'margin-top':(verticalOffset)? verticalOffset + 'px' : '0', 'margin-left':(horizontalOffset)? horizontalOffset + 'px' : '0'}" >
                 <a class="container__close-button" ref="closeButton">X</a>
-                <slot name="no-results" v-if="!items || items.length <= 0"></slot>
+                <slot name="no-results" v-if="!items || items.length <= 0 || forceNoResults"></slot>
                 <div ref="scrollbar" style="overflow-y: auto; max-height: 180px;">
                     <div class="scrollable-content">
-                        <div class="result-box__items" v-show="items && items.length > 0">
-                            <div v-for="item in items" class="items__item" ref="searchable" @click="searchItemSelected(item)">
+                        <div class="result-box__items" v-show="items && items.length > 0 && !forceNoResults">
+                            <div v-for="item in items" v-if="!showOnly || item[showOnly]" class="items__item" ref="searchable" @click="searchItemSelected(item)">
                                 <slot name="item" :item="item"></slot>
                             </div>
                         </div>
@@ -38,8 +38,16 @@
                 scrollbar: null
             }
         },
-        props: ['items', 'shouldStayOpen', 'query', 'verticalOffset', 'horizontalOffset'],
+        props: ['items', 'shouldStayOpen', 'query', 'showOnly', 'verticalOffset', 'horizontalOffset', 'forceNoResults'],
         watch: {
+            showOnly(){
+                const vm = this;
+                Vue.nextTick(() => {
+                    if(vm.scrollbar){
+                        vm.scrollbar.update();
+                    }
+                });
+            },
             query(){
                 if(this.query.trim() !== ''){
                     this.openSearch();

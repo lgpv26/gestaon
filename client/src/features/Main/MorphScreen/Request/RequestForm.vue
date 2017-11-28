@@ -14,31 +14,9 @@
                 </div>
             </div>
             <div class="separator" v-if="!form.client.active && !form.order.active && !form.task.active"></div>
-            <app-client-form v-model="form.client" @sync="sync($event)"></app-client-form>
+            <app-client-form :client.sync="form.client" @sync="sync($event)"></app-client-form>
             <div class="separator"></div>
-            <form :class="{'active': form.order.active}">
-                <div class="form__content">
-                    <div class="form__main-column" v-show="form.order.active">
-                        <div class="main-column__form">
-                            <div class="columns">
-                                <div class="column">
-                                    Nome / Empresa
-                                    <input type="text" v-model="form.order.name" @input="sync('order.name')" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form__side-column">
-                        <div class="side-column__header">
-                        </div>
-                    </div>
-                </div>
-                <div class="form__header">
-                    <span v-if="!form.order.active">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
-                    <span class="push-both-sides"></span>
-                    <h3>VENDA</h3> <app-switch style="float: right;" v-model="form.order.active" @changed="sync('order.active')"></app-switch>
-                </div>
-            </form>
+            <app-order-form :order.sync="form.order" @sync="sync($event)"></app-order-form>
             <div class="separator"></div>
             <form :class="{'active': form.task.active}">
                 <div class="form__content">
@@ -72,6 +50,7 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
     import ClientForm from './ClientForm.vue';
+    import OrderForm from './OrderForm.vue';
     import Scrollbar from 'smooth-scrollbar';
 
     export default {
@@ -91,7 +70,8 @@
             }
         },
         components: {
-            'app-client-form': ClientForm
+            'app-client-form': ClientForm,
+            'app-order-form': OrderForm
         },
         data(){
             return {
@@ -354,6 +334,9 @@
         flex-direction: column;
         flex-grow: 1;
         position: relative;
+    }
+    div.ms-form div.ms-form { /* descendant ms-form's */
+        padding: 0;
     }
     div.ms-form .ms-form__spinner {
         position: absolute;

@@ -31,6 +31,7 @@
             emit(){
                 this.$emit("input", this.on);
                 this.$emit("changed", this.on);
+                this.$emit("change", this.on);
             }
         }
     }

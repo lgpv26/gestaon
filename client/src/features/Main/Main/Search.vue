@@ -10,19 +10,24 @@
             <icon-header-search></icon-header-search>
         </div>
         <div class="search__search-input">
-            <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :query="query" :verticalOffset="19" :horizontalOffset="-20">
+            <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :forceNoResults="forceNoResults" :showOnly="showOnly" :query="query" :verticalOffset="19" :horizontalOffset="-20">
                 <input type="text" class="input--borderless search-input__field" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
                 @keydown="onSearchInputKeyDown($event)" />
                 <template slot="item" slot-scope="props">
-                    <div class="search-input__item">
-                        <span class="detail__name">TRÁ TRÁ ---</span>
-                        <span class="detail__address" v-html="props.item.text">RUA 28 DE JUNHO, 1214</span>
-                        <span class="detail__phones">(44) 3268-6768, (44) 99107-8686</span>
+                    <div class="search-input__item" v-if="props.item.client">
+                        <span class="detail__name" v-html="props.item.client.name"></span>
+                        <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address"></span>
+                        <span class="detail__phones" v-if="props.item.client.phones.length > 0">
+                            <span v-for="(clientPhone, index) in props.item.client.phones" v-html="((index === 0) ? '' : ', ') + clientPhone.ddd + clientPhone.number"></span>
+                        </span>
+                    </div>
+                    <div class="search-input__item" v-if="props.item.address">
+                        <span class="detail__address" v-html="props.item.address.name"></span>
                     </div>
                 </template>
                 <template slot="settings">
                     <div class="search-input__settings">
-                        <app-switch style="margin-right: 8px;"></app-switch>
+                        <app-switch v-model="showOnlyAddresses" @change="onShowOnlyAddressesChanged($event)" style="margin-right: 8px;"></app-switch>
                         <span style="margin-right: 8px;">Apenas endereços</span>
                         <a class="settings__info">?</a>
                     </div>
@@ -46,6 +51,7 @@
 
 <script>
     import DraftsAPI from '../../../api/drafts';
+    import ClientsAPI from '../../../api/clients';
     import AddressesAPI from '../../../api/addresses';
     import SearchComponent from '../../../components/Inputs/Search.vue';
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
@@ -66,18 +72,20 @@
                 isSearchActive: false,
                 commitTimeout: null,
                 markJs: null,
-                searchItems: [
-                    { text: "THIAGO YOITHI VAZ DA ROCHA" },
-                    { text: "ACIMAR TAKAHASHI VAZ DA ROCHA" },
-                    { text: "MAILON RUAN" },
-                    { text: "TÂNIA MARA TAKAKO WATANABE VAZ DA ROCHA" },
-                    { text: "THAIS THIEMI VAZ DA ROCHA" },
-                ],
+                searchItems: [],
+                forceNoResults: false,
+                showOnlyAddresses: false
             }
         },
         computed: {
             ...mapState('auth', ['company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
+            showOnly(){
+                if(this.showOnlyAddresses === true){
+                    return 'address';
+                }
+                return null;
+            },
             searchObject(){
                 return {
                     inputValue: this.inputValue,
@@ -89,6 +97,14 @@
             ...mapActions('morph-screen', ['createDraft']),
             ...mapMutations('morph-screen', ['SHOW_MS', 'SET_MS_SCREEN']),
             ...mapActions('toast', ['showError']),
+            onShowOnlyAddressesChanged(){
+                if(this.showOnlyAddresses){
+                    this.search();
+                }
+                else {
+                    this.forceNoResults = false;
+                }
+            },
             addRequestClicked(ev){
                 const vm = this;
                 if(!vm.isShowingMorphScreen){
@@ -107,17 +123,34 @@
             search(){
                 const vm = this;
                 const searchComponent = vm.$refs.search;
-                AddressesAPI.search({
+                ClientsAPI.search({
                     actingCities: ['MARINGA'],
                     q: vm.query
-                }).then((result) => {
-                    vm.searchItems = result.data.map(({source}) => {
+                }).then(({data}) => {
+                    let clients = data[0];
+                    let addresses = data[1];
+                    vm.searchItems = [];
+                    clients = clients.map(({source}) => {
                         // source refers to search address item
                         return {
-                            text: source.name
+                            client: source
                         };
                     });
+                    addresses = addresses.map(({source}) => {
+                        // source refers to search address item
+                        return {
+                            address: source
+                        };
+                    });
+                    if(vm.showOnly === 'address' && addresses.length <= 0){
+                        vm.forceNoResults = true;
+                    }
+                    else {
+                        vm.forceNoResults = false;
+                    }
+                    vm.searchItems = _.concat(clients, addresses);
                     searchComponent.search();
+
                 }).catch((err) => {
                     vm.searchItems = [];
                 })
