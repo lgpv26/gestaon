@@ -28,5 +28,8 @@ export default {
     },
     saveClientPhones(clientId, body){
         return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId + '/phones', { clientPhones: body }).then((response) => response.json());
+    },
+    search(params){
+        return Vue.http.get(config.apiBaseUrl + '/service/search', { params }).then((response) => response.json());
     }
 }

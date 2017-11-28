@@ -353,7 +353,6 @@
         display: flex;
         flex-direction: column;
         flex-grow: 1;
-        flex-shrink: 0;
         position: relative;
     }
     div.ms-form .ms-form__spinner {
@@ -405,11 +404,15 @@
     div.ms-form form {
         display: flex;
         flex-direction: column;
-        padding: 30px 0;
+        padding: 10px 0;
         flex-shrink: 0;
+    }
+    div.ms-form form:first-child {
+        padding: 30px 0 10px!important;
     }
     div.ms-form form.active {
         flex-grow: 1;
+        padding: 30px 0 10px;
     }
     div.ms-form form.active .form__content {
         flex-grow: 1;

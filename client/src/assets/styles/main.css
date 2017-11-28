@@ -326,6 +326,16 @@ li.router-link-active svg.icon {
 
 /* scrollbar override */
 
+[data-scrollbar] .scroll-content {
+    display: flex;
+    flex-grow: 1;
+}
+
+[data-scrollbar].sticky {
+    display: flex;
+    flex-grow: 1;
+}
+
 [data-scrollbar].sticky .scrollbar-track, [scrollbar].sticky .scrollbar-track, scrollbar.sticky .scrollbar-track {
     background: transparent;
 }
