@@ -43,9 +43,24 @@ module.exports = (server, restify) => {
                                         }
                                     },
                                     {
+                                        "nested": {
+                                            "path": "phones",
+                                            "inner_hits": {},
+                                            "query": {
+                                                "multi_match": {
+                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                    "fields": ["phones.number"],
+                                                    "analyzer": "standard",
+                                                    "operator": "or"
+                                                }
+                                            },
+                                            "boost": 2
+                                        }
+                                    },
+                                    {
                                         "multi_match": {
                                             "query": utils.removeDiacritics(req.params.q.trim()),
-                                            "fields": ["name", "obs"],
+                                            "fields": ["name", "obs", "cpf/cnpj"],
                                             "analyzer": "standard",
                                             "operator": "OR"
                                         }
@@ -94,16 +109,50 @@ module.exports = (server, restify) => {
                         // substituir o addresses por um unico obj (se der InnerHits por ele, e se tiver + de 1 inner (retorna com o maior score), se não pelo primeiro).
                         // E se não tiver address cadastrado, nem retornar (address)
                         // retornar todos os phones, ordenar por _.score (onde o innerHits são os primeiros). E se não tiver phones cadastrado, nem retornar (address)
-
+                        // fazer a documetnação 
+                        // remover o telefone duplicado no innerHit
                         let dataSearches = []
                         _.map(esRes.responses, (response, index) => {
                             if (parseInt(index) === 0) {
                                 if (response.hits.total > 0) {
                                     let responseHits = []
                                     _.map(response.hits.hits, (hit, index) => {
-                                        let innerAddressesHits = _.map(hit.inner_hits.addresses.hits.hits, innerhit => innerhit._source)
-                                        const innerHits = (innerAddressesHits.length > 0) ? {innerHits: innerAddressesHits} : {}
-                                        responseHits.push(_.assign({},{}, { source: hit._source }, innerHits))
+
+                                        let address = {}
+                                        if (hit._source.addresses) {
+                                            if (hit.inner_hits.addresses.hits.total > 0) {
+                                                _.map(hit.inner_hits.addresses.hits.hits, (innerHitAddress) => {
+                                                    address = innerHitAddress._source
+                                                })
+                                            }
+
+                                            else {
+                                                address = hit._source.addresses[0]
+                                            }
+                                        }
+                                        hit._source = _.omit(hit._source, 'addresses')
+
+                                        let phones = []
+                                        if (hit._source.phones) {
+                                            if (hit.inner_hits.phones.hits.total > 0) {
+                                                _.map(hit.inner_hits.phones.hits.hits, (innerHitPhone) => {
+                                                    phones.push(innerHitPhone._source)
+                                                })
+                                                _.map(hit._source.phones, (phone) => {
+                                                    if (!_.includes(phones, phone)) {
+                                                        phones.push(phone)
+                                                    }
+                                                })
+                                            }
+                                            else {
+                                                phones = hit._source.phones
+                                            }
+                                        }
+                                        else {
+                                            _.omit(hit._source, 'phones')
+                                        }
+
+                                        responseHits.push({ source: _.assign({}, {id: hit._id}, hit._source, { address: address }, { phones: phones }) })
                                     })
                                     dataSearches.push(responseHits)
                                 }
@@ -112,14 +161,14 @@ module.exports = (server, restify) => {
                                 if (response.hits.total > 0) {
                                     _.map(response.hits.hits, (hit, index) => {
                                         const addressId = parseInt(hit._id)
-                                        dataSearches.push({source: _.assign({}, { id: addressId }, hit._source)})
+                                        dataSearches.push({ source: _.assign({}, { id: addressId }, hit._source) })
                                     })
                                 }
                             }
                         })
 
                         return res.send(200, {
-                            data: esRes
+                            data: dataSearches
                         });
                     }
                 })
