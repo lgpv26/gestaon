@@ -3,3 +3,5 @@
 client/src/config\.js
 
 server/src/config\.js
+
+client/package\.json
