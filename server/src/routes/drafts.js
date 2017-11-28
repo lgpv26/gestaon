@@ -60,8 +60,8 @@ module.exports = (server, restify) => {
         })
     });
 
-    server.patch('/drafts/client/:id/addresses', (req, res, next) => {
-        clientsController.saveAddresses(req, 1).then((addressPatch) => {
+    server.patch('/drafts/:draftId/client/:id/addresses', (req, res, next) => {
+        clientsController.saveAddresses(req, req.params.draftId).then((addressPatch) => {
             return res.send(200, { data: addressPatch })
         })
     })

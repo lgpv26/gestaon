@@ -357,7 +357,7 @@ module.exports = (server, restify) => {
                     let ids = Object.keys(server.io.sockets.connected)
                     ids.forEach(function (id) {
                         const socket = server.io.sockets.connected[id]       
-                        socket.in('draft/' + draftId).emit('updateDraft', {emittedBy: req.auth.id, form: { client: { clientAddresses: [address]}}})
+                        socket.in('draft/' + draftId).emit('updateDraft', {draftId: draftId, form: { client: { clientAddresses: address}}})
                     })
                 }
                 return address
