@@ -46,7 +46,11 @@ module.exports = (server, restify) => {
                         );
                     }
                     else {
-                        let dataSearch = _.map(esRes.hits.hits, hit => hit._source);
+                        let dataSearch = []
+                        _.map(esRes.hits.hits, (hit, index) => {
+                            const addressId = parseInt(hit._id)
+                            dataSearch[index] = {source: _.assign({}, {id: addressId}, hit._source)}
+                        })
                                                 
                         if (dataSearch < 1) {
                             return next(

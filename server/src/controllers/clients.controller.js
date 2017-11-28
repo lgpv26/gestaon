@@ -357,7 +357,7 @@ module.exports = (server, restify) => {
                     let ids = Object.keys(server.io.sockets.connected)
                     ids.forEach(function (id) {
                         const socket = server.io.sockets.connected[id]       
-                        socket.in('draft/' + draftId).emit('updateDraft', {emitted: req.auth.id, form: { client: { clientAddresses: [address]}}})
+                        socket.in('draft/' + draftId).emit('updateDraft', {emittedBy: req.auth.id, form: { client: { clientAddresses: [address]}}})
                     })
                 }
                 return address
@@ -558,6 +558,17 @@ module.exports = (server, restify) => {
     /* -------------------------------------- */
 
     function saveAddresses(req) {
+        if(!req.params.id || req.params.id === 0){
+            if(req.body.clientAddresses.addressId){
+                let createData = []
+                _.map(req.body.clientAddresses, (address, index) => {
+                    createData[index] = _.forOwn(address, (value, key) => {
+                        
+                    })
+                })
+                //server.models.Address.bulkCreate(createData)
+            }
+        }
         return new Promise((resolve, reject) => {
             let clientAddresses = _.map(req.body.clientAddresses, clientAddress => _.extend({
                 addressId: parseInt(clientAddress.addressId),
