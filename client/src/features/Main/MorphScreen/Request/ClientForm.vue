@@ -221,10 +221,10 @@
                     q: vm.addressQuery
                 }).then((result) => {
                     console.log(result);
-                    vm.addresses = result.data.map((address) => {
-                        console.log(address);
+                    vm.addresses = result.data.map(({source}) => {
+                        console.log(source);
                         return {
-                            text: address.name
+                            text: source.name
                         };
                     });
                     searchComponent.search();

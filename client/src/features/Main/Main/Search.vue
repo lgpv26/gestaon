@@ -111,9 +111,10 @@
                     actingCities: ['MARINGA'],
                     q: vm.query
                 }).then((result) => {
-                    vm.searchItems = result.data.map((address) => {
+                    vm.searchItems = result.data.map(({source}) => {
+                        // source refers to search address item
                         return {
-                            text: address.name
+                            text: source.name
                         };
                     });
                     searchComponent.search();
