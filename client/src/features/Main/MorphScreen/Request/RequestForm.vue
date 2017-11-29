@@ -4,6 +4,9 @@
             <div class="ms-form__spinner" v-if="saving && !form.client.active && !form.order.active && !form.task.active">
                 <span>Salvando...</span>
             </div>
+            <span style="position: absolute; top: 0; left: 2px;">
+                <span style="color: rgba(255,255,255,.05); margin-right: 5px;" v-for="presenceUser in presenceUsers">{{ presenceUser.name }}</span>
+            </span>
             <div class="form__instruction" v-if="!form.client.active && !form.order.active && !form.task.active">
                 <div class="instruction__container">
                     <div class="container__area">
@@ -56,14 +59,12 @@
     export default {
         sockets: {
             presenceDraft(data){
-                console.log("PRESENCE", data);
+                this.presenceUsers = data;
             },
             draftSaved(){
                 this.saving = false;
-                console.log("DRAFT SALVO!");
             },
             updateDraft({draftId, form}){
-                console.log(draftId, form);
                 if(draftId === this.activeMorphScreen.draft.draftId) {
                     _.mergeWith(this.form, form);
                 }
@@ -76,6 +77,8 @@
         data(){
             return {
                 scrollbar: null,
+
+                presenceUsers: [],
 
                 lastForm: null,
 

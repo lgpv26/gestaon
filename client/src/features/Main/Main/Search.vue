@@ -52,7 +52,6 @@
 <script>
     import DraftsAPI from '../../../api/drafts';
     import ClientsAPI from '../../../api/clients';
-    import AddressesAPI from '../../../api/addresses';
     import SearchComponent from '../../../components/Inputs/Search.vue';
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
@@ -125,7 +124,8 @@
                 const searchComponent = vm.$refs.search;
                 ClientsAPI.search({
                     actingCities: ['MARINGA'],
-                    q: vm.query
+                    q: vm.query,
+                    companyId: vm.company.id
                 }).then(({data}) => {
                     let clients = data[0];
                     let addresses = data[1];

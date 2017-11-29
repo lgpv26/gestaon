@@ -67,7 +67,6 @@
         sockets: {
             draftCreated(socketData){
                 if(socketData.emittedBy !== this.user.id){
-                    console.log(socketData);
                     this.ADD_DRAFT(socketData.data);
                 }
             }
