@@ -16,7 +16,7 @@
                 <template slot="item" slot-scope="props">
                     <div class="search-input__item" v-if="props.item.client">
                         <span class="detail__name" v-html="props.item.client.name"></span>
-                        <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address"></span>
+                        <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address + ', ' + props.item.client.address.number"></span>
                         <span class="detail__phones" v-if="props.item.client.phones.length > 0">
                             <span v-for="(clientPhone, index) in props.item.client.phones" v-html="((index === 0) ? '' : ', ') + clientPhone.ddd + clientPhone.number"></span>
                         </span>

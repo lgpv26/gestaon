@@ -1,0 +1,50 @@
+"from": 0, "size": 5,
+"query": {
+    "bool": {
+        "should": [
+            {
+                "nested": {
+                    "path": "addresses",
+                    "inner_hits": {},
+                    "query": {
+                        "bool": {
+                            "must": {
+                                "multi_match": {
+                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                    "fields": ["addresses.address^3", "addresses.number^2", "addresses.complement^2", "addresses.cep^5",
+                                    "name", "obs"],
+                                    "analyzer": "standard",
+                                    "operator": "OR"
+                                }
+                            }
+                        }
+
+                    }
+                }
+            },
+            {
+                "nested": {
+                    "path": "phones",
+                    "inner_hits": {},
+                    "query": {
+                        "multi_match": {
+                            "query": utils.removeDiacritics(req.params.q.trim()),
+                            "fields": ["phones.number"],
+                            "analyzer": "standard",
+                            "operator": "AND"
+                        }
+                    },
+                    "boost": 2
+                }
+            },
+            {
+                "multi_match": {
+                    "query": utils.removeDiacritics(req.params.q.trim()),
+                    "fields": ["name", "obs"],
+                    "analyzer": "standard",
+                    "operator": "AND"
+                }
+            }
+        ]
+    }
+}

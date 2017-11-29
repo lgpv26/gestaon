@@ -36,6 +36,11 @@
                         <div class="container__body">
                             <app-request-form></app-request-form>
                         </div>
+                        <div class="container__actions">
+                            <a>Excluir Rascunho</a>
+                            <span class="push-both-sides"></span>
+                            <a @click="closeScreen()">Voltar</a>
+                        </div>
                     </div>
                 </transition>
             </div>
@@ -521,6 +526,7 @@
         color: var(--font-color--10);
     }
 
+    /* containers */
 
     .morph-screen__container .container__body {
         display: flex;
@@ -529,4 +535,21 @@
         background-color: var(--bg-color--5);
         overflow-y: auto;
     }
+
+    .morph-screen__container .container__actions {
+        display: flex;
+        flex-direction: row;
+        height: 50px;
+        padding: 0 30px;
+        align-items: center;
+    }
+
+    .morph-screen__container .container__actions > a {
+        font-size: 14px;
+        text-transform: uppercase;
+        color: var(--font-color--4);
+        font-weight: 600;
+        cursor: pointer;
+    }
+
 </style>

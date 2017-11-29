@@ -4,34 +4,35 @@
             <div class="form-column" style="flex: 1 1 60%;">
                 <label>Endereço</label>
                 <div class="search">
-                    <app-address-form :address.sync="form.address" @change="addressChanged($event)"></app-address-form>
+                    <app-address-form :address.sync="clientAddress.address" @change="addressChanged($event)"></app-address-form>
                 </div>
             </div>
             <div class="form-column" style="flex: 1 1 10%;">
                 <label>Número</label>
-                <input type="text" />
+                <input type="text" v-model="clientAddress.number" />
             </div>
             <div class="form-column" style="flex: 1 1 25%;">
                 <label>Complemento</label>
-                <input type="text" />
+                <input type="text" v-model="clientAddress.complement" />
             </div>
         </div>
         <div class="form-columns">
             <div class="form-column" style="flex: 1 1 40%;">
                 <label>Bairro</label>
-                <input type="text" v-model="form.address.neighborhood" />
+                <input type="text" v-model="clientAddress.address.neighborhood" />
             </div>
             <div class="form-column" style="flex: 1 1 15%;">
                 <label>CEP</label>
-                <input type="text" v-model="form.address.cep" />
+                <!--<input type="text" v-model="form.address.cep" />-->
+                <app-mask placeholder="#####-###" :mask="'#####-###'" v-model="clientAddress.address.cep" />
             </div>
             <div class="form-column" style="flex: 1 1 35%;">
                 <label>Cidade</label>
-                <input type="text" v-model="form.address.city" />
+                <input type="text" v-model="clientAddress.address.city" />
             </div>
             <div class="form-column" style="flex: 1 1 8%;">
                 <label>Estado</label>
-                <input type="text" v-model="form.address.state" />
+                <input type="text" v-model="clientAddress.address.state" />
             </div>
         </div>
     </div>
@@ -47,19 +48,9 @@
         components: {
             'app-address-form': AddressForm
         },
-        props: ['value','clientAddress','name'],
+        props: ['value','clientAddress'],
         data(){
             return {
-                form: {
-                    address: {
-                        id: null,
-                        name: null,
-                        neighborhood: null,
-                        cep: null,
-                        city: null,
-                        state: null
-                    }
-                }
             }
         },
         computed: {
@@ -70,6 +61,7 @@
             }
         },
         mounted(){
+
         }
     }
 </script>
@@ -77,6 +69,12 @@
 <style scoped>
 
     /* search input */
+
+    .search {
+        display: flex;
+        flex-direction: row;
+        position: relative;
+    }
 
     .search .search-input__item {
         display: flex;

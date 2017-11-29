@@ -138,7 +138,6 @@
                             }
                         ]
                     },
-
                     order: {
                         active: false,
                         name: ''
@@ -259,7 +258,7 @@
         align-items: center;
         padding-bottom: 8px;
         margin-bottom: 8px;
-        border-bottom: 2px dashed var(--bg-color--7)
+        border-bottom: 1px dashed var(--border-color--2);
     }
 
     .form-group > .form-group__content > ul.content__list > li.list__item:first-child {
@@ -395,6 +394,9 @@
     }
     div.ms-form form:first-child {
         padding: 30px 0 10px!important;
+    }
+    div.ms-form form:last-child {
+        padding-bottom: 12px;
     }
     div.ms-form form.active {
         flex-grow: 1;

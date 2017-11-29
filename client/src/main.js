@@ -18,7 +18,7 @@ import './utils/resize-listener'
 import Vue from 'vue'
 import Resource from 'vue-resource'
 import Router from 'vue-router'
-import VueTheMask from 'vue-the-mask'
+import { TheMask } from 'vue-the-mask'
 import VueModal from 'vue-js-modal'
 import VueTimeago from 'vue-timeago'
 import VueResize from 'vue-resize'
@@ -57,8 +57,6 @@ Vue.use(VueTimeago, {
 
 Vue.use(VueResize);
 
-Vue.use(VueTheMask);
-
 Vue.use(VueModal);
 
 Vue.use(VueTippy);
@@ -71,6 +69,10 @@ Vue.use(VueMoney, {
     precision: 2,
     masked: false
 });
+
+/* Mask */
+
+Vue.component('app-mask', TheMask);
 
 /* Element eleme */
 

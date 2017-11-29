@@ -1,11 +1,12 @@
 <template>
-    <app-search ref="search" @itemSelected="addressSearchItemSelected($event)" :items="addresses" :shouldStayOpen="isAddressInputFocused" :query="addressQuery"
-                :verticalOffset="8" :horizontalOffset="-20">
+    <app-search ref="search" v-if="!address.id" :items="addresses" :shouldStayOpen="isAddressInputFocused" :query="addressQuery" :verticalOffset="8" :horizontalOffset="-20"
+    @itemSelected="addressSearchItemSelected($event)">
         <input type="text" class="search-input__field" v-model="address.name" ref="searchInput"
         @focus="isAddressInputFocused = true" @blur="isAddressInputFocused = false" @keydown="onAddressSearchInputKeyDown($event)" />
         <template slot="item" slot-scope="props">
             <div class="search-input__item">
-                <span class="detail__address" v-html="props.item.text">RUA 28 DE JUNHO, 1214</span>
+                <span class="detail__address" v-html="props.item.name"></span>
+                <span class="detail__neighborhood" v-html="props.item.neighborhood + ' - ' + props.item.city + '/' + props.item.state"></span>
             </div>
         </template>
         <template slot="settings">
@@ -19,6 +20,10 @@
             <span>Nenhum resulado encontrado...</span>
         </template>
     </app-search>
+    <div style="flex-grow: 1" v-else>
+        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="address.name" />
+        <a class="btn btn--border-only" style="position: absolute; right: 0; top: -3px;" @click="changeAddress()">Mudar</a>
+    </div>
 </template>
 
 <script>
@@ -37,7 +42,17 @@
                 addressQuery: null,
                 addressInputTimeout: null,
                 isAddressInputFocused: false,
-                addresses: []
+                addresses: [],
+                addressEmptyObj: {
+                    companyId: null,
+                    id: null,
+                    name: null,
+                    neighborhood: null,
+                    cep: null,
+                    city: null,
+                    state: null
+                },
+                initialAddressForm: null
             }
         },
         methods: {
@@ -49,10 +64,7 @@
                     q: vm.addressQuery
                 }).then((result) => {
                     vm.addresses = result.data.map(({source}) => {
-                        return {
-                            addressId: source.id,
-                            text: source.name
-                        };
+                        return source;
                     });
                     searchComponent.search();
                 }).catch((err) => {
@@ -68,15 +80,20 @@
             },
             addressSearchItemSelected(item){
                 const vm = this;
-                AddressesAPI.getOne(item.addressId).then(({data}) => {
+                AddressesAPI.getOne(item.id).then(({data}) => {
                     _.assign(vm.address, _.pick(data, _.keys(vm.address)));
                     vm.$emit('change', vm.address);
                     /*console.log(data);*/
                 });
+            },
+            changeAddress(){
+                Object.assign(this.address, this.addressEmptyObj);
             }
         },
         mounted(){
+            this.initialAddressForm = _.clone(this.address, true);
         }
+
     }
 </script>
 
