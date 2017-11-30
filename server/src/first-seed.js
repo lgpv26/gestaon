@@ -29,7 +29,7 @@ module.exports = (server) => {
                         isCreator: false
                     }
                 ],
-                password: '123'
+                password: '140992'
             }, {
                 include: [{
                     model: server.models.CompanyUser,
