@@ -9,11 +9,17 @@ module.exports = (server, restify) => {
         '/service', authGuard
     ));
 
+    server.get('/service/search', (req, res, next) => {
+        serviceController.search(req).then((searchResult) => {
+            return res.send(200, { data: searchResult })
+        }).catch((err) => {
+            return console.log(err)
+        })
+    })
+
+    //server.get('/service/find-clients', serviceController.findClients);
+    
     /* CRUD */
-
-    server.get('/service/search', serviceController.search);
-    server.get('/service/find-clients', serviceController.findClients);
-
     /*
     server.patch('/devices/:id', devicesController.updateOne);
     server.get('/devices/:id', devicesController.getOne);
