@@ -51,7 +51,8 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.params.q.trim()),
                                                                     "fields": [
-                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", "addresses.cep^5"
+                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
+                                                                        "addresses.cep^5", "addresses.neighborhood"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "and"
@@ -100,7 +101,8 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.params.q.trim()),
                                                                     "fields": [
-                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", "addresses.cep^5"
+                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
+                                                                        "addresses.cep^5", "addresses.neighborhood"
                                                                     ],
                                                                     "analyzer": "standard"
                                                                 }
@@ -137,7 +139,7 @@ module.exports = (server, restify) => {
                                                             ],
                                                             "analyzer": "standard",
                                                             "operator": "or",
-                                                            "minimum_should_match": -1
+                                                            "minimum_should_match": "75%"
                                                         }
                                                     },
                                                     {
@@ -148,11 +150,12 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.params.q.trim()),
                                                                     "fields": [
-                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", "addresses.cep^5"
+                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
+                                                                        "addresses.cep^5", "addresses.neighborhood"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "or",
-                                                                    "minimum_should_match": -1
+                                                                    "minimum_should_match": "75%"
                                                                 }
                                                             }
                                                         }
@@ -169,7 +172,7 @@ module.exports = (server, restify) => {
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "or",
-                                                                    "minimum_should_match": -1
+                                                                    "minimum_should_match": "75%"
                                                                 }
                                                             }
                                                         }
@@ -197,7 +200,7 @@ module.exports = (server, restify) => {
                                     "must": {
                                         "multi_match": {
                                             "query": utils.removeDiacritics(req.params.q.trim()),
-                                            "fields": ["name", "cep"],
+                                            "fields": ["name", "cep", "neighborhood"],
                                             "analyzer": "standard",
                                             "operator": "AND"
                                         }
