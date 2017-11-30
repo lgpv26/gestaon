@@ -48,3 +48,135 @@
         ]
     }
 }
+
+
+{
+  "mappings": {
+        "client": {
+            "properties": {
+                "addresses": {
+                    "type": "nested",
+                    "properties": {
+                        "address": {
+                            "type": "text",
+                            "analyzer": "autocomplete"
+                        },
+                        "clientAddressId": {
+                            "type": "integer"
+                        },
+                        "complement": {
+                            "type": "text",
+                            "analyzer": "autocomplete"
+                        },
+                        "number": {
+                            "type": "text"
+                        }
+                    }
+                },
+                "companyId": {
+                    "type": "integer"
+                },
+                "dateCreated": {
+                    "type": "date"
+                },
+                "dateUpdated": {
+                    "type": "date"
+                },
+                "name": {
+                    "type": "text",
+                    "analyzer": "autocomplete"
+                },
+                "obs": {
+                    "type": "text",
+                    "analyzer": "autocomplete"
+                },
+                "phones": {
+                    "type": "nested",
+                    "properties": {
+                      "clientPhoneId": {
+                            "type": "integer"
+                        },
+                        "ddd": {
+                            "type": "keyword"
+                        },
+                        "number": {
+                            "type": "text",
+                            "analyzer": "autocomplete"
+                        }
+                    }
+                },
+                "status": {
+                    "type": "keyword"
+                }
+            }
+        },
+        "address": {
+            "properties": {
+                "cep": {
+                    "type": "text",
+                    "analyzer": "autocomplete"
+                },
+                "city": {
+                    "type": "text",
+                    "analyzer": "phrasewords"
+                },
+                "companyId": {
+                    "type": "integer"
+                },
+                "dateCreated": {
+                    "type": "date"
+                },
+                "dateUpdated": {
+                    "type": "date"
+                },
+                "name": {
+                    "type": "text",
+                    "analyzer": "autocomplete"
+                },
+                "neighborhood": {
+                    "type": "text",
+                    "analyzer": "autocomplete"
+                },
+                "state": {
+                    "type": "text"
+                },
+                "status": {
+                    "type": "keyword"
+                }
+            }
+        }
+    },
+  "settings": {
+        "index": {
+          "number_of_shards" : 1,
+            "analysis": {
+                "filter": {
+                    "autocomplete_filter": {
+                        "type": "edge_ngram",
+                        "min_gram": "1",
+                        "max_gram": "20"
+                    }
+                },
+                "analyzer": {
+                    "autocomplete": {
+                        "filter": [
+                            "lowercase",
+                            "asciifolding",
+                            "autocomplete_filter"
+                        ],
+                        "type": "custom",
+                        "tokenizer": "standard"
+                    },
+                    "phrasewords": {
+                        "filter": [
+                            "lowercase",
+                            "asciifolding"
+                        ],
+                        "type": "custom",
+                        "tokenizer": "standard"
+                    }
+                }
+            }
+        }
+    }
+}

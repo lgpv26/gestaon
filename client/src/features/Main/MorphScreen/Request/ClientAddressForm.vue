@@ -42,13 +42,14 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
     import AddressesAPI from '../../../../api/addresses';
+    import ClientAPI from '../../../../api/clients';
     import AddressForm from './AddressForm.vue';
 
     export default {
         components: {
             'app-address-form': AddressForm
         },
-        props: ['value','clientAddress'],
+        props: ['value','clientId','clientAddress'],
         data(){
             return {
             }
@@ -56,8 +57,29 @@
         computed: {
         },
         methods: {
+            ...mapActions('toast', 'showError'),
             addressChanged(ev){
                 console.log(ev);
+            },
+            createClientAddress(){
+                return {
+                    addressId: null,
+                    name: null,
+                    number: null,
+                    complement: null,
+                    status: 'activated'
+                }
+            },
+            save(){
+                const vm = this;
+                let clientAddress = this.createClientAddress();
+                _.assign(clientAddress, _.pick(this.clientAddress, _.keys(clientAddress)));
+                console.log(clientAddress);
+                /*ClientAPI.saveAddresses(this.clientId, [clientAddress]).then((result)=>{
+                    console.log(result)
+                }).catch((err)=>{
+                    vm.showError(err);
+                });*/
             }
         },
         mounted(){

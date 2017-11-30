@@ -53,10 +53,10 @@
                             <span class="push-both-sides"></span>
                             <a class="btn btn--border-only" v-if="form.clientAddresses.length > 0" @click="backToClientAddressesList()">Voltar</a>
                             <a class="btn btn--primary" v-if="form.clientAddresses.length <= 0" style="margin-left: 10px;">Adicionar</a>
-                            <a class="btn btn--primary" v-else style="margin-left: 10px;">Salvar</a>
+                            <a class="btn btn--primary" v-else @click="saveClientAddress()" style="margin-left: 10px;">Salvar</a>
                         </div>
                         <div class="form-group__content">
-                            <app-client-address-form :clientAddress.sync="clientAddressForm"></app-client-address-form>
+                            <app-client-address-form ref="clientAddressForm" :clientId="form.id" :clientAddress.sync="clientAddressForm"></app-client-address-form>
                         </div>
                     </div>
                     <div class="form-group" v-else>
@@ -70,7 +70,7 @@
                                 <li class="list__item" v-for="clientAddress in form.clientAddresses">
                                     <span style="cursor: pointer;">{{ clientAddress.address.name }}, {{ clientAddress.number }}</span>
                                     <span class="push-both-sides"></span>
-                                    <a class="btn btn--border-only" @click="editClientAddress(clientAddress)">Editar endereço</a>
+                                    <a class="btn btn--border-only" style="position: absolute; right: 0" @click="editClientAddress(clientAddress)">Editar endereço</a>
                                 </li>
                             </ul>
                         </div>
@@ -95,7 +95,7 @@
                     <div class="form-group">
                         <div class="form-group__header">
                             <icon-phone class="header__icon"></icon-phone>
-                            <input type="text" class="input--borderless" placeholder="(XX) XXXXX-XXXX" />
+                            <app-mask :mask="['(##) ####-####','(##) #####-####']" style="width: 105px;" class="input--borderless" placeholder="(XX) XXXXX-XXXX" />
                             <div class="header__mini-circle"></div>
                             <input type="text" class="input--borderless" placeholder="fixo/celular" />
                             <span class="push-both-sides"></span>
@@ -148,6 +148,7 @@
     import ClientAddressForm from './ClientAddressForm.vue';
     import SearchComponent from '../../../../components/Inputs/Search.vue';
     import ClientsAPI from '../../../../api/clients';
+    import ServiceAPI from '../../../../api/service';
 
     export default {
         components: {
@@ -216,7 +217,7 @@
             },
             search(){
                 const vm = this;
-                ClientsAPI.search({
+                ServiceAPI.search({
                     actingCities: ['MARINGA'],
                     q: vm.query,
                     companyId: vm.company.id
@@ -261,6 +262,9 @@
                 this.resetClientAddressForm();
                 _.assign(this.clientAddressForm, clientAddress);
                 this.isEditing = true;
+            },
+            saveClientAddress(){
+                this.$refs.clientAddressForm.save();
             },
             resetForm(){
                 this.resetClientForm();

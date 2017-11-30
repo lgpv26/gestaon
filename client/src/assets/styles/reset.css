@@ -19,7 +19,7 @@ input {
     background: transparent;
     border: 0;
     padding: 0 0 5px;
-    border-bottom: 1px solid var(--border-color--2);
+    border-bottom: 2px solid var(--border-color--2);
     text-transform: uppercase;
     color: var(--font-color--8);
     outline: 0;
@@ -40,7 +40,7 @@ input:-webkit-autofill {
 }
 
 input:focus, input:visited {
-    border-bottom: 1px solid var(--border-color--primary);
+    border-bottom: 2px solid var(--border-color--primary);
 }
 
 input.input--borderless:focus, input.input--borderless:visited {

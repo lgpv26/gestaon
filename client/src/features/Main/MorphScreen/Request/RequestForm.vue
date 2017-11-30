@@ -213,7 +213,11 @@
         flex-direction: row;
         align-items: center;
         padding-bottom: 15px;
-        border-bottom: 1px dashed var(--border-color--2);
+        /*border-bottom: 1px dashed var(--border-color--2);*/
+        background-image: linear-gradient(to right, var(--border-color--2) 50%, rgba(255,255,255,0) 0%);
+        background-position: bottom left;
+        background-size: 6px 2px;
+        background-repeat: repeat-x;
         margin-bottom: 15px;
     }
 
@@ -223,7 +227,7 @@
 
     .form-group > .form-group__header > h3 {
         font-size: 12px;
-        font-weight: 600;
+        font-weight: initial;
     }
 
     .form-group > .form-group__header > input[type=text] {
@@ -256,19 +260,26 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        padding-bottom: 8px;
-        margin-bottom: 8px;
-        border-bottom: 1px dashed var(--border-color--2);
+        background-image: linear-gradient(to right, var(--border-color--2) 50%, rgba(255,255,255,0) 0%);
+        background-position: bottom left;
+        background-size: 6px 2px;
+        background-repeat: repeat-x;
+        position: relative;
+        padding-bottom: 15px;
+        margin-top: 13px;
+    }
+
+    .form-group > .form-group__content > ul.content__list > li.list__item span {
+        color: var(--font-color--7);
+        font-weight: 600;
     }
 
     .form-group > .form-group__content > ul.content__list > li.list__item:first-child {
-        margin-top: -7px;
+        margin-top: -2px;
     }
 
     .form-group > .form-group__content > ul.content__list > li.list__item:last-child {
-        padding-bottom: 0;
-        margin-bottom: 0;
-        border-bottom: 0;
+        margin-bottom: 8px;
     }
 
     .form-group > .form-group__content > ul.content__list > li.list__item > .item__mini-circle {
