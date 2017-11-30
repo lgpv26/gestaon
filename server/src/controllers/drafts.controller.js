@@ -44,7 +44,7 @@ module.exports = (server, restify) => {
                     
                     draft = JSON.parse(JSON.stringify(draft))
                     draft = _.assignIn(draft, {createdBy: req.auth.name}) // change createdBy to user name for emit to all users
-                   console.log(draft)
+                   
                     // check socket connections and emit 
                     let ids = Object.keys(server.io.sockets.connected)
                     ids.forEach(function (id) {

@@ -62,7 +62,7 @@ module.exports = function (server) {
                     });
                 });
                 sockets.forEach((s) => {
-                    s(server, channels, socket);
+                    new s(server, channels, socket);
                 });
             }
         });
