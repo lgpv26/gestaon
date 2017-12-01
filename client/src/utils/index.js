@@ -3,7 +3,21 @@ import moment from 'moment';
 
 export default {
 
-    // Masks
+    /*
+     * Overall
+     */
+
+    assignToExistentKeys(targetObj, obj){
+        return _.assign(targetObj, _.pick(obj, _.keys(targetObj)));
+    },
+
+    removeReactivity(obj){
+        return JSON.parse(JSON.stringify(obj));
+    },
+
+    /*
+     * Masks
+     * */
 
     formatPhone(phoneNumber){
         phoneNumber = phoneNumber.trim();

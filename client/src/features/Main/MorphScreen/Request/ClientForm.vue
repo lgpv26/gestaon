@@ -13,7 +13,7 @@
                                     v-model="form.name" v-if="form.id" placeholder="..." @input="commitSocketChanges('form.name')" />
                                 </div>
                                 <app-search v-else ref="search" :items="searchItems" :shouldStayOpen="isNameInputFocused" :query="query" :verticalOffset="5" :horizontalOffset="-20"
-                                    @itemSelected="clientSelected($event)" >
+                                    @itemSelected="searchClientSelected($event)" >
                                     <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="form.name" ref="searchInput"
                                     @keydown="searchValueUpdated()" @focus="isNameInputFocused = true" @blur="isNameInputFocused = false" />
                                     <template slot="item" slot-scope="props">
@@ -118,27 +118,41 @@
                 </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <div class="form-group__header">
+                        <app-new-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="form.clientGroup" :showInput="true">
                             <icon-client-group class="header__icon"></icon-client-group>
-                            <h3>Grupo de cliente</h3>
+                            <h3 v-if="!selectedClientGroup.value">Grupo de cliente</h3>
+                            <h3 v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</h3>
                             <span class="push-both-sides"></span>
                             <icon-dropdown class="header__action-icon"></icon-dropdown>
-                        </div>
+                            <template slot="item" slot-scope="itemProps">
+                                <span>{{itemProps.text }}</span>
+                            </template>
+                        </app-new-select>
                     </div>
                 </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <div class="form-group__header">
+                        <app-new-select class="form-group__header" :verticalOffset="8" :items="clientCustomFields" v-model="form.clientSelectedCustomFields" :multiple="true" :showInput="true">
                             <icon-client-details class="header__icon"></icon-client-details>
                             <h3>Informações adicionais</h3>
                             <span class="push-both-sides"></span>
-                            <icon-dropdown class="header__action-icon"></icon-dropdown>
-                        </div>
-                        <div class="form-group__content">
-                            <ul v-if="form.clientPhones && form.clientPhones.length >= 0">
-                                <li></li>
+                            <icon-dropdown class="header__action-icon" v-if="form.clientCustomFields && form.clientCustomFields.length >= 0"></icon-dropdown>
+                            <icon-add class="header__action-icon" v-else></icon-add>
+                            <template slot="item" slot-scope="itemProps">
+                                <span>{{itemProps.text }}</span>
+                            </template>
+                        </app-new-select>
+                        <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
+                            <ul class="content__list--mini">
+                                <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
+                                    <div class="item__check"></div>
+                                    <span>{{ clientCustomField.text }}</span>
+                                    <div class="item__mini-circle"></div>
+                                    <span><input type="text" placeholder="..." class="input--borderless" /></span>
+                                    <span class="push-both-sides"></span>
+                                    <icon-remove></icon-remove>
+                                </li>
                             </ul>
-                            <span v-else>Nenhuma informação adicional...</span>
                         </div>
                     </div>
                 </div>
@@ -154,7 +168,9 @@
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import { Select } from "../../../../components/Inputs/Select/index";
     import _ from 'lodash';
+    import utils from '../../../../utils';
     import ClientAddressForm from './ClientAddressForm.vue';
     import SearchComponent from '../../../../components/Inputs/Search.vue';
     import ClientsAPI from '../../../../api/clients';
@@ -163,7 +179,8 @@
     export default {
         components: {
             'app-search': SearchComponent,
-            'app-client-address-form': ClientAddressForm
+            'app-client-address-form': ClientAddressForm,
+            'app-new-select': Select
         },
         props: ['client'],
         data(){
@@ -191,14 +208,74 @@
                     id: null, // se passar, atualizar cliente. se não, criar.
                     name: '', // se passar e tiver id, atualizar. se não, criar.
                     legalDocument: '', // cpf, cnpj
+                    clientGroup: null,
+                    clientSelectedCustomFields: [],
+                    clientCustomFields: [],
                     clientAddresses: [],
                     clientAddressName: null
                 },
+                clientCustomFields: [
+                    {
+                        text: 'RG',
+                        value: 'rg'
+                    },
+                    {
+                        text: 'E-mail',
+                        value: 'email'
+                    },
+                    {
+                        text: 'Apelido',
+                        value: 'nickname'
+                    }
+                ],
+                clientGroups: [
+                    {
+                        text: 'NENHUM',
+                        value: null
+                    },
+                    {
+                        text: 'VAREJO DISK',
+                        value: 'retail-disk'
+                    },
+                    {
+                        text: 'VENDA AUTOMÁTICA',
+                        value: 'automatic-sales'
+                    },
+                    {
+                        text: 'COMÉRCIO',
+                        value: 'commerce'
+                    }
+                ],
                 searchItems: [],
                 commitTimeout: null
             }
         },
         watch: {
+            'form.clientSelectedCustomFields' : function(clientSelectedCustomFields) {
+                if(clientSelectedCustomFields.length && clientSelectedCustomFields.length > 0){
+                    this.form.clientCustomFields = _.reduce(this.clientCustomFields, (accumulator, clientCustomField, index) => {
+                        if(_.includes(clientSelectedCustomFields, clientCustomField.value)){ // Exists in selected custom fields
+                            const existentClientCustomField = _.find(this.form.clientCustomFields, { field: clientCustomField.value });
+                            if(existentClientCustomField){
+                                accumulator.push(existentClientCustomField);
+                            }
+                            else {
+                                accumulator.push({
+                                    text: clientCustomField.text,
+                                    field: clientCustomField.value,
+                                    value: null
+                                });
+                            }
+                            return accumulator;
+                        }
+                        // If it does not exist in selected custom fields, don't push it to accumulator
+                        return accumulator;
+                    }, []);
+                }
+                else {
+                    this.form.clientCustomFields = [];
+                }
+            },
             form: {
                 handler: function(form) {
                     this.syncWithParentForm();
@@ -207,9 +284,17 @@
             }
         },
         computed: {
-            ...mapState('auth', ['company'])
+            ...mapState('auth', ['company']),
+            selectedClientGroup(){
+                return _.find(this.clientGroups, { value: this.form.clientGroup });
+            }
         },
         methods: {
+
+            /**
+             * Form model
+             */
+
             createClientAddress(){
                 return {
                     id: null,
@@ -226,13 +311,11 @@
                     }
                 }
             },
-            clientSelected(searchItem){
-                const vm = this;
-                ClientsAPI.getOne(searchItem.client.id).then(({data}) => {
-                    _.assign(vm.form, _.pick(data, _.keys(vm.form)));
-                    vm.searchItems = [];
-                });
-            },
+
+            /**
+             * Client search
+             */
+
             search(){
                 const vm = this;
                 ServiceAPI.search({
@@ -252,11 +335,12 @@
                     vm.searchItems = [];
                 })
             },
-            commitUpdatedValue(){
-                if(this.query.trim() !== this.lastQuery){
-                    this.lastQuery = this.query.trim();
-                    this.search();
-                }
+            searchClientSelected(searchItem){
+                const vm = this;
+                ClientsAPI.getOne(searchItem.client.id).then(({data}) => {
+                    _.assign(vm.form, _.pick(data, _.keys(vm.form)));
+                    vm.searchItems = [];
+                });
             },
             searchValueUpdated(){
                 if(this.commitTimeout) clearTimeout(this.commitTimeout);
@@ -265,6 +349,17 @@
                     this.commitUpdatedValue();
                 }, 300)
             },
+            commitUpdatedValue(){
+                if(this.query.trim() !== this.lastQuery){
+                    this.lastQuery = this.query.trim();
+                    this.search();
+                }
+            },
+
+            /**
+             * Actions
+             */
+
             changeClient(){
                 this.resetForm();
             },
@@ -277,12 +372,17 @@
                 this.isAdding = true;
             },
             editClientAddress(clientAddress){
-                _.assign(this.clientAddressForm, JSON.parse(JSON.stringify(clientAddress)));
+                _.assign(this.clientAddressForm, utils.removeReactivity(clientAddress));
                 this.isEditing = true;
             },
             saveClientAddress(){
                 this.$refs.clientAddressForm.save();
             },
+
+            /**
+             * Resets
+             */
+
             resetForm(){
                 this.resetClientForm();
                 this.resetClientAddressForm();
@@ -293,6 +393,11 @@
             resetClientAddressForm(){
                 this.clientAddressForm = this.createClientAddress();
             },
+
+            /**
+             * Real-time
+             */
+
             syncWithParentForm(){
                 this.$emit('update:client', this.form);
             },

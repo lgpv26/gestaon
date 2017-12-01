@@ -41,6 +41,7 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
+    import utils from '../../../../utils';
     import AddressesAPI from '../../../../api/addresses';
     import ClientAPI from '../../../../api/clients';
     import AddressForm from './AddressForm.vue';
@@ -80,7 +81,8 @@
                     this.showError("Escolha um endereço.");
                     return
                 }
-                _.assign(clientAddress, _.pick(this.clientAddress, _.keys(clientAddress)), { addressId: this.clientAddress.address.id });
+                clientAddress = utils.assignToExistentKeys(clientAddress, this.clientAddress);
+                _.assign(clientAddress, { addressId: this.clientAddress.address.id });
                 ClientAPI.saveAddresses(this.clientId, [clientAddress], { companyId: this.company.id }).then((result)=>{
                     console.log(result);
                 }).catch((err)=>{

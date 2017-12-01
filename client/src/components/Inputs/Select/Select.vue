@@ -1,6 +1,6 @@
 <template>
     <div class="ag-select-input" ref="select" @mouseleave="onMouseLeave($event)" @mouseover="onMouseOver($event)">
-        <div class="select-input__target" @mousedown="onClickTarget($event)" ref="target">
+        <div class="select-input__target" @mousedown="onClickTarget($event)" style="cursor: pointer;" ref="target">
             <slot></slot>
         </div>
         <transition name="fade">
@@ -16,12 +16,18 @@
                     </div>
                 </div>
                 <div class="container__items" v-show="items && items.length > 0">
-                    <h3>Escolha</h3>
-                    <div class="items__item" v-for="item in items">
-                        <slot name="item" :text="item.text"></slot>
+                    <h3>{{ (title) ? title : 'SELECIONE' }}</h3>
+                    <div class="items__item" v-for="item in items" @click="itemSelected(item)">
+                        <slot name="item" :text="item.text" :active="(!multiple && item.value === value) || (multiple && value.length && value[value.indexOf(item.value)])"></slot>
                         <span class="push-both-sides"></span>
-                        OK
+                        <span v-if="(!multiple && item.value === value) || (multiple && value.length && value[value.indexOf(item.value)])">
+                            <icon-check></icon-check>
+                        </span>
                     </div>
+                </div>
+                <div class="container__input" v-if="showInput">
+                    <input type="text" placeholder="ADICIONAR NOVO" />
+                    <icon-check style="position: absolute; right: 0px; top: 0;"></icon-check>
                 </div>
             </div>
         </transition>
@@ -31,6 +37,7 @@
     import Vue from 'vue';
     import _ from 'lodash';
     import Popper from 'popper.js';
+    import utils from '../../../utils';
     export default {
         data(){
             return {
@@ -39,7 +46,7 @@
                 isShowing: false
             }
         },
-        props: ['sections', 'items', 'verticalOffset', 'horizontalOffset'],
+        props: ['value','sections','items','title','verticalOffset','horizontalOffset','showInput','multiple'],
         computed: {
         },
         methods: {
@@ -71,7 +78,12 @@
                         this.popperInstance.destroy();
                     }
                     this.popperInstance = new Popper(this.$refs.target, this.$refs.container, {
-                        placement: 'bottom-start'
+                        placement: 'bottom-start',
+                        modifiers: {
+                            flip: {
+                                enabled: false
+                            }
+                        }
                     });
                 });
             },
@@ -81,6 +93,27 @@
             toggleSelect(){
                 if(this.isShowing) return this.closeSelect();
                 this.openSelect();
+            },
+            itemSelected(item){
+                if(!this.multiple){ // single select
+                    if(this.value === item.value){
+                        this.$emit('input', null);
+                    }
+                    else {
+                        this.$emit('input', item.value);
+                    }
+                }
+                else { // multiple select
+                    if(_.includes(this.value, item.value)){
+                        this.value.splice(this.value.indexOf(item.value), 1);
+                        this.$emit('input', this.value);
+                    }
+                    else {
+                        this.value.push(item.value);
+                        this.$emit('input', this.value);
+                    }
+                }
+                this.closeSelect();
             }
         },
         mounted(){
@@ -104,11 +137,14 @@
 
     .ag-select-input .select-input__target {
         position: relative;
+        flex-direction: row;
+        display: flex;
+        flex-grow: 1;
         color: var(--base-color);
     }
     .ag-select-input .select-input__container {
         transition: .5s opacity;
-        width: 200px;
+        width: 240px;
         position: absolute;
         z-index: 99999;
         background-color: var(--bg-color);
@@ -143,7 +179,8 @@
         display: flex;
         flex-direction: row;
         cursor: pointer;
-        padding: 5px 0;
+        padding: 8px 0;
+        height: 32px;
     }
     .ag-select-input .section__item span {
         color: var(--base-color);
@@ -152,13 +189,23 @@
         display: flex;
         flex-direction: column;
     }
-    .ag-select-input h3 {
+    .ag-select-input .select-input__container h3 {
         color: var(--secondary-color--d);
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin-bottom: 3px;
+        margin-bottom: 8px;
     }
     .ag-select-input .container__items .items__item span {
         color: var(--base-color);
+    }
+    .ag-select-input .container__items .items__item >>> .colorizable {
+        fill: var(--font-color--secondary);
+    }
+    .ag-select-input .container__input {
+        margin-top: 10px;
+        position: relative;
+    }
+    .ag-select-input .container__input input {
+        font-size: 12px;
     }
 </style>

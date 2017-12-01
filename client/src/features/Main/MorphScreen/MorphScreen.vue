@@ -441,6 +441,7 @@
         display: flex;
         flex-direction: column;
         align-self: flex-start;
+        padding: 0 10px;
     }
     .morph-screen__container .container__header {
         display: flex;
@@ -534,6 +535,8 @@
         flex-direction: column;
         background-color: var(--bg-color--5);
         overflow-y: auto;
+        box-shadow: 1px 3px 5px rgba(0,0,0,0.4);
+        border-radius: 5px;
     }
 
     .morph-screen__container .container__actions {
