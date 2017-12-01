@@ -40,10 +40,18 @@ const mutations = {
             });
             return true;
         }
-        iziToast.error({
-            title: 'Erro',
-            message: "Houve um erro."
-        });
+        if(error){
+            iziToast.error({
+                title: 'Erro',
+                message: error
+            });
+        }
+        else {
+            iziToast.error({
+                title: 'Erro',
+                message: "Houve um erro."
+            });
+        }
     }
 }
 

@@ -17,8 +17,8 @@ export default {
     getOneClientAddress(clientId, addressId){
         return Vue.http.get(config.apiBaseUrl + '/clients/' + clientId + '/addresses/' + addressId).then((response) => response.json());
     },
-    saveAddresses(clientId, body){
-        return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId + '/addresses', { clientAddresses: body }).then((response) => response.json());
+    saveAddresses(clientId, body, params){
+        return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId + '/addresses', { clientAddresses: body }, { params }).then((response) => response.json());
     },
     removeOneClientPhone(clientId, phoneId){
         return Vue.http.delete(config.apiBaseUrl + '/clients/' + clientId + '/phones/' + phoneId).then((response) => response.json());

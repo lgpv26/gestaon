@@ -221,16 +221,23 @@
         margin-bottom: 15px;
     }
 
+    .form-group > .form-group__header:last-child {
+        background: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
     .form-group > .form-group__header > span {
         font-size: 12px;
     }
 
     .form-group > .form-group__header > h3 {
         font-size: 12px;
-        font-weight: initial;
+        font-weight: 600;
     }
 
     .form-group > .form-group__header > input[type=text] {
+        height: 14px;
     }
 
     .form-group > .form-group__header > .header__icon {

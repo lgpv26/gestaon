@@ -55,6 +55,7 @@
             }
         },
         computed: {
+            ...mapState('auth', ['company'])
         },
         methods: {
             ...mapActions('toast', 'showError'),
@@ -63,7 +64,9 @@
             },
             createClientAddress(){
                 return {
+                    id: null,
                     addressId: null,
+                    address: null,
                     name: null,
                     number: null,
                     complement: null,
@@ -73,13 +76,16 @@
             save(){
                 const vm = this;
                 let clientAddress = this.createClientAddress();
-                _.assign(clientAddress, _.pick(this.clientAddress, _.keys(clientAddress)));
-                console.log(clientAddress);
-                /*ClientAPI.saveAddresses(this.clientId, [clientAddress]).then((result)=>{
-                    console.log(result)
+                if(!_.has(this.clientAddress, 'address.id')){
+                    this.showError("Escolha um endereço.");
+                    return
+                }
+                _.assign(clientAddress, _.pick(this.clientAddress, _.keys(clientAddress)), { addressId: this.clientAddress.address.id });
+                ClientAPI.saveAddresses(this.clientId, [clientAddress], { companyId: this.company.id }).then((result)=>{
+                    console.log(result);
                 }).catch((err)=>{
                     vm.showError(err);
-                });*/
+                });
             }
         },
         mounted(){

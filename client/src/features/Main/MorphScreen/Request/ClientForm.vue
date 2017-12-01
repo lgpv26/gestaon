@@ -52,7 +52,7 @@
                             <h3 style="margin-right: 10px;">Locais</h3> <icon-local></icon-local>
                             <span class="push-both-sides"></span>
                             <a class="btn btn--border-only" v-if="form.clientAddresses.length > 0" @click="backToClientAddressesList()">Voltar</a>
-                            <a class="btn btn--primary" v-if="form.clientAddresses.length <= 0" style="margin-left: 10px;">Adicionar</a>
+                            <a class="btn btn--primary" v-if="form.clientAddresses.length <= 0" @click="saveClientAddress()" style="margin-left: 10px;">Adicionar</a>
                             <a class="btn btn--primary" v-else @click="saveClientAddress()" style="margin-left: 10px;">Salvar</a>
                         </div>
                         <div class="form-group__content">
@@ -95,7 +95,7 @@
                     <div class="form-group">
                         <div class="form-group__header">
                             <icon-phone class="header__icon"></icon-phone>
-                            <app-mask :mask="['(##) ####-####','(##) #####-####']" style="width: 105px;" class="input--borderless" placeholder="(XX) XXXXX-XXXX" />
+                            <app-mask :mask="['(##) ####-####','(##) #####-####']" style="width: 105px;" class="input--borderless" placeholder="Número" />
                             <div class="header__mini-circle"></div>
                             <input type="text" class="input--borderless" placeholder="fixo/celular" />
                             <span class="push-both-sides"></span>
@@ -113,6 +113,16 @@
                                 </li>
                             </ul>
                             <span v-else>Nenhum telefone...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-groups">
+                    <div class="form-group">
+                        <div class="form-group__header">
+                            <icon-client-group class="header__icon"></icon-client-group>
+                            <h3>Grupo de cliente</h3>
+                            <span class="push-both-sides"></span>
+                            <icon-dropdown class="header__action-icon"></icon-dropdown>
                         </div>
                     </div>
                 </div>
@@ -202,10 +212,18 @@
         methods: {
             createClientAddress(){
                 return {
-                    clientAddressId: null,
+                    id: null,
                     name: null,
                     number: null,
-                    complement: null
+                    complement: null,
+                    address: {
+                        id: null,
+                        name: null,
+                        neighborhood: null,
+                        cep: null,
+                        city: null,
+                        state: null
+                    }
                 }
             },
             clientSelected(searchItem){
@@ -259,8 +277,7 @@
                 this.isAdding = true;
             },
             editClientAddress(clientAddress){
-                this.resetClientAddressForm();
-                _.assign(this.clientAddressForm, clientAddress);
+                _.assign(this.clientAddressForm, JSON.parse(JSON.stringify(clientAddress)));
                 this.isEditing = true;
             },
             saveClientAddress(){
@@ -274,7 +291,7 @@
                 Object.assign(this.$data.form, this.$options.data.apply(this).form);
             },
             resetClientAddressForm(){
-                Object.assign(this.$data.clientAddressForm, this.$options.data.apply(this).clientAddressForm);
+                this.clientAddressForm = this.createClientAddress();
             },
             syncWithParentForm(){
                 this.$emit('update:client', this.form);
