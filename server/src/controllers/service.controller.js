@@ -46,6 +46,22 @@ module.exports = (server, restify) => {
                                                     {
                                                         "nested": {
                                                             "inner_hits": {},
+                                                            "path": "legaldocuments",
+                                                            "query": {
+                                                                "multi_match": {
+                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "fields": [
+                                                                        "legaldocuments.documentNumber"
+                                                                    ],
+                                                                    "analyzer": "standard",
+                                                                    "operator": "and"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "nested": {
+                                                            "inner_hits": {},
                                                             "path": "addresses",
                                                             "query": {
                                                                 "multi_match": {
@@ -55,7 +71,8 @@ module.exports = (server, restify) => {
                                                                         "addresses.cep^5", "addresses.neighborhood"
                                                                     ],
                                                                     "analyzer": "standard",
-                                                                    "operator": "and"
+                                                                    "operator": "and",
+                                                                    "type": "cross_fields"
                                                                 }
                                                             }
                                                         }
@@ -71,7 +88,8 @@ module.exports = (server, restify) => {
                                                                         "phones.ddd", "phones.number"
                                                                     ],
                                                                     "analyzer": "standard",
-                                                                    "operator": "and"
+                                                                    "operator": "and",
+                                                                    "type": "cross_fields"
                                                                 }
                                                             }
                                                         }
@@ -90,7 +108,8 @@ module.exports = (server, restify) => {
                                                                 "obs"
                                                             ],
                                                             "operator": "and",
-                                                            "analyzer": "standard"
+                                                            "analyzer": "standard",
+                                                            "type": "cross_fields"
                                                         }
                                                     },
                                                     {
@@ -103,6 +122,21 @@ module.exports = (server, restify) => {
                                                                     "fields": [
                                                                         "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
                                                                         "addresses.cep^5", "addresses.neighborhood"
+                                                                    ],
+                                                                    "analyzer": "standard"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "nested": {
+                                                            "inner_hits": {},
+                                                            "path": "legaldocuments",
+                                                            "query": {
+                                                                "multi_match": {
+                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "fields": [
+                                                                        "legaldocuments.documentNumber"
                                                                     ],
                                                                     "analyzer": "standard"
                                                                 }
@@ -135,7 +169,8 @@ module.exports = (server, restify) => {
                                                             "query": utils.removeDiacritics(req.params.q.trim()),
                                                             "fields": [
                                                                 "name",
-                                                                "obs"
+                                                                "obs",
+                                                                "legaldocument"
                                                             ],
                                                             "analyzer": "standard",
                                                             "operator": "or",
@@ -152,6 +187,23 @@ module.exports = (server, restify) => {
                                                                     "fields": [
                                                                         "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
                                                                         "addresses.cep^5", "addresses.neighborhood"
+                                                                    ],
+                                                                    "analyzer": "standard",
+                                                                    "operator": "or",
+                                                                    "minimum_should_match": "75%"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "nested": {
+                                                            "inner_hits": {},
+                                                            "path": "legaldocuments",
+                                                            "query": {
+                                                                "multi_match": {
+                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "fields": [
+                                                                        "legaldocuments.documentNumber"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "or",

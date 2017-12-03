@@ -51,18 +51,56 @@ module.exports = (server, restify) => {
     })
 
     // PHONES //
-    server.get('/clients/:id/phones', clientsController.getPhones);
-    server.del('/clients/:id/phones/:clientPhoneId', clientsController.removeOnePhone);
-    server.patch('/clients/:id/phones', clientsController.savePhones);
+    server.get('/clients/:id/phones', (req, res, next) => {
+        clientsController.getPhones(req).then((getAllResult) => {
+            if (!getAllResult || getAllResult.length < 1) {
+                return next(
+                    new restify.ResourceNotFoundError("Nenhum dado encontrado.")
+                );
+            }
+            return res.send(200, { data: getAllResult })
+        })
+    })
+    
+    server.del('/clients/:id/phones/:clientPhoneId', (req, res, next) => {
+        clientsController.removeOnePhone(req).then((phoneDeleted) => {
+            return res.send(200, { data: phoneDeleted })
+        }).catch((err) => {
+            console.log(err)
+        });
+    
+    })
+
+    server.patch('/clients/:id/phones', (req, res, next) => {
+        clientsController.savePhones(req).then((phonePatch) => {
+            return res.send(200, { data: phonePatch })
+        })
+    });
 
     // CUSTOM FIELDS //
-    server.get('/clients/:id/customFields', clientsController.getCustomFields);
-    server.del('/clients/:id/customFields/:customFieldId', clientsController.removeOneCustomField);
-    server.patch('/clients/:id/customFields', clientsController.saveCustomFields);
+    server.get('/clients/:id/customFields', (req, res, next) => {
+        clientsController.getCustomFields(req).then((getAllResult) => {
+            return res.send(200, { data: getAllResult })
+        })
+    })
+
+    server.get('/clients/:id/customFields/:customFieldId', (req, res, next) => {
+        clientsController.getOneCustomField(req).then((getResult) => {
+            return res.send(200, { data: getResult })
+        })
+    })
+    
+    server.del('/clients/:id/customFields/:customFieldId', (req, res, next) => {
+        clientsController.removeOneCustomField(req).then((customFieldDeleted) => {
+            return res.send(200, { data: customFieldDeleted })
+        })
+    })
+
+    server.patch('/clients/:id/customFields', (req, res, next) => {
+        clientsController.saveCustomFields(req).then((customFieldPatch) => {
+            return res.send(200, { data: customFieldPatch })
+        })
+    })
 
     server.post('/clients/export-to-es', clientsController.exportToES);
-
-    /*
-    server.del('/devices/:id', devicesController.removeOne);*/
-
 };

@@ -1,6 +1,8 @@
 const _ = require('lodash');
 
 module.exports = (server, restify) => {
+    const customFieldsController = require('./../controllers/custom-fields.controller')(server, restify);
+
     return {
         updateOneSettings: (req, res, next) => {
             if(_.has(req.body, 'companySettings') && _.has(req.params, 'id')){
@@ -334,6 +336,31 @@ module.exports = (server, restify) => {
                 );
             });
         },
+
+        getCustomFields(req){ 
+            return customFieldsController.getCustomFields(req).then((allCustomFields) => {
+                return allCustomFields
+            })
+        },
+
+        getOneCustomField(req){ 
+            return customFieldsController.getOne(req).then((customFields) => {
+                return customFields
+            })
+        },
+
+        saveCustomFields(req){ 
+            return customFieldsController.saveCustomFields(req).then((saveCustomFields) => {
+                return saveCustomFields
+            })
+        },
+
+        removeCustomField(req){ 
+            return customFieldsController.removeOne(req).then((removedOne) => {
+                return removedOne
+            })
+        }
+
         /*companyUserPermissionsSaveMultiple: (req, res, next) => {
             return server.sequelize.transaction((t) => {
                 server.models.CompanyUser.findOne({

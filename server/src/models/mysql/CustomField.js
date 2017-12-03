@@ -14,7 +14,10 @@ module.exports = {
                 },
                 name: {
                     type: Sequelize.STRING,
-                    allowNull: false
+                    allowNull: false,
+                    set(val) {
+                        this.setDataValue('name', (val == '' | val == null) ? null : val.toUpperCase().trim());
+                    }
                 },
                 dateUpdated: {
                     type: Sequelize.DATE

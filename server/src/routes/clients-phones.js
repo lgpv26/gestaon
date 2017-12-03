@@ -11,7 +11,18 @@ module.exports = (server, restify) => {
 
     /* CRUD */
 
-    server.get('/clients-phones/:id', clientsPhonesController.getOne);
-    server.patch('/clients-phones', clientsPhonesController.saveMultiple);
+    server.get('/clients-phones/:id', (req, res, next) => {
+        clientsPhonesController.getOnePhone(req).then((getAllResult) => {
+            if (!getAllResult || getAllResult.length < 1) {
+                return new restify.ResourceNotFoundError("Nenhum dado encontrado.")
+            }
+            return getAllResult 
+        })
+    })
 
+    server.patch('/clients-phones', (req, res, next) => {
+        clientsPhonesController.savePhones(req).then((phone) => {
+            return res.send(200, { data: phone })
+        })
+    })
 };

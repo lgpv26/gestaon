@@ -22,11 +22,15 @@ module.exports = class Drafts {
 
         this.socket.on('presence-update-draft', (presenceUser) => {
             this.onPresenceUpdate(presenceUser)
+         
         })
         
         this.socket.on('update-draft', (contentDraft) => {
             this.onUpdateDraft(contentDraft)
         })
+        
+        
+        // VER IMPLEMENTAR EVENT ON RECONECT OU SIMILAR - ATÉ O YOSHIU FALAR 
 
         this.socket.on('disconnect', () => {
             this.onSocketDisconnect()

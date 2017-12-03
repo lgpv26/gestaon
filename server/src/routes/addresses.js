@@ -17,7 +17,15 @@ module.exports = (server, restify) => {
     server.get('/addresses/:id', addressesController.getOne);
     /*server.post('/addresses', addressesController.createOne);
     server.patch('/addresses/:id', addressesController.updateOne);
-    server.del('/addresses/:id', addressesController.removeOne);*/
+    */
+
+    server.del('/addresses/:addressId', (req, res, next) => { 
+        addressesController.removeOne(req).then((address) => {
+            return res.send(200, { data: address })
+        }).catch((err) => {
+            return console.log(err)
+        })
+    })
 
     server.post('/addresses/export-to-es', addressesController.exportToES);
 

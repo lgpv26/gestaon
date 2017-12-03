@@ -11,7 +11,14 @@ module.exports = (server, restify) => {
 
     /* CRUD */
 
-    server.get('/clients-addresses/:id', clientsAddressesController.getOne);
+    server.get('/clients-addresses/:id', (req, res, next) => {
+        clientsAddressesController.getOneAddress(req).then((address) => {
+            if (!address || address.length < 1) {
+                return new restify.ResourceNotFoundError("Nenhum dado encontrado.")
+            }
+            return address 
+        })
+    })
     /*server.del('/clients-addresses/:id', clientsAddressesController.removeOne);*/
 
 };

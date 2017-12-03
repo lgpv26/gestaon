@@ -9,6 +9,9 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
+                companyId: {
+                    type: Sequelize.INTEGER
+                },
                 name: {
                     type: Sequelize.STRING,
                     set(val) {
