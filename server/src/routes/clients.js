@@ -78,25 +78,25 @@ module.exports = (server, restify) => {
     });
 
     // CUSTOM FIELDS //
-    server.get('/clients/:id/customFields', (req, res, next) => {
+    server.get('/clients/:id/custom-fields', (req, res, next) => {
         clientsController.getCustomFields(req).then((getAllResult) => {
             return res.send(200, { data: getAllResult })
         })
     })
 
-    server.get('/clients/:id/customFields/:customFieldId', (req, res, next) => {
+    server.get('/clients/:id/custom-fields/:customFieldId', (req, res, next) => {
         clientsController.getOneCustomField(req).then((getResult) => {
             return res.send(200, { data: getResult })
         })
     })
     
-    server.del('/clients/:id/customFields/:customFieldId', (req, res, next) => {
+    server.del('/clients/:id/custom-fields/:customFieldId', (req, res, next) => {
         clientsController.removeOneCustomField(req).then((customFieldDeleted) => {
             return res.send(200, { data: customFieldDeleted })
         })
     })
 
-    server.patch('/clients/:id/customFields', (req, res, next) => {
+    server.patch('/clients/:id/custom-fields', (req, res, next) => {
         clientsController.saveCustomFields(req).then((customFieldPatch) => {
             return res.send(200, { data: customFieldPatch })
         })

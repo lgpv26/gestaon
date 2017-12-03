@@ -11,7 +11,7 @@ module.exports = function(server, restify){
         "positions.js","service.js","users.js",
         "products.js","oauth.js", "sms.js",
         "geofences.js", "events.js", "orders.js",
-        "suppliers.js", "drafts.js", "main-search.js"
+        "suppliers.js", "drafts.js", "main-search.js", "custom-fields.js"
     ];
 
     routeFiles.forEach(function(fileName) {

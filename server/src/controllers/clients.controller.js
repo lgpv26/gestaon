@@ -8,7 +8,6 @@ module.exports = (server, restify) => {
     const clientsCustomFieldsController = require('./../controllers/clients-custom-fields.controller')(server, restify);
 
     return {
-        
         getAll: (req, res, next) => {
             server.models.Client.findAll().then((clients) => {
                 if (!clients) {
