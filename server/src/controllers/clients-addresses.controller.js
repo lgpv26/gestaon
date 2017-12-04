@@ -42,7 +42,7 @@ module.exports = (server, restify) => {
         saveClientAddresses(req) {            
             return new Promise((resolve, reject) => {
                 return server.mysql.ClientAddress.bulkCreate(req.body.clientAddresses, {
-                    updateOnDuplicate: ['clientId', 'addressId', 'name', 'number', 'complement'],
+                    updateOnDuplicate: ['clientId', 'addressId', 'name', 'number', 'complement', 'dateUpdate', 'dateRemoved'],
                     returning: true
                 }).then((response) => {
                     if (!response) {
@@ -89,7 +89,6 @@ module.exports = (server, restify) => {
                                     response[indexResponse].dataValues.address = req.body.clientAddresses[indexAddress].address.dataValues
                                 })
                             })
-                            console.log(response)
                             resolve(response);
                         })
                     })
