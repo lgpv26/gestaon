@@ -7,9 +7,9 @@ module.exports = (server, restify) => {
         getAll(req) {
             return server.mongodb.Draft.find({companyId: req.query.companyId}).then((drafts) => {
                 drafts = JSON.parse(JSON.stringify(drafts))
-                return server.models.User.findAll({
+                return server.mysql.User.findAll({
                     include: [{
-                        model: server.models.CompanyUser,
+                        model: server.mysql.CompanyUser,
                         as: 'userCompanies',
                         where: {
                             companyId: req.query.companyId

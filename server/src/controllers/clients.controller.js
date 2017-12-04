@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const utils = require('../utils');
+const Op = require('sequelize').Op
 
 module.exports = (server, restify) => {
     const addressesController = require('./../controllers/addresses.controller')(server, restify);
@@ -9,7 +10,7 @@ module.exports = (server, restify) => {
 
     return {
         getAll: (req, res, next) => {
-            server.models.Client.findAll().then((clients) => {
+            server.mysql.Client.findAll().then((clients) => {
                 if (!clients) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
@@ -21,28 +22,31 @@ module.exports = (server, restify) => {
             });
         },
         getOne: (req, res, next) => {
-            server.models.Client.findOne({
+            server.mysql.Client.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 },
                 include: [{
-                    model: server.models.ClientPhone,
+                    model: server.mysql.ClientPhone,
                     as: 'clientPhones'
                 }, {
-                    model: server.models.ClientAddress,
+                    model: server.mysql.ClientAddress,
                     as: 'clientAddresses',
                     include: [{
-                        model: server.models.Address,
+                        model: server.mysql.Address,
                         as: 'address'
                     }]
                 }, {
-                    model: server.models.ClientCustomField,
+                    model: server.mysql.ClientCustomField,
                     as: 'clientCustomFields',
                     include: [{
-                        model: server.models.CustomField,
+                        model: server.mysql.CustomField,
                         as: 'customField'
                     }]
+                }, {
+                    model: server.mysql.ClientsGroup,
+                    as: 'clientsGroup'
                 }]
             }).then((client) => {
                 if (!client) {
@@ -58,22 +62,22 @@ module.exports = (server, restify) => {
         createOne: (req, res, next) => {
             let createData = _.cloneDeep(req.body);
             createData.companyId = req.params.companyId
-            server.models.Client.create(createData, {
+            server.mysql.Client.create(createData, {
                 include: [{
-                    model: server.models.ClientPhone,
+                    model: server.mysql.ClientPhone,
                     as: 'clientPhones'
                 }, {
-                    model: server.models.ClientAddress,
+                    model: server.mysql.ClientAddress,
                     as: 'clientAddresses',
                     include: [{
-                        model: server.models.Address,
+                        model: server.mysql.Address,
                         as: 'address'
                     }]
                 }, {
-                    model: server.models.ClientCustomField,
+                    model: server.mysql.ClientCustomField,
                     as: 'clientCustomFields',
                     include: [{
-                        model: server.models.CustomField,
+                        model: server.mysql.CustomField,
                         as: 'customField'
                     }]
                 }]
@@ -144,7 +148,7 @@ module.exports = (server, restify) => {
         },
         updateOne: (req, res, next) => {
             const updateData = _.cloneDeep(req.body);
-            server.models.Client.update(updateData, {
+            server.mysql.Client.update(updateData, {
                 where: {
                     id: req.params.id,
                     status: 'activated'
@@ -155,26 +159,26 @@ module.exports = (server, restify) => {
                         new restify.ResourceNotFoundError("Registro não encontrado.")
                     );
                 }
-                server.models.Client.findById(req.params.id, {
+                server.mysql.Client.findById(req.params.id, {
                     where: {
                         id: req.params.id,
                         status: 'activated'
                     },
                     include: [{
-                        model: server.models.ClientPhone,
+                        model: server.mysql.ClientPhone,
                         as: 'clientPhones'
                     }, {
-                        model: server.models.ClientAddress,
+                        model: server.mysql.ClientAddress,
                         as: 'clientAddresses',
                         include: [{
-                            model: server.models.Address,
+                            model: server.mysql.Address,
                             as: 'address'
                         }]
                     }, {
-                        model: server.models.ClientCustomField,
+                        model: server.mysql.ClientCustomField,
                         as: 'clientCustomFields',
                         include: [{
-                            model: server.models.CustomField,
+                            model: server.mysql.CustomField,
                             as: 'customField'
                         }]
                     }]
@@ -253,12 +257,30 @@ module.exports = (server, restify) => {
         },
 
         ///////////////////
+        // CLIENTS GROUP //
+        ///////////////////
+
+        saveClientsGroup(req) {
+            return server.mysql.Client.update(req.body, {
+                where: {
+                    id: req.params.id,
+                    status: 'activated'
+                }
+            }).then((client) => {
+                if (!client) {
+                    return new restify.ResourceNotFoundError("Registro não encontrado.")
+                }
+                return _.first(client)
+            })
+        },
+
+        ///////////////////
         //    ADDRESS    //
         ///////////////////
         removeOneAddress(req) {
             return clientsAddressesController.removeClientAddress(req).then((removeClientAddress) => {
                 return removeClientAddress
-            })
+            })  
         },
         getAddresses(req) {
             return clientsAddressesController.getClientAddresses(req).then((getAll) => {
@@ -332,22 +354,22 @@ module.exports = (server, restify) => {
         ///////////////////
         exportToES: (req, res, next) => {
             let esRequestBody = [];
-            server.models.Client.findAll({
+            server.mysql.Client.findAll({
                 include: [{
-                    model: server.models.ClientPhone,
+                    model: server.mysql.ClientPhone,
                     as: 'clientPhones'
                 }, {
-                    model: server.models.ClientAddress,
+                    model: server.mysql.ClientAddress,
                     as: 'clientAddresses',
                     include: [{
-                        model: server.models.Address,
+                        model: server.mysql.Address,
                         as: 'address'
                     }]
-                },{
-                    model: server.models.ClientCustomField,
+                }, {
+                    model: server.mysql.ClientCustomField,
                     as: 'clientCustomFields',
                     include: [{
-                        model: server.models.CustomField,
+                        model: server.mysql.CustomField,
                         as: 'customField'
                     }]
                 }]
@@ -384,7 +406,7 @@ module.exports = (server, restify) => {
                         legaldocuments: _.map(client.clientCustomFields, clientCustomField => {
                             return {
                                 clientCustomFieldId: clientCustomField.id,
-                                documentType: clientCustomField.customField.name, 
+                                documentType: clientCustomField.customField.name,
                                 documentNumber: clientCustomField.value
                             };
                         }),

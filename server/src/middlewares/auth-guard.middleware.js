@@ -14,25 +14,25 @@ module.exports = (server, restify) => {
                 })
             );
         }
-        server.models.UserAccessToken.findOne({
+        server.mysql.UserAccessToken.findOne({
             where: {
                 accessToken: req.query.token
             },
             include: [
                 {
-                    model: server.models.User,
+                    model: server.mysql.User,
                     as: 'user',
                     include: [
                         {
-                            model: server.models.CompanyUser,
+                            model: server.mysql.CompanyUser,
                             as: 'userCompanies',
                             include: [
                                 {
-                                    model: server.models.Company,
+                                    model: server.mysql.Company,
                                     as: 'company'
                                 },
                                 {
-                                    model: server.models.CompanyUserPermission,
+                                    model: server.mysql.CompanyUserPermission,
                                     as: 'permissions'
                                 }
                             ]
@@ -116,7 +116,7 @@ module.exports = (server, restify) => {
 
             }
 
-            server.models.User.findById(decoded.id).then((user) => {
+            server.mysql.User.findById(decoded.id).then((user) => {
                 req['auth'] = user.dataValues;
                 next();
             });

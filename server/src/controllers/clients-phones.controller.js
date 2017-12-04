@@ -3,7 +3,7 @@ const _ = require('lodash');
 module.exports = (server, restify) => {
     return {
         getPhones(req) {
-            return server.models.ClientPhone.findAll({
+            return server.mysql.ClientPhone.findAll({
                 where: {
                     clientId: req.params.id,
                     status: 'activated'
@@ -17,13 +17,13 @@ module.exports = (server, restify) => {
         },
 
         getOnePhone(req) {
-            return server.models.ClientAddress.findOne({
+            return server.mysql.ClientAddress.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 },
                 include: [{
-                    model: server.models.Address,
+                    model: server.mysql.Address,
                     as: 'address'
                 }]
             }).then((clientPhone) => {
@@ -36,7 +36,7 @@ module.exports = (server, restify) => {
 
         removeOne(req) {
             return server.sequelize.transaction(function (t) {
-                return server.models.ClientPhone.destroy({
+                return server.mysql.ClientPhone.destroy({
                     where: {
                         id: req.params.clientPhoneId
                     },
@@ -46,7 +46,7 @@ module.exports = (server, restify) => {
                         throw new restify.ResourceNotFoundError("Registro não encontrado.");
                     }
 
-                    server.models.ClientPhone.findAll({
+                    server.mysql.ClientPhone.findAll({
                         where: {
                             clientId: parseInt(req.params.id)
                         }
@@ -90,16 +90,16 @@ module.exports = (server, restify) => {
                     clientId: parseInt(req.params.id)
                 }, clientPhone));
     
-                server.models.ClientPhone.bulkCreate(clientPhones, {
+                server.mysql.ClientPhone.bulkCreate(clientPhones, {
                     updateOnDuplicate: ['clientId', 'name', 'ddd', 'number']
                 }).then((response) => {
-                    server.models.Client.findOne({
+                    server.mysql.Client.findOne({
                         where: {
                             id: parseInt(req.params.id),
                             status: 'activated'
                         },
                         include: [{
-                            model: server.models.ClientPhone,
+                            model: server.mysql.ClientPhone,
                             as: 'clientPhones'
                         }]
                     }).then((client) => {

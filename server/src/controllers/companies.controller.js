@@ -20,9 +20,9 @@ module.exports = (server, restify) => {
             }
         },
         getAll: (req, res, next) => {
-            server.models.Company.findAll({
+            server.mysql.Company.findAll({
                 include: [{
-                    model: server.models.CompanySetting,
+                    model: server.mysql.CompanySetting,
                     as: 'companySettings'
                 }]
             }).then((companies) => {
@@ -37,12 +37,12 @@ module.exports = (server, restify) => {
             });
         },
         getOne: (req, res, next) => {
-            server.models.Company.findOne({
+            server.mysql.Company.findOne({
                 where: {
                     id: req.params.id
                 },
                 include: [{
-                    model: server.models.CompanySetting,
+                    model: server.mysql.CompanySetting,
                     as: 'companySettings'
                 }]
             }).then((company) => {
@@ -57,21 +57,21 @@ module.exports = (server, restify) => {
             });
         },
         getOneAndSetActive: (req, res, next) => {
-            server.models.Company.findOne({
+            server.mysql.Company.findOne({
                 where: {
                     id: req.params.id
                 },
                 include: [
                     {
-                        model: server.models.CompanySetting,
+                        model: server.mysql.CompanySetting,
                         as: 'companySettings'
                     },
                     {
-                        model: server.models.CompanyUser,
+                        model: server.mysql.CompanyUser,
                         as: 'companyUsers',
                         include: [
                             {
-                                model: server.models.CompanyUserPermission,
+                                model: server.mysql.CompanyUserPermission,
                                 as: 'permissions'
                             }
                         ]
@@ -92,7 +92,7 @@ module.exports = (server, restify) => {
                         }})
                     );
                 }
-                return server.models.User.update({
+                return server.mysql.User.update({
                     activeCompanyUserId: companyUser.id
                 },{
                     where: {
@@ -114,9 +114,9 @@ module.exports = (server, restify) => {
                     }
                 ]
             });
-            return server.models.Company.create(req.body,{
+            return server.mysql.Company.create(req.body,{
                 include: [{
-                    model: server.models.CompanyUser,
+                    model: server.mysql.CompanyUser,
                     as: 'companyUsers'
                 }]
             }).then((company) => {
@@ -137,7 +137,7 @@ module.exports = (server, restify) => {
             });
         },
         updateOne: (req, res, next) => {
-            server.models.Company.update(req.body,{
+            server.mysql.Company.update(req.body,{
                 where: {
                     id: req.params.id
                 }
@@ -147,7 +147,7 @@ module.exports = (server, restify) => {
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                     );
                 }
-                server.models.Company.findById(req.params.id, {
+                server.mysql.Company.findById(req.params.id, {
                     where: {
                         id: req.params.id
                     }
@@ -165,7 +165,7 @@ module.exports = (server, restify) => {
         },
         removeOne: (req, res, next) => {
             server.sequelize.transaction((t) => {
-                return server.models.Company.destroy({
+                return server.mysql.Company.destroy({
                     where: {
                         id: req.params.id
                     },
@@ -176,13 +176,13 @@ module.exports = (server, restify) => {
                             new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                         );
                     }
-                    return server.models.CompanyUser.findAll({
+                    return server.mysql.CompanyUser.findAll({
                         where: {
                             companyId: req.params.id
                         },
                         transaction: t
                     }).then((companyUsers) => {
-                        return server.models.CompanyUser.destroy({
+                        return server.mysql.CompanyUser.destroy({
                             where: {
                                 companyId: req.params.id
                             },
@@ -191,7 +191,7 @@ module.exports = (server, restify) => {
                             const companyUsersPromises = [];
                             companyUsers.forEach((companyUser) => {
                                 companyUsersPromises.push(new Promise(function(resolve, reject){
-                                    server.models.CompanyUserPermission.destroy({
+                                    server.mysql.CompanyUserPermission.destroy({
                                         where: {
                                             companyUserId: companyUser.id
                                         },
@@ -216,18 +216,18 @@ module.exports = (server, restify) => {
             });
         },
         companyUsersGetAll: (req, res, next) => {
-            server.models.CompanyUser.findAll({
+            server.mysql.CompanyUser.findAll({
                 where: {
                     companyId: req.params.companyId
                 },
                 include: [{
-                    model: server.models.Company,
+                    model: server.mysql.Company,
                     as: 'company'
                 },{
-                    model: server.models.User,
+                    model: server.mysql.User,
                     as: 'user'
                 },{
-                    model: server.models.CompanyUserPermission,
+                    model: server.mysql.CompanyUserPermission,
                     as: 'permissions'
                 }]
             }).then((companyUsers) => {
@@ -248,7 +248,7 @@ module.exports = (server, restify) => {
         },
         companyUsersRemoveOne: (req, res, next) => {
             server.sequelize.transaction((t) => {
-                return server.models.CompanyUser.findOne({
+                return server.mysql.CompanyUser.findOne({
                     where: {
                         companyId: req.params.companyId,
                         userId: req.params.userId
@@ -268,7 +268,7 @@ module.exports = (server, restify) => {
                             }})
                         );
                     }
-                    return server.models.CompanyUser.destroy({
+                    return server.mysql.CompanyUser.destroy({
                         where: {
                             companyId: companyUser.companyId,
                             userId: companyUser.userId
@@ -280,7 +280,7 @@ module.exports = (server, restify) => {
                                 new restify.ResourceNotFoundError("Nenhum dado encontrado.")
                             );
                         }
-                        return server.models.CompanyUserPermission.destroy({
+                        return server.mysql.CompanyUserPermission.destroy({
                             where: {
                                 companyUserId: companyUser.id
                             },
@@ -298,12 +298,12 @@ module.exports = (server, restify) => {
         },
         companyUsersPermissionsSaveMultiple: (req, res, next) => {
             return server.sequelize.transaction().then((t) => {
-                server.models.CompanyUser.findAll({
+                server.mysql.CompanyUser.findAll({
                     where: {
                         companyId: req.params.companyId
                     },
                     include: [{
-                        model: server.models.CompanyUserPermission,
+                        model: server.mysql.CompanyUserPermission,
                         as: 'permissions'
                     }]
                 }, {transaction: t}).then((companyUsers) => {
@@ -314,13 +314,13 @@ module.exports = (server, restify) => {
                         );
                     }
                     return Promise.all(_.map(companyUsers, (companyUser) => {
-                        return server.models.CompanyUserPermission.destroy({
+                        return server.mysql.CompanyUserPermission.destroy({
                             where: {
                                 companyUserId: companyUser.id
                             }
                         }, {transaction: t}).then(() => {
                             const reqCompanyUser = _.find(req.body.companyUsers, {companyUserId: companyUser.id});
-                            return server.models.CompanyUserPermission.bulkCreate(reqCompanyUser.permissions, { transaction: t });
+                            return server.mysql.CompanyUserPermission.bulkCreate(reqCompanyUser.permissions, { transaction: t });
                         });
                     })).then((response) => {
                         t.commit();
@@ -338,13 +338,13 @@ module.exports = (server, restify) => {
         
         /*companyUserPermissionsSaveMultiple: (req, res, next) => {
             return server.sequelize.transaction((t) => {
-                server.models.CompanyUser.findOne({
+                server.mysql.CompanyUser.findOne({
                     where: {
                         companyId: req.params.companyId,
                         userId: req.params.userId
                     },
                     include: [{
-                        model: server.models.CompanyUserPermission,
+                        model: server.mysql.CompanyUserPermission,
                         as: 'permissions'
                     }]
                 }, {transaction: t}).then((companyUser) => {
@@ -353,12 +353,12 @@ module.exports = (server, restify) => {
                             new restify.ResourceNotFoundError("Nenhum dado encontrado.")
                         );
                     }
-                    return server.models.CompanyUserPermission.destroy({
+                    return server.mysql.CompanyUserPermission.destroy({
                         where: {
                             companyUserId: companyUser.id
                         }
                     }, {transaction: t}).then(() => {
-                        return server.models.CompanyUserPermission.bulkCreate(req.body, { transaction: t }).then((response) => {
+                        return server.mysql.CompanyUserPermission.bulkCreate(req.body, { transaction: t }).then((response) => {
                             return res.send(200, {
                                 data: {}
                             });
@@ -393,16 +393,16 @@ module.exports = (server, restify) => {
             companySettings = _.map(companySettings, companySetting => _.extend({
                 companyId: parseInt(req.params.id)
             }, companySetting));
-            server.models.CompanySetting.bulkCreate(companySettings, {
+            server.mysql.CompanySetting.bulkCreate(companySettings, {
                 updateOnDuplicate: ['name','value']
             }).then((response) => {
-                server.models.Company.findOne({
+                server.mysql.Company.findOne({
                     where: {
                         id: parseInt(req.params.id),
                         status: 'activated'
                     },
                     include: [{
-                        model: server.models.CompanySetting,
+                        model: server.mysql.CompanySetting,
                         as: 'companySettings'
                     }]
                 }).then((company) => {

@@ -84,7 +84,7 @@ server.use(function(req, res, next) {
 server['mongodb'] = require('./models/mongodb')(mongoose);
 
 // load MySQL/Sequelize models
-server['models'] = require('./models/mysql')(Sequelize, sequelize);
+server['mysql'] = require('./models/mysql')(Sequelize, sequelize);
 
 // loading all sockets
 log.info("Loading sockets");

@@ -3,7 +3,7 @@ const _ = require('lodash');
 module.exports = (server, restify) => {
     return {
         getAll: (req, res, next) => {
-            server.models.Supplier.findAndCountAll(req.queryParser).then((suppliers) => {
+            server.mysql.Supplier.findAndCountAll(req.queryParser).then((suppliers) => {
                 if (suppliers.count === 0) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
@@ -25,22 +25,22 @@ module.exports = (server, restify) => {
             });
         },
         getOne: (req, res, next) => {
-            server.models.Supplier.findOne({
+            server.mysql.Supplier.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 },
                 include: [{
-                    model: server.models.SupplierProduct,
+                    model: server.mysql.SupplierProduct,
                     as: 'products',
                     include: [{
-                        model: server.models.Product,
+                        model: server.mysql.Product,
                         as: 'product'
                     }],
-                    model: server.models.SupplierCompany,
+                    model: server.mysql.SupplierCompany,
                     as: 'companies',
                     include: [{
-                        model: server.models.Company,
+                        model: server.mysql.Company,
                         as: 'company'
                     }]
                 }]
@@ -63,18 +63,18 @@ module.exports = (server, restify) => {
                 );
             }
             const createData = _.cloneDeep(req.body);
-            server.models.Supplier.create(createData, {
+            server.mysql.Supplier.create(createData, {
                 include: [{
-                    model: server.models.SupplierProduct,
+                    model: server.mysql.SupplierProduct,
                     as: 'supplierProducts',
                     include: [{
-                        model: server.models.Product,
+                        model: server.mysql.Product,
                         as: 'product'
                     }],
-                    model: server.models.SupplierCompany,
+                    model: server.mysql.SupplierCompany,
                     as: 'supplierCompanies',
                     include: [{
-                        model: server.models.Company,
+                        model: server.mysql.Company,
                         as: 'company'
                     }]
                 }]
@@ -138,7 +138,7 @@ module.exports = (server, restify) => {
                 );
             }
             const updateData = _.cloneDeep(req.body);
-            server.models.Supplier.update(updateData, {
+            server.mysql.Supplier.update(updateData, {
                 where: {
                     id: req.params.id,
                     status: 'activated'
@@ -149,22 +149,22 @@ module.exports = (server, restify) => {
                         new restify.ResourceNotFoundError("Registro não encontrado Parte 1.")
                     );
                 }
-                server.models.Supplier.findById(req.params.id, {
+                server.mysql.Supplier.findById(req.params.id, {
                     where: {
                         id: req.params.id,
                         status: 'activated'
                     },
                     include: [{
-                        model: server.models.SupplierProduct,
+                        model: server.mysql.SupplierProduct,
                         as: 'supplierProducts',
                         include: [{
-                            model: server.models.Product,
+                            model: server.mysql.Product,
                             as: 'product'
                         }],
-                        model: server.models.SupplierCompany,
+                        model: server.mysql.SupplierCompany,
                         as: 'supplierCompanies',
                         include: [{
-                            model: server.models.Company,
+                            model: server.mysql.Company,
                             as: 'company'
                         }]
                     }]
@@ -208,7 +208,7 @@ module.exports = (server, restify) => {
 
         removeOne: (req, res, next) => {
             server.sequelize.transaction((t) => {
-                return server.models.Supplier.destroy({
+                return server.mysql.Supplier.destroy({
                     where: {
                         id: req.params.id
                     }
@@ -219,12 +219,12 @@ module.exports = (server, restify) => {
                         );
                     }
                     deleteStatus(req.params.id)
-                    server.models.SupplierCompany.destroy({
+                    server.mysql.SupplierCompany.destroy({
                         where: {
                             supplierId: req.params.id
                         }
                     })
-                    server.models.SupplierProduct.destroy({
+                    server.mysql.SupplierProduct.destroy({
                         where: {
                             supplierId: req.params.id
                         }
@@ -259,7 +259,7 @@ module.exports = (server, restify) => {
         },
 
         getProducts: (req, res, next) => {
-            server.models.SupplierProduct.findAndCountAll(req.queryParser)
+            server.mysql.SupplierProduct.findAndCountAll(req.queryParser)
             .then((supplierProducts) => {
                 if (supplierProducts.count === 0) {
                     return next(
@@ -284,7 +284,7 @@ module.exports = (server, restify) => {
 
         removeOneProduct: (req, res, next) => {
             return server.sequelize.transaction(function (t) {
-                return server.models.SupplierProduct.destroy({
+                return server.mysql.SupplierProduct.destroy({
                     where: {
                         productId: req.params.productId,
                         supplierId: req.params.id
@@ -308,7 +308,7 @@ module.exports = (server, restify) => {
         },
 
         getCompanies: (req, res, next) => {
-            server.models.SupplierCompany.findAndCountAll(req.queryParser)
+            server.mysql.SupplierCompany.findAndCountAll(req.queryParser)
             .then((supplierCompany) => {
                 if (supplierCompany.count === 0) {
                     return next(
@@ -333,7 +333,7 @@ module.exports = (server, restify) => {
 
         removeOneCompany: (req, res, next) => {
             return server.sequelize.transaction(function (t) {
-                return server.models.SupplierCompany.destroy({
+                return server.mysql.SupplierCompany.destroy({
                     where: {
                         companyId: req.params.companyId,
                         supplierId: req.params.id
@@ -361,7 +361,7 @@ module.exports = (server, restify) => {
 
     function deleteStatus(id) {
         let statusData = { status: "deleted" }
-        server.models.Supplier.update(statusData, {
+        server.mysql.Supplier.update(statusData, {
             where: {
                 id: id
             }
@@ -379,16 +379,16 @@ module.exports = (server, restify) => {
                 supplierId: parseInt(req.params.id)
             }, supplierCompany));
 
-            server.models.SupplierCompany.bulkCreate(supplierCompanies, {
+            server.mysql.SupplierCompany.bulkCreate(supplierCompanies, {
                 updateOnDuplicate: ['supplierId', 'companyId']
             }).then((response) => {
-                server.models.Supplier.findOne({
+                server.mysql.Supplier.findOne({
                     where: {
                         id: parseInt(req.params.id),
                         status: 'activated'
                     },
                     include: [{
-                        model: server.models.SupplierCompany,
+                        model: server.mysql.SupplierCompany,
                         as: 'supplierCompanies'
                     }]
                 }).then((supplier) => {
@@ -412,16 +412,16 @@ module.exports = (server, restify) => {
                 supplierId: parseInt(req.params.id)
             }, supplierProduct));
 
-            server.models.SupplierProduct.bulkCreate(supplierProducts, {
+            server.mysql.SupplierProduct.bulkCreate(supplierProducts, {
                 updateOnDuplicate: ['supplierId', 'productId']
             }).then((response) => {
-                server.models.Supplier.findOne({
+                server.mysql.Supplier.findOne({
                     where: {
                         id: parseInt(req.params.id),
                         status: 'activated'
                     },
                     include: [{
-                        model: server.models.SupplierProduct,
+                        model: server.mysql.SupplierProduct,
                         as: 'supplierProducts'
                     }]
                 }).then((supplier) => {

@@ -3,7 +3,7 @@ const _ = require('lodash');
 module.exports = (server, restify) => {
     return {
         getAll: (req, res, next) => {
-            server.models.Order.findAndCountAll(req.queryParser).then((orders) => {
+            server.mysql.Order.findAndCountAll(req.queryParser).then((orders) => {
                 if (orders.count === 0) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
@@ -25,16 +25,16 @@ module.exports = (server, restify) => {
             });
         },
         getOne: (req, res, next) => {
-            server.models.Order.findOne({
+            server.mysql.Order.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 },
                 include: [{
-                    model: server.models.OrderProduct,
+                    model: server.mysql.OrderProduct,
                     as: 'orderProducts',
                     include: [{
-                        model: server.models.Product,
+                        model: server.mysql.Product,
                         as: 'product'
                     }]
                 }]
@@ -57,9 +57,9 @@ module.exports = (server, restify) => {
                 );
             }
             const createData = _.cloneDeep(req.body);
-            server.models.Order.create(createData, {
+            server.mysql.Order.create(createData, {
                 include: [{
-                    model: server.models.OrderProduct,
+                    model: server.mysql.OrderProduct,
                     as: 'orderProducts'
                 }]
             }).then((order) => {
@@ -113,7 +113,7 @@ module.exports = (server, restify) => {
                 );
             }
             const updateData = _.cloneDeep(req.body);
-            server.models.Order.update(updateData, {
+            server.mysql.Order.update(updateData, {
                 where: {
                     id: req.params.id,
                     status: 'activated'
@@ -124,16 +124,16 @@ module.exports = (server, restify) => {
                         new restify.ResourceNotFoundError("Registro não encontrado P)arte 1.")
                     );
                 }
-                server.models.Order.findById(req.params.id, {
+                server.mysql.Order.findById(req.params.id, {
                     where: {
                         id: req.params.id,
                         status: 'activated'
                     },
                     include: [{
-                        model: server.models.OrderProduct,
+                        model: server.mysql.OrderProduct,
                         as: 'orderProducts',
                         include: [{
-                            model: server.models.Product,
+                            model: server.mysql.Product,
                             as: 'product'
                         }]
                     }]
@@ -165,7 +165,7 @@ module.exports = (server, restify) => {
 
         removeOne: (req, res, next) => {
             server.sequelize.transaction((t) => {
-                return server.models.Order.destroy({
+                return server.mysql.Order.destroy({
                     where: {
                         id: req.params.id
                     },
@@ -177,19 +177,19 @@ module.exports = (server, restify) => {
                         );
                     }
                     deleteStatus(req.params.id)
-                    return server.models.OrderProduct.findAll({
+                    return server.mysql.OrderProduct.findAll({
                         where: {
                             orderId: req.params.id
                         },
                         transaction: t
                     }).then((orderProducts) => {
                         let statusData = { status: "deleted" }
-                        server.models.OrderProduct.update(statusData, {
+                        server.mysql.OrderProduct.update(statusData, {
                             where: {
                                 orderId: req.params.id
                             }
                         })
-                        return server.models.OrderProduct.destroy({
+                        return server.mysql.OrderProduct.destroy({
                             where: {
                                 orderId: req.params.id
                             },
@@ -207,7 +207,7 @@ module.exports = (server, restify) => {
         },
 
         getAllProducts: (req, res, next) => {
-            server.models.OrderProduct.findAndCountAll(req.queryParser).then((products) => {
+            server.mysql.OrderProduct.findAndCountAll(req.queryParser).then((products) => {
                 if (products.count === 0) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
@@ -241,7 +241,7 @@ module.exports = (server, restify) => {
 
         removeOneProduct: (req, res, next) => {
             return server.sequelize.transaction(function (t) {
-                return server.models.OrderProduct.destroy({
+                return server.mysql.OrderProduct.destroy({
                     where: {
                         productId: req.params.productId,
                         orderId: req.params.id
@@ -270,7 +270,7 @@ module.exports = (server, restify) => {
 
     function deleteStatus(id) {
         let statusData = { status: "deleted" }
-        server.models.Order.update(statusData, {
+        server.mysql.Order.update(statusData, {
             where: {
                 id: id
             }
@@ -288,16 +288,16 @@ module.exports = (server, restify) => {
                 orderId: parseInt(req.params.id)
             }, orderProduct));
 
-            server.models.OrderProduct.bulkCreate(orderProducts, {
+            server.mysql.OrderProduct.bulkCreate(orderProducts, {
                 updateOnDuplicate: ['productId', 'orderId', 'quantity', 'unitPrice', 'unitDiscount', 'status']
             }).then((response) => {
-                server.models.Order.findOne({
+                server.mysql.Order.findOne({
                     where: {
                         id: parseInt(req.params.id),
                         status: 'activated'
                     },
                     include: [{
-                        model: server.models.OrderProduct,
+                        model: server.mysql.OrderProduct,
                         as: 'orderProducts'
                     }]
                 }).then((order) => {

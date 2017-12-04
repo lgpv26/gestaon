@@ -6,12 +6,12 @@ module.exports = (server, restify) => {
 
     return {
         getClientCustomFields(req) {
-            return server.models.ClientCustomField.findAll({
+            return server.mysql.ClientCustomField.findAll({
                 where: {
                     clientId: req.params.id
                 },
                 include: [{
-                    model: server.models.CustomField,
+                    model: server.mysql.CustomField,
                     as: 'customField'
                 }]
             }).then((customFields) => {
@@ -23,13 +23,13 @@ module.exports = (server, restify) => {
         },
 
         getOne(req) {
-            return server.models.ClientCustomField.findOne({
+            return server.mysql.ClientCustomField.findOne({
                 where: {
                     clientId: req.params.id,
                     id: req.params.customFieldId
                 },
                 include: [{
-                    model: server.models.CustomField,
+                    model: server.mysql.CustomField,
                     as: 'customField'
                 }]
             }).then((customField) => {
@@ -47,7 +47,7 @@ module.exports = (server, restify) => {
                     clientId: parseInt(req.params.id)
                 }, clientCustomField));
     
-                server.models.ClientCustomField.bulkCreate(clientCustomFields, {
+                server.mysql.ClientCustomField.bulkCreate(clientCustomFields, {
                     updateOnDuplicate: ['customFieldId', 'value', 'dateRemoved']
                 }).then((response) => {
                     if (!response) {
@@ -65,7 +65,7 @@ module.exports = (server, restify) => {
 
         removeOne(req) {
             return server.sequelize.transaction(function (t) {
-                return server.models.ClientCustomField.destroy({
+                return server.mysql.ClientCustomField.destroy({
                     where: {
                         id: req.params.customFieldId
                     },
@@ -91,7 +91,7 @@ module.exports = (server, restify) => {
 
     function updateES(req) {
         return new Promise((resolve, reject) => {
-            server.models.ClientCustomField.findAll({
+            server.mysql.ClientCustomField.findAll({
                 where: {
                     clientId: parseInt(req.params.id),
                     customFieldId: {
@@ -99,7 +99,7 @@ module.exports = (server, restify) => {
                     }
                 },
                 include: [{
-                    model: server.models.CustomField,
+                    model: server.mysql.CustomField,
                     as: 'customField'
                 }]
             }).then((findClientCustomFields) => {

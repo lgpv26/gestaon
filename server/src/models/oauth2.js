@@ -40,17 +40,17 @@ module.exports = (server) => {
                 });
             },
             getUser(email, password){
-                return server.models.User.findOne({
+                return server.mysql.User.findOne({
                     where: {
                         email: email
                     },
                     include: [
                         {
-                            model: server.models.Company,
+                            model: server.mysql.Company,
                             as:'companies',
                             include: [
                                 {
-                                    model: server.models.CompanySetting,
+                                    model: server.mysql.CompanySetting,
                                     as:'companySettings'
                                 }
                             ],
@@ -68,14 +68,14 @@ module.exports = (server) => {
             },
             saveToken(token, client, user){
                 return server.sequelize.transaction((t) => {
-                    return server.models.UserAccessToken.create({
+                    return server.mysql.UserAccessToken.create({
                         accessToken: token.accessToken,
                         expiresAt: token.accessTokenExpiresAt,
                         scope: token.scope,
                         appId: client.id,
                         userId: user.id
                     }, {transaction: t}).then((userAccessToken) => {
-                        return server.models.UserRefreshToken.create({
+                        return server.mysql.UserRefreshToken.create({
                             refreshToken: token.refreshToken,
                             expiresAt: token.refreshTokenExpiresAt,
                             scope: token.scope,
@@ -106,21 +106,21 @@ module.exports = (server) => {
                 });
             },
             getRefreshToken(refreshToken){
-                return server.models.UserRefreshToken.findOne({
+                return server.mysql.UserRefreshToken.findOne({
                     where: {
                         refreshToken: refreshToken
                     },
                     include: [
                         {
-                            model: server.models.User,
+                            model: server.mysql.User,
                             as: 'user',
                             include:[
                                 {
-                                    model: server.models.Company,
+                                    model: server.mysql.Company,
                                     as: 'companies',
                                     include: [
                                         {
-                                            model: server.models.CompanySetting,
+                                            model: server.mysql.CompanySetting,
                                             as: 'companySettings'
                                         }
                                     ],
@@ -144,7 +144,7 @@ module.exports = (server) => {
                 });
             },
             revokeToken(token){
-                return server.models.UserRefreshToken.destroy({
+                return server.mysql.UserRefreshToken.destroy({
                     where: {
                         refreshToken: token.refreshToken
                     }

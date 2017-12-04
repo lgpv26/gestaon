@@ -6,7 +6,7 @@ module.exports = (server, restify) => {
 
     return {
         getCustomFields(req) {
-            return server.models.CustomField.findAll({
+            return server.mysql.CustomField.findAll({
                 where: {
                     companyId: {
                         [Op.in]: [0, parseInt(req.params.companyId)]
@@ -21,7 +21,7 @@ module.exports = (server, restify) => {
         },
 
         getOne(req) {
-            return server.models.CustomField.findOne({
+            return server.mysql.CustomField.findOne({
                 where: {
                     companyId: {
                         [Op.in]: [0, parseInt(req.params.companyId)]
@@ -51,7 +51,7 @@ module.exports = (server, restify) => {
                             req.params.customFields[index].companyId = parseInt(req.params.companyId)
                         }
                     })
-                    server.models.CustomField.findAll({
+                    server.mysql.CustomField.findAll({
                         where: {
                             id: {
                                 [Op.in]: customFieldsIds
@@ -73,7 +73,7 @@ module.exports = (server, restify) => {
                 )
 
                 return Promise.all(customFieldsResolverPromisses).then(() => {
-                    server.models.CustomField.bulkCreate(req.params.customFields, {
+                    server.mysql.CustomField.bulkCreate(req.params.customFields, {
                         updateOnDuplicate: ['name', 'dateUpdated', 'dateRemoved'],
                         returning: true
                     }).then((customFieldBulk) => {
@@ -100,7 +100,7 @@ module.exports = (server, restify) => {
 
         removeOne(req) {
             return server.sequelize.transaction(function (t) {
-                return server.models.CustomField.destroy({
+                return server.mysql.CustomField.destroy({
                     where: {
                         id: req.params.customFieldId,
                         companyId: {

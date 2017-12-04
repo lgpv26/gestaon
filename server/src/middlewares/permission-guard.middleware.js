@@ -9,7 +9,7 @@ module.exports = (server, restify) => {
 
             return new Promise((resolve, reject) => {
                 const companyIncludeObj = {
-                    model: server.models.Company,
+                    model: server.mysql.Company,
                     as: 'company'
                 }
                 if (user.activeCompanyUserId) {
@@ -17,13 +17,13 @@ module.exports = (server, restify) => {
                         id: user.activeCompanyUserId
                     }
                 }
-                server.models.CompanyUser.findOne({
+                server.mysql.CompanyUser.findOne({
                     where: {
                         userId: user.id
                     },
                     include: [
                         {
-                            model: server.models.CompanyUserPermission,
+                            model: server.mysql.CompanyUserPermission,
                             as: 'permissions'
                         },
                         companyIncludeObj

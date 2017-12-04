@@ -24,6 +24,9 @@ module.exports = {
                         this.setDataValue('obs', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
                 },
+                clientsGroupId: {
+                    type: Sequelize.INTEGER
+                },
                 dateUpdated: {
                     type: Sequelize.DATE
                 },
@@ -33,7 +36,10 @@ module.exports = {
                 dateRemoved: {
                     type: Sequelize.DATE
                 },
-                status: Sequelize.STRING
+                status: {
+                    type: Sequelize.STRING,
+                    defaultValue: 'activated'
+                }
             }, {
                 tableName: "client",
                 timestamps: true,
@@ -45,12 +51,13 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Client,Address,ClientAddress,ClientPhone,ClientCustomField,CustomField}) => {
+    postSettings: ({Client,Address,ClientAddress,ClientPhone,ClientCustomField,CustomField, ClientsGroup}) => {
         Client.hasMany(ClientAddress, {as: 'clientAddresses', foreignKey: 'clientId'});
         Client.belongsToMany(Address, {through: ClientAddress, as: 'addresses', foreignKey: 'clientId'});
 
         Client.hasMany(ClientPhone, {as: 'clientPhones', foreignKey: 'clientId'});
-
+        Client.belongsTo(ClientsGroup, {as: 'clientsGroup'});
+        
         Client.hasMany(ClientCustomField, {as: 'clientCustomFields', foreignKey: 'clientId'});
         Client.belongsToMany(CustomField, { through: ClientCustomField, as: 'customFields', foreignKey: 'clientId' });
     }

@@ -6,7 +6,7 @@ module.exports = (server, restify) => {
         importAddresses: (req, res, next) => {
 
             /*
-            server.models.Enderecos.findAll({
+            server.mysql.Enderecos.findAll({
 
                 limit: 5000
             }).then((response) => {
@@ -24,7 +24,7 @@ module.exports = (server, restify) => {
                     let deferred = Q.defer();
                     promises.push(deferred.promise);
 
-                    server.models.Address.create({
+                    server.mysql.Address.create({
                         originId: endereco.id,
                         name: endereco.logradouro + " " + endereco.rua,
                         neighborhood: endereco.bairro,

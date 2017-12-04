@@ -5,17 +5,17 @@ const _ = require('lodash');
 module.exports = (server, restify) => {
     return {
         authenticate: (req, res, next) => {
-            server.models.User.findOne({
+            server.mysql.User.findOne({
                 where: {
                     email: req.body.email
                 },
                 include: [
                     {
-                        model:server.models.Company,
+                        model:server.mysql.Company,
                         as:'companies',
                         include: [
                             {
-                                model: server.models.CompanySetting,
+                                model: server.mysql.CompanySetting,
                                 as:'companySettings'
                             }
                         ],
@@ -45,14 +45,14 @@ module.exports = (server, restify) => {
         },
         register: (req, res, next) => {
             return server.sequelize.transaction(function(t){
-                return server.models.User.create(req.body, {transaction: t}).then((user) => {
+                return server.mysql.User.create(req.body, {transaction: t}).then((user) => {
                     if(!_.has(req.query, 'companyId')){
                         return res.send(200, {
                             data: user
                         });
                     }
                     else {
-                        return server.models.CompanyUser.create({
+                        return server.mysql.CompanyUser.create({
                             userId: user.id,
                             companyId: req.query.companyId,
                             isCreator: false
@@ -77,27 +77,27 @@ module.exports = (server, restify) => {
             console.log('forgot password endpoint called');
         },
         me: (req, res, next) => {
-            server.models.User.findOne({
+            server.mysql.User.findOne({
                 where: {
                     id: req.auth.id,
                     status: 'activated'
                 },
                 include: [{
-                    model: server.models.CompanyUser,
+                    model: server.mysql.CompanyUser,
                     as: 'userCompanies',
                     include: [
                         {
-                            model:server.models.Company,
+                            model:server.mysql.Company,
                             as:'company',
                             include: [
                                 {
-                                    model: server.models.CompanySetting,
+                                    model: server.mysql.CompanySetting,
                                     as:'companySettings'
                                 }
                             ],
                         },
                         {
-                            model:server.models.CompanyUserPermission,
+                            model:server.mysql.CompanyUserPermission,
                             as:'permissions'
                         }
                     ]
@@ -117,7 +117,7 @@ module.exports = (server, restify) => {
 
 
 
-            server.models.User.scope(req.query.includedScopes).findAll().then((users) => {
+            server.mysql.User.scope(req.query.includedScopes).findAll().then((users) => {
                 if (!users) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum dado encontrado.")
@@ -139,13 +139,13 @@ module.exports = (server, restify) => {
             });
         },
         getOne: (req, res, next) => {
-            server.models.User.findOne({
+            server.mysql.User.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 },
                 include: [
-                    {model:server.models.Company, as:'companies'}
+                    {model:server.mysql.Company, as:'companies'}
                 ]
             }).then((user) => {
                 if(!user){
@@ -160,24 +160,24 @@ module.exports = (server, restify) => {
         },
         createOne: (req, res, next) => {
             return server.sequelize.transaction(function(t){
-                return server.models.User.findOne({
+                return server.mysql.User.findOne({
                     where: {
                         email: req.body.email
                     },
                     include: [
-                        {model:server.models.Company, as:'companies'}
+                        {model:server.mysql.Company, as:'companies'}
                     ],
                     transaction: t
                 }).then((user) => {
                     if(!user){ // there is no user with this email, register new one
-                        return server.models.User.create(req.body, {transaction: t}).then((user) => {
+                        return server.mysql.User.create(req.body, {transaction: t}).then((user) => {
                             if(!_.has(req.query, 'companyId')){
                                 return res.send(200, {
                                     data: user
                                 });
                             }
                             else {
-                                return server.models.CompanyUser.create({
+                                return server.mysql.CompanyUser.create({
                                     userId: user.id,
                                     companyId: req.query.companyId,
                                     isCreator: false
@@ -211,11 +211,11 @@ module.exports = (server, restify) => {
                         );
                     }
                     // if there is user, then we should create a invitation to him
-                    return server.models.CompanyUserInvitation.create({
+                    return server.mysql.CompanyUserInvitation.create({
                         code: "anything",
                         createdBy: req.auth.id
                     }, {transaction: t}).then((companyUserInvitation) => {
-                        return server.models.CompanyUser.create({
+                        return server.mysql.CompanyUser.create({
                             userId: user.id,
                             companyId: req.query.companyId,
                             companyUserInvitationId: companyUserInvitation.id,
@@ -243,7 +243,7 @@ module.exports = (server, restify) => {
             if(_.has(req.body, 'password')){
                 req.body.password = bcrypt.hashSync(req.body.password, 8);
             }
-            server.models.User.update(req.body,{
+            server.mysql.User.update(req.body,{
                 individualHooks: true,
                 where: {
                     id: req.params.id
@@ -254,7 +254,7 @@ module.exports = (server, restify) => {
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                     );
                 }
-                server.models.User.findById(req.params.id, {
+                server.mysql.User.findById(req.params.id, {
                     where: {
                         id: req.params.id
                     }
@@ -272,7 +272,7 @@ module.exports = (server, restify) => {
         },
         removeOne: (req, res, next) => {
             return server.sequelize.transaction((t) => {
-                return server.models.User.destroy({
+                return server.mysql.User.destroy({
                     where: {
                         id: req.params.id
                     },
@@ -283,13 +283,13 @@ module.exports = (server, restify) => {
                             new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                         );
                     }
-                    return server.models.CompanyUser.findAll({
+                    return server.mysql.CompanyUser.findAll({
                         where: {
                             userId: req.params.id
                         },
                         transaction: t
                     }).then((companyUsers) => {
-                        return server.models.CompanyUser.destroy({
+                        return server.mysql.CompanyUser.destroy({
                             where: {
                                 userId: req.params.id
                             },
@@ -298,7 +298,7 @@ module.exports = (server, restify) => {
                             const companyUsersPromises = [];
                             companyUsers.forEach((companyUser) => {
                                 companyUsersPromises.push(new Promise(function(resolve, reject){
-                                    server.models.CompanyUserPermission.destroy({
+                                    server.mysql.CompanyUserPermission.destroy({
                                         where: {
                                             companyUserId: companyUser.id
                                         },

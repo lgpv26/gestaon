@@ -26,6 +26,18 @@ module.exports = (server, restify) => {
     server.post('/clients', clientsController.createOne);
     server.patch('/clients/:id', clientsController.updateOne);
 
+    // CLIENTS GROUP //
+    server.patch('/clients/:id/clients-group', (req, res, next) => {
+        clientsController.saveClientsGroup(req).then((clientsGroupPatch) => {
+            if (!clientsGroupPatch || clientsGroupPatch.length < 1) {
+                return next(
+                    new restify.ResourceNotFoundError("Nenhum dado encontrado.")
+                );
+            }
+            return res.send(200, { data: clientsGroupPatch })
+        })
+    })
+
     // ADDRESS //
     server.get('/clients/:id/addresses', (req, res, next) => {
         clientsController.getAddresses(req).then((getAllResult) => {

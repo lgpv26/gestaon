@@ -68,7 +68,7 @@ module.exports = (server, restify) => {
             )
         },
         getOne: (req, res, next) => {
-            server.models.Address.findOne({
+            server.mysql.Address.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
@@ -96,8 +96,11 @@ module.exports = (server, restify) => {
                         if (forEachAddress.id) {
                             addressesIds.push(forEachAddress.id)
                         }
+                        else {
+                            req.params.addresses[index].companyId = parseInt(req.params.companyId)
+                        }
                     })
-                    server.models.Address.findAll({
+                    server.mysql.Address.findAll({
                         where: {
                             id: {
                                 [Op.in]: addressesIds
@@ -120,7 +123,7 @@ module.exports = (server, restify) => {
 
                 return Promise.all(addressesResolverPromisses).then(() => {
                    
-                    server.models.Address.bulkCreate(req.params.addresses, {
+                    server.mysql.Address.bulkCreate(req.params.addresses, {
                         updateOnDuplicate: ['name', 'neighborhood', 'city', 'state', 'cep'],
                         returning: true
                     }).then((addressesBulk) => {
@@ -179,7 +182,7 @@ module.exports = (server, restify) => {
 
         removeOne(req) {
             return server.sequelize.transaction(function (t) {
-                return server.models.Address.destroy({
+                return server.mysql.Address.destroy({
                     where: {
                         id: req.params.addressId,
                         companyId: {
@@ -213,7 +216,7 @@ module.exports = (server, restify) => {
 
         exportToES(req, res, next) {
             let esRequestBody = [];
-            server.models.Address.findAll({}).then((addresses) => {
+            server.mysql.Address.findAll({}).then((addresses) => {
                 addresses.forEach((address) => {
                     let metaObj = {};
                     metaObj.index = {

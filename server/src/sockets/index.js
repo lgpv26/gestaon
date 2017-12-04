@@ -28,17 +28,17 @@ module.exports = function (server) {
     // clients connected to real-time features
     server.io.on('connection', (socket) => {
         let token = socket.handshake.query.token, user;
-        server.models.UserAccessToken.findOne({
+        server.mysql.UserAccessToken.findOne({
             where: {
                 accessToken: token
             },
             include: [
                 {
-                    model: server.models.User,
+                    model: server.mysql.User,
                     as: 'user',
                     include: [
                         {
-                            model: server.models.Company,
+                            model: server.mysql.Company,
                             as: 'companies'
                         }
                     ]

@@ -4,13 +4,13 @@ const utils = require('../utils');
 module.exports = (server, restify) => {
     return {
         getClientAddresses(req) {
-            return server.models.ClientAddress.findAll({
+            return server.mysql.ClientAddress.findAll({
                 where: {
                     clientId: req.params.id,
                     status: 'activated'
                 },
                 include: [{
-                    model: server.models.Address,
+                    model: server.mysql.Address,
                     as: 'address'
                 }]
             }).then((clientAddresses) => {
@@ -22,13 +22,13 @@ module.exports = (server, restify) => {
         },
 
         getOneAddress(req) {
-            return server.models.ClientAddress.findOne({
+            return server.mysql.ClientAddress.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 },
                 include: [{
-                    model: server.models.Address,
+                    model: server.mysql.Address,
                     as: 'address'
                 }]
             }).then((clientAddresses) => {
@@ -41,7 +41,7 @@ module.exports = (server, restify) => {
 
         saveClientAddresses(req) {            
             return new Promise((resolve, reject) => {
-                return server.models.ClientAddress.bulkCreate(req.body.clientAddresses, {
+                return server.mysql.ClientAddress.bulkCreate(req.body.clientAddresses, {
                     updateOnDuplicate: ['clientId', 'addressId', 'name', 'number', 'complement'],
                     returning: true
                 }).then((response) => {
@@ -52,12 +52,12 @@ module.exports = (server, restify) => {
                     let clientAddressesES = {}
                     let clientId = null
 
-                    server.models.ClientAddress.findAll({
+                    server.mysql.ClientAddress.findAll({
                         where: {
                             clientId: parseInt(req.params.id)
                         },
                         include: [{
-                                model: server.models.Address,
+                                model: server.mysql.Address,
                                 as: 'address'
                             }]
                     }).then((findClientAddresses) => {
@@ -106,7 +106,7 @@ module.exports = (server, restify) => {
 
         removeClientAddress(req) {
             return server.sequelize.transaction(function (t) {
-                return server.models.ClientAddress.destroy({
+                return server.mysql.ClientAddress.destroy({
                     where: {
                         id: req.params.clientAddressId
                     },

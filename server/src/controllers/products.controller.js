@@ -3,7 +3,7 @@ const _ = require('lodash');
 module.exports = (server, restify) => {
     return {
         getAll: (req, res, next) => {
-            server.models.Product.findAll().then((products) => {
+            server.mysql.Product.findAll().then((products) => {
                 if(!products){
                     return next(
                         new restify.ResourceNotFoundError("Nenhum dado encontrado.")
@@ -15,7 +15,7 @@ module.exports = (server, restify) => {
             });
         },
         getOne: (req, res, next) => {
-            server.models.Product.findOne({
+            server.mysql.Product.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
@@ -33,7 +33,7 @@ module.exports = (server, restify) => {
         },
         createOne: (req, res, next) => {
             let createData = _.assign(req.body, {});
-            server.models.Product.create(createData,{}).then((product) => {
+            server.mysql.Product.create(createData,{}).then((product) => {
                 if(!product){
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
@@ -45,7 +45,7 @@ module.exports = (server, restify) => {
             });
         },
         updateOne: (req, res, next) => {
-            server.models.Product.update(req.body,{
+            server.mysql.Product.update(req.body,{
                 where: {
                     id: req.params.id,
                     status: 'activated'
@@ -56,7 +56,7 @@ module.exports = (server, restify) => {
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                     );
                 }
-                server.models.Product.findById(req.params.id, {
+                server.mysql.Product.findById(req.params.id, {
                     where: {
                         id: req.params.id,
                         status: 'activated'
@@ -74,7 +74,7 @@ module.exports = (server, restify) => {
             });
         },
         removeOne: (req, res, next) => {
-            server.models.Product.destroy({
+            server.mysql.Product.destroy({
                 where: {
                     id: req.params.id
                 }

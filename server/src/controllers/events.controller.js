@@ -210,16 +210,16 @@ module.exports = (server, restify) => {
             deviceSettings = _.map(deviceSettings, deviceSetting => _.extend({
                 deviceId: parseInt(req.params.id)
             }, deviceSetting));
-            server.models.DeviceSetting.bulkCreate(deviceSettings, {
+            server.mysql.DeviceSetting.bulkCreate(deviceSettings, {
                 updateOnDuplicate: ['name','value']
             }).then((response) => {
-                server.models.Device.findOne({
+                server.mysql.Device.findOne({
                     where: {
                         id: parseInt(req.params.id),
                         status: 'activated'
                     },
                     include: [{
-                        model: server.models.DeviceSetting,
+                        model: server.mysql.DeviceSetting,
                         as: 'deviceSettings'
                     }]
                 }).then((device) => {
