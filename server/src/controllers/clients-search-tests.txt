@@ -1,0 +1,56 @@
+"query": {
+    "bool": {
+      "must": [
+        {
+          "multi_match": {
+            "query": "thiago rocha junho",
+            "fields": [
+              "name",
+              "obs"
+            ],
+            "operator": "or",
+            "analyzer": "standard"
+          }
+        },
+        {
+          "bool": {
+            "should": [
+              {
+                "multi_match": {
+                  "query": "thiago rocha junho",
+                  "fields": [
+                    "name",
+                    "obs"
+                  ],
+                  "operator": "and",
+                  "analyzer": "standard"
+                }
+              },
+              {
+                "nested": {
+                  "inner_hits": {},
+                  "path": "addresses",
+                  "query": {
+                    "multi_match": {
+                      "query": "thiago rocha junho",
+                      "fields": [
+                        "addresses.address"
+                      ],
+                      "analyzer": "standard"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+
+
+
+
+
+    }
+  }
+
+  mailon

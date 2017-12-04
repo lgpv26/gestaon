@@ -20,14 +20,14 @@ export default {
     saveAddresses(clientId, body, params){
         return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId + '/addresses', { clientAddresses: body }, { params }).then((response) => response.json());
     },
-    removeOneClientPhone(clientId, phoneId){
-        return Vue.http.delete(config.apiBaseUrl + '/clients/' + clientId + '/phones/' + phoneId).then((response) => response.json());
+    removeOneClientPhone(clientId, clientPhoneId, params){
+        return Vue.http.delete(config.apiBaseUrl + '/clients/' + clientId + '/phones/' + clientPhoneId, { params }).then((response) => response.json());
     },
     getOneClientPhone(clientId, phoneId){
         return Vue.http.get(config.apiBaseUrl + '/clients/' + clientId + '/phones/' + phoneId).then((response) => response.json());
     },
-    saveClientPhones(clientId, body){
-        return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId + '/phones', { clientPhones: body }).then((response) => response.json());
+    savePhones(clientId, body, params){
+        return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId + '/phones', { clientPhones: body }, { params }).then((response) => response.json());
     },
     search(params){
         return Vue.http.get(config.apiBaseUrl + '/clients/search', { params }).then((response) => response.json());

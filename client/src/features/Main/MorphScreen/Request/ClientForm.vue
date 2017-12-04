@@ -95,21 +95,25 @@
                     <div class="form-group">
                         <div class="form-group__header">
                             <icon-phone class="header__icon"></icon-phone>
-                            <app-mask :mask="['(##) ####-####','(##) #####-####']" style="width: 105px;" class="input--borderless" placeholder="Número" />
+                            <app-mask :mask="['(##) ####-####','(##) #####-####']" style="width: 105px;" class="input--borderless" v-model="clientPhoneForm.number" placeholder="Número" />
                             <div class="header__mini-circle"></div>
-                            <input type="text" class="input--borderless" placeholder="fixo/celular" />
+                            <input type="text" v-model="clientPhoneForm.name" class="input--borderless" placeholder="fixo/celular" />
                             <span class="push-both-sides"></span>
+                            <div style="cursor: pointer;" @click="addClientPhone()">
                             <icon-add class="header__action-icon"></icon-add>
+                            </div>
                         </div>
                         <div class="form-group__content">
                             <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length >= 0">
                                 <li class="list__item" v-for="clientPhone in form.clientPhones">
                                     <div class="item__check"></div>
-                                    <span>({{ clientPhone.ddd }}) clientPhone.number</span>
+                                    <span>({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
                                     <div class="item__mini-circle"></div>
                                     <span>{{ clientPhone.name }}</span>
                                     <span class="push-both-sides"></span>
+                                    <div @click="removeClientPhone(clientPhone)">
                                     <icon-remove></icon-remove>
+                                    </div>
                                 </li>
                             </ul>
                             <span v-else>Nenhum telefone...</span>
@@ -190,6 +194,11 @@
                 isNameInputFocused: false,
                 isAdding: false,
                 isEditing: false,
+                clientPhoneForm: {
+                    id: null,
+                    name: null,
+                    number: null
+                },
                 clientAddressForm: {
                     id: null,
                     name: null,
@@ -212,6 +221,7 @@
                     clientSelectedCustomFields: [],
                     clientCustomFields: [],
                     clientAddresses: [],
+                    clientPhones: [],
                     clientAddressName: null
                 },
                 clientCustomFields: [
@@ -284,7 +294,7 @@
             }
         },
         computed: {
-            ...mapState('auth', ['company']),
+            ...mapState('auth', ['user','company']),
             selectedClientGroup(){
                 return _.find(this.clientGroups, { value: this.form.clientGroup });
             }
@@ -367,6 +377,32 @@
                 this.isAdding = false;
                 this.isEditing = false;
             },
+            addClientPhone(){
+                const vm = this;
+                const clientPhone = _.assign({}, vm.clientPhoneForm, {
+                    ddd: utils.getDDDAndNumber(vm.clientPhoneForm.number).ddd,
+                    number: utils.getDDDAndNumber(vm.clientPhoneForm.number).number
+                });
+                ClientsAPI.savePhones(vm.form.id, [clientPhone], { companyId: vm.company.id }).then((resultx) => {
+                    const savedClientPhone = _.first(resultx.data);
+                    const clientPhoneId = _.findIndex(vm.form.clientAddresses, { id: savedClientPhone.id });
+                    if(clientPhoneId !== -1){ // found
+                        vm.form.clientPhones[clientPhoneId] = savedClientPhone;
+                    }
+                    else {
+                        vm.form.clientPhones.push(savedClientPhone);
+                    }
+                })
+            },
+            removeClientPhone(clientPhone){
+                const vm = this;
+                ClientsAPI.removeOneClientPhone(vm.form.id, clientPhone.id, { companyId: vm.company.id }).then(() => {
+                    const clientPhoneIndex = _.findIndex(vm.form.clientPhones, { id: clientPhone.id });
+                    if(clientPhoneIndex !== -1){
+                        vm.form.clientPhones.splice(clientPhoneIndex, 1);
+                    }
+                });
+            },
             addClientAddress(){
                 this.resetClientAddressForm();
                 this.isAdding = true;
@@ -376,7 +412,12 @@
                 this.isEditing = true;
             },
             saveClientAddress(){
-                this.$refs.clientAddressForm.save();
+                const vm = this;
+                this.$refs.clientAddressForm.save().then((clientAddress) => {
+                    const clientAddressId = _.findIndex(vm.form.clientAddresses, { id: clientAddress.id });
+                    vm.form.clientAddresses[clientAddressId] = clientAddress;
+                    vm.backToClientAddressesList();
+                });
             },
 
             /**

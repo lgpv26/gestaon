@@ -83,8 +83,9 @@
                 }
                 clientAddress = utils.assignToExistentKeys(clientAddress, this.clientAddress);
                 _.assign(clientAddress, { addressId: this.clientAddress.address.id });
-                ClientAPI.saveAddresses(this.clientId, [clientAddress], { companyId: this.company.id }).then((result)=>{
-                    console.log(result);
+                return ClientAPI.saveAddresses(this.clientId, [clientAddress], { companyId: this.company.id }).then((result)=>{
+                    const savedAddress = _.assign(vm.clientAddress, _.first(result.data));
+                    return savedAddress
                 }).catch((err)=>{
                     vm.showError(err);
                 });
