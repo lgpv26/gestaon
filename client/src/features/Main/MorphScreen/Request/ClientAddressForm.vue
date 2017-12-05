@@ -59,7 +59,7 @@
             ...mapState('auth', ['company'])
         },
         methods: {
-            ...mapActions('toast', 'showError'),
+            ...mapActions('toast', ['showToast', 'showError']),
             addressChanged(ev){
                 console.log(ev);
             },
@@ -76,16 +76,22 @@
             },
             save(){
                 const vm = this;
-                let clientAddress = this.createClientAddress();
+                if(!this.clientId){
+                    this.showError("Um cliente deve estar selecionado.");
+                    return false;
+                }
                 if(!_.has(this.clientAddress, 'address.id')){
                     this.showError("Escolha um endereço.");
-                    return
+                    return false;
                 }
-                clientAddress = utils.assignToExistentKeys(clientAddress, this.clientAddress);
+                const clientAddress = utils.assignToExistentKeys(this.createClientAddress(), this.clientAddress);
                 _.assign(clientAddress, { addressId: this.clientAddress.address.id });
                 return ClientAPI.saveAddresses(this.clientId, [clientAddress], { companyId: this.company.id }).then((result)=>{
-                    const savedAddress = _.assign(vm.clientAddress, _.first(result.data));
-                    return savedAddress
+                    vm.showToast({
+                        type: "success",
+                        message: "Endereço do cliente salvo com sucesso."
+                    });
+                    return _.assign(vm.clientAddress, _.first(result.data));
                 }).catch((err)=>{
                     vm.showError(err);
                 });

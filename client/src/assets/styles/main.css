@@ -347,3 +347,7 @@ li.router-link-active svg.icon {
 .highcharts-credits {
     display: none;
 }
+
+.iziToast-wrapper {
+    z-index: 9999999;
+}

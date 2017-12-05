@@ -545,6 +545,7 @@
         height: 50px;
         padding: 0 30px;
         align-items: center;
+        flex-shrink: 0;
     }
 
     .morph-screen__container .container__actions > a {

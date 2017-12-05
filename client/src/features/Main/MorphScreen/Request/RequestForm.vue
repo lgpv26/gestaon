@@ -64,6 +64,9 @@
             draftSaved(){
                 this.saving = false;
             },
+            consultDraft(data){
+                console.log(data);
+            },
             updateDraft({draftId, form}){
                 if(draftId === this.activeMorphScreen.draft.draftId) {
                     _.mergeWith(this.form, form);
@@ -156,6 +159,7 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
         },
         methods: {
+            ...mapActions('toast', ['showToast']),
             getIsolatedFormPathObj(path){
                 return _.set({}, path, _.get(this.form, path));
             },

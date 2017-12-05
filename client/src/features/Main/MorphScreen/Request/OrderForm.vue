@@ -1,8 +1,54 @@
 <template>
     <form :class="{'active': order.active}">
         <div class="form__content" v-show="order.active">
-            <div class="form__main-column">
+            <div class="form__main-column" style="margin-right: 10px;">
                 <div class="form-groups">
+                    <div class="form-group" style="padding: 0; background: transparent;">
+                        <div class="form-group__header">
+                            <h3 style="margin-right: 10px;">Venda</h3><icon-local></icon-local>
+                            <span class="push-both-sides"></span>
+                            <span style="margin-right: 10px;">Canal de divulgação</span>
+                            <a class="btn btn--border-only">Tele-Entrega</a>
+                        </div>
+                        <div class="form-group__content">
+                            <table class="order-products" style="width: 100%; text-align: left;">
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th class="content-size" style="text-align: right;">Quant.</th>
+                                        <th style="text-align: right; width: 120px;">Valor Un.</th>
+                                        <th style="text-align: right; width: 120px;">Desconto Un.</th>
+                                        <th style="text-align: right; width: 120px;">Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><input type="text" placeholder="ESCOLHA UM PRODUTO" /></td>
+                                        <td class="content-size"><input type="text" style="text-align: center;" /></td>
+                                        <td style="width: 120px;"><money  style="text-align: right;"/></td>
+                                        <td style="width: 120px;"><money type="text" style="text-align: right;" /></td>
+                                        <td style="width: 120px;"><money type="text" style="text-align: right;" /></td>
+                                        <td style="text-align: center;"><icon-remove></icon-remove></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" /></td>
+                                        <td class="content-size"><input type="text" style="text-align: center;" /></td>
+                                        <td style="width: 120px;"><input type="text"  style="text-align: right;"/></td>
+                                        <td style="width: 120px;"><input type="text" style="text-align: right;" /></td>
+                                        <td style="width: 120px;"><input type="text" style="text-align: right;" /></td>
+                                        <td style="text-align: center;"><icon-add></icon-add></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3"></td>
+                                        <td style="text-align: right; font-size: 16px; font-weight: 600;">R$ XX,XX</td>
+                                        <td style="text-align: right; font-size: 18px; font-weight: 600; color: var(--font-color--secondary)">R$ XX,XX</td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form__side-column">
@@ -33,7 +79,16 @@
         data(){
             return {
                 form: {
-                }
+                    orderProducts: [
+                        {},
+                        {}
+                    ]
+                },
+                products: [
+                    {
+                        name: 'GÁS LP 13KG'
+                    }
+                ]
             }
         },
         computed: {
@@ -303,5 +358,22 @@
 <style scoped>
     div.ms-form form .form__side-column {
         width: 400px;
+    }
+    .form__main-column .form-group__header {
+        background-image: none;
+        padding-bottom: 0;
+    }
+    .order-products td, .order-products th {
+        padding-right: 10px;
+        padding-left: 0;
+        font-weight: initial;
+        padding-bottom: 8px;
+    }
+    .order-products td:last-child, .order-products th:last-child {
+        padding-right: 0;
+    }
+    .order-products td.content-size, .order-products th.content-size {
+        width: 1px;
+        white-space: nowrap;
     }
 </style>

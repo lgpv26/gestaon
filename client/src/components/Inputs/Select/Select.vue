@@ -141,6 +141,7 @@
         display: flex;
         flex-grow: 1;
         color: var(--base-color);
+        align-items: center;
     }
     .ag-select-input .select-input__container {
         transition: .5s opacity;

@@ -95,7 +95,7 @@
                     <div class="form-group">
                         <div class="form-group__header">
                             <icon-phone class="header__icon"></icon-phone>
-                            <app-mask :mask="['(##) ####-####','(##) #####-####']" style="width: 105px;" class="input--borderless" v-model="clientPhoneForm.number" placeholder="Número" />
+                            <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" v-model="clientPhoneForm.number" placeholder="Número" />
                             <div class="header__mini-circle"></div>
                             <input type="text" v-model="clientPhoneForm.name" class="input--borderless" placeholder="fixo/celular" />
                             <span class="push-both-sides"></span>
@@ -104,15 +104,15 @@
                             </div>
                         </div>
                         <div class="form-group__content">
-                            <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length >= 0">
+                            <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length > 0">
                                 <li class="list__item" v-for="clientPhone in form.clientPhones">
                                     <div class="item__check"></div>
                                     <span>({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
                                     <div class="item__mini-circle"></div>
                                     <span>{{ clientPhone.name }}</span>
                                     <span class="push-both-sides"></span>
-                                    <div @click="removeClientPhone(clientPhone)">
-                                    <icon-remove></icon-remove>
+                                    <div @click="removeClientPhone(clientPhone)" style="display: flex; cursor: pointer;">
+                                        <icon-remove></icon-remove>
                                     </div>
                                 </li>
                             </ul>
@@ -301,6 +301,8 @@
         },
         methods: {
 
+            ...mapActions('toast', ['showToast', 'showError']),
+
             /**
              * Form model
              */
@@ -387,9 +389,17 @@
                     const savedClientPhone = _.first(resultx.data);
                     const clientPhoneId = _.findIndex(vm.form.clientAddresses, { id: savedClientPhone.id });
                     if(clientPhoneId !== -1){ // found
+                        vm.showToast({
+                            type: "success",
+                            message: "Número de contato salvo com sucesso."
+                        });
                         vm.form.clientPhones[clientPhoneId] = savedClientPhone;
                     }
                     else {
+                        vm.showToast({
+                            type: "success",
+                            message: "Número de contato adicionado com sucesso."
+                        });
                         vm.form.clientPhones.push(savedClientPhone);
                     }
                 })
@@ -397,6 +407,10 @@
             removeClientPhone(clientPhone){
                 const vm = this;
                 ClientsAPI.removeOneClientPhone(vm.form.id, clientPhone.id, { companyId: vm.company.id }).then(() => {
+                    vm.showToast({
+                        type: "success",
+                        message: "Telefone do cliente removido com sucesso."
+                    });
                     const clientPhoneIndex = _.findIndex(vm.form.clientPhones, { id: clientPhone.id });
                     if(clientPhoneIndex !== -1){
                         vm.form.clientPhones.splice(clientPhoneIndex, 1);
@@ -413,11 +427,19 @@
             },
             saveClientAddress(){
                 const vm = this;
-                this.$refs.clientAddressForm.save().then((clientAddress) => {
-                    const clientAddressId = _.findIndex(vm.form.clientAddresses, { id: clientAddress.id });
-                    vm.form.clientAddresses[clientAddressId] = clientAddress;
-                    vm.backToClientAddressesList();
-                });
+                const saveAddress = this.$refs.clientAddressForm.save();
+                if(saveAddress){
+                    saveAddress.then((clientAddress) => {
+                        const clientAddressId = _.findIndex(vm.form.clientAddresses, {id: clientAddress.id});
+                        if (clientAddressId !== -1) {
+                            vm.form.clientAddresses[clientAddressId] = clientAddress;
+                        }
+                        else {
+                            vm.form.clientAddresses.push(clientAddress);
+                        }
+                        vm.backToClientAddressesList();
+                    });
+                }
             },
 
             /**
