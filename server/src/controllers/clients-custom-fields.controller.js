@@ -48,7 +48,7 @@ module.exports = (server, restify) => {
                 }, clientCustomField));
     
                 server.mysql.ClientCustomField.bulkCreate(clientCustomFields, {
-                    updateOnDuplicate: ['customFieldId', 'value', 'dateRemoved']
+                    updateOnDuplicate: ['customFieldId', 'value', 'dateRemoved','dateUpdate']
                 }).then((response) => {
                     if (!response) {
                         reject(new restify.ResourceNotFoundError("Registro não encontrado."));

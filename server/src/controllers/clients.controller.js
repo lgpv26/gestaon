@@ -259,16 +259,24 @@ module.exports = (server, restify) => {
         ///////////////////
         // CLIENTS GROUP //
         ///////////////////
-
         saveClientsGroup(req) {
             return server.mysql.Client.update(req.body, {
                 where: {
                     id: req.params.id,
                     status: 'activated'
-                }
+                },
+                include:[{
+                    model: server.mysql.ClientsGroup,
+                    as: 'clientsGroup',
+                    where: {
+                        companyId: {
+                            [Op.in]: [0, parseInt(req.params.companyId)]
+                        }
+                    }
+                }]
             }).then((client) => {
                 if (!client) {
-                    return new restify.ResourceNotFoundError("Registro não encontrado.")
+                    return "Registro não encontrado ou registro padrão"
                 }
                 return _.first(client)
             })

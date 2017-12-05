@@ -91,7 +91,7 @@ module.exports = (server, restify) => {
                 }, clientPhone));
     
                 server.mysql.ClientPhone.bulkCreate(clientPhones, {
-                    updateOnDuplicate: ['clientId', 'name', 'ddd', 'number']
+                    updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdate', 'dateRemoved']
                 }).then((response) => {
                     server.mysql.Client.findOne({
                         where: {
