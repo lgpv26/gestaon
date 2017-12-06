@@ -65,11 +65,12 @@
                 this.saving = false;
             },
             consultDraft(data){
-                console.log(data);
+                console.log("Consult draft",data);
             },
             updateDraft({draftId, form}){
                 if(draftId === this.activeMorphScreen.draft.draftId) {
                     _.mergeWith(this.form, form);
+                    this.stopLoading();
                 }
             }
         },
@@ -92,11 +93,13 @@
                 createdAt: null,
                 updatedAt: null,
 
+
                 form: {
                     client: {
                         active: false,
                         id: null, // se passar, atualizar cliente. se não, criar.
                         name: '', // se passar e tiver id, atualizar. se não, criar.
+                        clientGroup: null,
                         legalDocument: '', // cpf, cnpj
                         clientAddresses: [
                             {
@@ -160,13 +163,13 @@
         },
         methods: {
             ...mapActions('toast', ['showToast']),
+            ...mapActions('loading', ['stopLoading']),
             getIsolatedFormPathObj(path){
                 return _.set({}, path, _.get(this.form, path));
             },
             sync(path){
                 this.saving = true;
                 const toBeEmitted = { draftId: this.activeMorphScreen.draft.draftId, form: this.getIsolatedFormPathObj(path)};
-                console.log("Emitted", toBeEmitted);
                 this.$socket.emit('update-draft', toBeEmitted);
             }
         },
@@ -241,7 +244,6 @@
     }
 
     .form-group .form-group__header input[type=text] {
-        height: 14px;
     }
 
     .form-group .form-group__header .header__icon {

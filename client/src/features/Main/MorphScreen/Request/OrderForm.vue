@@ -23,24 +23,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td><input type="text" placeholder="ESCOLHA UM PRODUTO" /></td>
-                                        <td class="content-size"><input type="text" style="text-align: center;" /></td>
-                                        <td style="width: 120px;"><money  style="text-align: right;"/></td>
-                                        <td style="width: 120px;"><money type="text" style="text-align: right;" /></td>
-                                        <td style="width: 120px;"><money type="text" style="text-align: right;" /></td>
-                                        <td style="text-align: center;"><icon-remove></icon-remove></td>
+                                    <tr v-for="(orderProduct, index) in form.orderProducts" :key="orderProduct.id">
+                                        <td><app-product-input v-model="orderProduct.productId" /></td>
+                                        <td class="content-size"><input v-model="orderProduct.quantity" type="text" style="text-align: center;" /></td>
+                                        <td style="width: 120px;"><money v-model="form.price"  style="text-align: right;"/></td>
+                                        <td style="width: 120px;"><money v-model="form.price" type="text" style="text-align: right;" /></td>
+                                        <td style="width: 120px;"><money v-model="form.price" type="text" style="text-align: right;" /></td>
+                                        <td style="text-align: center; cursor: pointer;" @click="removeProduct(orderProduct.id)"><icon-remove></icon-remove></td>
                                     </tr>
                                     <tr>
-                                        <td><input type="text" /></td>
-                                        <td class="content-size"><input type="text" style="text-align: center;" /></td>
-                                        <td style="width: 120px;"><input type="text"  style="text-align: right;"/></td>
-                                        <td style="width: 120px;"><input type="text" style="text-align: right;" /></td>
-                                        <td style="width: 120px;"><input type="text" style="text-align: right;" /></td>
-                                        <td style="text-align: center;"><icon-add></icon-add></td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="3"></td>
+                                        <td colspan="3" @click="addProduct">
+                                            <a class="btn btn--border-only btn--primary" style="display: inline-flex;">
+                                                <icon-add style="margin-right: 5px;"></icon-add>Adicionar produto
+                                            </a>
+                                        </td>
                                         <td style="text-align: right; font-size: 16px; font-weight: 600;">R$ XX,XX</td>
                                         <td style="text-align: right; font-size: 18px; font-weight: 600; color: var(--font-color--secondary)">R$ XX,XX</td>
                                         <td></td>
@@ -52,9 +48,18 @@
                 </div>
             </div>
             <div class="form__side-column">
+                <div class="side-column__tabs">
+                    <ul>
+                        <li :class="{ active: activeTab === 'chart' }" @click="activateTab('chart')">Gráfico</li>
+                        <li :class="{ active: activeTab === 'history' }" @click="activateTab('history')">Histórico de compras</li>
+                    </ul>
+                </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <div class="product-chart" ref="productChart"></div>
+                        <div class="product-chart" ref="productChart" v-show="activeTab === 'chart'"></div>
+                        <div v-show="activeTab === 'history'">
+                            Histórico de compras...
+                        </div>
                     </div>
                 </div>
             </div>
@@ -71,18 +76,25 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
     import Highcharts from 'highcharts';
+    import ProductInput from './ProductInput.vue';
 
     export default {
         components: {
+            'app-product-input': ProductInput
         },
         props: ['order'],
         data(){
             return {
+                activeTab: 'chart',
                 form: {
                     orderProducts: [
-                        {},
-                        {}
-                    ]
+                        {
+                            id: _.uniqueId("product#"),
+                            productId: null,
+                            quantity: 1
+                        }
+                    ],
+                    price: 0
                 },
                 products: [
                     {
@@ -94,6 +106,22 @@
         computed: {
         },
         methods: {
+            addProduct(){
+                this.form.orderProducts.push({
+                    id: _.uniqueId("product#"),
+                    productId: null,
+                    quantity: 1
+                })
+            },
+            removeProduct(orderProductId){
+                let orderProductIndex = _.findIndex(this.form.orderProducts, { id: orderProductId });
+                if(orderProductIndex !== -1){
+                    this.form.orderProducts.splice(orderProductIndex, 1);
+                }
+            },
+            activateTab(tab){
+                this.activeTab = tab;
+            },
             commitSocketChanges(mapping){
                 this.$emit('sync', mapping);
             }
@@ -375,5 +403,31 @@
     .order-products td.content-size, .order-products th.content-size {
         width: 1px;
         white-space: nowrap;
+    }
+
+    .form__side-column .form-group {
+        border-top-left-radius: 0px;
+    }
+
+    .side-column__tabs ul {
+        display: flex;
+        flex-direction: row;
+    }
+    .side-column__tabs ul li {
+        cursor: pointer;
+        display: flex;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        margin-right: 2px;
+        background-color: var(--bg-color--9);
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        font-weight: 600;
+    }
+    .side-column__tabs ul li.active {
+        background-color: var(--bg-color--8);
+        color: var(--font-color--7);
     }
 </style>

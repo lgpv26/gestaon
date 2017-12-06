@@ -26,7 +26,8 @@
 <style scoped>
 
     .parent {
-        background: rgba(0,0,0,0.8);
+        background: var(--bg-color--5);
+        opacity: 1;
         z-index: 9999999999;
         width: 100%;
         height: 100%;

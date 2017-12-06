@@ -27,7 +27,9 @@
                 </div>
                 <div class="container__input" v-if="showInput">
                     <input type="text" placeholder="ADICIONAR NOVO" />
-                    <icon-check style="position: absolute; right: 0px; top: 0;"></icon-check>
+                    <div style="position: absolute; right: 0px; top: 0; cursor: pointer;" @click="">
+                        <icon-check></icon-check>
+                    </div>
                 </div>
             </div>
         </transition>
@@ -97,23 +99,27 @@
             itemSelected(item){
                 if(!this.multiple){ // single select
                     if(this.value === item.value){
-                        this.$emit('input', null);
+                        this.onValueChanged(null);
                     }
                     else {
-                        this.$emit('input', item.value);
+                        this.onValueChanged(item.value);
                     }
                 }
                 else { // multiple select
                     if(_.includes(this.value, item.value)){
                         this.value.splice(this.value.indexOf(item.value), 1);
-                        this.$emit('input', this.value);
+                        this.onValueChanged(this.value);
                     }
                     else {
                         this.value.push(item.value);
-                        this.$emit('input', this.value);
+                        this.onValueChanged(this.value);
                     }
                 }
                 this.closeSelect();
+            },
+            onValueChanged(value){
+                this.$emit('input', value);
+                this.$emit('change', value);
             }
         },
         mounted(){

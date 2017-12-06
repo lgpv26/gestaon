@@ -101,6 +101,7 @@
         methods: {
             ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS_SCREEN','SHOW_MS', 'ADD_DRAFT']),
             ...mapActions('morph-screen', ['createMorphScreen']),
+            ...mapActions('loading', ['startLoading','setLoadingText']),
             animateMorphScreenDirectlyToDraft(){
                 const vm = this;
                 const screenToBeActivated = vm.activeMorphScreen;
@@ -226,6 +227,8 @@
                 });
                 Promise.all(allAnimationsCompleted).then(() => {
                     setTimeout(() => {
+                        vm.setLoadingText("Carregando rascunho...");
+                        vm.startLoading();
                         vm.SET_MS_SCREEN(_.assign({}, screen, { active: true }));
                     }, 300);
                 });

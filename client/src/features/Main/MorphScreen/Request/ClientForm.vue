@@ -8,14 +8,14 @@
                         <div class="form-columns">
                             <div class="form-column" style="flex-grow: 1;">
                                 Nome / Empresa
-                                <div v-if="form.id"> <!-- unassociate client -->
+                                <div v-if="client.id"> <!-- unassociate client -->
                                     <input type="text" class="input--borderless" style="color: var(--font-color--primary)"
-                                    v-model="form.name" v-if="form.id" placeholder="..." @input="commitSocketChanges('form.name')" />
+                                    v-model="client.name" v-if="client.id" placeholder="..." @input="commitSocketChanges('client.name')" />
                                 </div>
                                 <app-search v-else ref="search" :items="searchItems" :shouldStayOpen="isNameInputFocused" :query="query" :verticalOffset="5" :horizontalOffset="-20"
                                     @itemSelected="searchClientSelected($event)" >
-                                    <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="form.name" ref="searchInput"
-                                    @keydown="searchValueUpdated()" @focus="isNameInputFocused = true" @blur="isNameInputFocused = false" />
+                                    <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="client.name" ref="searchInput"
+                                    @keydown="searchValueUpdated()" @focus="isNameInputFocused = true" @blur="isNameInputFocused = false" @input="commitSocketChanges('client.name')" />
                                     <template slot="item" slot-scope="props">
                                         <div class="search-input__item" v-if="props.item.client">
                                             <span class="detail__name" v-html="props.item.client.name"></span>
@@ -35,7 +35,7 @@
                                 </app-search>
                             </div>
                             <div class="form-column" style="justify-content: center;">
-                                <icon-search v-if="!form.id"></icon-search>
+                                <icon-search v-if="!client.id"></icon-search>
                                 <span class="btn btn--border-only" v-else @click="changeClient()">Mudar</span>
                             </div>
                         </div>
@@ -56,7 +56,7 @@
                             <a class="btn btn--primary" v-else @click="saveClientAddress()" style="margin-left: 10px;">Salvar</a>
                         </div>
                         <div class="form-group__content">
-                            <app-client-address-form ref="clientAddressForm" :clientId="form.id" :clientAddress.sync="clientAddressForm"></app-client-address-form>
+                            <app-client-address-form ref="clientAddressForm" :clientId="client.id" :clientAddress.sync="clientAddressForm"></app-client-address-form>
                         </div>
                     </div>
                     <div class="form-group" v-else>
@@ -122,7 +122,7 @@
                 </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <app-new-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="form.clientGroup" :showInput="true">
+                        <app-new-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
                             <icon-client-group class="header__icon"></icon-client-group>
                             <h3 v-if="!selectedClientGroup.value">Grupo de cliente</h3>
                             <h3 v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</h3>
@@ -165,7 +165,7 @@
         <div class="form__header">
             <span v-if="!client.active">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
             <span class="push-both-sides"></span>
-            <h3>DADOS DO CLIENTE</h3> <app-switch style="float: right;" v-model="client.active"></app-switch>
+            <h3>DADOS DO CLIENTE</h3> <app-switch style="float: right;" v-model="client.active" @change="commitSocketChanges('client.active')"></app-switch>
         </div>
     </form>
 </template>
@@ -214,6 +214,7 @@
                     }
                 },
                 form: {
+                    active: false,
                     id: null, // se passar, atualizar cliente. se não, criar.
                     name: '', // se passar e tiver id, atualizar. se não, criar.
                     legalDocument: '', // cpf, cnpj
@@ -385,7 +386,7 @@
                     ddd: utils.getDDDAndNumber(vm.clientPhoneForm.number).ddd,
                     number: utils.getDDDAndNumber(vm.clientPhoneForm.number).number
                 });
-                ClientsAPI.savePhones(vm.form.id, [clientPhone], { companyId: vm.company.id }).then((resultx) => {
+                ClientsAPI.savePhones(vm.client.id, [clientPhone], { companyId: vm.company.id }).then((resultx) => {
                     const savedClientPhone = _.first(resultx.data);
                     const clientPhoneId = _.findIndex(vm.form.clientAddresses, { id: savedClientPhone.id });
                     if(clientPhoneId !== -1){ // found
@@ -406,7 +407,7 @@
             },
             removeClientPhone(clientPhone){
                 const vm = this;
-                ClientsAPI.removeOneClientPhone(vm.form.id, clientPhone.id, { companyId: vm.company.id }).then(() => {
+                ClientsAPI.removeOneClientPhone(vm.client.id, clientPhone.id, { companyId: vm.company.id }).then(() => {
                     vm.showToast({
                         type: "success",
                         message: "Telefone do cliente removido com sucesso."
