@@ -11,6 +11,7 @@ const moment = require('moment');
 const _ = require('lodash');
 const mysql = require('mysql');
 const bluebird = require('bluebird');
+const redis = require('redis')
 
 // create restify server
 let server = restify.createServer({
@@ -80,6 +81,9 @@ server.use(function(req, res, next) {
     return next();
 });
 
+// load Redis
+server['redisClient'] = redis.createClient()
+
 // load MongoDB/Mongoose models
 server['mongodb'] = require('./models/mongodb')(mongoose);
 
@@ -133,36 +137,43 @@ const connectToMySQL = new Promise((resolve, reject) => {
     });
 });
 
-connectToMySQL.then((databaseCreated) => {
-    // guarantee MySQL structure
-    return sequelize.sync({
-        logging: false
-    }).then(() => {
-        log.info("Successfully connected to MySQL");
-        return new Promise((resolve, reject) => {
-            if(databaseCreated){
-                return require("./first-seed.js")(server).then(() => {
-                    resolve();
-                }).catch((err) => {
-                    reject(err);
-                });
-            }
-            return resolve();
+server.redisClient.on('ready', () => {
+    log.info("Redis is ready")
+    connectToMySQL.then((databaseCreated) => {
+        // guarantee MySQL structure
+        return sequelize.sync({
+            logging: false
         }).then(() => {
-            mongoose.Promise = bluebird;
-            return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
-                useMongoClient: true,
-                promiseLibrary: bluebird
+            log.info("Successfully connected to MySQL");
+            return new Promise((resolve, reject) => {
+                if(databaseCreated){
+                    return require("./first-seed.js")(server).then(() => {
+                        resolve();
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                }
+                return resolve();
             }).then(() => {
-                log.info("Successfully connected to MongoDB");
-                // finally, initialize server
-                const serverPort = config.mainServer.port;
-                server.listen(serverPort, () => {
-                    log.info("Server v" + config.mainServer.version + " running on port: " + serverPort);
+                mongoose.Promise = bluebird;
+                return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
+                    useMongoClient: true,
+                    promiseLibrary: bluebird
+                }).then(() => {
+                    log.info("Successfully connected to MongoDB");
+                    // finally, initialize server
+                    const serverPort = config.mainServer.port;
+                    server.listen(serverPort, () => {
+                        log.info("Server v" + config.mainServer.version + " running on port: " + serverPort);
+                    });
                 });
             });
         });
+    }).catch((err) => {
+        log.error(err.message + " (" + err.name + ")");
     });
-}).catch((err) => {
+})
+
+server.redisClient.on('error', (err) => {
     log.error(err.message + " (" + err.name + ")");
-});
+})

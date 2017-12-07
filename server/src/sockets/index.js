@@ -22,6 +22,9 @@ module.exports = function (server) {
     let channels = { 
             presences: {
                 drafts: []
+            },
+            updates: {
+                drafts: []
             }
         }
    

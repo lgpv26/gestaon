@@ -11,8 +11,7 @@ module.exports = class Drafts {
         this.controller = require('./../controllers/drafts.controller')(server)
         
         // local variables
-        this._timer = null; 
-        this._draftUpdate = []
+        this._timer = null
 
         // functions
         this.setSocketListeners()
@@ -37,68 +36,115 @@ module.exports = class Drafts {
         })
     }
 
-    onPresenceUpdate(presenceUser) { 
-        this.socket.join('draft/' + presenceUser.draftId)
-        this.socket.join('presence-draft/' + presenceUser.draftId)
-        let objPresenceUser = {}
-
-        if (presenceUser.userId === this.socket.user.id) {
-            objPresenceUser.name = this.socket.user.name
-            objPresenceUser.email = this.socket.user.email
-        }
-
-        let draft = _.find(this.channels.presences.drafts, { draftId: presenceUser.draftId })
-        if (draft) {
-            const presenceUserIndex = this.channels.presences.drafts.indexOf(draft)
-            const repeatUser = _.find(this.channels.presences.drafts[presenceUserIndex].users, (user) => {
-                return JSON.stringify(user) === JSON.stringify(objPresenceUser)
-            })
-
-            if (!repeatUser) this.channels.presences.drafts[presenceUserIndex].users.push(objPresenceUser)
-
+    onPresenceUpdate(presenceUser) {
+        if (presenceUser.leave) {
+            const objPresenceUser = {name: this.socket.user.name, email: this.socket.user.email}
+            this.onLeavePresence(presenceUser.draftId, objPresenceUser)
         }
         else {
-            draft = { draftId: presenceUser.draftId, users: [objPresenceUser] }
-            this.channels.presences.drafts.push(draft)
-        }
+            this.setArrayDraft({draftId: presenceUser.draftId}).then(() => {
+                if (this._timer) clearTimeout(this._timer)
+                this.saveDraft(presenceUser.draftId, true)
+            
+                this.socket.join('draft/' + presenceUser.draftId)
 
-        if (presenceUser.leave) {
-            this.socket.leave('presence-draft/' + presenceUser.draftId)
-            draft = _.find(this.channels.presences.drafts, { draftId: presenceUser.draftId })
+                let objPresenceUser = {}
 
-            _.map(draft.users, (user, index) => {
-                if (JSON.stringify(user) === JSON.stringify(objPresenceUser)) {
-                    draft.users.splice(index, 1)
+                if (presenceUser.userId === this.socket.user.id) {
+                    objPresenceUser.name = this.socket.user.name
+                    objPresenceUser.email = this.socket.user.email
                 }
+                let draft = _.find(this.channels.presences.drafts, { draftId: presenceUser.draftId })
+
+                if (draft) {
+                    const presenceUserIndex = this.channels.presences.drafts.indexOf(draft)
+                    const repeatUser = _.find(this.channels.presences.drafts[presenceUserIndex].users, (user) => {
+                        return JSON.stringify(user) === JSON.stringify(objPresenceUser)
+                    })
+                    if (!repeatUser) this.channels.presences.drafts[presenceUserIndex].users.push(objPresenceUser)
+                }
+                else {
+                    draft = { draftId: presenceUser.draftId, users: [objPresenceUser] }
+                    this.channels.presences.drafts.push(draft)
+                }
+                
+                this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', draft.users)
             })
+        
         }
-        this.server.io.in('presence-draft/' + presenceUser.draftId).emit('presenceDraft', draft.users)
     }
 
     onUpdateDraft(contentDraft) {
         this.socket.broadcast.in('draft/' + contentDraft.draftId).emit('updateDraft', contentDraft)
 
-        const draft = _.find(this._draftUpdate, { draftId: contentDraft.draftId })
-        if (draft) {
-            const draftUpdateIndex = this._draftUpdate.indexOf(draft);
-            this._draftUpdate[draftUpdateIndex] = _.mergeWith(draft, contentDraft)
-        }
-        else {
-            this._draftUpdate.push(contentDraft)
-        }
+        this.setArrayDraft(contentDraft).then(() => {
+            this.timerSocketUpdate(contentDraft.draftId)
+        })
+    }
 
+    onLeavePresence(draftId, objPresenceUser){
+        this.socket.leave('draft/' + draftId)
+        let draft = _.find(this.channels.presences.drafts, { draftId: draftId })
+        if(draft){
+            _.map(draft.users, (user, index) => {
+                if (JSON.stringify(user) === JSON.stringify(objPresenceUser)) {
+                    draft.users.splice(index, 1)
+                }
+            })
+            this.server.io.in('draft/' + draftId).emit('presenceDraft', draft.users)
+        }
+    }
+
+    setArrayDraft(contentDraft) {
+        return new Promise((resolve, reject) => {
+            const draft = _.find(this.channels.updates.drafts, { draftId: contentDraft.draftId })
+            if (draft) {
+                const draftUpdateIndex = this.channels.updates.drafts.indexOf(draft);
+                this.channels.updates.drafts[draftUpdateIndex] = _.mergeWith(draft, contentDraft)
+                resolve()
+            }
+            else {
+                this.channels.updates.drafts.push(contentDraft)
+                resolve()
+            }
+        })
+    }
+
+    timerSocketUpdate(draftId) {
         if (this._timer) clearTimeout(this._timer)
         //TIMEOUT to save form in MONGO
         this._timer = setTimeout(() => {
-            this._draftUpdate.forEach((du) => {
-                this.controller.updateDraft(du).then(() => {
-                    this.socket.emit('draftSaved')
-                })
-            })
-            this._draftUpdate = []
+           this.saveDraft(draftId)
         }, 3000)
     }
 
+    findDraftInArray(draftId) {
+        return new Promise((resolve, reject) => {
+            const index = _.findIndex(this.channels.updates.drafts, (draft) => {
+                return draft.draftId === draftId; 
+            })
+            resolve(index)
+        })
+    }
+
+    consultDraft(draftId) {
+        this.controller.getOne(draftId).then((draft) => {
+            this.socket.emit('updateDraft', {draftId: draftId, form: draft.form})
+        })
+    }
+
+    saveDraft(draftId, userEntry = false) {
+        this.findDraftInArray(draftId).then((index) => {
+            this.controller.updateDraft(this.channels.updates.drafts[index]).then(() => {
+                this.socket.emit('draftSaved')
+                this.channels.updates.drafts[index] = {}
+                if(userEntry) {
+                    this.consultDraft(draftId)
+                    console.log('to aqui')
+                } 
+            })
+        })
+    }
 
     onSocketDisconnect() {
         _.map(this.channels.presences.drafts, (tempDraft) => {
@@ -110,7 +156,7 @@ module.exports = class Drafts {
             tempDraft.users = _.filter(tempDraft.users, (disconnectUser) => {
                 return (disconnectUser.name !== this.socket.user.name && disconnectUser.email !== this.socket.user.email)
             })
-            if (userFound) this.server.io.in('presence-draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.users)
+            if (userFound) this.server.io.in('draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.users)
             return tempDraft
         })
     }

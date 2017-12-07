@@ -4,6 +4,14 @@ const Q = require('q');
 
 module.exports = (server, restify) => {
     return {
+
+        getOne(draftId) {
+            return server.mongodb.Draft.findOne({draftId: draftId}).then((draft) => {
+                draft = JSON.parse(JSON.stringify(draft))
+                return draft
+            })
+        },        
+
         getAll(req) {
             return server.mongodb.Draft.find({companyId: req.query.companyId}).then((drafts) => {
                 drafts = JSON.parse(JSON.stringify(drafts))
