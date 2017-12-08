@@ -9,7 +9,7 @@ module.exports = class Drafts {
         this.channels = channels
         this.socket = socket
         this.controller = require('./../controllers/drafts.controller')(server)
-        
+
         // local variables
         this._timer = null
 
@@ -21,14 +21,14 @@ module.exports = class Drafts {
 
         this.socket.on('presence-update-draft', (presenceUser) => {
             this.onPresenceUpdate(presenceUser)
-         
+
         })
-        
+
         this.socket.on('update-draft', (contentDraft) => {
             this.onUpdateDraft(contentDraft)
         })
-        
-        
+
+
         // VER IMPLEMENTAR EVENT ON RECONECT OU SIMILAR - ATÉ O YOSHIU FALAR 
 
         this.socket.on('disconnect', () => {
@@ -38,39 +38,42 @@ module.exports = class Drafts {
 
     onPresenceUpdate(presenceUser) {
         if (presenceUser.leave) {
-            const objPresenceUser = {name: this.socket.user.name, email: this.socket.user.email}
+            const objPresenceUser = { name: this.socket.user.name, email: this.socket.user.email }
             this.onLeavePresence(presenceUser.draftId, objPresenceUser)
         }
         else {
-            this.setArrayDraft({draftId: presenceUser.draftId}).then(() => {
+            this.setArrayDraft({ draftId: presenceUser.draftId }).then(() => {
                 if (this._timer) clearTimeout(this._timer)
                 this.saveDraft(presenceUser.draftId, true)
-            
+
                 this.socket.join('draft/' + presenceUser.draftId)
 
                 let objPresenceUser = {}
 
                 if (presenceUser.userId === this.socket.user.id) {
-                    objPresenceUser.name = this.socket.user.name
                     objPresenceUser.email = this.socket.user.email
+                    objPresenceUser.name = this.socket.user.name
                 }
-                let draft = _.find(this.channels.presences.drafts, { draftId: presenceUser.draftId })
 
-                if (draft) {
-                    const presenceUserIndex = this.channels.presences.drafts.indexOf(draft)
-                    const repeatUser = _.find(this.channels.presences.drafts[presenceUserIndex].users, (user) => {
-                        return JSON.stringify(user) === JSON.stringify(objPresenceUser)
-                    })
-                    if (!repeatUser) this.channels.presences.drafts[presenceUserIndex].users.push(objPresenceUser)
-                }
-                else {
-                    draft = { draftId: presenceUser.draftId, users: [objPresenceUser] }
-                    this.channels.presences.drafts.push(draft)
-                }
-                
-                this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', draft.users)
+
+                return this.controller.checkPresence(presenceUser.draftId).then((presence) => {
+                    if (presence) {
+                        const repeatUser = _.find(presence, (user) => {
+                            return JSON.stringify(user.email) === JSON.stringify(objPresenceUser.email)
+                        })
+                        if (!repeatUser) this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
+                            this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
+
+                        })
+                    }
+                    else {
+                        this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
+                            this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
+                        })
+                    }
+                })
             })
-        
+
         }
     }
 
@@ -82,17 +85,22 @@ module.exports = class Drafts {
         })
     }
 
-    onLeavePresence(draftId, objPresenceUser){
+    onLeavePresence(draftId, objPresenceUser) {
         this.socket.leave('draft/' + draftId)
-        let draft = _.find(this.channels.presences.drafts, { draftId: draftId })
-        if(draft){
-            _.map(draft.users, (user, index) => {
-                if (JSON.stringify(user) === JSON.stringify(objPresenceUser)) {
-                    draft.users.splice(index, 1)
-                }
+        return new Promise((resolve, reject) => {
+            this.controller.checkPresence(draftId).then((presence) => {
+                _.map(presence, (user, index) => {
+                    if (user.email === objPresenceUser.email) {
+                        return presence.splice(index, 1)
+                    }
+                })
+                resolve(presence)
             })
-            this.server.io.in('draft/' + draftId).emit('presenceDraft', draft.users)
-        }
+        }).then((userPresence) => {
+            this.controller.savePresenceUser(draftId, userPresence).then((newPresence) => {
+                this.server.io.in('draft/' + draftId).emit('presenceDraft', newPresence)
+            })
+        })
     }
 
     setArrayDraft(contentDraft) {
@@ -114,14 +122,14 @@ module.exports = class Drafts {
         if (this._timer) clearTimeout(this._timer)
         //TIMEOUT to save form in MONGO
         this._timer = setTimeout(() => {
-           this.saveDraft(draftId)
+            this.saveDraft(draftId)
         }, 3000)
     }
 
     findDraftInArray(draftId) {
         return new Promise((resolve, reject) => {
             const index = _.findIndex(this.channels.updates.drafts, (draft) => {
-                return draft.draftId === draftId; 
+                return draft.draftId === draftId;
             })
             resolve(index)
         })
@@ -129,7 +137,7 @@ module.exports = class Drafts {
 
     consultDraft(draftId) {
         this.controller.getOne(draftId).then((draft) => {
-            this.socket.emit('updateDraft', {draftId: draftId, form: draft.form})
+            this.socket.emit('updateDraft', { draftId: draftId, form: draft.form })
         })
     }
 
@@ -138,26 +146,33 @@ module.exports = class Drafts {
             this.controller.updateDraft(this.channels.updates.drafts[index]).then(() => {
                 this.socket.emit('draftSaved')
                 this.channels.updates.drafts[index] = {}
-                if(userEntry) {
+                if (userEntry) {
                     this.consultDraft(draftId)
-                    console.log('to aqui')
-                } 
+                }
             })
         })
     }
 
     onSocketDisconnect() {
-        _.map(this.channels.presences.drafts, (tempDraft) => {
-            const userFound = _.some(tempDraft.users, (disconnectUser) => {
-                if (disconnectUser.name === this.socket.user.name && disconnectUser.email === this.socket.user.email) {
-                    return true
+
+        //this.socket.leave('draft/' + draftId)
+
+        return this.controller.checkAllPresence().then((presence) => {
+            _.map(presence, (tempDraft) => {
+                const userFound = _.some(tempDraft.presence, (disconnectUser) => {
+                    if (disconnectUser.name === this.socket.user.name && disconnectUser.email === this.socket.user.email) {
+                        return true
+                    }
+                })
+                tempDraft.presence = _.filter(tempDraft.presence, (disconnectUser) => {
+                    return (disconnectUser.name !== this.socket.user.name && disconnectUser.email !== this.socket.user.email)
+                })
+                if (userFound) {
+                    this.controller.savePresenceUser(tempDraft.draftId, tempDraft.presence).then((newPresence) => {
+                        this.server.io.in('draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.presence)
+                    })
                 }
             })
-            tempDraft.users = _.filter(tempDraft.users, (disconnectUser) => {
-                return (disconnectUser.name !== this.socket.user.name && disconnectUser.email !== this.socket.user.email)
-            })
-            if (userFound) this.server.io.in('draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.users)
-            return tempDraft
         })
     }
 }

@@ -18,6 +18,10 @@ module.exports = {
             form: {
                 type: Object,
                 default: {}
+            },
+            presence: {
+                type: Array,
+                default: []
             }
         }, {
             timestamps: {
