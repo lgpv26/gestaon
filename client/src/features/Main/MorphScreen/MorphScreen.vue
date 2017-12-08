@@ -399,8 +399,8 @@
 
     .morph-screen__close {
         position: fixed;
-        top: 30px;
-        right: 30px;
+        top: 20px;
+        right: 20px;
         z-index: 1000000;
     }
 
@@ -449,7 +449,7 @@
     .morph-screen__container .container__header {
         display: flex;
         flex-direction: row;
-        padding: 0 30px;
+        padding: 0 20px;
         height: 112px;
         flex-shrink: 0;
         align-items: center;
@@ -546,7 +546,7 @@
         display: flex;
         flex-direction: row;
         height: 50px;
-        padding: 0 30px;
+        padding: 0 20px;
         align-items: center;
         flex-shrink: 0;
     }

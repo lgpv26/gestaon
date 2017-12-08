@@ -1,13 +1,13 @@
 <template>
     <div ref="scrollbar">
         <div class="ms-form">
-            <div class="ms-form__spinner" v-if="saving && !form.client.active && !form.order.active && !form.task.active">
+            <div class="ms-form__spinner" v-if="saving && !form.activeStep">
                 <span>Salvando...</span>
             </div>
             <span style="position: absolute; top: 0; left: 2px;">
                 <span style="color: rgba(255,255,255,.05); margin-right: 5px;" v-for="presenceUser in presenceUsers">{{ presenceUser.name }}</span>
             </span>
-            <div class="form__instruction" v-if="!form.client.active && !form.order.active && !form.task.active">
+            <div class="form__instruction" v-if="!form.activeStep">
                 <div class="instruction__container">
                     <div class="container__area">
                         <small>O que vamos fazer?</small>
@@ -16,35 +16,12 @@
                     <img-request-form></img-request-form>
                 </div>
             </div>
-            <div class="separator" v-if="!form.client.active && !form.order.active && !form.task.active"></div>
-            <app-client-form :client.sync="form.client" @sync="sync($event)"></app-client-form>
+            <div class="separator" v-if="!form.activeStep"></div>
+            <app-client-form :activeStep.sync="form.activeStep" :client.sync="form.client" @sync="sync($event)"></app-client-form>
             <div class="separator"></div>
-            <app-order-form :order.sync="form.order" @sync="sync($event)"></app-order-form>
+            <app-order-form :activeStep.sync="form.activeStep" :order.sync="form.order" @sync="sync($event)"></app-order-form>
             <div class="separator"></div>
-            <form :class="{'active': form.task.active}">
-                <div class="form__content">
-                    <div class="form__main-column" v-show="form.task.active">
-                        <div class="main-column__form">
-                            <div class="columns">
-                                <div class="column">
-                                    Nome / Empresa
-                                    <input type="text" v-model="form.task.name" @input="sync('task.name')" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form__side-column">
-                        <div class="side-column__header">
-
-                        </div>
-                    </div>
-                </div>
-                <div class="form__header">
-                    <span v-if="!form.task.active">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
-                    <span class="push-both-sides"></span>
-                    <h3>TAREFA</h3> <app-switch style="float: right;" v-model="form.task.active" @changed="sync('task.active')"></app-switch>
-                </div>
-            </form>
+            <app-task-form :activeStep.sync="form.activeStep" :task.sync="form.task" @sync="sync($event)"></app-task-form>
         </div>
     </div>
 </template>
@@ -54,6 +31,7 @@
     import _ from 'lodash';
     import ClientForm from './ClientForm.vue';
     import OrderForm from './OrderForm.vue';
+    import TaskForm from './TaskForm.vue';
     import Scrollbar from 'smooth-scrollbar';
 
     export default {
@@ -64,9 +42,6 @@
             draftSaved(){
                 this.saving = false;
             },
-            consultDraft(data){
-                console.log("Consult draft",data);
-            },
             updateDraft({draftId, form}){
                 if(draftId === this.activeMorphScreen.draft.draftId) {
                     _.mergeWith(this.form, form);
@@ -76,7 +51,8 @@
         },
         components: {
             'app-client-form': ClientForm,
-            'app-order-form': OrderForm
+            'app-order-form': OrderForm,
+            'app-task-form': TaskForm
         },
         data(){
             return {
@@ -92,9 +68,10 @@
                 createdBy: null,
                 createdAt: null,
                 updatedAt: null,
-
-
                 form: {
+                    activeStep: null,
+                    clientPhoneId: null,
+                    clientAddressId: null,
                     client: {
                         active: false,
                         id: null, // se passar, atualizar cliente. se não, criar.
@@ -103,6 +80,7 @@
                         legalDocument: '', // cpf, cnpj
                         clientAddresses: [
                             {
+                                active: false,
                                 clientAddressId: null,
                                 name: null,
                                 number: null,
@@ -234,12 +212,12 @@
         padding-bottom: 0;
     }
 
-    .form-group .form-group__header span {
+    .form-group .form-group__header > span {
         font-size: 12px;
     }
 
     .form-group .form-group__header h3 {
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
     }
 
@@ -249,6 +227,7 @@
     .form-group .form-group__header .header__icon {
         flex-shrink: 0;
         margin-right: 10px;
+        width: 20px;
     }
 
     .form-group .form-group__header .header__mini-circle {
@@ -282,8 +261,17 @@
         margin-top: 13px;
     }
 
+    .form-group .form-group__content > ul.content__list > li.list__item.active span {
+        color: var(--font-color--secondary);
+    }
+
+    .form-group .form-group__content > ul.content__list > li.list__item.active .item__check .colorizable {
+        fill: var(--font-color--primary);
+    }
+
     .form-group .form-group__content > ul.content__list > li.list__item span {
         color: var(--font-color--7);
+        font-size: 14px;
         font-weight: 600;
     }
 
@@ -314,6 +302,22 @@
         flex-direction: row;
         align-items: center;
         margin-bottom: 5px;
+    }
+
+    .form-group .form-group__content > ul.content__list--mini > li.list__item .item__check {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        width: 20px;
+    }
+
+    .form-group .form-group__content > ul.content__list--mini > li.list__item.active .item__check .colorizable {
+        fill: var(--font-color--primary);
+    }
+
+    .form-group .form-group__content > ul.content__list--mini > li.list__item span {
+        color: var(--font-color--7);
+        font-weight: 600;
     }
 
     .form-group .form-group__content > ul.content__list--mini > li.list__item:last-child {
@@ -355,7 +359,7 @@
     }
 
     div.ms-form {
-        padding: 0 30px;
+        padding: 0 20px;
         display: flex;
         flex-direction: column;
         flex-grow: 1;
@@ -376,7 +380,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 30px 0 30px;
+        margin: 20px 0 20px;
         flex-shrink: 0;
         flex-grow: 1;
     }
@@ -417,14 +421,14 @@
         flex-shrink: 0;
     }
     div.ms-form form:first-child {
-        padding: 30px 0 10px!important;
+        padding: 20px 0 10px!important;
     }
     div.ms-form form:last-child {
         padding-bottom: 12px;
     }
     div.ms-form form.active {
         flex-grow: 1;
-        padding: 30px 0 10px;
+        padding: 20px 0 10px;
     }
     div.ms-form form.active .form__content {
         flex-grow: 1;

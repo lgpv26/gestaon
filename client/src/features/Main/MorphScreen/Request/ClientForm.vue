@@ -1,6 +1,6 @@
 <template>
-    <form :class="{'active': client.active}">
-        <div class="form__content" v-show="client.active">
+    <form :class="{'active': isCurrentStepActive}">
+        <div class="form__content" v-show="isCurrentStepActive">
             <div class="form__main-column">
                 <!-- client name and document -->
                 <div class="form-groups">
@@ -49,7 +49,11 @@
                 <div class="form-groups">
                     <div class="form-group" v-if="isEditing || isAdding || form.clientAddresses.length <= 0">
                         <div class="form-group__header">
-                            <h3 style="margin-right: 10px;">Locais</h3> <icon-local></icon-local>
+                            <h3 style="margin-right: 10px; color: var(--font-color--2);" v-if="isEditing">
+                                {{ clientAddressForm.address.name + ', ' + clientAddressForm.number }}
+                            </h3>
+                            <h3 style="margin-right: 10px;" v-else>Locais</h3>
+                            <icon-local></icon-local>
                             <span class="push-both-sides"></span>
                             <a class="btn btn--border-only" v-if="form.clientAddresses.length > 0" @click="backToClientAddressesList()">Voltar</a>
                             <a class="btn btn--primary" v-if="form.clientAddresses.length <= 0" @click="saveClientAddress()" style="margin-left: 10px;">Adicionar</a>
@@ -61,16 +65,26 @@
                     </div>
                     <div class="form-group" v-else>
                         <div class="form-group__header">
-                            <h3 style="margin-right: 10px;">Selecione um local</h3><icon-local></icon-local>
+                            <span style="margin-right: 10px;">Selecione um local</span><icon-local></icon-local>
                             <span class="push-both-sides"></span>
                             <a class="btn btn--border-only" @click="addClientAddress()">Novo</a>
                         </div>
                         <div class="form-group__content">
                             <ul class="content__list">
-                                <li class="list__item" v-for="clientAddress in form.clientAddresses">
-                                    <span style="cursor: pointer;">{{ clientAddress.address.name }}, {{ clientAddress.number }}</span>
+                                <li class="list__item" v-for="clientAddress in form.clientAddresses" :class="{ active: clientAddress.active }">
+                                    <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
+                                        {{ clientAddress.address.name }}, {{ clientAddress.number }}
+                                    </span>
                                     <span class="push-both-sides"></span>
-                                    <a class="btn btn--border-only" style="position: absolute; right: 0" @click="editClientAddress(clientAddress)">Editar endereço</a>
+                                    <div class="item__check" @click="onClientAddressSelected(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                                        <icon-check></icon-check>
+                                    </div>
+                                    <div @click="editClientAddress(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                                        <icon-copy></icon-copy>
+                                    </div>
+                                    <div style="cursor: pointer;">
+                                        <icon-remove></icon-remove>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
@@ -94,7 +108,9 @@
                 <div class="form-groups">
                     <div class="form-group">
                         <div class="form-group__header">
-                            <icon-phone class="header__icon"></icon-phone>
+                            <div class="header__icon">
+                                <icon-phone></icon-phone>
+                            </div>
                             <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" v-model="clientPhoneForm.number" placeholder="Número" />
                             <div class="header__mini-circle"></div>
                             <input type="text" v-model="clientPhoneForm.name" class="input--borderless" placeholder="fixo/celular" />
@@ -105,9 +121,11 @@
                         </div>
                         <div class="form-group__content">
                             <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length > 0">
-                                <li class="list__item" v-for="clientPhone in form.clientPhones">
-                                    <div class="item__check"></div>
-                                    <span>({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
+                                <li class="list__item" v-for="clientPhone in form.clientPhones" :class="{ active: clientPhone.active }">
+                                    <div class="item__check" style="margin-right: 10px;">
+                                        <icon-check></icon-check>
+                                    </div>
+                                    <span style="cursor: pointer;" @click="onClientPhoneSelected(clientPhone)">({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
                                     <div class="item__mini-circle"></div>
                                     <span>{{ clientPhone.name }}</span>
                                     <span class="push-both-sides"></span>
@@ -123,8 +141,10 @@
                 <div class="form-groups">
                     <div class="form-group">
                         <app-new-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
-                            <icon-client-group class="header__icon"></icon-client-group>
-                            <h3 v-if="!selectedClientGroup.value">Grupo de cliente</h3>
+                            <div class="header__icon">
+                                <icon-client-group></icon-client-group>
+                            </div>
+                            <h3 class="static" v-if="!selectedClientGroup.value">Grupo de cliente</h3>
                             <h3 v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</h3>
                             <span class="push-both-sides"></span>
                             <icon-dropdown class="header__action-icon"></icon-dropdown>
@@ -137,8 +157,10 @@
                 <div class="form-groups">
                     <div class="form-group">
                         <app-new-select class="form-group__header" :verticalOffset="8" :items="clientCustomFields" v-model="form.clientSelectedCustomFields" :multiple="true" :showInput="true">
-                            <icon-client-details class="header__icon"></icon-client-details>
-                            <h3>Informações adicionais</h3>
+                            <div class="header__icon">
+                                <icon-client-details></icon-client-details>
+                            </div>
+                            <h3 class="static">Informações adicionais</h3>
                             <span class="push-both-sides"></span>
                             <icon-dropdown class="header__action-icon" v-if="form.clientCustomFields && form.clientCustomFields.length >= 0"></icon-dropdown>
                             <icon-add class="header__action-icon" v-else></icon-add>
@@ -149,7 +171,6 @@
                         <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
                             <ul class="content__list--mini">
                                 <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
-                                    <div class="item__check"></div>
                                     <span>{{ clientCustomField.text }}</span>
                                     <div class="item__mini-circle"></div>
                                     <span><input type="text" placeholder="..." class="input--borderless" /></span>
@@ -162,10 +183,26 @@
                 </div>
             </div>
         </div>
-        <div class="form__header">
-            <span v-if="!client.active">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
+        <div class="form__header" v-if="!isCurrentStepActive && client.id" :class="{'summary': !isCurrentStepActive && client.id}">
+            <div class="form-groups" style="flex-grow: 1;">
+                <div class="form-group" style="flex-basis: 70%">
+                    <span style="color: var(--font-color--secondary)">{{ client.name }}</span>
+                </div>
+                <div class="form-group" style="flex-basis: 30%;">
+                    <icon-phone style="margin-right: 10px;"></icon-phone>
+                    <span>(11) 99847-2355</span>
+                    <div class="mini-circle"></div>
+                    <span>WhatsApp</span>
+                </div>
+                <div class="form-group" style="flex-wrap: wrap; flex-grow: initial;">
+                    <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
+                </div>
+            </div>
+        </div>
+        <div class="form__header" v-else>
+            <span v-if="!isCurrentStepActive">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
             <span class="push-both-sides"></span>
-            <h3>DADOS DO CLIENTE</h3> <app-switch style="float: right;" v-model="client.active" @change="commitSocketChanges('client.active')"></app-switch>
+            <h3>DADOS DO CLIENTE</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
         </div>
     </form>
 </template>
@@ -186,7 +223,8 @@
             'app-client-address-form': ClientAddressForm,
             'app-new-select': Select
         },
-        props: ['client'],
+        props: ['client','activeStep'],
+
         data(){
             return {
                 lastQuery: '',
@@ -296,6 +334,9 @@
         },
         computed: {
             ...mapState('auth', ['user','company']),
+            isCurrentStepActive(){
+                return this.activeStep === 'client';
+            },
             selectedClientGroup(){
                 return _.find(this.clientGroups, { value: this.form.clientGroup });
             }
@@ -351,7 +392,16 @@
             searchClientSelected(searchItem){
                 const vm = this;
                 ClientsAPI.getOne(searchItem.client.id).then(({data}) => {
-                    _.assign(vm.form, _.pick(data, _.keys(vm.form)));
+                    const client = data;
+                    client.clientPhones.map((clientPhone) => {
+                        clientPhone.active = false;
+                        return clientPhone;
+                    });
+                    client.clientAddresses.map((clientAddress) => {
+                        clientAddress.active = false;
+                        return clientAddress;
+                    });
+                    _.assign(vm.form, _.pick(client, _.keys(vm.form)));
                     vm.searchItems = [];
                 });
             },
@@ -418,6 +468,22 @@
                     }
                 });
             },
+            onClientPhoneSelected(selectedClientPhone){
+                this.client.clientPhones.forEach((clientPhone) => {
+                    clientPhone.active = false;
+                    if(selectedClientPhone.id === clientPhone.id){
+                        selectedClientPhone.active = true;
+                    }
+                })
+            },
+            onClientAddressSelected(selectedClientAddress){
+                this.client.clientAddresses.forEach((clientAddress) => {
+                    clientAddress.active = false;
+                    if(selectedClientAddress.id === clientAddress.id){
+                        selectedClientAddress.active = true;
+                    }
+                })
+            },
             addClientAddress(){
                 this.resetClientAddressForm();
                 this.isAdding = true;
@@ -462,6 +528,10 @@
              * Real-time
              */
 
+            onCurrentStepChanged(){
+                (this.activeStep === 'client') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'client');
+                this.commitSocketChanges('activeStep');
+            },
             syncWithParentForm(){
                 this.$emit('update:client', this.form);
             },
@@ -476,6 +546,32 @@
 </script>
 
 <style scoped>
+
+    .form__header.summary {
+        height: auto;
+    }
+
+    .form__header.summary span {
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .form__header.summary .form-group {
+        padding: 0 20px;
+        display: flex;
+        height: 50px;
+        align-items: center;
+        flex-direction: row;
+    }
+
+    .mini-circle {
+        flex-shrink: 0;
+        height: 4px;
+        width: 4px;
+        background-color: var(--font-color--secondary);
+        border-radius: 2px;
+        margin: 0 10px;
+    }
 
     /* search input */
 

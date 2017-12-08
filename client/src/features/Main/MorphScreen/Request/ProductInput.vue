@@ -1,7 +1,7 @@
 <template>
     <div class="product-input">
         <app-new-select :items="selectProducts" title="Escolha um Produto" :verticalOffset="8" showInput="true" v-model="selectedProduct">
-            <input type="text" style="cursor: pointer;" readonly :value="selectedProductName" placeholder="ESCOLHA UM PRODUTO" />
+            <input type="text" style="cursor: pointer;" readonly :value="selectedProductName" placeholder="ESCOLHA UM" />
             <icon-dropdown style="position: absolute; top: 6px; right: 5px;"></icon-dropdown>
             <template slot="item" slot-scope="itemProps">
                 <span>{{itemProps.text }}</span>

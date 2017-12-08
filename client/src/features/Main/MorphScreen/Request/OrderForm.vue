@@ -1,6 +1,6 @@
 <template>
-    <form :class="{'active': order.active}">
-        <div class="form__content" v-show="order.active">
+    <form :class="{'active': isCurrentStepActive}">
+        <div class="form__content" v-show="isCurrentStepActive">
             <div class="form__main-column" style="margin-right: 10px;">
                 <div class="form-groups">
                     <div class="form-group" style="padding: 0; background: transparent;">
@@ -15,9 +15,9 @@
                                 <thead>
                                     <tr>
                                         <th>Produto</th>
-                                        <th class="content-size" style="text-align: right;">Quant.</th>
-                                        <th style="text-align: right; width: 120px;">Valor Un.</th>
-                                        <th style="text-align: right; width: 120px;">Desconto Un.</th>
+                                        <th class="content-size" style="text-align: center; width: 40px;">Qnt.</th>
+                                        <th style="text-align: right; width: 90px;">Valor Un.</th>
+                                        <th style="text-align: right; width: 120px;">Desc. Un.</th>
                                         <th style="text-align: right; width: 120px;">Subtotal</th>
                                         <th></th>
                                     </tr>
@@ -26,16 +26,14 @@
                                     <tr v-for="(orderProduct, index) in form.orderProducts" :key="orderProduct.id">
                                         <td><app-product-input v-model="orderProduct.productId" /></td>
                                         <td class="content-size"><input v-model="orderProduct.quantity" type="text" style="text-align: center;" /></td>
-                                        <td style="width: 120px;"><money v-model="form.price"  style="text-align: right;"/></td>
-                                        <td style="width: 120px;"><money v-model="form.price" type="text" style="text-align: right;" /></td>
-                                        <td style="width: 120px;"><money v-model="form.price" type="text" style="text-align: right;" /></td>
+                                        <td><money v-model="form.price"  style="text-align: right;"/></td>
+                                        <td><money v-model="form.price" type="text" style="text-align: right;" /></td>
+                                        <td><money v-model="form.price" type="text" style="text-align: right;" /></td>
                                         <td style="text-align: center; cursor: pointer;" @click="removeProduct(orderProduct.id)"><icon-remove></icon-remove></td>
                                     </tr>
                                     <tr>
                                         <td colspan="3" @click="addProduct">
-                                            <a class="btn btn--border-only btn--primary" style="display: inline-flex;">
-                                                <icon-add style="margin-right: 5px;"></icon-add>Adicionar produto
-                                            </a>
+                                            <a class="btn btn--border-only" style="display: inline-flex; padding: 0 8px;">Adicionar produto</a>
                                         </td>
                                         <td style="text-align: right; font-size: 16px; font-weight: 600;">R$ XX,XX</td>
                                         <td style="text-align: right; font-size: 18px; font-weight: 600; color: var(--font-color--secondary)">R$ XX,XX</td>
@@ -65,9 +63,9 @@
             </div>
         </div>
         <div class="form__header">
-            <span v-if="!order.active">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
+            <span v-if="!isCurrentStepActive">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
             <span class="push-both-sides"></span>
-            <h3>VENDA</h3> <app-switch style="float: right;" v-model="order.active" @changed="commitSocketChanges('order.active')"></app-switch>
+            <h3>VENDA</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
         </div>
     </form>
 </template>
@@ -82,7 +80,7 @@
         components: {
             'app-product-input': ProductInput
         },
-        props: ['order'],
+        props: ['order','activeStep'],
         data(){
             return {
                 activeTab: 'chart',
@@ -104,6 +102,9 @@
             }
         },
         computed: {
+            isCurrentStepActive(){
+                return this.activeStep === 'order';
+            }
         },
         methods: {
             addProduct(){
@@ -121,6 +122,10 @@
             },
             activateTab(tab){
                 this.activeTab = tab;
+            },
+            onCurrentStepChanged(value){
+                (this.activeStep === 'order') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'order');
+                this.commitSocketChanges('activeStep');
             },
             commitSocketChanges(mapping){
                 this.$emit('sync', mapping);

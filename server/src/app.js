@@ -82,7 +82,9 @@ server.use(function(req, res, next) {
 });
 
 // load Redis
-server['redisClient'] = redis.createClient()
+if(config.redis.active){
+    server['redisClient'] = redis.createClient()
+}
 
 // load MongoDB/Mongoose models
 server['mongodb'] = require('./models/mongodb')(mongoose);
@@ -137,8 +139,24 @@ const connectToMySQL = new Promise((resolve, reject) => {
     });
 });
 
-server.redisClient.on('ready', () => {
-    log.info("Redis is ready")
+let connectToRedis = new Promise((resolve, reject) => {
+    if(config.redis.active){
+        server.redisClient.on('ready', () => {
+            log.info("Redis is ready");
+        }).catch((err) => {
+            log.error(err.message + " (" + err.name + ")");
+        }).then(() => {
+            resolve();
+        });
+        server.redisClient.on('error', (err) => {
+            log.error(err.message + " (" + err.name + ")");
+            resolve();
+        })
+    }
+    else resolve();
+});
+
+connectToRedis.then(() => {
     connectToMySQL.then((databaseCreated) => {
         // guarantee MySQL structure
         return sequelize.sync({
@@ -169,11 +187,5 @@ server.redisClient.on('ready', () => {
                 });
             });
         });
-    }).catch((err) => {
-        log.error(err.message + " (" + err.name + ")");
-    });
-})
-
-server.redisClient.on('error', (err) => {
-    log.error(err.message + " (" + err.name + ")");
-})
+    })
+});
