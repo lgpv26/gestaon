@@ -21,8 +21,8 @@ module.exports = (server, restify) => {
                 });
             });
         },
-        getOne: (req, res, next) => {
-            server.mysql.Client.findOne({
+        getOne(req) {
+           return server.mysql.Client.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
@@ -49,15 +49,8 @@ module.exports = (server, restify) => {
                     as: 'clientsGroup'
                 }]
             }).then((client) => {
-                if (!client) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado.")
-                    );
-                }
-                return res.send(200, {
-                    data: client
-                });
-            });
+                  return client
+            })
         },
         createOne: (req, res, next) => {
             let createData = _.cloneDeep(req.body);

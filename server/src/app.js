@@ -94,7 +94,7 @@ server['mysql'] = require('./models/mysql')(Sequelize, sequelize);
 
 // loading all sockets
 log.info("Loading sockets");
-require('./sockets')(server);
+require('./sockets')(server)
 
 // OAuth server
 server['oAuth2'] = require('./models/oauth2')(server);
@@ -143,11 +143,8 @@ let connectToRedis = new Promise((resolve, reject) => {
     if(config.redis.active){
         server.redisClient.on('ready', () => {
             log.info("Redis is ready");
-        }).catch((err) => {
-            log.error(err.message + " (" + err.name + ")");
-        }).then(() => {
             resolve();
-        });
+        })
         server.redisClient.on('error', (err) => {
             log.error(err.message + " (" + err.name + ")");
             resolve();

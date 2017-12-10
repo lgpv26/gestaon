@@ -1,6 +1,6 @@
 const _ = require('lodash');
-const Op = require('sequelize').Op;
-const moment = require('moment');
+const Op = require('sequelize').Op
+const moment = require('moment')
 
 module.exports = (server, restify) => {
     return (columnFind, res, next) => {

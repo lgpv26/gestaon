@@ -14,11 +14,10 @@ module.exports = class Drafts {
         this._timer = null
 
         // functions
-        this.setSocketListeners()
+        this.setSocketDraftListeners()
     }
 
-    setSocketListeners() {
-
+    setSocketDraftListeners() {
         this.socket.on('presence-update-draft', (presenceUser) => {
             this.onPresenceUpdate(presenceUser)
 
@@ -36,6 +35,16 @@ module.exports = class Drafts {
         })
     }
 
+    resetTimeout(removeUpdate = false) {
+        if (removeUpdate) {
+            this.findDraftInArray(removeUpdate).then((index) => {
+                this.channels.updates.drafts.splice(index, 1)
+            })
+        }
+
+        if (this._timer) clearTimeout(this._timer)
+    }
+
     onPresenceUpdate(presenceUser) {
         if (presenceUser.leave) {
             const objPresenceUser = { name: this.socket.user.name, email: this.socket.user.email }
@@ -43,7 +52,6 @@ module.exports = class Drafts {
         }
         else {
             this.setArrayDraft({ draftId: presenceUser.draftId }).then(() => {
-                if (this._timer) clearTimeout(this._timer)
                 this.saveDraft(presenceUser.draftId, true)
 
                 this.socket.join('draft/' + presenceUser.draftId)
@@ -55,7 +63,7 @@ module.exports = class Drafts {
                     objPresenceUser.name = this.socket.user.name
                 }
 
-
+                if (this._timer) clearTimeout(this._timer)
                 return this.controller.checkPresence(presenceUser.draftId).then((presence) => {
                     if (presence) {
                         const repeatUser = _.find(presence, (user) => {
@@ -64,14 +72,22 @@ module.exports = class Drafts {
                         if (!repeatUser) this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
                             this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
 
+                        }).catch(() => {
+                            console.log('catch do NEW PRESENCEUSER - QUE É UM IF DENTRO DO CHECKPRESENCE')
                         })
                     }
                     else {
                         this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
                             this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
+                        }).catch(() => {
+                            console.log('catch do NEW PRESENCEUSER - QUE É NO ELSE DENTRO DO CHECKPRESENCE')
                         })
                     }
+                }).catch(() => {
+                    console.log('catch do CHECKPRESENCE')
                 })
+            }).catch(() => {
+                console.log('catch do SET ARRAY DRAFT (QUE ESTA DENTRO DO ON PRESENCE DRAFT)')
             })
 
         }
@@ -82,6 +98,8 @@ module.exports = class Drafts {
 
         this.setArrayDraft(contentDraft).then(() => {
             this.timerSocketUpdate(contentDraft.draftId)
+        }).catch(() => {
+            console.log('catch do SET ARRAY DENTRO DO ONUPDATEDRAFT')
         })
     }
 
@@ -89,16 +107,21 @@ module.exports = class Drafts {
         this.socket.leave('draft/' + draftId)
         return new Promise((resolve, reject) => {
             this.controller.checkPresence(draftId).then((presence) => {
-                _.map(presence, (user, index) => {
-                    if (user.email === objPresenceUser.email) {
-                        return presence.splice(index, 1)
+                // JSON.parse(JSON.stringify(presence))
+                presence = _.filter(presence, (user, index) => {
+                    if (user.email !== objPresenceUser.email) {
+                        return user
                     }
                 })
                 resolve(presence)
+            }).catch(() => {
+                console.log('catch do CHECK PRESENCE - DENTRO DO ONLEAVE PRESENCE')
             })
         }).then((userPresence) => {
             this.controller.savePresenceUser(draftId, userPresence).then((newPresence) => {
                 this.server.io.in('draft/' + draftId).emit('presenceDraft', newPresence)
+            }).catch(() => {
+                console.log('catch do SAVEPRESENCEUSER - DENTRO DO LEAVE PRESENCE')
             })
         })
     }
@@ -115,6 +138,8 @@ module.exports = class Drafts {
                 this.channels.updates.drafts.push(contentDraft)
                 resolve()
             }
+        }).catch(() => {
+            console.log('catch do SET ARRAY DRAFT MESMO')
         })
     }
 
@@ -132,12 +157,18 @@ module.exports = class Drafts {
                 return draft.draftId === draftId;
             })
             resolve(index)
+        }).then((index) => {
+            return index
+        }).catch(() => {
+            console.log('catch do FIND DRAFTIN ARRAY')
         })
     }
 
     consultDraft(draftId) {
         this.controller.getOne(draftId).then((draft) => {
             this.socket.emit('updateDraft', { draftId: draftId, form: draft.form })
+        }).catch(() => {
+            console.log('catch do CONSULTDRAFT')
         })
     }
 
@@ -145,19 +176,20 @@ module.exports = class Drafts {
         this.findDraftInArray(draftId).then((index) => {
             this.controller.updateDraft(this.channels.updates.drafts[index]).then(() => {
                 this.socket.emit('draftSaved')
-                this.channels.updates.drafts[index] = {}
+                this.channels.updates.drafts.splice(index, 1)
                 if (userEntry) {
                     this.consultDraft(draftId)
                 }
+            }).catch(() => {
+                console.log('catch do UPDATEDRAFT - QUE TA DENTRO DO SAVEDRAFT')
             })
+        }).catch(() => {
+            console.log('catch do FINDDRAFTIN ARRAY - DENTRO DO SAVEDRAFT')
         })
     }
 
     onSocketDisconnect() {
-
-        //this.socket.leave('draft/' + draftId)
-
-        return this.controller.checkAllPresence().then((presence) => {
+        this.controller.checkAllPresence().then((presence) => {
             _.map(presence, (tempDraft) => {
                 const userFound = _.some(tempDraft.presence, (disconnectUser) => {
                     if (disconnectUser.name === this.socket.user.name && disconnectUser.email === this.socket.user.email) {
@@ -170,24 +202,13 @@ module.exports = class Drafts {
                 if (userFound) {
                     this.controller.savePresenceUser(tempDraft.draftId, tempDraft.presence).then((newPresence) => {
                         this.server.io.in('draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.presence)
+                    }).catch(() => {
+                        console.log('catch do SAVEPRESENCE USER - DENTRO DO SOCKET DISCONECT')
                     })
                 }
             })
+        }).catch(() => {
+            console.log('catch do CHECKALL PRESENCE - NO ON SOCKET DISCONECCT')
         })
     }
 }
-/*
-
-    socket.user.companies.forEach((company) => {
-        server.mongodb.Draft.find({
-            companyId: company
-        }).exec().then((drafts) => {
-            drafts.forEach((draft) => {
-                socket.join('draft/' + draft.draftId);
-            });
-        }).catch((err) => {
-            console.log(err);
-        })
-    })
-    
-*/

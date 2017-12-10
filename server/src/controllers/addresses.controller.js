@@ -67,22 +67,16 @@ module.exports = (server, restify) => {
                 }
             )
         },
-        getOne: (req, res, next) => {
-            server.mysql.Address.findOne({
+        
+        getOne(req) {
+           return server.mysql.Address.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 }
             }).then((address) => {
-                if (!address) {
-                    return next(
-                        new restify.ResourceNotFoundError("Nenhum dado encontrado.")
-                    );
-                }
-                return res.send(200, {
-                    data: address
-                });
-            });
+                return address
+            })
         },
 
         saveAddresses(req) {

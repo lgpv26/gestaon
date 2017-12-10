@@ -3,7 +3,7 @@ const basePath = require('./../middlewares/base-path.middleware');
 module.exports = (server, restify) => {
 
     const authGuard = require('./../middlewares/auth-guard.middleware')(server, restify);
-    const clientsController = require('./../controllers/clients.controller')(server, restify);
+    const clientsController = require('./../controllers/clients.controller')(server, restify)
 
     server.use(basePath(
         '/clients', authGuard
@@ -22,7 +22,13 @@ module.exports = (server, restify) => {
     /* CRUD */
 
     server.get('/clients', clientsController.getAll);
-    server.get('/clients/:id', clientsController.getOne);
+    server.get('/clients/:id', (req, res, next) => {
+        clientsController.getOne(req).then((client) => {
+            return client
+        }).catch((err) => {
+            console.log('catch da rota do client', err)
+        })
+    });
     server.post('/clients', clientsController.createOne);
     server.patch('/clients/:id', clientsController.updateOne);
 

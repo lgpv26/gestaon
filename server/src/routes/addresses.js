@@ -14,7 +14,11 @@ module.exports = (server, restify) => {
     /* CRUD */
 
     /*server.get('/addresses', addressesController.getAll);*/
-    server.get('/addresses/:id', addressesController.getOne);
+    server.get('/addresses/:id', (req, res, next) => {
+        addressesController.getOne(req).then((address) => {
+            return res.send(200, {data: address})
+        })
+    })
     /*server.post('/addresses', addressesController.createOne);
     server.patch('/addresses/:id', addressesController.updateOne);
     */

@@ -1,11 +1,10 @@
 var fs = require('fs')
 
 module.exports = function (server) {
-
     /* import all sockets files */
 
     let socketFiles = [
-        "drafts.js"
+        "request.js"
     ];
 
     let sockets = [];
@@ -17,12 +16,10 @@ module.exports = function (server) {
         }
         // Require all files inside this directory
         sockets.push(require('./' + fileName));
-    });
+    })
+
     
     let channels = { 
-            presences: {
-                drafts: []
-            },
             updates: {
                 drafts: []
             }

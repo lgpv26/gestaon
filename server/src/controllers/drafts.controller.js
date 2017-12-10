@@ -1,8 +1,11 @@
 const utils = require('../utils');
-const _ = require('lodash');
-const Q = require('q');
+const _ = require('lodash')
+const Op = require('sequelize').Op
 
 module.exports = (server, restify) => {
+    const clientsController = require('./../controllers/clients.controller')(server)
+    const addressesController = require('./../controllers/addresses.controller')(server)
+
     return {
 
         getOne(draftId) {
@@ -86,6 +89,7 @@ module.exports = (server, restify) => {
                 return server.mongodb.Draft.update({ draftId: draftReq.draftId }, { $set: { form: draftObjUpdate } }).then((draft) => {
                     return draft
                 }).catch((err) => {
+                    console.log(err)
                     return err
                 });
             })
@@ -102,7 +106,7 @@ module.exports = (server, restify) => {
             return server.mongodb.Draft.find({}).then((drafts) => {
                 let presenceUsers = []
                 drafts.forEach((draft) => {
-                    presenceUsers.push({draftId: draft.draftId, presence: draft.presence})
+                    presenceUsers.push({ draftId: draft.draftId, presence: draft.presence })
                 })
                 return presenceUsers
             })
@@ -132,7 +136,39 @@ module.exports = (server, restify) => {
                 })
             }).then((updatedPresence) => {
                 return updatedPresence
-            })           
+            })
+        },
+
+        selectClient(clientSelect) {
+            const req = { params: {id: clientSelect.clientId }}
+            return clientsController.getOne(req).then((client) => {
+                client = JSON.parse(JSON.stringify(client))
+                return server.mongodb.Draft.update({ draftId: clientSelect.draftId }, { $set: { form: { client: client } } }).then(() => {
+                    return client
+                })
+            })
+        },
+
+        resetClient(clientReset) {
+            return server.mongodb.Draft.update({ draftId: clientReset.draftId }, { $set: { form: { client: {} } } }).then(() => {
+                return null
+            })
+        },
+
+        selectAddressClientAddress(addressSelect) {
+            const req = { params: {id: addressSelect.addressId }}
+            return addressesController.getOne(req).then((address) => {
+                address = JSON.parse(JSON.stringify(address))
+                return server.mongodb.Draft.update({ draftId: addressSelect.draftId }, { $set: { form: { clientAddressForm: {address: address } } } }).then(() => {
+                    return address
+                })
+            })
+        },
+
+        resetAddressClientAddress(addressReset) {
+            return server.mongodb.Draft.update({ draftId: addressReset.draftId }, { $set: { form: { clientAddressForm: {address: {} } } } }).then(() => {
+                return null
+            })
         },
 
         removeAll() {
