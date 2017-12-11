@@ -100,7 +100,7 @@
                         <div class="form-columns">
                             <div class="form-column" style="flex-grow: 1;">
                                 <label>Apelido (ex: Casa da mãe)</label>
-                                <input type="text" class="input--borderless" v-model="clientAddressForm.name" placeholder="..." />
+                                <input type="text" class="input--borderless" v-model="clientAddressForm.name" @input="$refs.clientAddressForm.syncClientAddressForm('name')" placeholder="..." />
                             </div>
                             <div class="form-column" style="width: 180px;">
                                 <a class="btn">Tipo de local</a>
@@ -116,24 +116,32 @@
                             <div class="header__icon">
                                 <icon-phone></icon-phone>
                             </div>
-                            <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" v-model="clientPhoneForm.number" placeholder="Número" />
+                            <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" v-model="clientPhoneForm.number"
+                                      @input.native="syncClientPhoneTrustedEvent($event, 'number')" placeholder="Número"></app-mask>
                             <div class="header__mini-circle"></div>
-                            <input type="text" v-model="clientPhoneForm.name" class="input--borderless" placeholder="fixo/celular" />
+                            <input type="text" v-model="clientPhoneForm.name" @input="syncClientPhoneForm('name')" class="input--borderless" placeholder="fixo/celular" />
                             <span class="push-both-sides"></span>
-                            <div style="cursor: pointer;" @click="addClientPhone()">
-                            <icon-add class="header__action-icon"></icon-add>
+                            <div style="cursor: pointer; margin-right: 8px;" @click="cancelClientPhoneEdition()" v-if="clientPhoneForm.id">
+                                <a style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">V</a>
+                            </div>
+                            <div style="cursor: pointer;" @click="saveClientPhone()">
+                                <icon-add class="header__action-icon" v-if="!clientPhoneForm.id"></icon-add>
+                                <a v-else style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">S</a>
                             </div>
                         </div>
                         <div class="form-group__content">
                             <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length > 0">
-                                <li class="list__item" v-for="clientPhone in form.clientPhones" :class="{ active: clientPhone.active }">
-                                    <div class="item__check" style="margin-right: 10px;">
+                                <li class="list__item" v-for="clientPhone in form.clientPhones" :class="{ active: clientPhoneId === clientPhone.id }">
+                                    <div class="item__check" style="margin-right: 10px; cursor: pointer;">
                                         <icon-check></icon-check>
                                     </div>
-                                    <span style="cursor: pointer;" @click="onClientPhoneSelected(clientPhone)">({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
+                                    <span style="cursor: pointer;" @click="selectClientPhone(clientPhone)">({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
                                     <div class="item__mini-circle"></div>
                                     <span>{{ clientPhone.name }}</span>
                                     <span class="push-both-sides"></span>
+                                    <div class="item__icon" @click="editClientPhone(clientPhone)" style="cursor: pointer; margin-right: 10px;">
+                                        <icon-edit></icon-edit>
+                                    </div>
                                     <div @click="removeClientPhone(clientPhone)" style="display: flex; cursor: pointer;">
                                         <icon-remove></icon-remove>
                                     </div>
@@ -216,6 +224,7 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
     import utils from '../../../../utils';
+    import models from '../../../../models';
     import ClientAddressForm from './ClientAddressForm.vue';
     import SearchComponent from '../../../../components/Inputs/Search.vue';
     import ClientsAPI from '../../../../api/clients';
@@ -347,6 +356,38 @@
             }
         },
         sockets: {
+            draftClientPhoneEditionCancel(){
+                console.log("Received draftClientPhoneEditionCancel");
+                this.resetClientPhoneForm();
+            },
+            draftClientPhoneSave(clientPhone){
+                console.log("Received draftClientPhoneSave", clientPhone);
+                const clientPhoneId = _.findIndex(this.form.clientPhones, { id: clientPhone.id });
+                if(clientPhoneId >= 0){ // found
+                    this.form.clientPhones[clientPhoneId] = clientPhone;
+                }
+                else {
+                    this.form.clientPhones.push(clientPhone);
+                }
+                this.clientPhoneForm = models.createClientPhoneModel();
+            },
+            draftClientPhoneEdit(clientPhoneId){
+                console.log("Received draftClientPhoneEdit", clientPhoneId);
+                let clientPhone = _.find(this.form.clientPhones, {id: clientPhoneId});
+                if(clientPhone){
+                    clientPhone = utils.removeReactivity(clientPhone);
+                    this.clientPhoneForm.number = clientPhone.ddd + clientPhone.number;
+                    delete clientPhone.number;
+                    utils.assignToExistentKeys(this.clientPhoneForm, clientPhone);
+                }
+            },
+            draftClientPhoneRemove(clientPhoneId){
+                console.log("Received draftClientPhoneRemove", clientPhoneId);
+                const clientPhoneIndex = _.findIndex(this.form.clientPhones, {id: clientPhoneId});
+                if(clientPhoneIndex !== -1){
+                    this.form.clientPhones.splice(clientPhoneIndex, 1);
+                }
+            },
             draftClientAddressAdd(){
                 this.resetClientAddressForm();
                 this.isAdding = true;
@@ -387,27 +428,6 @@
         methods: {
 
             ...mapActions('toast', ['showToast', 'showError']),
-
-            /**
-             * Form model
-             */
-
-            createClientAddress(){
-                return {
-                    id: null,
-                    name: null,
-                    number: null,
-                    complement: null,
-                    address: {
-                        id: null,
-                        name: null,
-                        neighborhood: null,
-                        cep: null,
-                        city: null,
-                        state: null
-                    }
-                }
-            },
 
             /**
              * Client search
@@ -475,39 +495,45 @@
             changeClient(){
                 this.resetForm();
             },
-            backToClientAddressesList(){
-                this.$socket.emit('draft:client-address-back', {
+
+            // client phone
+
+            selectClientPhone(selectedClientPhone){
+                this.$emit('update:clientPhoneId', selectedClientPhone.id);
+                this.commitSocketChanges('clientPhoneId');
+            },
+            cancelClientPhoneEdition(){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                };
+                console.log("Emitting draft:client-phone-edition-cancel", emitData);
+                this.$socket.emit('draft:client-phone-edition-cancel', emitData);
+            },
+            editClientPhone(clientPhone){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    clientPhoneId: clientPhone.id
+                };
+                console.log("Emitting draft:client-phone-edit", emitData);
+                this.$socket.emit('draft:client-phone-edit', emitData);
+            },
+            saveClientPhone(){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                };
+                console.log("Emitting draft:client-phone-save", emitData);
+                this.$socket.emit('draft:client-phone-save', {
                     draftId: this.activeMorphScreen.draft.draftId
                 });
             },
-            addClientPhone(){
-                const vm = this;
-                const clientPhone = _.assign({}, vm.clientPhoneForm, {
-                    ddd: utils.getDDDAndNumber(vm.clientPhoneForm.number).ddd,
-                    number: utils.getDDDAndNumber(vm.clientPhoneForm.number).number
-                });
-                ClientsAPI.savePhones(vm.client.id, [clientPhone], { companyId: vm.company.id }).then((resultx) => {
-                    const savedClientPhone = _.first(resultx.data);
-                    const clientPhoneId = _.findIndex(vm.form.clientAddresses, { id: savedClientPhone.id });
-                    if(clientPhoneId !== -1){ // found
-                        vm.showToast({
-                            type: "success",
-                            message: "Número de contato salvo com sucesso."
-                        });
-                        vm.form.clientPhones[clientPhoneId] = savedClientPhone;
-                    }
-                    else {
-                        vm.showToast({
-                            type: "success",
-                            message: "Número de contato adicionado com sucesso."
-                        });
-                        vm.form.clientPhones.push(savedClientPhone);
-                    }
-                })
-            },
             removeClientPhone(clientPhone){
-                const vm = this;
-                ClientsAPI.removeOneClientPhone(vm.client.id, clientPhone.id, { companyId: vm.company.id }).then(() => {
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    clientPhoneId: clientPhone.id
+                };
+                console.log("Emitting draft:client-phone-remove", emitData);
+                this.$socket.emit('draft:client-phone-remove', emitData);
+                /*ClientsAPI.removeOneClientPhone(vm.client.id, clientPhone.id, { companyId: vm.company.id }).then(() => {
                     vm.showToast({
                         type: "success",
                         message: "Telefone do cliente removido com sucesso."
@@ -516,37 +542,15 @@
                     if(clientPhoneIndex !== -1){
                         vm.form.clientPhones.splice(clientPhoneIndex, 1);
                     }
+                });*/
+            },
+
+            // client address
+
+            backToClientAddressesList(){
+                this.$socket.emit('draft:client-address-back', {
+                    draftId: this.activeMorphScreen.draft.draftId
                 });
-            },
-            onClientPhoneSelected(selectedClientPhone){
-                this.client.clientPhones.forEach((clientPhone) => {
-                    clientPhone.active = false;
-                    if(selectedClientPhone.id === clientPhone.id){
-                        selectedClientPhone.active = true;
-                    }
-                })
-            },
-            onClientAddressSelected(selectedClientAddress){
-                this.$emit('update:clientAddressId', selectedClientAddress.id);
-                this.commitSocketChanges('clientAddressId')
-                /*
-                this.client.clientAddresses.forEach((clientAddress, index) => {
-                    clientAddress.active = false;
-                    if(selectedClientAddress.id === clientAddress.id){
-                        selectedClientAddress.active = true;
-                    }
-                })
-                */
-            },
-            onClientAddressSave(clientAddress){
-                const clientAddressId = _.findIndex(this.form.clientAddresses, {id: clientAddress.id});
-                if (clientAddressId !== -1) {
-                    this.form.clientAddresses[clientAddressId] = clientAddress;
-                }
-                else {
-                    this.form.clientAddresses.push(clientAddress);
-                }
-                this.backToClientAddressesList();
             },
             addClientAddress(){
                 this.$socket.emit('draft:client-address-add', {
@@ -560,7 +564,6 @@
                 });
             },
             removeClientAddress(clientAddress){
-                console.log("Emitindo removeClientAddress");
                 this.$socket.emit('draft:client-address-remove', {
                     draftId: this.activeMorphScreen.draft.draftId,
                     clientAddressId: clientAddress.id
@@ -568,6 +571,27 @@
             },
             saveClientAddress(){
                 this.$refs.clientAddressForm.save();
+            },
+
+            /**
+             * Events / Parent component callbacks
+             */
+
+            // client address
+
+            onClientAddressSelected(selectedClientAddress){
+                this.$emit('update:clientAddressId', selectedClientAddress.id);
+                this.commitSocketChanges('clientAddressId');
+            },
+            onClientAddressSave(clientAddress){
+                const clientAddressId = _.findIndex(this.form.clientAddresses, {id: clientAddress.id});
+                if (clientAddressId !== -1) {
+                    this.form.clientAddresses[clientAddressId] = clientAddress;
+                }
+                else {
+                    this.form.clientAddresses.push(clientAddress);
+                }
+                this.backToClientAddressesList();
             },
 
             /**
@@ -583,8 +607,11 @@
                     draftId: this.activeMorphScreen.draft.draftId
                 });
             },
+            resetClientPhoneForm(){
+                this.clientPhoneForm = models.createClientPhoneModel();
+            },
             resetClientAddressForm(){
-                this.clientAddressForm = this.createClientAddress();
+                this.clientAddressForm = models.createClientAddressModel();
             },
 
             /**
@@ -607,7 +634,45 @@
             },
             commitSocketChanges(mapping){
                 this.$emit('sync', mapping);
-            }
+            },
+
+            // client phone
+
+            getIsolatedClientPhoneFormPathObj(path){
+                return _.set({}, path, _.get(this.clientPhoneForm, path));
+            },
+            syncClientPhoneTrustedEvent(ev, mapping){
+                if(ev.isTrusted){
+                    setImmediate(() => {
+                        this.syncClientPhoneForm(mapping);
+                    });
+                }
+            },
+            syncClientPhoneForm(mapping){
+                if(mapping === 'number'){
+                    const clientPhone = utils.getDDDAndNumber(this.clientPhoneForm.number);
+                    const emitData = {
+                        draftId: this.activeMorphScreen.draft.draftId,
+                        clientPhoneId: this.clientPhoneForm.id || null,
+                        clientPhoneForm: {
+                            ddd: clientPhone.ddd,
+                            number: clientPhone.number || null
+                        }
+                    };
+                    console.log("Emitting draft:client-phone-update", emitData);
+                    this.$socket.emit("draft:client-phone-update", emitData);
+                }
+                else {
+                    const emitData = {
+                        draftId: this.activeMorphScreen.draft.draftId,
+                        clientPhoneId: this.clientPhoneForm.id || null,
+                        clientPhoneForm: this.getIsolatedClientPhoneFormPathObj(mapping)
+                    };
+                    console.log("Emitting draft:client-phone-update", emitData);
+                    this.$socket.emit("draft:client-phone-update", emitData);
+                }
+            },
+
         },
         mounted(){
             this.syncWithParentForm();

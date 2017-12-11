@@ -145,8 +145,9 @@
             },
             sync(path){
                 this.saving = true;
-                const toBeEmitted = { draftId: this.activeMorphScreen.draft.draftId, form: this.getIsolatedFormPathObj(path)};
-                this.$socket.emit('update-draft', toBeEmitted);
+                const emitData = { draftId: this.activeMorphScreen.draft.draftId, form: this.getIsolatedFormPathObj(path)};
+                console.log("Emitting update-draft", emitData);
+                this.$socket.emit('update-draft', emitData);
             }
         },
         mounted(){
@@ -246,7 +247,7 @@
         flex-direction: column;
     }
 
-    .form-group .form-group__content > ul.content__list > li.list__item {
+    .form-group .form-group__content ul.content__list li.list__item {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -259,6 +260,11 @@
         margin-top: 13px;
     }
 
+    .form-group .form-group__content li.list__item .item__icon {
+        display: flex;
+        align-items: center;
+    }
+
     .form-group .form-group__content > ul.content__list > li.list__item.active span {
         color: var(--font-color--secondary);
     }
@@ -267,7 +273,7 @@
         fill: var(--font-color--primary);
     }
 
-    .form-group .form-group__content > ul.content__list > li.list__item .item__icon .colorizable {
+    .form-group .form-group__content li.list__item .item__icon .colorizable {
         fill: var(--font-color--2);
     }
 

@@ -107,7 +107,6 @@
             },
             syncClientAddressForm(mapping){
                 this.$emit('update:isSaving', true);
-                console.log(this.getIsolatedFormPathObj(mapping));
                 this.$socket.emit("draft:client-address-update", {
                     draftId: this.activeMorphScreen.draft.draftId,
                     clientAddressId: this.clientAddress.id,
@@ -115,10 +114,10 @@
                 });
             },
             save(){
-                if(!this.clientId){
+                /*if(!this.clientId){
                     this.showError("Um cliente deve estar selecionado.");
                     return false;
-                }
+                }*/
                 if(!_.has(this.clientAddress, 'address.id')){
                     this.showError("Escolha um endereço.");
                     return false;

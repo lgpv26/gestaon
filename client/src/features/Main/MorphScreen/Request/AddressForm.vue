@@ -33,6 +33,7 @@
     import AddressesAPI from '../../../../api/addresses';
     import SearchComponent from '../../../../components/Inputs/Search.vue';
     import utils from '../../../../utils';
+    import models from '../../../../models';
 
     export default {
         components: {
@@ -63,7 +64,7 @@
         },
         sockets: {
             draftClientAddressAddressReset(){
-                Object.assign(this.address, this.addressEmptyObj);
+                Object.assign(this.address, models.createAddressModel());
             },
             draftClientAddressAddressSelect(address){
                 utils.assignToExistentKeys(this.address, address);
@@ -71,6 +72,11 @@
             }
         },
         methods: {
+
+            /**
+             * Search
+             */
+
             searchAddresses(){
                 const vm = this;
                 const searchComponent = vm.$refs.search;
@@ -106,6 +112,11 @@
                     });
                 }
             },
+
+            /**
+             * Actions
+             */
+
             changeAddress(){
                 this.$socket.emit('draft:client-address-address-reset', {
                     draftId: this.activeMorphScreen.draft.draftId

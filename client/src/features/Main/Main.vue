@@ -350,6 +350,7 @@
             /* start socket.io */
 
             const socket = io(config.socketServer + '?token=' + vm.token.accessToken);
+            localStorage.debug = false;
             Vue.use(VueSocketio, socket);
 
             /* if user disconnected / reconnected from socket server */

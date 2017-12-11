@@ -41,7 +41,7 @@ const mutations = {
             screen.active = false;
         });
         let screen = _.find(state.screens, (screen) => {
-            if(screen.draft.draftId === screenObj.draft.draftId) return true;
+            if(screenObj.draft && screen.draft.draftId === screenObj.draft.draftId) return true;
         });
         if(screen){
             delete screenObj.draft;
