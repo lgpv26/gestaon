@@ -173,18 +173,28 @@ module.exports = class Drafts {
     }
 
     saveDraft(draftId, userEntry = false) {
-        this.findDraftInArray(draftId).then((index) => {
-            this.controller.updateDraft(this.channels.updates.drafts[index]).then(() => {
-                this.socket.emit('draftSaved')
-                this.channels.updates.drafts.splice(index, 1)
-                if (userEntry) {
-                    this.consultDraft(draftId)
+        return new Promise((resolve, reject) => {
+            this.findDraftInArray(draftId).then((index) => {
+                if (index !== -1) {
+                    this.controller.updateDraft(this.channels.updates.drafts[index]).then(() => {
+                        this.socket.emit('draftSaved')
+                        this.channels.updates.drafts.splice(index, 1)
+                        if (userEntry) {
+                            this.consultDraft(draftId)
+                        }
+                        resolve()
+                    }).catch(() => {
+                        console.log('catch do UPDATEDRAFT - QUE TA DENTRO DO SAVEDRAFT')
+                        reject()
+                    })
                 }
+                else {
+                    resolve()
+                }                
             }).catch(() => {
-                console.log('catch do UPDATEDRAFT - QUE TA DENTRO DO SAVEDRAFT')
+                console.log('catch do FINDDRAFTIN ARRAY - DENTRO DO SAVEDRAFT')
+                reject()
             })
-        }).catch(() => {
-            console.log('catch do FINDDRAFTIN ARRAY - DENTRO DO SAVEDRAFT')
         })
     }
 

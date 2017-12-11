@@ -140,34 +140,117 @@ module.exports = (server, restify) => {
         },
 
         selectClient(clientSelect) {
-            const req = { params: {id: clientSelect.clientId }}
-            return clientsController.getOne(req).then((client) => {
-                client = JSON.parse(JSON.stringify(client))
-                return server.mongodb.Draft.update({ draftId: clientSelect.draftId }, { $set: { form: { client: client } } }).then(() => {
-                    return client
+            return this.getOne(clientSelect.draftId).then((draft) => {
+                const req = { params: { id: clientSelect.clientId } }
+                return clientsController.getOne(req).then((client) => {
+                    client = JSON.parse(JSON.stringify(client))
+                    const update = _.assign(draft.form, { client: client, clientAddressForm: {}, clientAddressId: null })
+                    return server.mongodb.Draft.update({ draftId: clientSelect.draftId }, { $set: { form: update } }).then(() => {
+                        return client
+                    })
                 })
             })
         },
 
         resetClient(clientReset) {
-            return server.mongodb.Draft.update({ draftId: clientReset.draftId }, { $set: { form: { client: {} } } }).then(() => {
-                return null
+            return this.getOne(clientReset.draftId).then((draft) => {
+                const update = _.assign(draft.form, { client: {}, clientAddressForm: {}, clientAddressId: null })
+                return server.mongodb.Draft.update({ draftId: clientReset.draftId }, { $set: { form: update } }).then(() => {
+                    return null
+                })
             })
         },
 
         selectAddressClientAddress(addressSelect) {
-            const req = { params: {id: addressSelect.addressId }}
-            return addressesController.getOne(req).then((address) => {
-                address = JSON.parse(JSON.stringify(address))
-                return server.mongodb.Draft.update({ draftId: addressSelect.draftId }, { $set: { form: { clientAddressForm: {address: address } } } }).then(() => {
-                    return address
+            return this.getOne(addressSelect.draftId).then((draft) => {
+                const req = { params: { id: addressSelect.addressId } }
+                return addressesController.getOne(req).then((address) => {
+                    address = JSON.parse(JSON.stringify(address))
+                    
+
+                    const clientAddressForm = _.assign(draft.form.clientAddressForm, {id: (addressSelect.clientAddressId) ? addressSelect.clientAddressId : null , address: address})
+                    const update = _.assign(draft.form, {clientAddressForm: clientAddressForm})
+
+                    return server.mongodb.Draft.update({ draftId: addressSelect.draftId }, { $set: { form: update } }).then(() => {
+                        return address
+                    })
                 })
             })
         },
 
         resetAddressClientAddress(addressReset) {
-            return server.mongodb.Draft.update({ draftId: addressReset.draftId }, { $set: { form: { clientAddressForm: {address: {} } } } }).then(() => {
-                return null
+            return this.getOne(addressReset.draftId).then((draft) => {
+                const formAddress = _.assign(draft.form.clientAddressForm, { address: {} })
+                const update = _.assign(draft.form, { clientAddressForm: formAddress })
+                return server.mongodb.Draft.update({ draftId: addressReset.draftId }, { $set: { form: update } }).then(() => {
+                    return null
+                })
+            })
+        },
+
+        clientAddressBack(addressBack) {
+            return this.getOne(addressBack.draftId).then((draft) => {
+                const update = _.assign(draft.form, { clientAddressForm: {} })
+                return server.mongodb.Draft.update({ draftId: addressBack.draftId }, { $set: { form: update } }).then(() => {
+                    return null
+                })
+            })
+        },
+
+        saveClientAddress(clientAddressSave) {
+            return new Promise((resolve, reject) => {
+                return server.mongodb.Draft.findOne({ draftId: clientAddressSave.draftId }).then((draft) => {
+                    draft = JSON.parse(JSON.stringify(draft))
+                    const index = _.findIndex(draft.form.client.clientAddresses, (clientAddress) => {
+                        return clientAddress.id === draft.form.clientAddressForm.id
+                    })
+                    let saveClientAddresses = draft.form.client.clientAddresses
+                    let update = {}
+
+                    if (index !== -1) {
+
+                        const address = _.assign(saveClientAddresses[index].address, draft.form.clientAddressForm.address)
+                        const clientAddressForm = _.assign(draft.form.clientAddressForm, {address: address})
+                        saveClientAddresses[index] = _.assign(saveClientAddresses[index], clientAddressForm)
+                        update.addressClientReturn = _.assign(saveClientAddresses[index], clientAddressForm)
+                    }
+                    else {
+                        saveClientAddresses.push(draft.form.clientAddressForm)
+                        update.addressClientReturn = draft.form.clientAddressForm
+                    }
+
+                    const client = _.assign(draft.form.client, {clientAddresses: saveClientAddresses})
+                    update.form = _.assign(draft.form, {client: client, clientAddressForm: {}})
+
+                    resolve(update)
+                })
+            }).then((save) => {
+                return server.mongodb.Draft.update({ draftId: clientAddressSave.draftId }, { $set: { form: save.form } }).then(() => {
+                    return save.addressClientReturn
+                })
+            })
+        },
+
+        removeClientAddress(clientAddressRemove) {
+            return new Promise((resolve, reject) => {
+                return server.mongodb.Draft.findOne({ draftId: clientAddressRemove.draftId }).then((draft) => {
+                    draft = JSON.parse(JSON.stringify(draft))
+                    let update = {}
+                    update.saveClientAddresses = _.filter(draft.form.client.clientAddresses, (clientAddress) => {
+                        return clientAddress.id !== clientAddressRemove.clientAddressId
+                    })
+
+                    update.clientAddressId = clientAddressRemove.clientAddressId
+
+                    const client = _.assign(draft.form.client, {clientAddresses: update.saveClientAddresses})
+                    update.form = _.assign(draft.form, {client: client, clientAddressForm: {}, })
+
+                    resolve(update)
+                })
+            }).then((save) => {
+                return server.mongodb.Draft.update({ draftId: clientAddressRemove.draftId }, { $set: { form: save.form } }).then(() => {
+                    return save.clientAddressId
+                })
             })
         },
 
