@@ -42,25 +42,30 @@
                     </div>
                     <div class="form-group">
                         CPF / CNPJ
-                        <app-mask class="input--borderless" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="form.legalDocument" placeholder="..." @input="commitSocketChanges('client.legalDocument')" />
+                        <app-mask class="input--borderless" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="form.legalDocument" placeholder="..." @input.native="commitTrustedSocketChanges($event,'client.legalDocument')" />
                     </div>
                 </div>
                 <!-- client addresses -->
                 <div class="form-groups">
                     <div class="form-group" v-if="isEditing || isAdding || form.clientAddresses.length <= 0">
                         <div class="form-group__header">
-                            <h3 style="margin-right: 10px; color: var(--font-color--2);" v-if="isEditing">
-                                {{ clientAddressForm.address.name + ', ' + clientAddressForm.number }}
-                            </h3>
+                            <h3 style="margin-right: 10px; color: var(--font-color--2);" v-if="isEditing && !clientAddressForm.address.id">Editando endereço...</h3>
+                            <h3 style="margin-right: 10px; color: var(--font-color--2);" v-else-if="isEditing">{{ clientAddressForm.address.name + ', ' + clientAddressForm.number }}</h3>
                             <h3 style="margin-right: 10px;" v-else>Locais</h3>
                             <icon-local></icon-local>
                             <span class="push-both-sides"></span>
                             <a class="btn btn--border-only" v-if="form.clientAddresses.length > 0" @click="backToClientAddressesList()">Voltar</a>
-                            <a class="btn btn--primary" v-if="form.clientAddresses.length <= 0" @click="saveClientAddress()" style="margin-left: 10px;">Adicionar</a>
-                            <a class="btn btn--primary" v-else @click="saveClientAddress()" style="margin-left: 10px;">Salvar</a>
+                            <div v-if="form.clientAddresses.length <= 0">
+                                <a class="btn btn--primary" @click="saveClientAddress()" v-if="!isSavingClientAddress" style="margin-left: 10px;">Adicionar</a>
+                                <a class="btn btn--primary btn--disabled" v-else style="margin-left: 10px;">Adicionar</a>
+                            </div>
+                            <div v-else>
+                                <a class="btn btn--primary" @click="saveClientAddress()" v-if="!isSavingClientAddress" style="margin-left: 10px;">Salvar</a>
+                                <a class="btn btn--primary btn--disabled" v-else style="margin-left: 10px;">Salvar</a>
+                            </div>
                         </div>
                         <div class="form-group__content">
-                            <app-client-address-form ref="clientAddressForm" :clientId="client.id" :clientAddress.sync="clientAddressForm"></app-client-address-form>
+                            <app-client-address-form ref="clientAddressForm" :clientId="client.id" :clientAddress.sync="clientAddressForm" :isSaving.sync="isSavingClientAddress" @save="onClientAddressSave($event)"></app-client-address-form>
                         </div>
                     </div>
                     <div class="form-group" v-else>
@@ -71,18 +76,18 @@
                         </div>
                         <div class="form-group__content">
                             <ul class="content__list">
-                                <li class="list__item" v-for="clientAddress in form.clientAddresses" :class="{ active: clientAddress.active }">
+                                <li class="list__item" v-for="clientAddress in form.clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
                                     <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
                                         {{ clientAddress.address.name }}, {{ clientAddress.number }}
                                     </span>
                                     <span class="push-both-sides"></span>
-                                    <div class="item__check" @click="onClientAddressSelected(clientAddress)" style="cursor: pointer; margin-right: 10px;">
-                                        <icon-check></icon-check>
+                                    <div class="item__check item__icon" @click="onClientAddressSelected(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                                        <icon-check style="width: 16px;"></icon-check>
                                     </div>
-                                    <div @click="editClientAddress(clientAddress)" style="cursor: pointer; margin-right: 10px;">
-                                        <icon-copy></icon-copy>
+                                    <div class="item__icon" @click="editClientAddress(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                                        <icon-edit></icon-edit>
                                     </div>
-                                    <div style="cursor: pointer;">
+                                    <div class="item__icon" @click="removeClientAddress(clientAddress)" style="cursor: pointer;">
                                         <icon-remove></icon-remove>
                                     </div>
                                 </li>
@@ -140,7 +145,7 @@
                 </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <app-new-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
+                        <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
                             <div class="header__icon">
                                 <icon-client-group></icon-client-group>
                             </div>
@@ -151,12 +156,12 @@
                             <template slot="item" slot-scope="itemProps">
                                 <span>{{itemProps.text }}</span>
                             </template>
-                        </app-new-select>
+                        </app-select>
                     </div>
                 </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <app-new-select class="form-group__header" :verticalOffset="8" :items="clientCustomFields" v-model="form.clientSelectedCustomFields" :multiple="true" :showInput="true">
+                        <app-select class="form-group__header" :verticalOffset="8" :items="clientCustomFields" v-model="form.clientSelectedCustomFields" :multiple="true" :showInput="true">
                             <div class="header__icon">
                                 <icon-client-details></icon-client-details>
                             </div>
@@ -167,7 +172,7 @@
                             <template slot="item" slot-scope="itemProps">
                                 <span>{{itemProps.text }}</span>
                             </template>
-                        </app-new-select>
+                        </app-select>
                         <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
                             <ul class="content__list--mini">
                                 <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
@@ -209,7 +214,6 @@
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import { Select } from "../../../../components/Inputs/Select/index";
     import _ from 'lodash';
     import utils from '../../../../utils';
     import ClientAddressForm from './ClientAddressForm.vue';
@@ -221,10 +225,8 @@
         components: {
             'app-search': SearchComponent,
             'app-client-address-form': ClientAddressForm,
-            'app-new-select': Select
         },
-        props: ['client','activeStep'],
-
+        props: ['client','activeStep','clientAddressId','clientPhoneId'],
         data(){
             return {
                 lastQuery: '',
@@ -232,11 +234,13 @@
                 isNameInputFocused: false,
                 isAdding: false,
                 isEditing: false,
+                isSavingClientAddress: false,
                 clientPhoneForm: {
                     id: null,
                     name: null,
                     number: null
                 },
+                selectedClientAddressId: null,
                 clientAddressForm: {
                     id: null,
                     name: null,
@@ -333,12 +337,51 @@
             }
         },
         computed: {
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company']),
             isCurrentStepActive(){
                 return this.activeStep === 'client';
             },
             selectedClientGroup(){
                 return _.find(this.clientGroups, { value: this.form.clientGroup });
+            }
+        },
+        sockets: {
+            draftClientAddressAdd(){
+                this.resetClientAddressForm();
+                this.isAdding = true;
+            },
+            draftClientAddressBack(){
+                this.isAdding = false;
+                this.isEditing = false;
+            },
+            draftClientAddressEdit(clientAddressId){
+                const clientAddress = _.find(this.form.clientAddresses, {id: clientAddressId});
+                if(clientAddress){
+                    _.assign(this.clientAddressForm, utils.removeReactivity(clientAddress));
+                    this.isEditing = true;
+                }
+            },
+            draftClientAddressRemove(clientAddressId){
+                const clientAddressIndex = _.findIndex(this.form.clientAddresses, {id: clientAddressId});
+                if(clientAddressIndex !== -1){
+                    this.form.clientAddresses.splice(clientAddressIndex, 1);
+                }
+            },
+            draftClientSelect(data){
+                const client = data;
+                client.clientPhones.map((clientPhone) => {
+                    clientPhone.active = false;
+                    return clientPhone;
+                });
+                client.clientAddresses.map((clientAddress) => {
+                    clientAddress.active = false;
+                    return clientAddress;
+                });
+                utils.assignToExistentKeys(this.form, client);
+            },
+            draftClientReset() {
+                Object.assign(this.$data.form, this.$options.data.apply(this).form);
             }
         },
         methods: {
@@ -391,6 +434,11 @@
             },
             searchClientSelected(searchItem){
                 const vm = this;
+
+                const toBeEmitted = { draftId: this.activeMorphScreen.draft.draftId, clientId: searchItem.client.id};
+                this.$socket.emit('draft:client-select', toBeEmitted);
+                vm.searchItems = [];
+                /*
                 ClientsAPI.getOne(searchItem.client.id).then(({data}) => {
                     const client = data;
                     client.clientPhones.map((clientPhone) => {
@@ -404,6 +452,7 @@
                     _.assign(vm.form, _.pick(client, _.keys(vm.form)));
                     vm.searchItems = [];
                 });
+                */
             },
             searchValueUpdated(){
                 if(this.commitTimeout) clearTimeout(this.commitTimeout);
@@ -427,8 +476,9 @@
                 this.resetForm();
             },
             backToClientAddressesList(){
-                this.isAdding = false;
-                this.isEditing = false;
+                this.$socket.emit('draft:client-address-back', {
+                    draftId: this.activeMorphScreen.draft.draftId
+                });
             },
             addClientPhone(){
                 const vm = this;
@@ -477,36 +527,47 @@
                 })
             },
             onClientAddressSelected(selectedClientAddress){
-                this.client.clientAddresses.forEach((clientAddress) => {
+                this.$emit('update:clientAddressId', selectedClientAddress.id);
+                this.commitSocketChanges('clientAddressId')
+                /*
+                this.client.clientAddresses.forEach((clientAddress, index) => {
                     clientAddress.active = false;
                     if(selectedClientAddress.id === clientAddress.id){
                         selectedClientAddress.active = true;
                     }
                 })
+                */
+            },
+            onClientAddressSave(clientAddress){
+                const clientAddressId = _.findIndex(this.form.clientAddresses, {id: clientAddress.id});
+                if (clientAddressId !== -1) {
+                    this.form.clientAddresses[clientAddressId] = clientAddress;
+                }
+                else {
+                    this.form.clientAddresses.push(clientAddress);
+                }
+                this.backToClientAddressesList();
             },
             addClientAddress(){
-                this.resetClientAddressForm();
-                this.isAdding = true;
+                this.$socket.emit('draft:client-address-add', {
+                    draftId: this.activeMorphScreen.draft.draftId
+                });
             },
             editClientAddress(clientAddress){
-                _.assign(this.clientAddressForm, utils.removeReactivity(clientAddress));
-                this.isEditing = true;
+                this.$socket.emit('draft:client-address-edit', {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    clientAddressId: clientAddress.id
+                });
+            },
+            removeClientAddress(clientAddress){
+                console.log("Emitindo removeClientAddress");
+                this.$socket.emit('draft:client-address-remove', {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    clientAddressId: clientAddress.id
+                });
             },
             saveClientAddress(){
-                const vm = this;
-                const saveAddress = this.$refs.clientAddressForm.save();
-                if(saveAddress){
-                    saveAddress.then((clientAddress) => {
-                        const clientAddressId = _.findIndex(vm.form.clientAddresses, {id: clientAddress.id});
-                        if (clientAddressId !== -1) {
-                            vm.form.clientAddresses[clientAddressId] = clientAddress;
-                        }
-                        else {
-                            vm.form.clientAddresses.push(clientAddress);
-                        }
-                        vm.backToClientAddressesList();
-                    });
-                }
+                this.$refs.clientAddressForm.save();
             },
 
             /**
@@ -518,7 +579,9 @@
                 this.resetClientAddressForm();
             },
             resetClientForm(){
-                Object.assign(this.$data.form, this.$options.data.apply(this).form);
+                this.$socket.emit('draft:client-reset', {
+                    draftId: this.activeMorphScreen.draft.draftId
+                });
             },
             resetClientAddressForm(){
                 this.clientAddressForm = this.createClientAddress();
@@ -528,6 +591,13 @@
              * Real-time
              */
 
+            commitTrustedSocketChanges(ev, mapping){
+                if(ev.isTrusted){
+                    setImmediate(() => {
+                        this.commitSocketChanges(mapping);
+                    });
+                }
+            },
             onCurrentStepChanged(){
                 (this.activeStep === 'client') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'client');
                 this.commitSocketChanges('activeStep');

@@ -1,4 +1,4 @@
-import Select from './Select.vue'
+import Select from '../Select.vue'
 import SelectOption from './SelectOption.vue'
 import SelectSectionHeader from './SelectSectionHeader.vue'
 

@@ -60,7 +60,7 @@
                                         </div>
                                     </div>
                                 </app-datetime-picker>
-                                <app-new-select class="request-board__filter filter--type" :sections="requestBoardFilter.type"  :verticalOffset="15">
+                                <app-select class="request-board__filter filter--type" :sections="requestBoardFilter.type"  :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Tipo</span>
                                     </div>
@@ -70,8 +70,8 @@
                                     <template slot="item" slot-scope="itemProps">
                                         <span>{{itemProps.text }}</span>
                                     </template>
-                                </app-new-select>
-                                <app-new-select class="request-board__filter filter--users-in-charge" :items="requestBoardFilter.usersInCharge" :verticalOffset="15">
+                                </app-select>
+                                <app-select class="request-board__filter filter--users-in-charge" :items="requestBoardFilter.usersInCharge" :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Responsável</span>
                                         <div class="target__amount">
@@ -82,8 +82,8 @@
                                     <template slot="item" slot-scope="itemProps">
                                         <span>{{itemProps.text }}</span>
                                     </template>
-                                </app-new-select>
-                                <app-new-select class="request-board__filter filter--filter" :sections="requestBoardFilter.filter" :verticalOffset="15">
+                                </app-select>
+                                <app-select class="request-board__filter filter--filter" :sections="requestBoardFilter.filter" :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Filtro</span>
                                         <div class="target__amount">
@@ -97,7 +97,7 @@
                                     <template slot="item" slot-scope="itemProps">
                                         <span>{{itemProps.text }}</span>
                                     </template>
-                                </app-new-select>
+                                </app-select>
                             </div>
                         </div>
                         <div class="header__container" v-else>
@@ -128,7 +128,6 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import { MorphScreen } from "./MorphScreen/index";
-    import { Select } from "../../components/Inputs/Select/index";
     import Search from "./Main/Search.vue";
     import Modals from "./Dashboard/Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
@@ -156,7 +155,6 @@
             "app-dropdown-menu": DropdownMenuComponent,
             "app-device-details-window": DeviceDetails,
             "app-map-context-menu": MapContextMenu,
-            "app-new-select": Select,
             "app-search": Search
         },
         data(){

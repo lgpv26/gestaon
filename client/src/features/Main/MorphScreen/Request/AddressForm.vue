@@ -2,7 +2,8 @@
     <app-search ref="search" v-if="!address.id" :items="addresses" :shouldStayOpen="isAddressInputFocused" :query="addressQuery" :verticalOffset="8" :horizontalOffset="-20"
     @itemSelected="addressSearchItemSelected($event)">
         <input type="text" class="search-input__field" v-model="address.name" ref="searchInput"
-        @focus="isAddressInputFocused = true" @blur="isAddressInputFocused = false" @keydown="onAddressSearchInputKeyDown($event)" />
+        @focus="isAddressInputFocused = true" @blur="isAddressInputFocused = false" @keydown="onAddressSearchInputKeyDown($event)"
+        @input="onSearchInput()" />
         <template slot="item" slot-scope="props">
             <div class="search-input__item">
                 <span class="detail__address" v-html="props.item.name"></span>
@@ -21,7 +22,7 @@
         </template>
     </app-search>
     <div style="flex-grow: 1" v-else>
-        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="address.name" />
+        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="address.name" @input="onSearchInput()" />
         <a class="btn btn--border-only" style="position: absolute; right: 0; top: -3px;" @click="changeAddress()">Mudar</a>
     </div>
 </template>
@@ -31,12 +32,13 @@
     import _ from 'lodash';
     import AddressesAPI from '../../../../api/addresses';
     import SearchComponent from '../../../../components/Inputs/Search.vue';
+    import utils from '../../../../utils';
 
     export default {
         components: {
             'app-search': SearchComponent
         },
-        props: ['address'],
+        props: ['address', 'clientAddress'],
         data(){
             return {
                 addressQuery: null,
@@ -55,6 +57,19 @@
                 initialAddressForm: null
             }
         },
+        computed: {
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
+            ...mapState('auth', ['user','company'])
+        },
+        sockets: {
+            draftClientAddressAddressReset(){
+                Object.assign(this.address, this.addressEmptyObj);
+            },
+            draftClientAddressAddressSelect(address){
+                utils.assignToExistentKeys(this.address, address);
+                this.$emit('change', this.address);
+            }
+        },
         methods: {
             searchAddresses(){
                 const vm = this;
@@ -71,6 +86,9 @@
                     vm.addresses = [];
                 });
             },
+            onSearchInput(){
+                this.$emit('input', this.address.name);
+            },
             onAddressSearchInputKeyDown(ev){
                 if(this.addressInputTimeout) clearTimeout(this.addressInputTimeout);
                 this.addressInputTimeout = setTimeout(() => {
@@ -80,14 +98,18 @@
             },
             addressSearchItemSelected(item){
                 const vm = this;
-                AddressesAPI.getOne(item.id).then(({data}) => {
-                    _.assign(vm.address, _.pick(data, _.keys(vm.address)));
-                    vm.$emit('change', vm.address);
-                    /*console.log(data);*/
-                });
+                if(this.clientAddress){
+                    this.$socket.emit('draft:client-address-address-select', {
+                        draftId: this.activeMorphScreen.draft.draftId,
+                        addressId: item.id,
+                        clientAddressId: (this.clientAddress.id) ? this.clientAddress.id : null
+                    });
+                }
             },
             changeAddress(){
-                Object.assign(this.address, this.addressEmptyObj);
+                this.$socket.emit('draft:client-address-address-reset', {
+                    draftId: this.activeMorphScreen.draft.draftId
+                });
             }
         },
         mounted(){

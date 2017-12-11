@@ -92,7 +92,7 @@ Vue.use(Router);
 
 import PanelLoadingComponent from './components/Utilities/PanelLoading.vue';
 Vue.component("app-panel-loading", PanelLoadingComponent);
-import SelectComponent from './components/Forms/Select.vue';
+import SelectComponent from './components/Inputs/Select.vue';
 Vue.component("app-select", SelectComponent);
 import SwitchComponent from './components/Forms/Switch.vue';
 Vue.component("app-switch", SwitchComponent);

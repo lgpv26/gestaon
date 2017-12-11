@@ -17,7 +17,7 @@
                 </div>
             </div>
             <div class="separator" v-if="!form.activeStep"></div>
-            <app-client-form :activeStep.sync="form.activeStep" :client.sync="form.client" @sync="sync($event)"></app-client-form>
+            <app-client-form :activeStep.sync="form.activeStep" :clientAddressId.sync="form.clientAddressId" :clientPhoneId.sync="form.clientPhoneId" :client.sync="form.client" @sync="sync($event)"></app-client-form>
             <div class="separator"></div>
             <app-order-form :activeStep.sync="form.activeStep" :order.sync="form.order" @sync="sync($event)"></app-order-form>
             <div class="separator"></div>
@@ -28,6 +28,7 @@
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import utils from '../../../../utils'
     import _ from 'lodash';
     import ClientForm from './ClientForm.vue';
     import OrderForm from './OrderForm.vue';
@@ -73,7 +74,6 @@
                     clientPhoneId: null,
                     clientAddressId: null,
                     client: {
-                        active: false,
                         id: null, // se passar, atualizar cliente. se não, criar.
                         name: '', // se passar e tiver id, atualizar. se não, criar.
                         clientGroup: null,
@@ -123,11 +123,9 @@
                         ]
                     },
                     order: {
-                        active: false,
                         name: ''
                     },
                     task: {
-                        active: false,
                         name: ''
                     }
                 },
@@ -267,6 +265,10 @@
 
     .form-group .form-group__content > ul.content__list > li.list__item.active .item__check .colorizable {
         fill: var(--font-color--primary);
+    }
+
+    .form-group .form-group__content > ul.content__list > li.list__item .item__icon .colorizable {
+        fill: var(--font-color--2);
     }
 
     .form-group .form-group__content > ul.content__list > li.list__item span {

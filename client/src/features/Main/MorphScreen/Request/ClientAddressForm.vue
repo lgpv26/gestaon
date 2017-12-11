@@ -4,35 +4,36 @@
             <div class="form-column" style="flex: 1 1 60%;">
                 <label>Endereço</label>
                 <div class="search">
-                    <app-address-form :address.sync="clientAddress.address" @change="addressChanged($event)"></app-address-form>
+                    <app-address-form :clientAddress="clientAddress" :address.sync="clientAddress.address" @change="onAddressChange($event)"
+                    @input="syncClientAddressForm('address.name')"></app-address-form>
                 </div>
             </div>
             <div class="form-column" style="flex: 1 1 10%;">
                 <label>Número</label>
-                <input type="text" v-model="clientAddress.number" />
+                <input type="text" v-model="clientAddress.number" @input="syncClientAddressForm('number')" />
             </div>
             <div class="form-column" style="flex: 1 1 25%;">
                 <label>Complemento</label>
-                <input type="text" v-model="clientAddress.complement" />
+                <input type="text" v-model="clientAddress.complement" @input="syncClientAddressForm('complement')" />
             </div>
         </div>
         <div class="form-columns">
             <div class="form-column" style="flex: 1 1 40%;">
                 <label>Bairro</label>
-                <input type="text" v-model="clientAddress.address.neighborhood" />
+                <input type="text" v-model="clientAddress.address.neighborhood" @input="syncClientAddressForm('address.neighborhood')" />
             </div>
             <div class="form-column" style="flex: 1 1 15%;">
                 <label>CEP</label>
                 <!--<input type="text" v-model="form.address.cep" />-->
-                <app-mask placeholder="#####-###" :mask="'#####-###'" v-model="clientAddress.address.cep" />
+                <app-mask placeholder="#####-###" :mask="'#####-###'" v-model="clientAddress.address.cep" @input.native="syncTrustedEvent($event,'address.cep')" ></app-mask>
             </div>
             <div class="form-column" style="flex: 1 1 35%;">
                 <label>Cidade</label>
-                <input type="text" v-model="clientAddress.address.city" />
+                <input type="text" v-model="clientAddress.address.city" @input="syncClientAddressForm('address.city')" />
             </div>
             <div class="form-column" style="flex: 1 1 8%;">
                 <label>Estado</label>
-                <input type="text" v-model="clientAddress.address.state" />
+                <input type="text" v-model="clientAddress.address.state" @input="syncClientAddressForm('address.state')" />
             </div>
         </div>
     </div>
@@ -45,22 +46,42 @@
     import AddressesAPI from '../../../../api/addresses';
     import ClientAPI from '../../../../api/clients';
     import AddressForm from './AddressForm.vue';
+    import Vue from 'vue';
 
     export default {
         components: {
             'app-address-form': AddressForm
         },
-        props: ['value','clientId','clientAddress'],
+        props: ['value','clientId','clientAddress','isSaving'],
         data(){
             return {
             }
         },
+        sockets: {
+            draftClientAddressSaveable(){
+                this.$emit('update:isSaving', false);
+            },
+            draftClientAddressSave(clientAddress){
+                /*this.$emit('update:clientAddress', this.createClientAddress());*/
+                Vue.nextTick(() => {
+                    this.$emit('save', clientAddress);
+                });
+            },
+            draftClientAddressUpdate(ret){
+                if(ret.address){
+                    utils.assignToExistentKeys(this.clientAddress.address, ret.address);
+                    delete ret.address;
+                }
+                utils.assignToExistentKeys(this.clientAddress, ret);
+            }
+        },
         computed: {
-            ...mapState('auth', ['company'])
+            ...mapState('auth', ['company']),
+            ...mapGetters('morph-screen', ['activeMorphScreen'])
         },
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
-            addressChanged(ev){
+            onAddressChange(ev){
                 console.log(ev);
             },
             createClientAddress(){
@@ -74,8 +95,26 @@
                     status: 'activated'
                 }
             },
+            getIsolatedFormPathObj(path){
+                return _.set({}, path, _.get(this.clientAddress, path));
+            },
+            syncTrustedEvent(ev, mapping){
+                if(ev.isTrusted){
+                    setImmediate(() => {
+                        this.syncClientAddressForm(mapping);
+                    });
+                }
+            },
+            syncClientAddressForm(mapping){
+                this.$emit('update:isSaving', true);
+                console.log(this.getIsolatedFormPathObj(mapping));
+                this.$socket.emit("draft:client-address-update", {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    clientAddressId: this.clientAddress.id,
+                    clientAddressForm: this.getIsolatedFormPathObj(mapping)
+                });
+            },
             save(){
-                const vm = this;
                 if(!this.clientId){
                     this.showError("Um cliente deve estar selecionado.");
                     return false;
@@ -84,16 +123,8 @@
                     this.showError("Escolha um endereço.");
                     return false;
                 }
-                const clientAddress = utils.assignToExistentKeys(this.createClientAddress(), this.clientAddress);
-                _.assign(clientAddress, { addressId: this.clientAddress.address.id });
-                return ClientAPI.saveAddresses(this.clientId, [clientAddress], { companyId: this.company.id }).then((result)=>{
-                    vm.showToast({
-                        type: "success",
-                        message: "Endereço do cliente salvo com sucesso."
-                    });
-                    return _.assign(vm.clientAddress, _.first(result.data));
-                }).catch((err)=>{
-                    vm.showError(err);
+                this.$socket.emit('draft:client-address-save', {
+                    draftId: this.activeMorphScreen.draft.draftId
                 });
             }
         },

@@ -102,6 +102,10 @@ ul li {
     align-items: center;
 }
 
+.btn--disabled {
+    cursor: not-allowed!important;
+}
+
 .btn.btn--circle  {
     border-radius: 24px;
     width: 24px;
