@@ -102,9 +102,6 @@
                                 <label>Apelido (ex: Casa da mãe)</label>
                                 <input type="text" class="input--borderless" v-model="clientAddressForm.name" @input="$refs.clientAddressForm.syncClientAddressForm('name')" placeholder="..." />
                             </div>
-                            <div class="form-column" style="width: 180px;">
-                                <a class="btn">Tipo de local</a>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -197,18 +194,38 @@
             </div>
         </div>
         <div class="form__header" v-if="!isCurrentStepActive && client.id" :class="{'summary': !isCurrentStepActive && client.id}">
-            <div class="form-groups" style="flex-grow: 1;">
-                <div class="form-group" style="flex-basis: 70%">
-                    <span style="color: var(--font-color--secondary)">{{ client.name }}</span>
+            <div class="form-columns" style="flex-grow: 1;">
+                <div class="form-column" style="flex-grow: 1; flex-basis: 70%; display: flex; flex-direction: row; justify-content: flex-start; align-items: center;">
+                    <span style="margin-right: 8px;">{{ shortenedClientName }}</span>
+                    <div v-if="selectedClientAddress">
+                        <span style="margin-right: 8px;">{{ shortenedClientAddress }}</span>
+                    </div>
+                    <icon-edit style="width:10px;"></icon-edit>
                 </div>
-                <div class="form-group" style="flex-basis: 30%;">
-                    <icon-phone style="margin-right: 10px;"></icon-phone>
-                    <span>(11) 99847-2355</span>
-                    <div class="mini-circle"></div>
-                    <span>WhatsApp</span>
+                <div class="form-column" v-if="selectedClientPhone">
+                    <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
+                        <icon-phone class="icon--d-secondary" style="margin-right: 10px;"></icon-phone>
+                        <span style="white-space: nowrap;">{{ formatedClientPhone }}</span>
+                    </a>
                 </div>
-                <div class="form-group" style="flex-wrap: wrap; flex-grow: initial;">
-                    <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
+                <div class="form-column" v-if="client.clientGroup">
+                    <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
+                        <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
+                            <div class="header__icon">
+                                <icon-client-group class="icon--d-secondary" style="margin-right: 10px;"></icon-client-group>
+                            </div>
+                            <h3 class="static" style="white-space: nowrap" v-if="!selectedClientGroup.value">Grupo de cliente</h3>
+                            <h3 style="white-space: nowrap" v-else>{{ selectedClientGroup.text }}</h3>
+                            <span class="push-both-sides"></span>
+                            <icon-dropdown class="header__action-icon"></icon-dropdown>
+                        </a>
+                        <template slot="item" slot-scope="itemProps">
+                            <span>{{itemProps.text }}</span>
+                        </template>
+                    </app-select>
+                </div>
+                <div class="form-column" style="flex-grow: initial; flex-direction: row; align-items: center;">
+                    <h3 style="top: 0;">CLIENTE</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
                 </div>
             </div>
         </div>
@@ -353,6 +370,26 @@
             },
             selectedClientGroup(){
                 return _.find(this.clientGroups, { value: this.form.clientGroup });
+            },
+            selectedClientAddress(){
+                const clientAddress = _.find(this.form.clientAddresses, { id: this.clientAddressId });
+                return clientAddress || null;
+            },
+            selectedClientPhone(){
+                const clientPhone = _.find(this.form.clientPhones, { id: this.clientPhoneId });
+                return clientPhone || null;
+            },
+            formatedClientPhone(){
+                if(this.selectedClientPhone)
+                return utils.formatPhone(this.selectedClientPhone.ddd + this.selectedClientPhone.number);
+            },
+            shortenedClientName(){
+                if(this.form.id)
+                return utils.getShortString(this.form.name, 18, '[...]');
+            },
+            shortenedClientAddress(){
+                if(this.selectedClientAddress)
+                return utils.getShortString(this.selectedClientAddress.address.name, 24, '[...]') + ', ' + this.selectedClientAddress.number + ' - ' + this.selectedClientAddress.complement;
             }
         },
         sockets: {
@@ -684,6 +721,10 @@
 
     .form__header.summary {
         height: auto;
+    }
+
+    .form__header.summary >>> .colorizable {
+        fill: var(--font-color--2);
     }
 
     .form__header.summary span {

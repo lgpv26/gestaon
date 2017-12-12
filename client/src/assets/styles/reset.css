@@ -47,10 +47,10 @@ input.input--borderless:focus, input.input--borderless:visited {
     border-bottom: 0;
 }
 
-h1, h2, h3, h4, h5, p, span, a, li, div {
+h1, h2, h3, h4, h5, p, span, a, li, div, label {
     color: var(--font-color);
     font-weight: initial;
-    font-size: 12px;
+    font-size: 14px;
     margin: 0;
     padding: 0;
 }
@@ -184,6 +184,15 @@ div.module-panel *::-moz-placeholder {
 }
 div.module-panel *:-ms-input-placeholder {
     color: rgba(255,255,255,0.5);
+}
+
+/* icons */
+
+.icon--secondary .colorizable {
+    fill: var(--font-color--secondary)!important;
+}
+.icon--d-secondary .colorizable {
+    fill: var(--font-color--d-secondary)!important;
 }
 
 /* tags */

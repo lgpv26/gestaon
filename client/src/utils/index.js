@@ -22,13 +22,12 @@ export default {
     formatPhone(phoneNumber){
         phoneNumber = phoneNumber.trim();
         const ddd = phoneNumber.substring(0, 2);
-        const number = phoneNumber.substring(3);
-        console.log(number);
+        const number = phoneNumber.substring(2);
         if(number.length === 8){
-
             return '(' + ddd + ') ' + number.substring(0, 4) + '-' + number.substring(5, 8);
         }
         else if(number.length === 9){
+
             return '(' + ddd + ') ' + number.substring(0, 5) + '-' + number.substring(5, 10);
         }
         else{
@@ -44,6 +43,10 @@ export default {
     * Get
     * */
 
+    getShortString(str, max, add){
+        add = add || '...';
+        return (typeof str === 'string' && str.length > max ? str.substring(0,max).trim() + ' ' + add : str.trim());
+    },
     getDDDAndNumber(phoneNumber){
         phoneNumber.replace(/\D/g,'');
         const ddd = phoneNumber.substring(0,2);

@@ -224,6 +224,7 @@
     }
 
     .form-group .form-group__header .header__icon {
+        display: flex;
         flex-shrink: 0;
         margin-right: 10px;
         width: 20px;
@@ -463,9 +464,8 @@
     }
     div.ms-form form .form__header h3 {
         font-size: 12px;
-        margin-right: 15px;
+        margin-right: 10px;
         position: relative;
-        top: 1px;
         font-weight: 600;
     }
     div.ms-form form .form__header > span {

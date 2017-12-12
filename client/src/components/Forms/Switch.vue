@@ -73,4 +73,7 @@
 .onoffswitch-checkbox.on + .onoffswitch-label {
     border: 1px solid #61AFEF;
 }
+    label {
+        margin-bottom: 0;
+    }
 </style>
