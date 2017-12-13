@@ -12,7 +12,7 @@
                     <div class="morph-screen__container" v-if="screen.active" ref="container">
                         <div class="container__header">
                             <div class="header__summary">
-                                <h1 class="summary__title" ref="title">PEDIDO <span>#{{ screen.draft.draftId }}</span>
+                                <h1 class="summary__title" ref="title">RASCUNHO <span>#{{ screen.draft.draftId }}</span>
                                 <icon-log style="margin-left: 3px; position: relative; top: 1px;"></icon-log></h1>
                                 <span class="summary__info">Iniciado às <em>{{ formatedCreatedAt }}</em> por <em>{{ screen.draft.createdBy }}</em></span>
                             </div>
@@ -29,7 +29,7 @@
                                     <div class="count">
                                         <span>{{ screens.length }}</span>
                                     </div>
-                                    <icon-draft-list></icon-draft-list>
+                                    <icon-draft-list class="icon--primary"></icon-draft-list>
                                 </div>
                             </div>
                         </div>
@@ -66,7 +66,8 @@
                 scrollbar: null,
                 contentEl: null,
                 selectedContent: null,
-                windowResizeEventListener: null
+                windowResizeEventListener: null,
+                isAnimating: false
             }
         },
         sockets: {
@@ -105,6 +106,7 @@
             animateMorphScreenDirectlyToDraft(){
                 const vm = this;
                 const screenToBeActivated = vm.activeMorphScreen;
+                vm.isAnimating = true;
                 vm.SET_ALL_MS_SCREENS({
                     active: false
                 });
@@ -184,11 +186,14 @@
                     opacity: [0, 1],
                     height: ['30px', '50px']
                 }).finished.then(() => {
+                    vm.isAnimating = false;
                     vm.$refs.morphScreen.style.overflowY = 'overlay';
                 });
             },
             itemSelected(screen){
                 const vm = this;
+                if(vm.isAnimating) return;
+                vm.isAnimating = true;
                 const windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                 const allAnimationsCompleted = [];
                 let activeScreenIndex = vm.screens.indexOf(screen);
@@ -230,6 +235,7 @@
                         vm.setLoadingText("Carregando rascunho...");
                         vm.startLoading();
                         vm.SET_MS_SCREEN(_.assign({}, screen, { active: true }));
+                        vm.isAnimating = false;
                     }, 300);
                 });
             },
@@ -458,6 +464,7 @@
         font-weight: 600;
         line-height: 120%;
         font-size: 14px;
+        color: var(--terciary-color);
     }
 
     .container__header .header__summary > .summary__title span {

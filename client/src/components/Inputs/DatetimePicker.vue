@@ -238,7 +238,7 @@
     .picker__container {
         z-index: 99999;
         width: 280px;
-        background: var(--bg-color---5);
+        background: var(--bg-color);
         -webkit-box-shadow: var(--popover-shadow);
         box-shadow: var(--popover-shadow);
         padding: 15px;

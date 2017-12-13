@@ -6,9 +6,9 @@
             <g id="header-request">
                 <g id="count-draft" transform="translate(1135.000000, 42.000000)">
                     <g id="ic-list-draft" transform="translate(11.000000, 0.000000)">
-                        <rect id="Shape" x="2" y="0" width="28" height="4" rx="2"></rect>
-                        <rect id="Shape" x="0" y="12" width="32" height="4" rx="2"></rect>
-                        <rect id="Shape" x="2" y="24" width="28" height="4" rx="2"></rect>
+                        <rect class="colorizable" id="Shape" x="2" y="0" width="28" height="4" rx="2"></rect>
+                        <rect class="colorizable" id="Shape" x="0" y="12" width="32" height="4" rx="2"></rect>
+                        <rect class="colorizable" id="Shape" x="2" y="24" width="28" height="4" rx="2"></rect>
                     </g>
                 </g>
             </g>

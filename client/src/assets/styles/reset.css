@@ -188,6 +188,10 @@ div.module-panel *:-ms-input-placeholder {
 
 /* icons */
 
+.icon--primary .colorizable {
+    fill: var(--font-color--primary)!important;
+}
+
 .icon--secondary .colorizable {
     fill: var(--font-color--secondary)!important;
 }

@@ -93,7 +93,7 @@ div.dropdown-menu {
     text-align: left;
     align-self: center;
     box-shadow: var(--popover-shadow);
-    min-width: 120px;
+    min-width: 160px;
 }
 
 .v-enter-active, .v-leave-active {
@@ -104,9 +104,9 @@ div.dropdown-menu {
 }
 
 div.dropdown-menu li {
-    padding: 5px 8px;
+    padding: 8px 12px;
     border-bottom: 1px solid rgba(0,0,0,0.1);
-    color: #FFF;
+    color: var(--font-color--8);
     cursor: pointer;
 }
 
@@ -115,7 +115,7 @@ div.dropdown-menu li:hover {
 }
 
 div.dropdown-menu li:last-child {
-    border-bottom: 0px;
+    border-bottom: 0;
 }
 
 div.dropdown-target {

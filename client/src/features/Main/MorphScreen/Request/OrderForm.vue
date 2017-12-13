@@ -38,8 +38,8 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="3" @click="addProduct">
-                                            <a class="btn btn--border-only" style="display: inline-flex; padding: 0 7px; color: var(--font-color--secondary);">Adicionar produto</a>
+                                        <td colspan="3">
+                                            <a class="btn btn--border-only" @click="addProduct" style="display: inline-flex; padding: 0 7px; color: var(--font-color--secondary);">Adicionar produto</a>
                                         </td>
                                         <td style="text-align: right; font-weight: 800;">R$ XX,XX</td>
                                         <td style="text-align: right; font-weight: 800; color: var(--font-color--secondary)">R$ XX,XX</td>
@@ -74,8 +74,8 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="1" @click="addPaymentMethod">
-                                            <a class="btn btn--border-only" style="display: inline-flex; padding: 0 7px; color: var(--font-color--secondary);">Incluir pagamento</a>
+                                        <td colspan="1">
+                                            <a class="btn btn--border-only" @click="addPaymentMethod" style="display: inline-flex; padding: 0 7px; color: var(--font-color--secondary);">Incluir pagamento</a>
                                         </td>
                                         <td style="text-align: right; font-weight: 600;">Saldo</td>
                                         <td style="text-align: right; font-weight: 800; color: var(--font-color--secondary)">R$ XX,XX</td>
