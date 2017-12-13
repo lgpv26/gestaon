@@ -34,6 +34,7 @@
     import SearchComponent from '../../../../components/Inputs/Search.vue';
     import utils from '../../../../utils';
     import models from '../../../../models';
+    import Vue from 'vue';
 
     export default {
         components: {

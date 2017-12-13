@@ -65,7 +65,8 @@
                             </div>
                         </div>
                         <div class="form-group__content">
-                            <app-client-address-form ref="clientAddressForm" :clientId="client.id" :clientAddress.sync="clientAddressForm" :isSaving.sync="isSavingClientAddress" @save="onClientAddressSave($event)"></app-client-address-form>
+                            <app-client-address-form ref="clientAddressForm" :clientId="client.id" :clientAddress.sync="clientAddressForm" :isSaving.sync="isSavingClientAddress"
+                            @save="onClientAddressSave($event)"></app-client-address-form>
                         </div>
                     </div>
                     <div class="form-group" v-else>
@@ -113,7 +114,7 @@
                             <div class="header__icon">
                                 <icon-phone></icon-phone>
                             </div>
-                            <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" v-model="clientPhoneForm.number"
+                            <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" ref="clientPhoneInput" v-model="clientPhoneForm.number"
                                       @input.native="syncClientPhoneTrustedEvent($event, 'number')" placeholder="Número"></app-mask>
                             <div class="header__mini-circle"></div>
                             <input type="text" v-model="clientPhoneForm.name" @input="syncClientPhoneForm('name')" class="input--borderless" placeholder="fixo/celular" />
@@ -246,6 +247,7 @@
     import SearchComponent from '../../../../components/Inputs/Search.vue';
     import ClientsAPI from '../../../../api/clients';
     import ServiceAPI from '../../../../api/service';
+    import Vue from 'vue';
 
     export default {
         components: {
@@ -330,6 +332,9 @@
             }
         },
         watch: {
+            'clientPhoneForm.number': function(number){
+                this.$refs.clientPhoneInput.display = number;
+            },
             'form.clientSelectedCustomFields' : function(clientSelectedCustomFields) {
                 if(clientSelectedCustomFields.length && clientSelectedCustomFields.length > 0){
                     this.form.clientCustomFields = _.reduce(this.clientCustomFields, (accumulator, clientCustomField, index) => {
@@ -413,9 +418,8 @@
                 let clientPhone = _.find(this.form.clientPhones, {id: clientPhoneId});
                 if(clientPhone){
                     clientPhone = utils.removeReactivity(clientPhone);
-                    this.clientPhoneForm.number = clientPhone.ddd + clientPhone.number;
-                    delete clientPhone.number;
                     utils.assignToExistentKeys(this.clientPhoneForm, clientPhone);
+                    this.clientPhoneForm.number = clientPhone.ddd + clientPhone.number;
                 }
             },
             draftClientPhoneRemove(clientPhoneId){

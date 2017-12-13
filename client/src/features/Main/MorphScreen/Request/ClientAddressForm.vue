@@ -4,8 +4,8 @@
             <div class="form-column" style="flex: 1 1 60%;">
                 <label>Endereço</label>
                 <div class="search">
-                    <app-address-form :clientAddress="clientAddress" :address.sync="clientAddress.address" @change="onAddressChange($event)"
-                    @input="syncClientAddressForm('address.name')"></app-address-form>
+                    <app-address-form :clientAddress="clientAddress" :address.sync="clientAddress.address"
+                                      @input="syncClientAddressForm('address.name')" @change="addressChanged($event)"></app-address-form>
                 </div>
             </div>
             <div class="form-column" style="flex: 1 1 10%;">
@@ -25,7 +25,8 @@
             <div class="form-column" style="flex: 1 1 15%;">
                 <label>CEP</label>
                 <!--<input type="text" v-model="form.address.cep" />-->
-                <app-mask placeholder="#####-###" :mask="'#####-###'" v-model="clientAddress.address.cep" @input.native="syncTrustedEvent($event,'address.cep')" ></app-mask>
+                <app-mask ref="cepInput" placeholder="#####-###" :mask="'#####-###'" v-model="clientAddress.address.cep"
+                @input.native="syncTrustedEvent($event,'address.cep')" ></app-mask>
             </div>
             <div class="form-column" style="flex: 1 1 35%;">
                 <label>Cidade</label>
@@ -57,6 +58,11 @@
             return {
             }
         },
+        watch: {
+            'clientAddress.address.cep': function(cep){
+                this.$refs.cepInput.display = cep;
+            }
+        },
         sockets: {
             draftClientAddressSaveable(){
                 this.$emit('update:isSaving', false);
@@ -67,12 +73,12 @@
                     this.$emit('save', clientAddress);
                 });
             },
-            draftClientAddressUpdate(ret){
-                if(ret.address){
-                    utils.assignToExistentKeys(this.clientAddress.address, ret.address);
-                    delete ret.address;
+            draftClientAddressUpdate(clientAddress){
+                if(clientAddress.address){
+                    utils.assignToExistentKeys(this.clientAddress.address, clientAddress.address);
+                    delete clientAddress.address;
                 }
-                utils.assignToExistentKeys(this.clientAddress, ret);
+                utils.assignToExistentKeys(this.clientAddress, clientAddress);
             }
         },
         computed: {
@@ -81,8 +87,19 @@
         },
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
-            onAddressChange(ev){
-                console.log(ev);
+            addressChanged(ev){
+                /*
+                this.clientAddress.address.cep = ev.cep;
+                this.$refs.cepInput.refresh();
+                setImmediate(() => {
+
+                    console.log(this.$refs.cepInput);
+                })
+                */
+                /*setTimeout(() => {
+                    console.log(ev.cep);
+                    this.clientAddress.address.cep = ev.cep;
+                }, 2000)*/
             },
             createClientAddress(){
                 return {
@@ -114,14 +131,6 @@
                 });
             },
             save(){
-                /*if(!this.clientId){
-                    this.showError("Um cliente deve estar selecionado.");
-                    return false;
-                }*/
-                if(!_.has(this.clientAddress, 'address.id')){
-                    this.showError("Escolha um endereço.");
-                    return false;
-                }
                 this.$socket.emit('draft:client-address-save', {
                     draftId: this.activeMorphScreen.draft.draftId
                 });

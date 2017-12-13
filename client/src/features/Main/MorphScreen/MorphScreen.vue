@@ -105,8 +105,8 @@
             ...mapActions('loading', ['startLoading','setLoadingText']),
             animateMorphScreenDirectlyToDraft(){
                 const vm = this;
-                const screenToBeActivated = vm.activeMorphScreen;
                 vm.isAnimating = true;
+                const screenToBeActivated = vm.activeMorphScreen;
                 vm.SET_ALL_MS_SCREENS({
                     active: false
                 });
@@ -144,7 +144,7 @@
                         opacity: [0, 1],
                         height: ['30px', '50px']
                     }).finished.then(() => {
-                        vm.itemSelected(screenToBeActivated);
+                        vm.itemSelected(screenToBeActivated, true);
                     });
                 })
             },
@@ -186,13 +186,12 @@
                     opacity: [0, 1],
                     height: ['30px', '50px']
                 }).finished.then(() => {
-                    vm.isAnimating = false;
                     vm.$refs.morphScreen.style.overflowY = 'overlay';
                 });
             },
-            itemSelected(screen){
+            itemSelected(screen, ignoreAnimating = false){
                 const vm = this;
-                if(vm.isAnimating) return;
+                if(!ignoreAnimating && vm.isAnimating) return;
                 vm.isAnimating = true;
                 const windowHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                 const allAnimationsCompleted = [];
@@ -423,6 +422,10 @@
         flex-shrink: 0;
         margin: 10px 0;
         width: 100%;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
 
     .morph-screen__item .item__option {
@@ -459,6 +462,12 @@
         height: 112px;
         flex-shrink: 0;
         align-items: center;
+    }
+    .container__header {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
     }
     .container__header .header__summary > .summary__title {
         font-weight: 600;

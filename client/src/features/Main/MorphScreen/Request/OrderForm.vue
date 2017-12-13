@@ -117,7 +117,64 @@
                         <div class="form-group">
                             <div class="product-chart" ref="productChart" v-show="activeTab === 'chart'"></div>
                             <div v-show="activeTab === 'history'">
-                                Histórico de compras...
+                                <div class="history__summary" style="display: flex; flex-direction: column; margin-bottom: 15px;">
+                                    <div class="summary__titles" style="display: flex; flex-direction: row;">
+                                        Cliente desde
+                                        <span class="push-both-sides"></span>
+                                        Média de compra(s)
+                                    </div>
+                                    <div class="summary_values" style="display: flex; flex-direction: row;">
+                                        <h3 style="color: var(--font-color--d-secondary)">02/05/2015</h3>
+                                        <span class="push-both-sides"></span>
+                                        <h3 style="color: var(--font-color--primary)">145 dias</h3>
+                                    </div>
+                                </div>
+                                <table style="width: 100%;">
+                                    <tbody>
+                                        <tr style="vertical-align: baseline;">
+                                            <td>03/08/2017</td>
+                                            <td style="padding-bottom: 5px;">
+                                                <ul style="display: flex; flex-direction: column">
+                                                    <li>GÁS LP 13KG</li>
+                                                    <li>GÁS LP 45KG</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul style="display: flex; flex-direction: column">
+                                                    <li>1</li>
+                                                    <li>1</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul style="display: flex; flex-direction: column">
+                                                    <li style="text-align: right;">R$ 78,00</li>
+                                                    <li style="text-align: right;">R$ 420,00</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                        <tr style="vertical-align: baseline;">
+                                            <td>03/08/2017</td>
+                                            <td>
+                                                <ul style="display: flex; flex-direction: column">
+                                                    <li>GÁS LP 13KG</li>
+                                                    <li>GÁS LP 45KG</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul style="display: flex; flex-direction: column">
+                                                    <li>1</li>
+                                                    <li>1</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul style="display: flex; flex-direction: column">
+                                                    <li style="text-align: right;">R$ 78,00</li>
+                                                    <li style="text-align: right;">R$ 420,00</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -429,7 +486,7 @@
             Highcharts.setOptions(Highcharts.theme);
             vm.productChart = Highcharts.chart(this.$refs.productChart, {
                 chart: {
-                    height: 240
+                    height: 200
                 },
                 title: false,
                 subtitle: false,
