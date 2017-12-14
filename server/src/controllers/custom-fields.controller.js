@@ -29,9 +29,6 @@ module.exports = (server, restify) => {
                     id: req.params.customFieldId
                 }
             }).then((customField) => {
-                if (!customField) {
-                    return new restify.ResourceNotFoundError("Nenhum registro encontrado.")
-                }
                 return customField
             });
         },

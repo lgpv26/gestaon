@@ -27,12 +27,21 @@ module.exports = class Drafts {
             this.onUpdateDraft(contentDraft)
         })
 
-
         // VER IMPLEMENTAR EVENT ON RECONECT OU SIMILAR - ATÉ O YOSHIU FALAR 
 
         this.socket.on('disconnect', () => {
             this.onSocketDisconnect()
         })
+
+        this.checkRedisPresence()
+    }
+
+    checkRedisPresence() {
+        this.consultRedisUserPresence(this.socket.user.id).then((checkPresence) => {
+            checkPresence = JSON.parse(checkPresence)
+            if (checkPresence) this.socket.join('draft/' + checkPresence.draftId)
+        })
+
     }
 
     resetTimeout(removeUpdate = false) {
@@ -49,42 +58,47 @@ module.exports = class Drafts {
         if (presenceUser.leave) {
             const objPresenceUser = { name: this.socket.user.name, email: this.socket.user.email }
             this.onLeavePresence(presenceUser.draftId, objPresenceUser)
+            this.setRedisUserPresence({ draftId: null, userId: presenceUser.userId })
         }
         else {
             this.setArrayDraft({ draftId: presenceUser.draftId }).then(() => {
                 this.saveDraft(presenceUser.draftId, true)
 
-                this.socket.join('draft/' + presenceUser.draftId)
+                this.setRedisUserPresence(presenceUser).then(() => {
 
-                let objPresenceUser = {}
+                    this.socket.join('draft/' + presenceUser.draftId)
 
-                if (presenceUser.userId === this.socket.user.id) {
-                    objPresenceUser.email = this.socket.user.email
-                    objPresenceUser.name = this.socket.user.name
-                }
+                    let objPresenceUser = {}
 
-                if (this._timer) clearTimeout(this._timer)
-                return this.controller.checkPresence(presenceUser.draftId).then((presence) => {
-                    if (presence) {
-                        const repeatUser = _.find(presence, (user) => {
-                            return JSON.stringify(user.email) === JSON.stringify(objPresenceUser.email)
-                        })
-                        if (!repeatUser) this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
-                            this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
-
-                        }).catch(() => {
-                            console.log('catch do NEW PRESENCEUSER - QUE É UM IF DENTRO DO CHECKPRESENCE')
-                        })
+                    if (presenceUser.userId === this.socket.user.id) {
+                        objPresenceUser.email = this.socket.user.email
+                        objPresenceUser.name = this.socket.user.name
                     }
-                    else {
-                        this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
-                            this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
-                        }).catch(() => {
-                            console.log('catch do NEW PRESENCEUSER - QUE É NO ELSE DENTRO DO CHECKPRESENCE')
-                        })
-                    }
-                }).catch(() => {
-                    console.log('catch do CHECKPRESENCE')
+
+                    if (this._timer) clearTimeout(this._timer)
+                    return this.controller.checkPresence(presenceUser.draftId).then((presence) => {
+                        if (presence) {
+                            const repeatUser = _.find(presence, (user) => {
+                                return JSON.stringify(user.email) === JSON.stringify(objPresenceUser.email)
+                            })
+                            if (!repeatUser) this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
+                                this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
+
+                            }).catch(() => {
+                                console.log('catch do NEW PRESENCEUSER - QUE É UM IF DENTRO DO CHECKPRESENCE')
+                            })
+                        }
+                        else {
+                            this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
+                                this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
+                            }).catch(() => {
+                                console.log('catch do NEW PRESENCEUSER - QUE É NO ELSE DENTRO DO CHECKPRESENCE')
+                            })
+                        }
+
+                    }).catch(() => {
+                        console.log('catch do CHECKPRESENCE')
+                    })
                 })
             }).catch(() => {
                 console.log('catch do SET ARRAY DRAFT (QUE ESTA DENTRO DO ON PRESENCE DRAFT)')
@@ -132,6 +146,7 @@ module.exports = class Drafts {
             if (draft) {
                 const draftUpdateIndex = this.channels.updates.drafts.indexOf(draft);
                 this.channels.updates.drafts[draftUpdateIndex] = _.mergeWith(draft, contentDraft)
+
                 resolve()
             }
             else {
@@ -167,6 +182,67 @@ module.exports = class Drafts {
     consultDraft(draftId) {
         this.controller.getOne(draftId).then((draft) => {
             this.socket.emit('updateDraft', { draftId: draftId, form: draft.form })
+
+            this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
+                if (err) console.log(err)
+                if (checkEdition) {
+
+                    const update = JSON.parse(checkEdition.clientFormUpdate)
+                    checkEdition = JSON.parse(checkEdition.clientFormEdition)
+
+                    if (checkEdition.clientAddress.inEdition) {
+                        if (checkEdition.clientAddress.clientAddressId) {
+                            this.socket.emit('draftClientAddressEdit', checkEdition.clientAddress.clientAddressId)
+                            if (update.clientAddressForm) {
+                                this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
+                                if (update.clientAddressForm.address.reset) {
+                                    this.socket.emit('draftClientAddressAddressReset')
+                                }
+                                else {
+                                    if (update.clientAddressForm.address.select) {
+                                        this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                    }
+                                    else {
+                                        this.socket.emit('draftClientAddressAddressReset')
+                                        this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            this.socket.emit('draftClientAddressAdd')
+                            if (update.clientAddressForm) {
+                                this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
+                                if (update.clientAddressForm.address.reset) {
+                                    this.socket.emit('draftClientAddressAddressReset')
+                                }
+                                else {
+                                    this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                }
+                            }
+                        }
+                    }
+                    if(checkEdition.clientPhone.inEdition) {
+                        if (checkEdition.clientPhone.inEdition) {
+                            if (checkEdition.clientPhone.clientPhoneId) {
+                                this.socket.emit('draftClientPhoneEdit', checkEdition.clientPhone.clientPhoneId)
+                                this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
+                            }
+                            else {
+                                this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
+                            }
+                        }
+                        else {
+                            this.socket.emit('draftClientPhoneEditionCancel')
+                        }
+                    }
+                }
+                else {
+                    const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
+                    this.setDraftRedis(objSetDraftRedis)
+                }
+            })
+
         }).catch(() => {
             console.log('catch do CONSULTDRAFT')
         })
@@ -177,6 +253,7 @@ module.exports = class Drafts {
             this.findDraftInArray(draftId).then((index) => {
                 if (index !== -1) {
                     this.controller.updateDraft(this.channels.updates.drafts[index]).then(() => {
+
                         this.socket.emit('draftSaved')
                         this.channels.updates.drafts.splice(index, 1)
                         if (userEntry) {
@@ -190,13 +267,139 @@ module.exports = class Drafts {
                 }
                 else {
                     resolve()
-                }                
+                }
             }).catch(() => {
                 console.log('catch do FINDDRAFTIN ARRAY - DENTRO DO SAVEDRAFT')
                 reject()
             })
         })
     }
+
+    setDraftRedis(setDraftRedis, selectedAddress = false) {
+        return new Promise((resolve, reject) => {
+            return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'clientFormUpdate', JSON.stringify({ clientAddressForm: { address: { select: (selectedAddress) ? true : false } }, clientPhoneForm: {} }), 'clientFormEdition', JSON.stringify({ clientAddress: { inEdition: setDraftRedis.clientAddress.inEdition, clientAddressId: null }, clientPhone: { inEdition: setDraftRedis.clientPhone.inEdition, clientPhoneId: null } }), (err, res) => {
+                if (err) {
+                    reject()
+                }
+                else {
+                    resolve()
+                }
+            })
+        })
+    }
+
+    updateDraftRedis(contentDraft, newEdit = false, resetOrSelectAddress = false) {
+        return new Promise((resolve, reject) => {
+            this.consultRedisDraft(contentDraft.draftId).then((redisConsult) => {
+                const checkUpdate = JSON.parse(redisConsult.clientFormUpdate)
+
+                let update = { clientAddressForm: checkUpdate.clientAddressForm, clientPhoneForm: checkUpdate.clientPhoneForm }
+                update.inEdition = _.merge(JSON.parse(redisConsult.clientFormEdition), contentDraft.inEdition)
+
+                if (resetOrSelectAddress) {
+                    if (resetOrSelectAddress.reset) {
+                        update.clientAddressForm = _.assign(checkUpdate.clientAddressForm, { address: { reset: true } })
+                    }
+                    else {
+                        update.clientAddressForm = _.assign(checkUpdate.clientAddressForm, { address: contentDraft.address, select: true })
+                    }
+                }
+                else {
+                    if (contentDraft.clientAddressForm) {
+                        if (!newEdit) {
+                            delete checkUpdate.clientAddressForm.address.reset
+                            const address = _.assign(checkUpdate.clientAddressForm.address, contentDraft.form.clientAddressForm.address)
+                            const updateClientAddress = _.assign(checkUpdate.clientAddressForm, contentDraft.form.clientAddressForm)
+                            update.clientAddressForm = _.assign(updateClientAddress, { address: address })
+                        }
+                        else {
+                            update.clientAddressForm = { address: { select: true } }
+                        }
+
+                    }
+                    else if (contentDraft.clientPhoneForm) {
+                        if (contentDraft.clientPhoneForm.reset) {
+                            update.clientPhoneForm = {}
+                        }
+                        else {
+                            update.clientPhoneForm = _.assign(checkUpdate.clientPhoneForm, contentDraft.form.clientPhoneForm)
+                        }
+                    }
+                }
+
+                resolve(update)
+            }).catch((err) => {
+                console.log(err, "CATCH DO CONSULT REDIS QUE TA DENTRO DO SET DRAFT REDIS")
+            })
+        }).then((update) => {
+            if (!update) {
+                return false
+            }
+            else {
+                const inEdition = update.inEdition
+
+                delete update.inEdition
+                return this.server.redisClient.HMSET("draft:" + contentDraft.draftId, 'clientFormUpdate', JSON.stringify(update), 'clientFormEdition', JSON.stringify(inEdition), (err, res) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        return res
+                    }
+                })
+            }
+        })
+    }
+
+    consultRedisDraft(draftId) {
+        return new Promise((resolve, reject) => {
+            this.server.redisClient.hgetall('draft:' + draftId, (err, redisConsult) => {
+                if (err) {
+                    reject(err)
+                }
+                else {
+                    resolve(redisConsult)
+                }
+
+            })
+        }).then((consult) => {
+            return consult
+        }).catch((err) => {
+            return err
+        })
+    }
+
+    consultRedisUserPresence(userId) {
+        return new Promise((resolve, reject) => {
+            this.server.redisClient.get('presenceUser:' + userId, (err, redisConsult) => {
+                if (err) {
+                    reject(err)
+                }
+                else {
+                    resolve(redisConsult)
+                }
+
+            })
+        }).then((consult) => {
+            return consult
+        }).catch((err) => {
+            return err
+        })
+    }
+
+    setRedisUserPresence(userPresence) {
+        return new Promise((resolve, reject) => {
+            this.server.redisClient.set("presenceUser:" + userPresence.userId, JSON.stringify({ draftId: userPresence.draftId }), 'EX', 86400, (err, res) => {
+                if (err) {
+                    reject()
+                }
+                else {
+                    resolve()
+                }
+            })
+        })
+    }
+
 
     onSocketDisconnect() {
         this.controller.checkAllPresence().then((presence) => {
