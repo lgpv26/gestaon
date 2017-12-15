@@ -45,6 +45,7 @@
             },
             updateDraft({draftId, form}){
                 if(draftId === this.activeMorphScreen.draft.draftId) {
+                    console.log(form);
                     _.mergeWith(this.form, form);
                     this.stopLoading();
                 }

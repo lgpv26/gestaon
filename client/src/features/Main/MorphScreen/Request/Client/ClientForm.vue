@@ -187,7 +187,7 @@
                         <div class="form-group__content" v-if="form.clientCustomFields && unspecialClientCustomFields.length > 0">
                             <ul class="content__list--mini">
                                 <li class="list__item" v-for="clientCustomField in form.clientCustomFields" v-if="unspecialClientCustomFields.includes(clientCustomField.customField.id)">
-                                    <span>{{ clientCustomField.text }}</span>
+                                    <span>{{ clientCustomField.customField.name }}</span>
                                     <div class="item__mini-circle"></div>
                                     <span><input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" /></span>
                                     <span class="push-both-sides"></span>
@@ -246,13 +246,13 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import utils from '../../../../../utils/index';
-    import models from '../../../../../models';
+    import utils from '@/utils/index';
+    import models from '@/models';
     import ClientAddressForm from './ClientAddressForm.vue';
-    import SearchComponent from '../../../../../components/Inputs/Search.vue';
+    import SearchComponent from '@/components/Inputs/Search.vue';
     import ClientAddressTypesInput from './ClientAddressTypesInput.vue';
-    import ClientsAPI from '../../../../../api/clients';
-    import ServiceAPI from '../../../../../api/service';
+    import ClientsAPI from '@/api/clients';
+    import ServiceAPI from '@/api/service';
     import Vue from 'vue';
 
     export default {
@@ -305,16 +305,20 @@
                 },
                 clientCustomFields: [
                     {
+                        text: 'CNPJ',
+                        value: 2
+                    },
+                    {
                         text: 'RG',
-                        value: 'rg'
+                        value: 3
                     },
                     {
                         text: 'E-mail',
-                        value: 'email'
+                        value: 4
                     },
                     {
                         text: 'Apelido',
-                        value: 'nickname'
+                        value: 5
                     }
                 ],
                 clientGroups: [
@@ -417,7 +421,13 @@
         },
         sockets: {
             draftClientCustomFieldAdd(clientCustomField){
+                console.log("Received draftClientCustomFieldUpdate", clientCustomField);
+            },
+            draftClientCustomFieldAdd(clientCustomField){
                 console.log("Received draftClientCustomFieldAdd", clientCustomField);
+            },
+            draftClientCustomFieldRemove(clientCustomField){
+                console.log("Received draftClientCustomFieldRemove", clientCustomField);
             },
             draftClientPhoneEditionCancel(){
                 console.log("Received draftClientPhoneEditionCancel");
@@ -665,8 +675,8 @@
                         value: customField.value
                     }
                 };
-                console.log("Emitting draft:client-custom-fields-update", emitData);
-                this.$socket.emit('draft:client-custom-fields-update', emitData);
+                console.log("Emitting draft:client-custom-field-update", emitData);
+                this.$socket.emit('draft:client-custom-field-update', emitData);
             },
 
             /**
