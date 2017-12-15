@@ -100,19 +100,23 @@
                 if(!this.multiple){ // single select
                     if(this.value === item.value){
                         this.onValueChanged(null);
+                        this.$emit('unselect', item.value);
                     }
                     else {
                         this.onValueChanged(item.value);
+                        this.$emit('select', item.value);
                     }
                 }
                 else { // multiple select
                     if(_.includes(this.value, item.value)){
                         this.value.splice(this.value.indexOf(item.value), 1);
                         this.onValueChanged(this.value);
+                        this.$emit('unselect', item.value);
                     }
                     else {
                         this.value.push(item.value);
                         this.onValueChanged(this.value);
+                        this.$emit('select', item.value);
                     }
                 }
                 this.closeSelect();

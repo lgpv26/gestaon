@@ -30,9 +30,9 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import utils from '../../../../utils'
     import _ from 'lodash';
-    import ClientForm from './ClientForm.vue';
-    import OrderForm from './OrderForm.vue';
-    import TaskForm from './TaskForm.vue';
+    import ClientForm from './Client/ClientForm.vue';
+    import OrderForm from './Order/OrderForm.vue';
+    import TaskForm from './Task/TaskForm.vue';
     import Scrollbar from 'smooth-scrollbar';
 
     export default {
@@ -212,12 +212,10 @@
     }
 
     .form-group .form-group__header > span {
-        font-size: 12px;
     }
 
     .form-group .form-group__header h3 {
         font-size: 14px;
-        font-weight: 600;
     }
 
     .form-group .form-group__header input[type=text] {
@@ -281,7 +279,6 @@
     .form-group .form-group__content > ul.content__list > li.list__item span {
         color: var(--font-color--7);
         font-size: 14px;
-        font-weight: 600;
     }
 
     .form-group .form-group__content > ul.content__list > li.list__item:first-child {
@@ -326,7 +323,6 @@
 
     .form-group .form-group__content > ul.content__list--mini > li.list__item span {
         color: var(--font-color--7);
-        font-weight: 600;
     }
 
     .form-group .form-group__content > ul.content__list--mini > li.list__item:last-child {
@@ -463,10 +459,14 @@
         margin-top: 35px;
     }
     div.ms-form form .form__header h3 {
-        font-size: 12px;
+        font-size: 16px;
         margin-right: 10px;
         position: relative;
-        font-weight: 600;
+        color: var(--font-color--2);
+        font-weight: initial;
+    }
+    div.ms-form form .form__header h3.active {
+        color: var(--font-color--primary);
     }
     div.ms-form form .form__header > span {
         font-size: 14px;

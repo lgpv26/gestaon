@@ -39,6 +39,7 @@
                         <div class="container__actions">
                             <a>Excluir Rascunho</a>
                             <span class="push-both-sides"></span>
+                            <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
                             <a @click="closeScreen()">Voltar</a>
                         </div>
                     </div>
@@ -567,12 +568,19 @@
         flex-shrink: 0;
     }
 
+    .morph-screen__container .container__actions > span em {
+        background-color: transparent;
+        color: var(--font-color--danger)
+    }
+
     .morph-screen__container .container__actions > a {
         font-size: 14px;
         text-transform: uppercase;
-        color: var(--font-color--4);
-        font-weight: 600;
+        color: var(--font-color--5);
+        font-weight: initial;
         cursor: pointer;
+        position: relative;
+        top: 1px;
     }
 
 </style>

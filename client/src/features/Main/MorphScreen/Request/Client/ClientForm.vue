@@ -34,9 +34,11 @@
                                     </template>
                                 </app-search>
                             </div>
-                            <div class="form-column" style="justify-content: center;">
-                                <icon-search v-if="!client.id"></icon-search>
-                                <span class="btn btn--border-only" v-else @click="changeClient()">Mudar</span>
+                            <div class="form-column" style="justify-content: flex-end;">
+                                <icon-search v-if="!client.id" style="position: relative; top: -4px;"></icon-search>
+                                <div style="cursor: pointer;" @click="changeClient()" v-else>
+                                    <icon-change></icon-change>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -49,10 +51,21 @@
                 <div class="form-groups">
                     <div class="form-group" v-if="isEditing || isAdding || form.clientAddresses.length <= 0">
                         <div class="form-group__header">
+                            <!-- previous implementation - shows the client address name/number
                             <h3 style="margin-right: 10px; color: var(--font-color--2);" v-if="isEditing && !clientAddressForm.address.id">Editando endereço...</h3>
-                            <h3 style="margin-right: 10px; color: var(--font-color--2);" v-else-if="isEditing">{{ clientAddressForm.address.name + ', ' + clientAddressForm.number }}</h3>
-                            <h3 style="margin-right: 10px;" v-else>Locais</h3>
-                            <icon-local></icon-local>
+                            <h3 style="margin-right: 10px; color: var(--font-color--2);" v-else-if="isEditing">
+                                {{ clientAddressForm.address.name + ', ' + clientAddressForm.number }}
+                            </h3>
+                            -->
+                            <div style="display: flex; flex-direction: row;" v-if="isEditing">
+                                <span style="margin-right: 10px;">Tipo do local</span>
+                                <icon-local></icon-local>
+                                <app-client-address-types-input style="margin-left: 10px;" v-model="clientAddressForm.clientAddressTypes"></app-client-address-types-input>
+                            </div>
+                            <div style="display: flex; flex-direction: row;" v-else>
+                                <span style="margin-right: 10px;">Selecione um local</span>
+                                <icon-local></icon-local>
+                            </div>
                             <span class="push-both-sides"></span>
                             <a class="btn btn--border-only" v-if="form.clientAddresses.length > 0" @click="backToClientAddressesList()">Voltar</a>
                             <div v-if="form.clientAddresses.length <= 0">
@@ -79,7 +92,8 @@
                             <ul class="content__list">
                                 <li class="list__item" v-for="clientAddress in form.clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
                                     <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
-                                        {{ clientAddress.address.name }}, {{ clientAddress.number }}
+                                        {{ clientAddress.address.name }},
+                                        {{ clientAddress.number.toString().trim() || "SN" }}
                                     </span>
                                     <span class="push-both-sides"></span>
                                     <div class="item__check item__icon" @click="onClientAddressSelected(clientAddress)" style="cursor: pointer; margin-right: 10px;">
@@ -96,16 +110,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-groups" v-if="isEditing || isAdding || form.clientAddresses.length <= 0">
-                    <div class="form-group">
-                        <div class="form-columns">
-                            <div class="form-column" style="flex-grow: 1;">
-                                <label>Apelido (ex: Casa da mãe)</label>
-                                <input type="text" class="input--borderless" v-model="clientAddressForm.name" @input="$refs.clientAddressForm.syncClientAddressForm('name')" placeholder="..." />
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="form__side-column">
                 <div class="form-groups">
@@ -115,9 +119,9 @@
                                 <icon-phone></icon-phone>
                             </div>
                             <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" ref="clientPhoneInput" v-model="clientPhoneForm.number"
-                                      @input.native="syncClientPhoneTrustedEvent($event, 'number')" placeholder="Número"></app-mask>
+                                      @input.native="syncClientPhoneTrustedEvent($event, 'number')" placeholder="(##) #####-####"></app-mask>
                             <div class="header__mini-circle"></div>
-                            <input type="text" v-model="clientPhoneForm.name" @input="syncClientPhoneForm('name')" class="input--borderless" placeholder="fixo/celular" />
+                            <input type="text" v-model="clientPhoneForm.name" @input="syncClientPhoneForm('name')" class="input--borderless" placeholder="fixo ou celular" />
                             <span class="push-both-sides"></span>
                             <div style="cursor: pointer; margin-right: 8px;" @click="cancelClientPhoneEdition()" v-if="clientPhoneForm.id">
                                 <a style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">V</a>
@@ -130,7 +134,7 @@
                         <div class="form-group__content">
                             <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length > 0">
                                 <li class="list__item" v-for="clientPhone in form.clientPhones" :class="{ active: clientPhoneId === clientPhone.id }">
-                                    <div class="item__check" style="margin-right: 10px; cursor: pointer;">
+                                    <div class="item__check" @click="selectClientPhone(clientPhone)" style="margin-right: 10px; cursor: pointer;">
                                         <icon-check></icon-check>
                                     </div>
                                     <span style="cursor: pointer;" @click="selectClientPhone(clientPhone)">({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
@@ -155,8 +159,8 @@
                             <div class="header__icon">
                                 <icon-client-group></icon-client-group>
                             </div>
-                            <h3 class="static" v-if="!selectedClientGroup.value">Grupo de cliente</h3>
-                            <h3 v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</h3>
+                            <span class="static" v-if="!selectedClientGroup.value">Grupo de cliente</span>
+                            <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</span>
                             <span class="push-both-sides"></span>
                             <icon-dropdown class="header__action-icon"></icon-dropdown>
                             <template slot="item" slot-scope="itemProps">
@@ -167,11 +171,12 @@
                 </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <app-select class="form-group__header" :verticalOffset="8" :items="clientCustomFields" v-model="form.clientSelectedCustomFields" :multiple="true" :showInput="true">
+                        <app-select class="form-group__header" :verticalOffset="8" :items="clientCustomFields" v-model="form.clientSelectedCustomFields"
+                            :multiple="true" :showInput="true" @select="onClientCustomFieldSelect($event)" @unselect="onClientCustomFieldUnselect($event)">
                             <div class="header__icon">
                                 <icon-client-details></icon-client-details>
                             </div>
-                            <h3 class="static">Informações adicionais</h3>
+                            <span class="static">Informações adicionais</span>
                             <span class="push-both-sides"></span>
                             <icon-dropdown class="header__action-icon" v-if="form.clientCustomFields && form.clientCustomFields.length >= 0"></icon-dropdown>
                             <icon-add class="header__action-icon" v-else></icon-add>
@@ -179,12 +184,12 @@
                                 <span>{{itemProps.text }}</span>
                             </template>
                         </app-select>
-                        <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
+                        <div class="form-group__content" v-if="form.clientCustomFields && unspecialClientCustomFields.length > 0">
                             <ul class="content__list--mini">
-                                <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
+                                <li class="list__item" v-for="clientCustomField in form.clientCustomFields" v-if="unspecialClientCustomFields.includes(clientCustomField.customField.id)">
                                     <span>{{ clientCustomField.text }}</span>
                                     <div class="item__mini-circle"></div>
-                                    <span><input type="text" placeholder="..." class="input--borderless" /></span>
+                                    <span><input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" /></span>
                                     <span class="push-both-sides"></span>
                                     <icon-remove></icon-remove>
                                 </li>
@@ -215,8 +220,8 @@
                             <div class="header__icon">
                                 <icon-client-group class="icon--d-secondary" style="margin-right: 10px;"></icon-client-group>
                             </div>
-                            <h3 class="static" style="white-space: nowrap" v-if="!selectedClientGroup.value">Grupo de cliente</h3>
-                            <h3 style="white-space: nowrap" v-else>{{ selectedClientGroup.text }}</h3>
+                            <span class="static" style="white-space: nowrap" v-if="!selectedClientGroup.value">Grupo de cliente</span>
+                            <span style="white-space: nowrap" v-else>{{ selectedClientGroup.text }}</span>
                             <span class="push-both-sides"></span>
                             <icon-dropdown class="header__action-icon"></icon-dropdown>
                         </a>
@@ -226,14 +231,14 @@
                     </app-select>
                 </div>
                 <div class="form-column" style="flex-grow: initial; flex-direction: row; align-items: center;">
-                    <h3 style="top: 0;">CLIENTE</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
+                    <h3 style="top: 0;">Cliente</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
                 </div>
             </div>
         </div>
         <div class="form__header" v-else>
             <span v-if="!isCurrentStepActive">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
             <span class="push-both-sides"></span>
-            <h3>DADOS DO CLIENTE</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
+            <h3 :class="{active: isCurrentStepActive}">Cliente</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
         </div>
     </form>
 </template>
@@ -241,18 +246,20 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import utils from '../../../../utils';
-    import models from '../../../../models';
+    import utils from '../../../../../utils/index';
+    import models from '../../../../../models';
     import ClientAddressForm from './ClientAddressForm.vue';
-    import SearchComponent from '../../../../components/Inputs/Search.vue';
-    import ClientsAPI from '../../../../api/clients';
-    import ServiceAPI from '../../../../api/service';
+    import SearchComponent from '../../../../../components/Inputs/Search.vue';
+    import ClientAddressTypesInput from './ClientAddressTypesInput.vue';
+    import ClientsAPI from '../../../../../api/clients';
+    import ServiceAPI from '../../../../../api/service';
     import Vue from 'vue';
 
     export default {
         components: {
             'app-search': SearchComponent,
             'app-client-address-form': ClientAddressForm,
+            'app-client-address-types-input': ClientAddressTypesInput,
         },
         props: ['client','activeStep','clientAddressId','clientPhoneId'],
         data(){
@@ -274,6 +281,7 @@
                     name: null,
                     number: null,
                     complement: null,
+                    clientAddressTypes: [],
                     address: {
                         id: null,
                         name: null,
@@ -335,18 +343,23 @@
             'clientPhoneForm.number': function(number){
                 this.$refs.clientPhoneInput.display = number;
             },
-            'form.clientSelectedCustomFields' : function(clientSelectedCustomFields) {
+            'form.clientSelectedCustomFields' : function(clientSelectedCustomFields, oldClientSelectedCustomFields) {
                 if(clientSelectedCustomFields.length && clientSelectedCustomFields.length > 0){
                     this.form.clientCustomFields = _.reduce(this.clientCustomFields, (accumulator, clientCustomField, index) => {
                         if(_.includes(clientSelectedCustomFields, clientCustomField.value)){ // Exists in selected custom fields
-                            const existentClientCustomField = _.find(this.form.clientCustomFields, { field: clientCustomField.value });
+                            const existentClientCustomField = _.find(this.form.clientCustomFields, {
+                                clientCustomFieldId: clientCustomField.value
+                            });
                             if(existentClientCustomField){
                                 accumulator.push(existentClientCustomField);
                             }
                             else {
                                 accumulator.push({
                                     text: clientCustomField.text,
-                                    field: clientCustomField.value,
+                                    clientCustomFieldId: clientCustomField.value,
+                                    customField: {
+                                        id: clientCustomField.value
+                                    },
                                     value: null
                                 });
                             }
@@ -395,12 +408,28 @@
             shortenedClientAddress(){
                 if(this.selectedClientAddress)
                 return utils.getShortString(this.selectedClientAddress.address.name, 24, '[...]') + ', ' + this.selectedClientAddress.number + ' - ' + this.selectedClientAddress.complement;
+            },
+            unspecialClientCustomFields(){
+                return _.filter(this.form.clientCustomFields, (clientCustomField) => {
+                    if(clientCustomField.customField.id !== 1) return true;
+                }).map(clientCustomField => clientCustomField.customField.id);
             }
         },
         sockets: {
+            draftClientCustomFieldAdd(clientCustomField){
+                console.log("Received draftClientCustomFieldAdd", clientCustomField);
+            },
             draftClientPhoneEditionCancel(){
                 console.log("Received draftClientPhoneEditionCancel");
                 this.resetClientPhoneForm();
+            },
+            draftClientPhoneUpdate(clientPhone){
+                if(_.has(clientPhone, 'ddd') && _.has(clientPhone, 'number')){
+                    this.clientPhoneForm.number = clientPhone.ddd + clientPhone.number;
+                    delete clientPhone.ddd;
+                    delete clientPhone.number;
+                }
+                utils.assignToExistentKeys(this.clientPhoneForm, clientPhone);
             },
             draftClientPhoneSave(clientPhone){
                 console.log("Received draftClientPhoneSave", clientPhone);
@@ -499,21 +528,6 @@
                 const toBeEmitted = { draftId: this.activeMorphScreen.draft.draftId, clientId: searchItem.client.id};
                 this.$socket.emit('draft:client-select', toBeEmitted);
                 vm.searchItems = [];
-                /*
-                ClientsAPI.getOne(searchItem.client.id).then(({data}) => {
-                    const client = data;
-                    client.clientPhones.map((clientPhone) => {
-                        clientPhone.active = false;
-                        return clientPhone;
-                    });
-                    client.clientAddresses.map((clientAddress) => {
-                        clientAddress.active = false;
-                        return clientAddress;
-                    });
-                    _.assign(vm.form, _.pick(client, _.keys(vm.form)));
-                    vm.searchItems = [];
-                });
-                */
             },
             searchValueUpdated(){
                 if(this.commitTimeout) clearTimeout(this.commitTimeout);
@@ -574,16 +588,6 @@
                 };
                 console.log("Emitting draft:client-phone-remove", emitData);
                 this.$socket.emit('draft:client-phone-remove', emitData);
-                /*ClientsAPI.removeOneClientPhone(vm.client.id, clientPhone.id, { companyId: vm.company.id }).then(() => {
-                    vm.showToast({
-                        type: "success",
-                        message: "Telefone do cliente removido com sucesso."
-                    });
-                    const clientPhoneIndex = _.findIndex(vm.form.clientPhones, { id: clientPhone.id });
-                    if(clientPhoneIndex !== -1){
-                        vm.form.clientPhones.splice(clientPhoneIndex, 1);
-                    }
-                });*/
             },
 
             // client address
@@ -633,6 +637,36 @@
                     this.form.clientAddresses.push(clientAddress);
                 }
                 this.backToClientAddressesList();
+            },
+
+            // client custom fields
+
+            onClientCustomFieldSelect(clientCustomFieldId){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    clientCustomFieldId: clientCustomFieldId
+                };
+                console.log("Emitting draft:client-custom-field-add", emitData);
+                this.$socket.emit('draft:client-custom-field-add', emitData);
+            },
+            onClientCustomFieldUnselect(clientCustomFieldId){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    clientCustomFieldId: clientCustomFieldId
+                };
+                console.log("Emitting draft:client-custom-field-remove", emitData);
+                this.$socket.emit('draft:client-custom-field-remove', emitData);
+            },
+            onClientCustomFieldInput(customField){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    clientCustomFieldId: customField.clientCustomFieldId,
+                    clientCustomFieldForm: {
+                        value: customField.value
+                    }
+                };
+                console.log("Emitting draft:client-custom-fields-update", emitData);
+                this.$socket.emit('draft:client-custom-fields-update', emitData);
             },
 
             /**
@@ -713,7 +747,6 @@
                     this.$socket.emit("draft:client-phone-update", emitData);
                 }
             },
-
         },
         mounted(){
             this.syncWithParentForm();
@@ -733,7 +766,8 @@
 
     .form__header.summary span {
         text-transform: uppercase;
-        font-weight: 600;
+        margin-right: 10px;
+        color: var(--font-color--8)
     }
 
     .form__header.summary .form-group {

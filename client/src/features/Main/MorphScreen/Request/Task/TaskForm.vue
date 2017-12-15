@@ -20,7 +20,7 @@
         <div class="form__header">
             <span v-if="!isCurrentStepActive">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
             <span class="push-both-sides"></span>
-            <h3>TAREFA</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
+            <h3 :class="{active: isCurrentStepActive}">Tarefa</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
         </div>
     </form>
 </template>

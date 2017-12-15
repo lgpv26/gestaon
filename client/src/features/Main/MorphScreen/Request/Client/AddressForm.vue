@@ -23,17 +23,19 @@
     </app-search>
     <div style="flex-grow: 1" v-else>
         <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="address.name" @input="onSearchInput()" />
-        <a class="btn btn--border-only" style="position: absolute; right: 0; top: -3px;" @click="changeAddress()">Mudar</a>
+        <div style="position: absolute; right: 0; top: -3px; cursor: pointer;" @click="changeAddress()">
+            <icon-change></icon-change>
+        </div>
     </div>
 </template>
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import AddressesAPI from '../../../../api/addresses';
-    import SearchComponent from '../../../../components/Inputs/Search.vue';
-    import utils from '../../../../utils';
-    import models from '../../../../models';
+    import AddressesAPI from '../../../../../api/addresses';
+    import SearchComponent from '../../../../../components/Inputs/Search.vue';
+    import utils from '../../../../../utils/index';
+    import models from '../../../../../models';
     import Vue from 'vue';
 
     export default {

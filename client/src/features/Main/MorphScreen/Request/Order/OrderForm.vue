@@ -194,7 +194,7 @@
         <div class="form__header">
             <span v-if="!isCurrentStepActive">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
             <span class="push-both-sides"></span>
-            <h3>VENDA</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
+            <h3 :class="{active: isCurrentStepActive}">Venda</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
         </div>
     </form>
 </template>
