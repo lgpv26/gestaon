@@ -87,7 +87,8 @@ module.exports = (server, restify) => {
                     body: {
                         companyId: client.companyId,
                         name: client.name,
-                        obs: client.obs
+                        obs: client.obs,
+                        legalDocument: client.legalDocument
                     }
                 }, function (esErr, esRes, esStatus) {
                     if (esErr) {
@@ -190,6 +191,7 @@ module.exports = (server, restify) => {
                                 companyId: client.companyId,
                                 name: client.name,
                                 obs: client.obs,
+                                legalDocument: client.legalDocument,
                                 dateUpdated: client.dateUpdated,
                                 dateCreated: client.dateCreated,
                                 status: client.status
@@ -387,6 +389,7 @@ module.exports = (server, restify) => {
                         companyId: client.companyId,
                         name: client.name,
                         obs: client.obs,
+                        legalDocument: client.legalDocument,
                         addresses: _.map(client.clientAddresses, clientAddress => {
                             return {
                                 clientAddressId: clientAddress.id,
@@ -404,11 +407,11 @@ module.exports = (server, restify) => {
                                 number: clientPhone.number
                             };
                         }),
-                        legaldocuments: _.map(client.clientCustomFields, clientCustomField => {
+                        customFields: _.map(client.clientCustomFields, clientCustomField => {
                             return {
                                 clientCustomFieldId: clientCustomField.id,
                                 documentType: clientCustomField.customField.name,
-                                documentNumber: clientCustomField.value
+                                documentValue: clientCustomField.value
                             };
                         }),
                         dateUpdated: client.dateUpdated,

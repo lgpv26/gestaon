@@ -17,4 +17,9 @@ module.exports = (server, restify) => {
     server.patch('/products/:id', productsController.updateOne);
     server.del('/products/:id', productsController.removeOne);
 
+    server.post('/products/export-to-es', (req, res, next) => {
+        productsController.exportToES(req).then((exportToES) => {
+            return res.send(200, { data: exportToES })
+        })
+    })
 };

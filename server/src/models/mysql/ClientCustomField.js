@@ -17,6 +17,7 @@ module.exports = {
                 },
                 value: {
                     type: Sequelize.STRING,
+                    allowNull: false,
                     set(val) {
                         this.setDataValue('value', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }

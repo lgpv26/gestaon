@@ -15,9 +15,8 @@ module.exports = {
                         this.setDataValue('name', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
                 },
-                price: {
-                    type: Sequelize.DECIMAL(10,2),
-                    default: 0
+                companyId: {
+                    type: Sequelize.INTEGER
                 },
                 dateUpdated: {
                     type: Sequelize.DATE
@@ -44,7 +43,9 @@ module.exports = {
         }
     },
     postSettings: ({ Product, OrderProduct, Order, Supplier, SupplierProduct }) => {
+        Product.hasMany(SupplierProduct, {as: 'productSuppliers', foreignKey: 'productId'});
+
         Product.belongsToMany(Order, {through: OrderProduct, as: 'productOrders', foreignKey: 'productId'});
-        Product.belongsToMany(Supplier, {through: SupplierProduct, as: 'productSuppliers', foreignKey: 'productId'});
+        Product.belongsToMany(Supplier, {through: SupplierProduct, as: 'suppliers', foreignKey: 'productId'});
     }
 }

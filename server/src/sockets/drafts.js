@@ -17,17 +17,19 @@ module.exports = class Drafts {
         this.setSocketDraftListeners()
     }
 
+    /**
+     * Events on Request Listeners
+     * 
+     */
     setSocketDraftListeners() {
-        this.socket.on('presence-update-draft', (presenceUser) => {
+
+        this.socket.on('draft:presence', (presenceUser) => {
             this.onPresenceUpdate(presenceUser)
-
         })
 
-        this.socket.on('update-draft', (contentDraft) => {
-            this.onUpdateDraft(contentDraft)
+        this.socket.on('draft:update', (contentDraft) => {
+            this.onDraftUpdate(contentDraft)
         })
-
-        // VER IMPLEMENTAR EVENT ON RECONECT OU SIMILAR - ATÉ O YOSHIU FALAR 
 
         this.socket.on('disconnect', () => {
             this.onSocketDisconnect()
@@ -36,24 +38,16 @@ module.exports = class Drafts {
         this.checkRedisPresence()
     }
 
-    checkRedisPresence() {
-        this.consultRedisUserPresence(this.socket.user.id).then((checkPresence) => {
-            checkPresence = JSON.parse(checkPresence)
-            if (checkPresence) this.socket.join('draft/' + checkPresence.draftId)
-        })
-
-    }
-
-    resetTimeout(removeUpdate = false) {
-        if (removeUpdate) {
-            this.findDraftInArray(removeUpdate).then((index) => {
-                this.channels.updates.drafts.splice(index, 1)
-            })
-        }
-
-        if (this._timer) clearTimeout(this._timer)
-    }
-
+        ///////////////////////
+        ///     GENERAL     ///
+        ///////////////////////
+//
+    /** 
+     * Presence Update
+     * @desc Controls users in room, draft loading
+     *
+     * @param {object} presenceUser expect: draftId, userId
+     */
     onPresenceUpdate(presenceUser) {
         if (presenceUser.leave) {
             const objPresenceUser = { name: this.socket.user.name, email: this.socket.user.email }
@@ -82,7 +76,7 @@ module.exports = class Drafts {
                                 return JSON.stringify(user.email) === JSON.stringify(objPresenceUser.email)
                             })
                             if (!repeatUser) this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
-                                this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
+                                this.server.io.in('draft/' + presenceUser.draftId).emit('draftPresence', newPresence)
 
                             }).catch(() => {
                                 console.log('catch do NEW PRESENCEUSER - QUE É UM IF DENTRO DO CHECKPRESENCE')
@@ -90,7 +84,7 @@ module.exports = class Drafts {
                         }
                         else {
                             this.controller.newPresenceUser(presenceUser.draftId, objPresenceUser).then((newPresence) => {
-                                this.server.io.in('draft/' + presenceUser.draftId).emit('presenceDraft', newPresence)
+                                this.server.io.in('draft/' + presenceUser.draftId).emit('draftPresence', newPresence)
                             }).catch(() => {
                                 console.log('catch do NEW PRESENCEUSER - QUE É NO ELSE DENTRO DO CHECKPRESENCE')
                             })
@@ -107,8 +101,14 @@ module.exports = class Drafts {
         }
     }
 
-    onUpdateDraft(contentDraft) {
-        this.socket.broadcast.in('draft/' + contentDraft.draftId).emit('updateDraft', contentDraft)
+    /** 
+     * Update Draft
+     * @desc Controls draft's updates to server memory
+     *
+     * @param {any} contentDraft 
+     */
+    onDraftUpdate(contentDraft) {
+        this.socket.broadcast.in('draft/' + contentDraft.draftId).emit('draftUpdate', contentDraft)
 
         this.setArrayDraft(contentDraft).then(() => {
             this.timerSocketUpdate(contentDraft.draftId)
@@ -117,47 +117,53 @@ module.exports = class Drafts {
         })
     }
 
-    onLeavePresence(draftId, objPresenceUser) {
-        this.socket.leave('draft/' + draftId)
-        return new Promise((resolve, reject) => {
-            this.controller.checkPresence(draftId).then((presence) => {
-                // JSON.parse(JSON.stringify(presence))
-                presence = _.filter(presence, (user, index) => {
-                    if (user.email !== objPresenceUser.email) {
-                        return user
+    /** 
+     * Socket Disconnect
+     * @desc Removes the user from the room and presence (mongo) when him is disconnected
+     * 
+     */
+    onSocketDisconnect() {
+        this.controller.checkAllPresence().then((presence) => {
+            _.map(presence, (tempDraft) => {
+                const userFound = _.some(tempDraft.presence, (disconnectUser) => {
+                    if (disconnectUser.name === this.socket.user.name && disconnectUser.email === this.socket.user.email) {
+                        return true
                     }
                 })
-                resolve(presence)
-            }).catch(() => {
-                console.log('catch do CHECK PRESENCE - DENTRO DO ONLEAVE PRESENCE')
+                tempDraft.presence = _.filter(tempDraft.presence, (disconnectUser) => {
+                    return (disconnectUser.name !== this.socket.user.name && disconnectUser.email !== this.socket.user.email)
+                })
+                if (userFound) {
+                    this.controller.savePresenceUser(tempDraft.draftId, tempDraft.presence).then((newPresence) => {
+                        this.server.io.in('draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.presence)
+                    }).catch(() => {
+                        console.log('catch do SAVEPRESENCE USER - DENTRO DO SOCKET DISCONECT')
+                    })
+                }
             })
-        }).then((userPresence) => {
-            this.controller.savePresenceUser(draftId, userPresence).then((newPresence) => {
-                this.server.io.in('draft/' + draftId).emit('presenceDraft', newPresence)
-            }).catch(() => {
-                console.log('catch do SAVEPRESENCEUSER - DENTRO DO LEAVE PRESENCE')
-            })
-        })
-    }
-
-    setArrayDraft(contentDraft) {
-        return new Promise((resolve, reject) => {
-            const draft = _.find(this.channels.updates.drafts, { draftId: contentDraft.draftId })
-            if (draft) {
-                const draftUpdateIndex = this.channels.updates.drafts.indexOf(draft);
-                this.channels.updates.drafts[draftUpdateIndex] = _.mergeWith(draft, contentDraft)
-
-                resolve()
-            }
-            else {
-                this.channels.updates.drafts.push(contentDraft)
-                resolve()
-            }
         }).catch(() => {
-            console.log('catch do SET ARRAY DRAFT MESMO')
+            console.log('catch do CHECKALL PRESENCE - NO ON SOCKET DISCONECCT')
         })
     }
 
+    /** 
+     * Check Redis Presence
+     * @desc Check if the user is in a draft (presence) set by Redis
+     * 
+     * @return {} Puts the user in the draft's presence @property {Socket}
+     */
+    checkRedisPresence() {
+        this.consultRedisUserPresence(this.socket.user.id).then((checkPresence) => {
+            checkPresence = JSON.parse(checkPresence)
+            if (checkPresence) this.socket.join('draft/' + checkPresence.draftId)
+        })
+    }
+//
+
+        ///////////////////////
+        ///     TIMERS      ///
+        ///////////////////////
+//
     timerSocketUpdate(draftId) {
         if (this._timer) clearTimeout(this._timer)
         //TIMEOUT to save form in MONGO
@@ -166,115 +172,190 @@ module.exports = class Drafts {
         }, 3000)
     }
 
-    findDraftInArray(draftId) {
-        return new Promise((resolve, reject) => {
-            const index = _.findIndex(this.channels.updates.drafts, (draft) => {
-                return draft.draftId === draftId;
+    resetTimeout(removeUpdate = false) {
+        if (removeUpdate) {
+            this.findDraftInArray(removeUpdate).then((index) => {
+                this.channels.updates.drafts.splice(index, 1)
             })
-            resolve(index)
-        }).then((index) => {
-            return index
-        }).catch(() => {
-            console.log('catch do FIND DRAFTIN ARRAY')
-        })
+        }
+
+        if (this._timer) clearTimeout(this._timer)
     }
-
-    consultDraft(draftId) {
-        this.controller.getOne(draftId).then((draft) => {
-            this.socket.emit('updateDraft', { draftId: draftId, form: draft.form })
-
-            this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
-                if (err) console.log(err)
-                if (checkEdition) {
-
-                    const update = JSON.parse(checkEdition.clientFormUpdate)
-                    checkEdition = JSON.parse(checkEdition.clientFormEdition)
-
-                    if (checkEdition.clientAddress.inEdition) {
-                        if (checkEdition.clientAddress.clientAddressId) {
-                            this.socket.emit('draftClientAddressEdit', checkEdition.clientAddress.clientAddressId)
-                            if (update.clientAddressForm) {
-                                this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
-                                if (update.clientAddressForm.address.reset) {
-                                    this.socket.emit('draftClientAddressAddressReset')
-                                }
-                                else {
-                                    if (update.clientAddressForm.address.select) {
-                                        this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
-                                    }
-                                    else {
-                                        this.socket.emit('draftClientAddressAddressReset')
-                                        this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
-                                    }
-                                }
-                            }
+//
+        /////////////////////////
+        /// HELPERS FUNCTIONS ///
+        /////////////////////////
+//
+    ///////////////////////////////////
+    // HELPERS FUNCTIONS => PRESENCE //
+    ///////////////////////////////////
+    //
+        onLeavePresence(draftId, objPresenceUser) {
+            this.socket.leave('draft/' + draftId)
+            return new Promise((resolve, reject) => {
+                this.controller.checkPresence(draftId).then((presence) => {
+                    // JSON.parse(JSON.stringify(presence))
+                    presence = _.filter(presence, (user, index) => {
+                        if (user.email !== objPresenceUser.email) {
+                            return user
                         }
-                        else {
-                            this.socket.emit('draftClientAddressAdd')
-                            if (update.clientAddressForm) {
-                                this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
-                                if (update.clientAddressForm.address.reset) {
-                                    this.socket.emit('draftClientAddressAddressReset')
-                                }
-                                else {
-                                    this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
-                                }
-                            }
-                        }
-                    }
-                    if(checkEdition.clientPhone.inEdition) {
-                        if (checkEdition.clientPhone.inEdition) {
-                            if (checkEdition.clientPhone.clientPhoneId) {
-                                this.socket.emit('draftClientPhoneEdit', checkEdition.clientPhone.clientPhoneId)
-                                this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
-                            }
-                            else {
-                                this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
-                            }
-                        }
-                        else {
-                            this.socket.emit('draftClientPhoneEditionCancel')
-                        }
-                    }
-                }
-                else {
-                    const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
-                    this.setDraftRedis(objSetDraftRedis)
-                }
-            })
-
-        }).catch(() => {
-            console.log('catch do CONSULTDRAFT')
-        })
-    }
-
-    saveDraft(draftId, userEntry = false) {
-        return new Promise((resolve, reject) => {
-            this.findDraftInArray(draftId).then((index) => {
-                if (index !== -1) {
-                    this.controller.updateDraft(this.channels.updates.drafts[index]).then(() => {
-
-                        this.socket.emit('draftSaved')
-                        this.channels.updates.drafts.splice(index, 1)
-                        if (userEntry) {
-                            this.consultDraft(draftId)
-                        }
-                        resolve()
-                    }).catch(() => {
-                        console.log('catch do UPDATEDRAFT - QUE TA DENTRO DO SAVEDRAFT')
-                        reject()
                     })
+                    resolve(presence)
+                }).catch(() => {
+                    console.log('catch do CHECK PRESENCE - DENTRO DO ONLEAVE PRESENCE')
+                })
+            }).then((userPresence) => {
+                this.controller.savePresenceUser(draftId, userPresence).then((newPresence) => {
+                    this.server.io.in('draft/' + draftId).emit('presenceDraft', newPresence)
+                }).catch(() => {
+                    console.log('catch do SAVEPRESENCEUSER - DENTRO DO LEAVE PRESENCE')
+                })
+            })
+        }
+    //
+
+    ////////////////////////////////
+    // HELPERS FUNCTIONS => DRAFT //
+    ////////////////////////////////
+    //
+        setArrayDraft(contentDraft) {
+            return new Promise((resolve, reject) => {
+                const draft = _.find(this.channels.updates.drafts, { draftId: contentDraft.draftId })
+                if (draft) {
+                    const draftUpdateIndex = this.channels.updates.drafts.indexOf(draft);
+                    this.channels.updates.drafts[draftUpdateIndex] = _.mergeWith(draft, contentDraft)
+
+                    resolve()
                 }
                 else {
+                    this.channels.updates.drafts.push(contentDraft)
                     resolve()
                 }
             }).catch(() => {
-                console.log('catch do FINDDRAFTIN ARRAY - DENTRO DO SAVEDRAFT')
-                reject()
+                console.log('catch do SET ARRAY DRAFT MESMO')
             })
-        })
-    }
+        }
 
+        findDraftInArray(draftId) {
+            return new Promise((resolve, reject) => {
+                const index = _.findIndex(this.channels.updates.drafts, (draft) => {
+                    return draft.draftId === draftId;
+                })
+                resolve(index)
+            }).then((index) => {
+                return index
+            }).catch(() => {
+                console.log('catch do FIND DRAFTIN ARRAY')
+            })
+        }
+
+        consultDraft(draftId) {
+            this.controller.getOne(draftId).then((draft) => {
+                this.socket.emit('draftUpdate', { draftId: draftId, form: draft.form })
+
+                this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
+                    if (err) console.log(err)
+                    if (checkEdition) {
+
+                        const update = JSON.parse(checkEdition.clientFormUpdate)
+                        checkEdition = JSON.parse(checkEdition.clientFormEdition)
+
+                        if (checkEdition.clientAddress.inEdition) {
+                            if (checkEdition.clientAddress.clientAddressId) {
+                                this.socket.emit('draftClientAddressEdit', checkEdition.clientAddress.clientAddressId)
+                                if (update.clientAddressForm) {
+                                    this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
+                                    if (update.clientAddressForm.address.reset) {
+                                        this.socket.emit('draftClientAddressAddressReset')
+                                    }
+                                    else {
+                                        if (update.clientAddressForm.address.select) {
+                                            this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                        }
+                                        else {
+                                            this.socket.emit('draftClientAddressAddressReset')
+                                            this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                this.socket.emit('draftClientAddressAdd')
+                                if (update.clientAddressForm) {
+                                    this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
+                                    if (update.clientAddressForm.address.reset) {
+                                        this.socket.emit('draftClientAddressAddressReset')
+                                    }
+                                    else {
+                                        this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                    }
+                                }
+                            }
+                        }
+                        if(checkEdition.clientPhone.inEdition) {
+                            if (checkEdition.clientPhone.inEdition) {
+                                if (checkEdition.clientPhone.clientPhoneId) {
+                                    this.socket.emit('draftClientPhoneEdit', checkEdition.clientPhone.clientPhoneId)
+                                    this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
+                                }
+                                else {
+                                    this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
+                                }
+                            }
+                            else {
+                                this.socket.emit('draftClientPhoneEditionCancel')
+                            }
+                        }
+                        /*if(draft.form.client.clientCustomFields.length > 0){
+                            _.map(draft.form.client.clientCustomFields, (clientCustomField) => {
+                                this.socket.emit('draftClientCustomFieldAdd', clientCustomField)
+                            })
+                        }*/
+                    }
+                    else {
+                        const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
+                        this.setDraftRedis(objSetDraftRedis)
+                    }
+                })
+
+            }).catch(() => {
+                console.log('catch do CONSULTDRAFT')
+            })
+        }
+
+        saveDraft(draftId, userEntry = false) {
+            return new Promise((resolve, reject) => {
+                this.findDraftInArray(draftId).then((index) => {
+                    if (index !== -1) {
+                        this.controller.updateDraft(this.channels.updates.drafts[index]).then(() => {
+
+                            this.socket.emit('draftSave')
+                            this.channels.updates.drafts.splice(index, 1)
+                            if (userEntry) {
+                                this.consultDraft(draftId)
+                            }
+                            resolve()
+                        }).catch(() => {
+                            console.log('catch do UPDATEDRAFT - QUE TA DENTRO DO SAVEDRAFT')
+                            reject()
+                        })
+                    }
+                    else {
+                        resolve()
+                    }
+                }).catch(() => {
+                    console.log('catch do FINDDRAFTIN ARRAY - DENTRO DO SAVEDRAFT')
+                    reject()
+                })
+            })
+        }
+    //
+//
+
+            /////////////
+            /// REDIS ///
+            /////////////
+//
     setDraftRedis(setDraftRedis, selectedAddress = false) {
         return new Promise((resolve, reject) => {
             return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'clientFormUpdate', JSON.stringify({ clientAddressForm: { address: { select: (selectedAddress) ? true : false } }, clientPhoneForm: {} }), 'clientFormEdition', JSON.stringify({ clientAddress: { inEdition: setDraftRedis.clientAddress.inEdition, clientAddressId: null }, clientPhone: { inEdition: setDraftRedis.clientPhone.inEdition, clientPhoneId: null } }), (err, res) => {
@@ -293,7 +374,7 @@ module.exports = class Drafts {
             this.consultRedisDraft(contentDraft.draftId).then((redisConsult) => {
                 const checkUpdate = JSON.parse(redisConsult.clientFormUpdate)
 
-                let update = { clientAddressForm: checkUpdate.clientAddressForm, clientPhoneForm: checkUpdate.clientPhoneForm }
+                let update = { clientAddressForm: checkUpdate.clientAddressForm, clientPhoneForm: checkUpdate.clientPhoneForm, clientCustomFieldForm: checkUpdate.clientCustomFieldForm}
                 update.inEdition = _.merge(JSON.parse(redisConsult.clientFormEdition), contentDraft.inEdition)
 
                 if (resetOrSelectAddress) {
@@ -317,13 +398,16 @@ module.exports = class Drafts {
                         }
 
                     }
-                    else if (contentDraft.clientPhoneForm) {
+                    if (contentDraft.clientPhoneForm) {
                         if (contentDraft.clientPhoneForm.reset) {
                             update.clientPhoneForm = {}
                         }
                         else {
                             update.clientPhoneForm = _.assign(checkUpdate.clientPhoneForm, contentDraft.form.clientPhoneForm)
                         }
+                    }
+                    if(contentDraft.clientCustomFieldForm) {
+                        
                     }
                 }
 
@@ -399,29 +483,6 @@ module.exports = class Drafts {
             })
         })
     }
+//
 
-
-    onSocketDisconnect() {
-        this.controller.checkAllPresence().then((presence) => {
-            _.map(presence, (tempDraft) => {
-                const userFound = _.some(tempDraft.presence, (disconnectUser) => {
-                    if (disconnectUser.name === this.socket.user.name && disconnectUser.email === this.socket.user.email) {
-                        return true
-                    }
-                })
-                tempDraft.presence = _.filter(tempDraft.presence, (disconnectUser) => {
-                    return (disconnectUser.name !== this.socket.user.name && disconnectUser.email !== this.socket.user.email)
-                })
-                if (userFound) {
-                    this.controller.savePresenceUser(tempDraft.draftId, tempDraft.presence).then((newPresence) => {
-                        this.server.io.in('draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.presence)
-                    }).catch(() => {
-                        console.log('catch do SAVEPRESENCE USER - DENTRO DO SOCKET DISCONECT')
-                    })
-                }
-            })
-        }).catch(() => {
-            console.log('catch do CHECKALL PRESENCE - NO ON SOCKET DISCONECCT')
-        })
-    }
 }

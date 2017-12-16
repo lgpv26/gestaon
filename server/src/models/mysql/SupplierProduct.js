@@ -12,6 +12,14 @@ module.exports = {
                     type: Sequelize.INTEGER,
                     primaryKey: true
                 },
+                price: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
+                },
+                quantity: {
+                    type: Sequelize.INTEGER,
+                    default: 0
+                },
                 dateUpdated: {
                     type: Sequelize.DATE
                 },

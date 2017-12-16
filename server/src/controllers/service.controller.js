@@ -37,7 +37,8 @@ module.exports = (server, restify) => {
                                                             "query": utils.removeDiacritics(req.params.q.trim()),
                                                             "fields": [
                                                                 "name",
-                                                                "obs"
+                                                                "obs",
+                                                                "legalDocument"
                                                             ],
                                                             "operator": "or",
                                                             "analyzer": "standard"
@@ -46,12 +47,12 @@ module.exports = (server, restify) => {
                                                     {
                                                         "nested": {
                                                             "inner_hits": {},
-                                                            "path": "legaldocuments",
+                                                            "path": "customFields",
                                                             "query": {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.params.q.trim()),
                                                                     "fields": [
-                                                                        "legaldocuments.documentNumber"
+                                                                        "customFields.documentValue"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "and"
@@ -105,7 +106,8 @@ module.exports = (server, restify) => {
                                                             "query": utils.removeDiacritics(req.params.q.trim()),
                                                             "fields": [
                                                                 "name",
-                                                                "obs"
+                                                                "obs",
+                                                                "legalDocument"
                                                             ],
                                                             "operator": "and",
                                                             "analyzer": "standard",
@@ -131,12 +133,12 @@ module.exports = (server, restify) => {
                                                     {
                                                         "nested": {
                                                             "inner_hits": {},
-                                                            "path": "legaldocuments",
+                                                            "path": "customFields",
                                                             "query": {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.params.q.trim()),
                                                                     "fields": [
-                                                                        "legaldocuments.documentNumber"
+                                                                        "customFields.documentValue"
                                                                     ],
                                                                     "analyzer": "standard"
                                                                 }
@@ -170,7 +172,7 @@ module.exports = (server, restify) => {
                                                             "fields": [
                                                                 "name",
                                                                 "obs",
-                                                                "legaldocument"
+                                                                "legalDocument"
                                                             ],
                                                             "analyzer": "standard",
                                                             "operator": "or",
@@ -198,12 +200,12 @@ module.exports = (server, restify) => {
                                                     {
                                                         "nested": {
                                                             "inner_hits": {},
-                                                            "path": "legaldocuments",
+                                                            "path": "customFields",
                                                             "query": {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.params.q.trim()),
                                                                     "fields": [
-                                                                        "legaldocuments.documentNumber"
+                                                                        "customFields.documentValue"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "or",

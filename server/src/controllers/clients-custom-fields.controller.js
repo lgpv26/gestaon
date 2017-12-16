@@ -93,24 +93,20 @@ module.exports = (server, restify) => {
         return new Promise((resolve, reject) => {
             server.mysql.ClientCustomField.findAll({
                 where: {
-                    clientId: parseInt(req.params.id),
-                    customFieldId: {
-                        [Op.or]: [1, 2]
-                    }
+                    clientId: parseInt(req.params.id)
                 },
                 include: [{
                     model: server.mysql.CustomField,
                     as: 'customField'
                 }]
             }).then((findClientCustomFields) => {
-                
                 if (!findClientCustomFields) {
-                    return reject(new restify.ResourceNotFoundError("Custom Field not found or isn't a legaldocument."))
+                    return reject(new restify.ResourceNotFoundError("Custom Field not found."))
                 }
                 let clientCustomFieldES = _.map(findClientCustomFields, clientCustomField => {
                     return { clientCustomFieldId: clientCustomField.id,
                         documentType: clientCustomField.customField.name, 
-                        documentNumber: clientCustomField.value }
+                        documentValue: clientCustomField.value }
                 })
                 server.elasticSearch.update({
                     index: 'main',
@@ -118,7 +114,7 @@ module.exports = (server, restify) => {
                     id: parseInt(req.params.id),
                     body: {
                         doc: {
-                            legaldocuments: clientCustomFieldES
+                            customFields: clientCustomFieldES
                         }
                     }
                 }, (esErr, esRes) => {

@@ -27,6 +27,12 @@ module.exports = {
                 clientsGroupId: {
                     type: Sequelize.INTEGER
                 },
+                legalDocument: {
+                    type: Sequelize.STRING,
+                    set(val) {
+                        this.setDataValue('legalDocument', (val == '' | val == null) ? null : val.toUpperCase().trim());
+                    }
+                },
                 dateUpdated: {
                     type: Sequelize.DATE
                 },

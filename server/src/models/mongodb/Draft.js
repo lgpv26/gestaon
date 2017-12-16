@@ -22,7 +22,11 @@ module.exports = {
             presence: {
                 type: Array,
                 default: []
-            }
+            },
+            changedData: {
+                type: Object,
+                default: {}
+            },
         }, {
             timestamps: {
                 createdAt: 'createdAt',
