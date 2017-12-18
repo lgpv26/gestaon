@@ -4,13 +4,16 @@ module.exports = {
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
+                id: {
+                    type: Sequelize.INTEGER,
+                    primaryKey: true,
+                    autoIncrement: true
+                },
                 supplierId: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true
                 },
                 productId: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true
                 },
                 price: {
                     type: Sequelize.DECIMAL(10,2),
@@ -25,12 +28,17 @@ module.exports = {
                 },
                 dateCreated: {
                     type: Sequelize.DATE
+                },
+                dateRemoved: {
+                    type: Sequelize.DATE
                 }
             }, {
                 tableName: 'supplier_product',
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
+                deletedAt: 'dateRemoved',
+                paranoid: true,
                 freezeTableName: true
             })
         }

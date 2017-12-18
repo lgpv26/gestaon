@@ -174,6 +174,39 @@ module.exports = class Request extends Drafts {
 
     // <-- end CLIENT | setSocketRequestListeners
 
+        ///////////////////////
+        ///     ORDER       ///
+        ///////////////////////
+//
+            ///////////////////////
+            ///     ORDER      ///
+            ///  ** product     ///
+            ///////////////////////
+    //
+        this.socket.on('draft:order-product-add', (orderProductAdd) => {
+            super.resetTimeout()
+            super.saveDraft(orderProductAdd.draftId).then(() => {
+                this.onOrderProductAdd(orderProductAdd)
+            })
+        })
+
+        this.socket.on('draft:order-product-remove', (orderProductRemove) => {
+            super.resetTimeout()
+            super.saveDraft(orderProductRemove.draftId).then(() => {
+                this.onOrderProductRemove(orderProductRemove)
+            })
+        })
+
+        this.socket.on('draft:order-product-select', (clientAddressBack) => {
+            super.resetTimeout()
+            super.saveDraft(clientAddressBack.draftId).then(() => {
+                this.onClientAddressBack(clientAddressBack)
+            })
+        })
+    //<-- end ORDER ** product | setSocketRequestListeners
+
+//<-- end ORDER | setSocketRequestListeners
+
     } // <-- end setSocketRequestListeners
 
     ///////////////////////
@@ -211,6 +244,7 @@ module.exports = class Request extends Drafts {
     onClientReset(clientReset) {
         clientReset.clientAddress = { inEdition: true, clientAddressId: null }
         clientReset.clientPhone = { inEdition: true, clientPhoneId: null }
+        
         super.setDraftRedis(clientReset).then(() => {
             this.controller.resetClient(clientReset).then(() => {
                 this.server.io.in('draft/' + clientReset.draftId).emit('draftClientAddressAdd')
@@ -563,7 +597,7 @@ module.exports = class Request extends Drafts {
                         const draftUpdateMemory = _.find(this.channels.updates.drafts, { draftId: clientCustomField.draftId })
 
                         const indexClientCustomField = _.findIndex(draft.form.client.clientCustomFields, (customField) => { return customField.id === clientCustomField.clientCustomFieldId })
-                        draft.form.client.clientCustomFields[indexClientCustomField] = _.assign(draft.form.client.clientCustomFields[indexClientCustomField], { value: clientCustomField.clientCustomFieldForm.value })
+                        draft.form.client.clientCustomFields[indexClientCustomField] = _.assign(draft.form.client.clientCustomFields[indexClientCustomField], { value: _.toUpper(clientCustomField.clientCustomFieldForm.value) })
 
                         if (draftUpdateMemory) {
                             const draftUpdateIndex = this.channels.updates.drafts.indexOf(draftUpdateMemory)
@@ -618,8 +652,45 @@ module.exports = class Request extends Drafts {
 
     //<-- end CUSTOM FIELD ** in company
 
-
-
 //  <-- end CLIENT
+
+    ///////////////////////
+    ///     ORDEN       ///
+    ///////////////////////
+
+        //////////////////////
+        ///     ORDEN      ///
+        ///  ** product    ///
+        //////////////////////
+    //
+        /**
+         * Order Product Add
+         * @desc Send to all sockets in Draft/:id the add form product event
+         * 
+         * @param {object} orderProductAdd - expected: draftId
+         * @return {int} order Product Id @property {Socket}
+         */
+        onOrderProductAdd(orderProductAdd) {
+            this.controller.orderProductAdd(orderProductAdd).then((orderProduct) => {
+                super.updateDraftRedis(orderProductAdd, true).then(() => {
+                    this.server.io.in('draft/' + orderProductAdd.draftId).emit('draftOrderProductAdd', orderProduct.orderProductId)
+                })
+            })
+        }
+
+        /**
+         * Order Product Remove
+         * @desc Send to all sockets in Draft/:id the remove form product event
+         * 
+         * @param {object} orderProductRemove - expected: draftId, orderProductId
+         * @return {int} order Product Id (removed) @property {Socket}
+         */
+        onOrderProductRemove(orderProductRemove) {
+            this.controller.orderProductRemove(orderProductRemove).then(() => {
+                super.updateDraftRedis(orderProductRemove, true).then(() => {
+                    this.server.io.in('draft/' + orderProductRemove.draftId).emit('draftOrderProductRemove', orderProductRemove.orderProductId)
+                })
+            })
+        }
 
 }

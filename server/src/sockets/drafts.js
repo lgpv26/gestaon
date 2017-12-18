@@ -51,6 +51,7 @@ module.exports = class Drafts {
     onPresenceUpdate(presenceUser) {
         if (presenceUser.leave) {
             const objPresenceUser = { name: this.socket.user.name, email: this.socket.user.email }
+            this.saveDraft(presenceUser.draftId)
             this.onLeavePresence(presenceUser.draftId, objPresenceUser)
             this.setRedisUserPresence({ draftId: null, userId: presenceUser.userId })
         }
@@ -252,14 +253,14 @@ module.exports = class Drafts {
         consultDraft(draftId) {
             this.controller.getOne(draftId).then((draft) => {
                 this.socket.emit('draftUpdate', { draftId: draftId, form: draft.form })
-
                 this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
-                    if (err) console.log(err)
-                    if (checkEdition) {
+                if (err) console.log(err)
 
+                if(draft.form.activeStep === 'client'){
+
+                    if (checkEdition.clientFormEdition) {
                         const update = JSON.parse(checkEdition.clientFormUpdate)
                         checkEdition = JSON.parse(checkEdition.clientFormEdition)
-
                         if (checkEdition.clientAddress.inEdition) {
                             if (checkEdition.clientAddress.clientAddressId) {
                                 this.socket.emit('draftClientAddressEdit', checkEdition.clientAddress.clientAddressId)
@@ -306,18 +307,27 @@ module.exports = class Drafts {
                                 this.socket.emit('draftClientPhoneEditionCancel')
                             }
                         }
-                        /*if(draft.form.client.clientCustomFields.length > 0){
-                            _.map(draft.form.client.clientCustomFields, (clientCustomField) => {
-                                this.socket.emit('draftClientCustomFieldAdd', clientCustomField)
-                            })
-                        }*/
                     }
                     else {
                         const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
                         this.setDraftRedis(objSetDraftRedis)
                     }
-                })
+                }
+                else if(draft.form.activeStep === 'order'){
+                    if (checkEdition.orderProduct) {
 
+                    }
+                    else {
+                        const objSetDraftRedis = {draftId: draftId, orderProductId: draft.form.order.orderProducts[0].orderProductId}
+                        this.setDraftRedis(objSetDraftRedis, false, true)
+                    }
+                }
+                else{
+                    const objSetDraftRedis = {draftId: draftId, isNull: true}
+                    this.setDraftRedis(objSetDraftRedis) 
+                }
+            })
+            
             }).catch(() => {
                 console.log('catch do CONSULTDRAFT')
             })
@@ -356,16 +366,38 @@ module.exports = class Drafts {
             /// REDIS ///
             /////////////
 //
-    setDraftRedis(setDraftRedis, selectedAddress = false) {
+    setDraftRedis(setDraftRedis, selectedAddress = false, orderProduct = false) {
         return new Promise((resolve, reject) => {
-            return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'clientFormUpdate', JSON.stringify({ clientAddressForm: { address: { select: (selectedAddress) ? true : false } }, clientPhoneForm: {} }), 'clientFormEdition', JSON.stringify({ clientAddress: { inEdition: setDraftRedis.clientAddress.inEdition, clientAddressId: null }, clientPhone: { inEdition: setDraftRedis.clientPhone.inEdition, clientPhoneId: null } }), (err, res) => {
-                if (err) {
-                    reject()
-                }
-                else {
-                    resolve()
-                }
-            })
+            if(orderProduct){
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProduct', JSON.stringify({"orderProduct": [{orderProductId: setDraftRedis.orderProductId}]}), (err, res) => {
+                    if (err) {
+                        reject()
+                    }
+                    else {
+                        resolve()
+                    }
+                }) 
+            }
+            else if(setDraftRedis.isNull){
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, (err, res) => {
+                    if (err) {
+                        reject()
+                    }
+                    else {
+                        resolve()
+                    }
+                })
+            }
+            else {
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'clientFormUpdate', JSON.stringify({ clientAddressForm: { address: { select: (selectedAddress) ? true : false } }, clientPhoneForm: {} }), 'clientFormEdition', JSON.stringify({ clientAddress: { inEdition: setDraftRedis.clientAddress.inEdition, clientAddressId: null }, clientPhone: { inEdition: setDraftRedis.clientPhone.inEdition, clientPhoneId: null } }), (err, res) => {
+                    if (err) {
+                        reject()
+                    }
+                    else {
+                        resolve()
+                    }
+                })
+            }
         })
     }
 
@@ -374,7 +406,10 @@ module.exports = class Drafts {
             this.consultRedisDraft(contentDraft.draftId).then((redisConsult) => {
                 const checkUpdate = JSON.parse(redisConsult.clientFormUpdate)
 
-                let update = { clientAddressForm: checkUpdate.clientAddressForm, clientPhoneForm: checkUpdate.clientPhoneForm, clientCustomFieldForm: checkUpdate.clientCustomFieldForm}
+                let update = { clientAddressForm: checkUpdate.clientAddressForm,
+                                clientPhoneForm: checkUpdate.clientPhoneForm, 
+                                orderProduct: checkUpdate.orderProduct
+                            }
                 update.inEdition = _.merge(JSON.parse(redisConsult.clientFormEdition), contentDraft.inEdition)
 
                 if (resetOrSelectAddress) {
@@ -406,7 +441,7 @@ module.exports = class Drafts {
                             update.clientPhoneForm = _.assign(checkUpdate.clientPhoneForm, contentDraft.form.clientPhoneForm)
                         }
                     }
-                    if(contentDraft.clientCustomFieldForm) {
+                    if(contentDraft.orderProduct) {
                         
                     }
                 }

@@ -199,9 +199,7 @@ module.exports = (server, restify) => {
                         }
                     }, function (esErr, esRes) {
                         if (esErr) {
-                            return next(
-                                new restify.ResourceNotFoundError(esErr)
-                            );
+                            return new restify.ResourceNotFoundError(esErr)
                         }
 
                         if ((_.has(updateData, "clientAddresses") && updateData.clientAddresses.length > 0) ||

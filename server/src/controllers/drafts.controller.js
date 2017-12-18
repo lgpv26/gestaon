@@ -62,9 +62,9 @@ module.exports = (server, restify) => {
             }).then((seq) => {
                 req.body.draftId = seq
                 req.body.createdBy = req.auth.id
-                req.body.companyId = req.query.companyId,
-                    req.body.presence = []
-                req.body.form = { client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId } }
+                req.body.companyId = req.query.companyId
+                req.body.presence = []
+                req.body.form = { client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId }, order: { orderProducts: [{orderProductId: 'temp:' + shortid.generate()}] } }
                 req.body.changedData = { company: null, client: null }
                 return server.mongodb.Draft.create(req.body).then((draft) => {
 
@@ -181,7 +181,7 @@ module.exports = (server, restify) => {
         ///////////////////////
         ///     CLIENT      ///
         ///////////////////////
-        //
+//
         selectClient(clientSelect) {
             return this.getOne(clientSelect.draftId).then((draft) => {
                 const req = { params: { id: clientSelect.clientId } }
@@ -208,7 +208,7 @@ module.exports = (server, restify) => {
         ///     CLIENT      ///
         ///  ** address     ///
         ///////////////////////
-        //
+    //
         clientAddressBack(addressBack) {
             return this.getOne(addressBack.draftId).then((draft) => {
                 const update = _.assign(draft.form, { clientAddressForm: {} })
@@ -279,104 +279,104 @@ module.exports = (server, restify) => {
         //CLIENT ADDRESS => ADDRESS  //
         ///////////////////////////////
 
-        //
-        selectAddressClientAddress(addressSelect) {
-            return this.getOne(addressSelect.draftId).then((draft) => {
-                const req = { params: { id: addressSelect.addressId } }
-                return addressesController.getOne(req).then((address) => {
-                    address = JSON.parse(JSON.stringify(address))
+            //
+                selectAddressClientAddress(addressSelect) {
+                    return this.getOne(addressSelect.draftId).then((draft) => {
+                        const req = { params: { id: addressSelect.addressId } }
+                        return addressesController.getOne(req).then((address) => {
+                            address = JSON.parse(JSON.stringify(address))
 
 
-                    const clientAddressForm = _.assign(draft.form.clientAddressForm, { id: (addressSelect.clientAddressId) ? addressSelect.clientAddressId : null, address: address })
-                    const update = _.assign(draft.form, { clientAddressForm: clientAddressForm })
+                            const clientAddressForm = _.assign(draft.form.clientAddressForm, { id: (addressSelect.clientAddressId) ? addressSelect.clientAddressId : null, address: address })
+                            const update = _.assign(draft.form, { clientAddressForm: clientAddressForm })
 
-                    return server.mongodb.Draft.update({ draftId: addressSelect.draftId }, { $set: { form: update } }).then(() => {
-                        return address
+                            return server.mongodb.Draft.update({ draftId: addressSelect.draftId }, { $set: { form: update } }).then(() => {
+                                return address
+                            })
+                        })
                     })
-                })
-            })
-        },
+                },
 
-        resetAddressClientAddress(addressReset) {
-            return this.getOne(addressReset.draftId).then((draft) => {
-                const formAddress = _.assign(draft.form.clientAddressForm, { address: {} })
-                const update = _.assign(draft.form, { clientAddressForm: formAddress })
-                return server.mongodb.Draft.update({ draftId: addressReset.draftId }, { $set: { form: update } }).then(() => {
-                    return null
-                })
-            })
-        },
-        // <--- end CLIENT ADDRESS => ADDRESS | CLIENT ** address
+                resetAddressClientAddress(addressReset) {
+                    return this.getOne(addressReset.draftId).then((draft) => {
+                        const formAddress = _.assign(draft.form.clientAddressForm, { address: {} })
+                        const update = _.assign(draft.form, { clientAddressForm: formAddress })
+                        return server.mongodb.Draft.update({ draftId: addressReset.draftId }, { $set: { form: update } }).then(() => {
+                            return null
+                        })
+                    })
+                },
+            // <--- end CLIENT ADDRESS => ADDRESS | CLIENT ** address
 
-        //  <-- end CLIENT ** address
+    //  <-- end CLIENT ** address
 
         ///////////////////////
         ///     CLIENT      ///
         ///  ** phone       ///
         ///////////////////////
         //
-        phoneEditionCancel(phoneEditionCancel) {
-            return this.getOne(phoneEditionCancel.draftId).then((draft) => {
-                const update = _.assign(draft.form, { clientPhoneForm: {} })
-                return server.mongodb.Draft.update({ draftId: phoneEditionCancel.draftId }, { $set: { form: update } }).then(() => {
-                    return null
-                })
-            })
-        },
-
-        saveClientPhone(clientPhoneSave) {
-            return new Promise((resolve, reject) => {
-                return server.mongodb.Draft.findOne({ draftId: clientPhoneSave.draftId }).then((draft) => {
-                    draft = JSON.parse(JSON.stringify(draft))
-                    const index = _.findIndex(draft.form.client.clientPhones, (clientPhone) => {
-                        return clientPhone.id === draft.form.clientPhoneForm.id
+            phoneEditionCancel(phoneEditionCancel) {
+                return this.getOne(phoneEditionCancel.draftId).then((draft) => {
+                    const update = _.assign(draft.form, { clientPhoneForm: {} })
+                    return server.mongodb.Draft.update({ draftId: phoneEditionCancel.draftId }, { $set: { form: update } }).then(() => {
+                        return null
                     })
-                    let saveClientPhones = draft.form.client.clientPhones
-                    let update = {}
-
-                    if (index !== -1) {
-                        saveClientPhones[index] = _.assign(saveClientPhones[index], draft.form.clientPhoneForm)
-                        update.phoneClientReturn = _.assign(saveClientPhones[index], draft.form.clientPhoneForm)
-                    }
-                    else {
-                        saveClientPhones.push(_.assign(draft.form.clientPhoneForm, { id: (draft.form.clientPhoneForm.id) ? draft.form.clientPhoneForm.id : 'temp:' + (saveClientPhones.length + 1) }))
-                        update.phoneClientReturn = draft.form.clientPhoneForm
-                    }
-
-                    const client = _.assign(draft.form.client, { clientPhones: saveClientPhones })
-                    update.form = _.assign(draft.form, { client: client, clientPhoneForm: {} })
-
-                    resolve(update)
                 })
-            }).then((save) => {
-                return server.mongodb.Draft.update({ draftId: clientPhoneSave.draftId }, { $set: { form: save.form } }).then(() => {
-                    return save.phoneClientReturn
-                })
-            })
-        },
+            },
 
-        removeClientPhone(clientPhoneRemove) {
-            return new Promise((resolve, reject) => {
-                return server.mongodb.Draft.findOne({ draftId: clientPhoneRemove.draftId }).then((draft) => {
-                    draft = JSON.parse(JSON.stringify(draft))
-                    let update = {}
-                    update.saveClientPhones = _.filter(draft.form.client.clientPhones, (clientPhone) => {
-                        return clientPhone.id !== clientPhoneRemove.clientPhoneId
+            saveClientPhone(clientPhoneSave) {
+                return new Promise((resolve, reject) => {
+                    return server.mongodb.Draft.findOne({ draftId: clientPhoneSave.draftId }).then((draft) => {
+                        draft = JSON.parse(JSON.stringify(draft))
+                        const index = _.findIndex(draft.form.client.clientPhones, (clientPhone) => {
+                            return clientPhone.id === draft.form.clientPhoneForm.id
+                        })
+                        let saveClientPhones = draft.form.client.clientPhones
+                        let update = {}
+
+                        if (index !== -1) {
+                            saveClientPhones[index] = _.assign(saveClientPhones[index], draft.form.clientPhoneForm)
+                            update.phoneClientReturn = _.assign(saveClientPhones[index], draft.form.clientPhoneForm)
+                        }
+                        else {
+                            saveClientPhones.push(_.assign(draft.form.clientPhoneForm, { id: (draft.form.clientPhoneForm.id) ? draft.form.clientPhoneForm.id : 'temp:' + (saveClientPhones.length + 1) }))
+                            update.phoneClientReturn = draft.form.clientPhoneForm
+                        }
+
+                        const client = _.assign(draft.form.client, { clientPhones: saveClientPhones })
+                        update.form = _.assign(draft.form, { client: client, clientPhoneForm: {} })
+
+                        resolve(update)
                     })
-
-                    update.clientPhoneId = clientPhoneRemove.clientPhoneId
-
-                    const client = _.assign(draft.form.client, { clientPhones: update.saveClientPhones })
-                    update.form = _.assign(draft.form, { client: client, clientPhoneForm: {} })
-
-                    resolve(update)
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: clientPhoneSave.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save.phoneClientReturn
+                    })
                 })
-            }).then((save) => {
-                return server.mongodb.Draft.update({ draftId: clientPhoneRemove.draftId }, { $set: { form: save.form } }).then(() => {
-                    return save.clientPhoneId
+            },
+
+            removeClientPhone(clientPhoneRemove) {
+                return new Promise((resolve, reject) => {
+                    return server.mongodb.Draft.findOne({ draftId: clientPhoneRemove.draftId }).then((draft) => {
+                        draft = JSON.parse(JSON.stringify(draft))
+                        let update = {}
+                        update.saveClientPhones = _.filter(draft.form.client.clientPhones, (clientPhone) => {
+                            return clientPhone.id !== clientPhoneRemove.clientPhoneId
+                        })
+
+                        update.clientPhoneId = clientPhoneRemove.clientPhoneId
+
+                        const client = _.assign(draft.form.client, { clientPhones: update.saveClientPhones })
+                        update.form = _.assign(draft.form, { client: client, clientPhoneForm: {} })
+
+                        resolve(update)
+                    })
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: clientPhoneRemove.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save.clientPhoneId
+                    })
                 })
-            })
-        },
+            },
 
         //  <--- end CLIENT ** phone
 
@@ -385,68 +385,72 @@ module.exports = (server, restify) => {
         /// ** customField  ///
         ///////////////////////
         //    
-        clientCustomFieldAdd(clientCustomFieldAdd) {
-            return this.getOne(clientCustomFieldAdd.draftId).then((draft) => {
+            clientCustomFieldAdd(clientCustomFieldAdd) {
+                return this.getOne(clientCustomFieldAdd.draftId).then((draft) => {
 
-                return new Promise((resolve, reject) => {
-                    if (!_.isInteger(clientCustomFieldAdd.customFieldId)) {
-                        const checkCustomFieldId = clientCustomFieldAdd.customFieldId.split(':')
-                        if (_.first(checkCustomFieldId) === 'temp') {
-                            const index = _.findIndex(draft.changedData.company.customFields, { id: clientCustomFieldAdd.customFieldId })
+                    return new Promise((resolve, reject) => {
+                        if (!_.isInteger(clientCustomFieldAdd.customFieldId)) {
+                            const checkCustomFieldId = clientCustomFieldAdd.customFieldId.split(':')
+                            if (_.first(checkCustomFieldId) === 'temp') {
+                                const index = _.findIndex(draft.changedData.company.customFields, { id: clientCustomFieldAdd.customFieldId })
 
-                            resolve(draft.changedData.company.customFields[index])
+                                resolve(draft.changedData.company.customFields[index])
+                            }
                         }
-                    }
-                    else {
-                        const req = { params: { customFieldId: clientCustomFieldAdd.customFieldId, companyId: (clientCustomFieldAdd.user.activeCompanyUserId) ? clientCustomFieldAdd.user.activeCompanyUserId : clientCustomFieldAdd.user.companies[0] } }
-                        customFieldsController.getOne(req).then((customField) => {
-                            resolve(JSON.parse(JSON.stringify(customField)))
-                        })
-                    }
-                }).then((addCustomField) => {
+                        else {
+                            const req = { params: { customFieldId: clientCustomFieldAdd.customFieldId, companyId: (clientCustomFieldAdd.user.activeCompanyUserId) ? clientCustomFieldAdd.user.activeCompanyUserId : clientCustomFieldAdd.user.companies[0] } }
+                            customFieldsController.getOne(req).then((customField) => {
+                                resolve(JSON.parse(JSON.stringify(customField)))
+                            })
+                        }
+                    }).then((addCustomField) => {
 
-                    if (addCustomField || addCustomField.length > 1) {
+                        if (addCustomField || addCustomField.length > 1) {
+                            let update = {}
+                            let saveClientCustomFields = (draft.form.client.clientCustomFields) ? draft.form.client.clientCustomFields : []
+
+                            update.clientCustomField = { id: 'temp:' + shortid.generate(), 
+                                                        clientId: (clientCustomFieldAdd.clientId) ? clientCustomFieldAdd.clientId : null, 
+                                                        value: null, 
+                                                        customField: addCustomField 
+                                                    }
+                            const client = _.assign(draft.form.client, { clientCustomFields: _.concat(saveClientCustomFields, update.clientCustomField) })
+                            update.form = _.assign(draft.form, { client: client })
+
+                            return server.mongodb.Draft.update({ draftId: clientCustomFieldAdd.draftId }, { $set: { form: update.form } }).then(() => {
+                                return update
+                            })
+                        }
+                        else {
+                            return { clientCustomField: 'Erro na consulta do custom Field' }
+                        }
+                    })
+                })
+
+            },
+
+            clientCustomFieldRemove(clientCustomFieldRemove) {
+                return new Promise((resolve, reject) => {
+                    return server.mongodb.Draft.findOne({ draftId: clientCustomFieldRemove.draftId }).then((draft) => {
+                        draft = JSON.parse(JSON.stringify(draft))
                         let update = {}
-                        let saveClientCustomFields = (draft.form.client.clientCustomFields) ? draft.form.client.clientCustomFields : []
+                        update.saveClientCustomFields = _.filter(draft.form.client.clientCustomFields, (clientCustomField) => {
+                            return clientCustomField.id !== clientCustomFieldRemove.clientCustomFieldId
+                        })
 
-                        update.clientCustomField = { id: 'temp:' + shortid.generate(), clientId: (clientCustomFieldAdd.clientId) ? clientCustomFieldAdd.clientId : null, value: null, customField: addCustomField }
-                        const client = _.assign(draft.form.client, { clientCustomFields: _.concat(saveClientCustomFields, update.clientCustomField) })
+                        update.clientCustomFieldId = clientCustomFieldRemove.clientCustomFieldId
+
+                        const client = _.assign(draft.form.client, { clientCustomFields: update.saveClientCustomFields })
                         update.form = _.assign(draft.form, { client: client })
 
-                        return server.mongodb.Draft.update({ draftId: clientCustomFieldAdd.draftId }, { $set: { form: update.form } }).then(() => {
-                            return update
-                        })
-                    }
-                    else {
-                        return { clientCustomField: 'Erro na consulta do custom Field' }
-                    }
-                })
-            })
-
-        },
-
-        clientCustomFieldRemove(clientCustomFieldRemove) {
-            return new Promise((resolve, reject) => {
-                return server.mongodb.Draft.findOne({ draftId: clientCustomFieldRemove.draftId }).then((draft) => {
-                    draft = JSON.parse(JSON.stringify(draft))
-                    let update = {}
-                    update.saveClientCustomFields = _.filter(draft.form.client.clientCustomFields, (clientCustomField) => {
-                        return clientCustomField.id !== clientCustomFieldRemove.clientCustomFieldId
+                        resolve(update)
                     })
-
-                    update.clientCustomFieldId = clientCustomFieldRemove.clientCustomFieldId
-
-                    const client = _.assign(draft.form.client, { clientCustomFields: update.saveClientCustomFields })
-                    update.form = _.assign(draft.form, { client: client })
-
-                    resolve(update)
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: clientCustomFieldRemove.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save
+                    })
                 })
-            }).then((save) => {
-                return server.mongodb.Draft.update({ draftId: clientCustomFieldRemove.draftId }, { $set: { form: save.form } }).then(() => {
-                    return save
-                })
-            })
-        },
+            },
         //  <--- end CLIENT ** customField
 
 
@@ -455,49 +459,91 @@ module.exports = (server, restify) => {
         /// ** in company   ///
         ///////////////////////
         //    
-        customFieldChange(customFieldChange) {
-            return this.getOne(customFieldChange.draftId).then((draft) => {
+            customFieldChange(customFieldChange) {
+                return this.getOne(customFieldChange.draftId).then((draft) => {
 
-                if (!draft.changedData.company) {
-                    draft.changedData.company = { customFields: null }
-                }
+                    if (!draft.changedData.company) {
+                        draft.changedData.company = { customFields: null }
+                    }
 
-                const index = _.findIndex(draft.changedData.company.customFields, (customField) => {
-                    return customField.id === (customFieldChange.customFieldId) ? customFieldChange.customFieldId : null
+                    const index = _.findIndex(draft.changedData.company.customFields, (customField) => {
+                        return customField.id === (customFieldChange.customFieldId) ? customFieldChange.customFieldId : null
+                    })
+
+                    let saveCustomFields = (draft.changedData.company.customFields) ? draft.changedData.company.customFields : []
+                    let update = {}
+
+                    update.customField = {
+                        id: (customFieldChange.customFieldId) ? customFieldChange.customFieldId : 'temp:' + shortid.generate(),
+                        name: _.toUpper(customFieldChange.name),
+                        companyId: (customFieldChange.user.activeCompanyUserId) ? customFieldChange.user.activeCompanyUserId : customFieldChange.user.companies[0],
+                        remove: (customFieldChange.remove) ? true : false
+                    }
+
+                    if (index !== -1) {
+                        saveCustomFields[index] = _.assign(saveCustomFields[index], update.customField)
+                        update.customFieldReturn = _.assign(saveCustomFields[index], update.customField)
+                    }
+                    else {
+                        saveCustomFields.push(update.customField)
+                        update.customFieldReturn = update.customField
+                    }
+
+                    const company = _.assign(draft.changedData.company, { customFields: saveCustomFields })
+                    update.changedData = _.assign(draft.changedData, { company: company })
+
+                    return server.mongodb.Draft.update({ draftId: customFieldChange.draftId }, { $set: { changedData: update.changedData } }).then(() => {
+                        return update
+                    })
                 })
+            },
 
-                let saveCustomFields = (draft.changedData.company.customFields) ? draft.changedData.company.customFields : []
-                let update = {}
+        // <-- end CUSTOM FIELD ** in company
 
-                update.customField = {
-                    id: (customFieldChange.customFieldId) ? customFieldChange.customFieldId : 'temp:' + shortid.generate(),
-                    name: customFieldChange.name,
-                    companyId: (customFieldChange.user.activeCompanyUserId) ? customFieldChange.user.activeCompanyUserId : customFieldChange.user.companies[0],
-                    remove: (customFieldChange.remove) ? true : false
-                }
+//  <-- end CLIENT
 
-                if (index !== -1) {
-                    saveCustomFields[index] = _.assign(saveCustomFields[index], update.customField)
-                    update.customFieldReturn = _.assign(saveCustomFields[index], update.customField)
-                }
-                else {
-                    saveCustomFields.push(update.customField)
-                    update.customFieldReturn = update.customField
-                }
+        //////////////////////
+        ///     ORDER      ///
+        //////////////////////
 
-                const company = _.assign(draft.changedData.company, { customFields: saveCustomFields })
-                update.changedData = _.assign(draft.changedData, { company: company })
+//
+            //////////////////////
+            ///     ORDER      ///
+            /// ** product     ///
+            //////////////////////
 
-                return server.mongodb.Draft.update({ draftId: customFieldChange.draftId }, { $set: { changedData: update.changedData } }).then(() => {
-                    return update
+        orderProductAdd(orderProductAdd) {
+            return this.getOne(orderProductAdd.draftId).then((draft) => {
+                const orderProduct = {orderProductId: 'temp:' + shortid.generate()}
+
+                draft.form.order.orderProducts.push(orderProduct)
+
+                const order = _.assign(draft.form.order, {orderProducts: draft.form.order.orderProducts})
+                const update = _.assign(draft.form, { order: order })
+
+                return server.mongodb.Draft.update({ draftId: orderProductAdd.draftId }, { $set: { form: update } }).then(() => {
+                    return orderProduct
                 })
             })
         },
 
-        // <-- end CUSTOM FIELD ** in company
+        orderProductRemove(orderProductRemove) {
+            return this.getOne(orderProductRemove.draftId).then((draft) => {
 
-        //  <-- end CLIENT
+                let orderProducts = _.filter(draft.form.order.orderProducts, (orderProduct) => {
+                    return orderProduct.orderProductId !== orderProductRemove.orderProductId
+                })
 
+                const order = _.assign(draft.form.order, {orderProducts: orderProducts})
+                const update = _.assign(draft.form, { order: order })
+
+                return server.mongodb.Draft.update({ draftId: orderProductRemove.draftId }, { $set: { form: update } }).then(() => {
+                    return true
+                })
+            })
+        },
+
+// <-- end ORDER
 
     } // <-- end RETURN
 
