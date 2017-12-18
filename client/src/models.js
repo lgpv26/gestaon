@@ -1,4 +1,22 @@
 export default {
+    createClientCustomFieldModel(){
+        return {
+            id: null,
+            clientId: null,
+            value: null,
+            customField: this.createCustomFieldModel()
+        }
+    },
+    createCustomFieldModel(){
+        return {
+            id: null,
+            companyId: null,
+            name: null,
+            dateUpdated: null,
+            dateCreated: null,
+            dateRemoved: null
+        }
+    },
     createClientPhoneModel(){
         return {
             id: null,
@@ -12,6 +30,7 @@ export default {
             name: null,
             number: null,
             complement: null,
+            clientAddressTypes: [],
             address: this.createAddressModel()
         }
     },

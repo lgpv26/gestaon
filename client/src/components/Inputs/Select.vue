@@ -26,8 +26,8 @@
                     </div>
                 </div>
                 <div class="container__input" v-if="showInput">
-                    <input type="text" placeholder="ADICIONAR NOVO" />
-                    <div style="position: absolute; right: 0px; top: 0; cursor: pointer;" @click="">
+                    <input type="text" v-model="inputValue" placeholder="ADICIONAR NOVO" />
+                    <div style="position: absolute; right: 0px; top: 0; cursor: pointer;" @click="saveInput()">
                         <icon-check></icon-check>
                     </div>
                 </div>
@@ -45,7 +45,8 @@
             return {
                 popperInstance: null,
                 closeTimeout: null,
-                isShowing: false
+                isShowing: false,
+                inputValue: null
             }
         },
         props: ['value','sections','items','title','verticalOffset','horizontalOffset','showInput','multiple'],
@@ -120,6 +121,9 @@
                     }
                 }
                 this.closeSelect();
+            },
+            saveInput(){
+                this.$emit('save', this.inputValue);
             },
             onValueChanged(value){
                 this.$emit('input', value);

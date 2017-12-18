@@ -6,7 +6,8 @@
                    @keydown="onSearchValueUpdate()" @focus="isInputFocused = true" @blur="isInputFocused = false" />
             <template slot="item" slot-scope="props">
                 <div class="search-input__item">
-                    <span class="detail__name">Teste</span>
+                    <span class="detail__name">{{ props.item.product }}</span>
+                    <span class="detail__supplier">{{ props.item.supplierName }}</span>
                 </div>
             </template>
             <template slot="no-results">
@@ -18,11 +19,11 @@
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import { Select } from "../../../../../components/Inputs/Select/index";
+    import { Select } from "@/components/Inputs/Select/index";
     import _ from 'lodash';
-    import utils from '../../../../../utils/index';
-    import ProductsAPI from '../../../../../api/products';
-    import SearchComponent from '../../../../../components/Inputs/Search.vue';
+    import utils from '@/utils/index';
+    import ProductsAPI from '@/api/products';
+    import SearchComponent from '@/components/Inputs/Search.vue';
 
     export default {
         components: {
@@ -51,24 +52,17 @@
 
             search(){
                 const vm = this;
-                /*
-                ServiceAPI.search({
+                ProductsAPI.search({
                     actingCities: ['MARINGA'],
                     q: vm.query,
                     companyId: vm.company.id
                 }).then(({data}) => {
-                    let clients = data[0];
-                    vm.searchItems = clients.map(({source}) => {
-                        // source refers to search address item
-                        return {
-                            client: source
-                        };
-                    });
+                    vm.searchItems = data;
                     vm.$refs.search.search();
+                    console.log(vm.searchItems);
                 }).catch((err) => {
                     vm.searchItems = [];
-                })
-                */
+                });
             },
             onSearchProductSelect(searchItem){
                 const vm = this;
@@ -80,7 +74,7 @@
             onSearchValueUpdate(){
                 if(this.commitTimeout) clearTimeout(this.commitTimeout);
                 this.commitTimeout = setTimeout(() => {
-                    this.query = this.form.name;
+                    this.query = this.searchValue;
                     this.commitUpdatedValue();
                 }, 300)
             },

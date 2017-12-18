@@ -11,7 +11,7 @@
                 <div ref="scrollbar" style="overflow-y: auto; max-height: 180px;">
                     <div class="scrollable-content">
                         <div class="result-box__items" v-show="items && items.length > 0 && !forceNoResults">
-                            <div v-for="item in items" v-if="!showOnly || item[showOnly]" class="items__item" ref="searchable" @click="searchItemSelected(item)">
+                            <div v-for="item in items" v-if="!showOnly || item[showOnly]" :key="item.iterationId" class="items__item" ref="searchable" @click="searchItemSelected(item)">
                                 <slot name="item" :item="item"></slot>
                             </div>
                         </div>
@@ -40,6 +40,11 @@
         },
         props: ['items', 'shouldStayOpen', 'query', 'showOnly', 'verticalOffset', 'horizontalOffset', 'forceNoResults'],
         watch: {
+            items(){
+                this.items.map((item) => {
+                    item.iterationId = _.uniqueId('i#');
+                });
+            },
             showOnly(){
                 const vm = this;
                 Vue.nextTick(() => {

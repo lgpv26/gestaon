@@ -16,5 +16,8 @@ export default {
     },
     removeOne(id){
         return Vue.http.delete(config.apiBaseUrl + '/products/' + id).then((response) => response.json());
+    },
+    search(params){
+        return Vue.http.get(config.apiBaseUrl + '/products/search', { params }).then((response) => response.json());
     }
 }

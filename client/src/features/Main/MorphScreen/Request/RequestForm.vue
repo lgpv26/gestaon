@@ -37,16 +37,20 @@
 
     export default {
         sockets: {
-            presenceDraft(data){
+            draftPresence(data){
                 this.presenceUsers = data;
             },
-            draftSaved(){
+            draftSave(){
                 this.saving = false;
             },
-            updateDraft({draftId, form}){
+            draftUpdate({draftId, form}){
                 if(draftId === this.activeMorphScreen.draft.draftId) {
-                    console.log(form);
-                    _.mergeWith(this.form, form);
+                    console.log("Received draft:update", { draftId, form });
+                    this.form = _.merge(this.form, form);
+                    this.$bus.$emit('draft:update', {
+                        draftId: draftId,
+                        form: this.form
+                    });
                     this.stopLoading();
                 }
             }
@@ -59,11 +63,8 @@
         data(){
             return {
                 scrollbar: null,
-
                 presenceUsers: [],
-
                 lastForm: null,
-
                 draftId: null, // requestId
                 originalId: null, // se estiver editando um draft originado de um dado já salvo no MySQL
                 type: 'request',
@@ -108,23 +109,10 @@
                                 name: null // string
                             }
                         ],
-                        clientCustomFields: [
-                            {
-                                clientCustomFieldId: null,
-                                value: '',
-                                customFieldId: null,
-                                /* salva no mysql -- nao no draft */
-                                customField: {
-                                    companyId: null,
-                                    id: null,
-                                    name: "Apelido do contato"
-                                },
-                                /* --- */
-                            }
-                        ]
+                        clientCustomFields: []
                     },
                     order: {
-                        name: ''
+                        orderProducts: []
                     },
                     task: {
                         name: ''
@@ -147,20 +135,18 @@
             sync(path){
                 this.saving = true;
                 const emitData = { draftId: this.activeMorphScreen.draft.draftId, form: this.getIsolatedFormPathObj(path)};
-                console.log("Emitting update-draft", emitData);
-                this.$socket.emit('update-draft', emitData);
+                console.log("Emitting draft:update", emitData);
+                this.$socket.emit('draft:update', emitData);
             }
         },
         mounted(){
-            const vm = this;
             this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
                 overscrollEffect: 'bounce',
                 alwaysShowTracks: true
             });
-            this.$socket.emit('presence-update-draft', {
-                draftId: vm.activeMorphScreen.draft.draftId,
-                userId: vm.user.id
-            });
+            const emitData = { draftId: this.activeMorphScreen.draft.draftId, userId: this.user.id};
+            console.log("Emitting draft:presence", emitData);
+            this.$socket.emit('draft:presence', emitData);
         },
         updated(){
             this.scrollbar.update();

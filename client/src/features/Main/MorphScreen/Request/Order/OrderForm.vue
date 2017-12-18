@@ -28,7 +28,7 @@
                                                 <div style="cursor: pointer; margin-right: 8px;">
                                                     <icon-mini-chart></icon-mini-chart>
                                                 </div>
-                                                <div style="cursor: pointer; margin-top: -1px;" @click="removeProduct(orderProduct.id)" v-if="form.orderProducts.length > 1">
+                                                <div style="cursor: pointer; margin-top: -1px;" @click="removeProduct(orderProduct.orderProductId)" v-if="form.orderProducts.length > 1">
                                                     <icon-remove></icon-remove>
                                                 </div>
                                                 <div style="cursor: not-allowed; opacity: .3; margin-top: -1px;" v-else>
@@ -92,7 +92,8 @@
                         <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
                             Observação do pedido
                         </label>
-                        <input type="text" style="width: initial;" class="input--borderless" placeholder="..." />
+                        <input type="text" style="width: initial;" class="input--borderless" placeholder="..."
+                        v-model="order.obs" @input="commitSocketChanges('order.obs')"/>
                     </div>
                 </div>
                 <div class="form-groups">
@@ -208,6 +209,7 @@
     import EmployeeInput from './EmployeeInput.vue';
     import StorageInput from './StorageInput.vue';
     import DivulgationChannelInput from './DivulgationChannelInput.vue';
+    import ProductsAPI from '@/api/products';
 
     export default {
         components: {
@@ -226,7 +228,7 @@
                     paymentMethodId: null,
                     orderProducts: [
                         {
-                            id: _.uniqueId("product#"),
+                            orderProductId: _.uniqueId("product#"),
                             productId: null,
                             quantity: 1
                         }
@@ -239,25 +241,51 @@
                     ],
                     price: 0
                 },
-                products: [
-                    {
-                        name: 'GÁS LP 13KG'
-                    }
-                ]
+                searchProducts: []
             }
         },
         computed: {
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
             isCurrentStepActive(){
                 return this.activeStep === 'order';
             }
         },
-        methods: {
-            addProduct(){
+        watch: {
+            form: {
+                handler: function(form) {
+                    this.syncWithParentForm();
+                },
+                deep: true
+            }
+        },
+        sockets: {
+
+            /* draft order products */
+
+            draftOrderProductAdd(orderProductId){
+                console.log("Received draftOrderProductAdd", orderProductId);
                 this.form.orderProducts.push({
-                    id: _.uniqueId("product#"),
+                    orderProductId: orderProductId,
                     productId: null,
                     quantity: 1
-                })
+                });
+            },
+            draftOrderProductRemove(orderProductId){
+                console.log("Received draftOrderProductRemove", orderProductId);
+                const orderProductIndex = _.findIndex(this.form.orderProducts, { orderProductId: orderProductId });
+                if(orderProductIndex !== -1){
+                    this.form.orderProducts.splice(orderProductIndex, 1);
+                }
+            }
+
+        },
+        methods: {
+            addProduct(){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                };
+                console.log("Emitting draft:order-product-add", emitData);
+                this.$socket.emit('draft:order-product-add', emitData);
             },
             addPaymentMethod(){
                 this.form.orderPaymentMethods.push({
@@ -266,10 +294,12 @@
                 })
             },
             removeProduct(orderProductId){
-                let orderProductIndex = _.findIndex(this.form.orderProducts, { id: orderProductId });
-                if(orderProductIndex !== -1){
-                    this.form.orderProducts.splice(orderProductIndex, 1);
-                }
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    orderProductId: orderProductId
+                };
+                console.log("Emitting draft:order-product-remove", emitData);
+                this.$socket.emit('draft:order-product-remove', emitData);
             },
             removePaymentMethod(orderPaymentMethodId){
                 let orderPaymentMethodIndex = _.findIndex(this.form.orderPaymentMethods, { id: orderPaymentMethodId });
@@ -280,16 +310,32 @@
             activateTab(tab){
                 this.activeTab = tab;
             },
+
+            /**
+             * Real-time
+             */
+
+            commitTrustedSocketChanges(ev, mapping){
+                if(ev.isTrusted){
+                    setImmediate(() => {
+                        this.commitSocketChanges(mapping);
+                    });
+                }
+            },
             onCurrentStepChanged(value){
                 (this.activeStep === 'order') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'order');
                 this.commitSocketChanges('activeStep');
             },
+            syncWithParentForm(){
+                this.$emit('update:order', this.form);
+            },
             commitSocketChanges(mapping){
                 this.$emit('sync', mapping);
             }
+
         },
         mounted(){
-            const vm = this;
+            this.syncWithParentForm();
             Highcharts.theme = {
                 colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066',
                     '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
@@ -484,7 +530,7 @@
                 maskColor: 'rgba(255,255,255,0.3)'
             };
             Highcharts.setOptions(Highcharts.theme);
-            vm.productChart = Highcharts.chart(this.$refs.productChart, {
+            this.productChart = Highcharts.chart(this.$refs.productChart, {
                 chart: {
                     height: 200
                 },

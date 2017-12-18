@@ -44,7 +44,8 @@
                     </div>
                     <div class="form-group">
                         CPF / CNPJ
-                        <app-mask class="input--borderless" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="form.legalDocument" placeholder="..." @input.native="commitTrustedSocketChanges($event,'client.legalDocument')" />
+                        <app-mask class="input--borderless" ref="legalDocumentInput" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="form.legalDocument"
+                        placeholder="..." @input.native="commitTrustedSocketChanges($event,'client.legalDocument')" />
                     </div>
                 </div>
                 <!-- client addresses -->
@@ -171,8 +172,9 @@
                 </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <app-select class="form-group__header" :verticalOffset="8" :items="clientCustomFields" v-model="form.clientSelectedCustomFields"
-                            :multiple="true" :showInput="true" @select="onClientCustomFieldSelect($event)" @unselect="onClientCustomFieldUnselect($event)">
+                        <app-select class="form-group__header" :verticalOffset="8" :items="customFieldsSelectOptions" v-model="form.clientSelectedCustomFields"
+                            :multiple="true" :showInput="true" @select="onClientCustomFieldSelect($event)" @unselect="onClientCustomFieldUnselect($event)"
+                            @save="onCustomFieldSave($event)">
                             <div class="header__icon">
                                 <icon-client-details></icon-client-details>
                             </div>
@@ -182,14 +184,17 @@
                             <icon-add class="header__action-icon" v-else></icon-add>
                             <template slot="item" slot-scope="itemProps">
                                 <span>{{itemProps.text }}</span>
+                                <div style="margin-left: 8px;" v-if="itemProps.isRemovable" @click="removeCustomField(itemProps.value)">
+                                    <icon-remove></icon-remove>
+                                </div>
                             </template>
                         </app-select>
-                        <div class="form-group__content" v-if="form.clientCustomFields && unspecialClientCustomFields.length > 0">
+                        <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
                             <ul class="content__list--mini">
-                                <li class="list__item" v-for="clientCustomField in form.clientCustomFields" v-if="unspecialClientCustomFields.includes(clientCustomField.customField.id)">
+                                <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
                                     <span>{{ clientCustomField.customField.name }}</span>
                                     <div class="item__mini-circle"></div>
-                                    <span><input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" /></span>
+                                    <input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" />
                                     <span class="push-both-sides"></span>
                                     <icon-remove></icon-remove>
                                 </li>
@@ -303,22 +308,30 @@
                     clientPhones: [],
                     clientAddressName: null
                 },
-                clientCustomFields: [
+                customFields: [
                     {
-                        text: 'CNPJ',
-                        value: 2
+                        companyId: 0,
+                        dateCreated: null,
+                        dateUpdated: null,
+                        name: 'RG',
+                        id: 1,
+                        dateRemoved: null
                     },
                     {
-                        text: 'RG',
-                        value: 3
+                        companyId: 0,
+                        dateCreated: null,
+                        dateUpdated: null,
+                        name: 'E-MAIL',
+                        id: 2,
+                        dateRemoved: null
                     },
                     {
-                        text: 'E-mail',
-                        value: 4
-                    },
-                    {
-                        text: 'Apelido',
-                        value: 5
+                        companyId: 0,
+                        dateCreated: null,
+                        dateUpdated: null,
+                        name: 'APELIDO',
+                        id: 3,
+                        dateRemoved: null
                     }
                 ],
                 clientGroups: [
@@ -344,38 +357,14 @@
             }
         },
         watch: {
+            'form.legalDocument': function(legalDocument){
+                this.$refs.legalDocumentInput.display = legalDocument;
+            },
+            'clientAddress.address.cep': function(cep){
+                this.$refs.cepInput.display = cep;
+            },
             'clientPhoneForm.number': function(number){
                 this.$refs.clientPhoneInput.display = number;
-            },
-            'form.clientSelectedCustomFields' : function(clientSelectedCustomFields, oldClientSelectedCustomFields) {
-                if(clientSelectedCustomFields.length && clientSelectedCustomFields.length > 0){
-                    this.form.clientCustomFields = _.reduce(this.clientCustomFields, (accumulator, clientCustomField, index) => {
-                        if(_.includes(clientSelectedCustomFields, clientCustomField.value)){ // Exists in selected custom fields
-                            const existentClientCustomField = _.find(this.form.clientCustomFields, {
-                                clientCustomFieldId: clientCustomField.value
-                            });
-                            if(existentClientCustomField){
-                                accumulator.push(existentClientCustomField);
-                            }
-                            else {
-                                accumulator.push({
-                                    text: clientCustomField.text,
-                                    clientCustomFieldId: clientCustomField.value,
-                                    customField: {
-                                        id: clientCustomField.value
-                                    },
-                                    value: null
-                                });
-                            }
-                            return accumulator;
-                        }
-                        // If it does not exist in selected custom fields, don't push it to accumulator
-                        return accumulator;
-                    }, []);
-                }
-                else {
-                    this.form.clientCustomFields = [];
-                }
             },
             form: {
                 handler: function(form) {
@@ -389,6 +378,15 @@
             ...mapState('auth', ['user','company']),
             isCurrentStepActive(){
                 return this.activeStep === 'client';
+            },
+            customFieldsSelectOptions(){
+                return _.map(this.customFields, (customField) => {
+                    return {
+                        text: customField.name,
+                        isRemovable: customField.companyId !== 0,
+                        value: customField.id
+                    }
+                });
             },
             selectedClientGroup(){
                 return _.find(this.clientGroups, { value: this.form.clientGroup });
@@ -412,23 +410,60 @@
             shortenedClientAddress(){
                 if(this.selectedClientAddress)
                 return utils.getShortString(this.selectedClientAddress.address.name, 24, '[...]') + ', ' + this.selectedClientAddress.number + ' - ' + this.selectedClientAddress.complement;
-            },
-            unspecialClientCustomFields(){
-                return _.filter(this.form.clientCustomFields, (clientCustomField) => {
-                    if(clientCustomField.customField.id !== 1) return true;
-                }).map(clientCustomField => clientCustomField.customField.id);
             }
         },
         sockets: {
-            draftClientCustomFieldAdd(clientCustomField){
+
+            /* draft custom fields */
+
+            draftCustomFieldSave(customField){
+                console.log("Received draftCustomFieldSave", customField);
+                const customFieldIndex = _.findIndex(this.customFields, { id: customField.id });
+                let tCustomField = models.createCustomFieldModel();
+                utils.assignToExistentKeys(tCustomField, customField);
+                if(customFieldIndex !== -1){ // updating an existent custom field
+                    Vue.set(this.customFields, customFieldIndex, tCustomField);
+                }
+                else { // creating a new custom field
+                    this.customFields.push(tCustomField);
+                    console.log(this.customFields);
+                }
+            },
+
+            /* draft client custom fields */
+
+            draftClientCustomFieldUpdate(clientCustomField){
                 console.log("Received draftClientCustomFieldUpdate", clientCustomField);
+                const clientCustomFieldIndex = _.findIndex(this.form.clientCustomFields, { id: clientCustomField.clientCustomFieldId });
+                if(clientCustomFieldIndex !== -1){
+                    let tClientCustomField = this.form.clientCustomFields[clientCustomFieldIndex];
+                    _.assign(tClientCustomField, {
+                        value: clientCustomField.clientCustomFieldForm.value
+                    });
+                    Vue.set(this.form.clientCustomFields, clientCustomFieldIndex, tClientCustomField)
+                }
             },
             draftClientCustomFieldAdd(clientCustomField){
                 console.log("Received draftClientCustomFieldAdd", clientCustomField);
+                let tClientCustomField = models.createClientCustomFieldModel();
+                utils.assignToExistentKeys(tClientCustomField.customField, clientCustomField.customField);
+                delete clientCustomField.customField;
+                utils.assignToExistentKeys(tClientCustomField, clientCustomField);
+                this.form.clientCustomFields.push(tClientCustomField);
+                this.updateClientCustomFieldsSelectedOptions();
             },
-            draftClientCustomFieldRemove(clientCustomField){
-                console.log("Received draftClientCustomFieldRemove", clientCustomField);
+            draftClientCustomFieldRemove(clientCustomFieldId){
+                console.log("Received draftClientCustomFieldRemove", clientCustomFieldId);
+                _.forEach(this.form.clientCustomFields, (clientCustomField, index) => {
+                    if(_.has(clientCustomField, 'id') && clientCustomField.id === clientCustomFieldId){
+                        this.form.clientCustomFields.splice(index, 1);
+                    }
+                });
+                this.updateClientCustomFieldsSelectedOptions(this.form.clientCustomFields);
             },
+
+            /* draft client phone */
+
             draftClientPhoneEditionCancel(){
                 console.log("Received draftClientPhoneEditionCancel");
                 this.resetClientPhoneForm();
@@ -468,6 +503,9 @@
                     this.form.clientPhones.splice(clientPhoneIndex, 1);
                 }
             },
+
+            /* draft client address fields */
+
             draftClientAddressAdd(){
                 this.resetClientAddressForm();
                 this.isAdding = true;
@@ -489,6 +527,9 @@
                     this.form.clientAddresses.splice(clientAddressIndex, 1);
                 }
             },
+
+            /* draft client */
+
             draftClientSelect(data){
                 const client = data;
                 client.clientPhones.map((clientPhone) => {
@@ -500,9 +541,12 @@
                     return clientAddress;
                 });
                 utils.assignToExistentKeys(this.form, client);
+                this.updateClientCustomFieldsSelectedOptions();
             },
             draftClientReset() {
                 Object.assign(this.$data.form, this.$options.data.apply(this).form);
+                utils.assignToExistentKeys(this.clientPhoneForm, models.createClientPhoneModel());
+                utils.assignToExistentKeys(this.clientAddressForm, models.createClientAddressModel());
             }
         },
         methods: {
@@ -533,11 +577,9 @@
                 })
             },
             searchClientSelected(searchItem){
-                const vm = this;
-
                 const toBeEmitted = { draftId: this.activeMorphScreen.draft.draftId, clientId: searchItem.client.id};
                 this.$socket.emit('draft:client-select', toBeEmitted);
-                vm.searchItems = [];
+                this.searchItems = [];
             },
             searchValueUpdated(){
                 if(this.commitTimeout) clearTimeout(this.commitTimeout);
@@ -628,6 +670,20 @@
                 this.$refs.clientAddressForm.save();
             },
 
+            // custom fields
+
+            removeCustomField(customFieldId){
+                console.log(customFieldId);
+            },
+
+            // client custom fields
+
+            updateClientCustomFieldsSelectedOptions(){
+                this.form.clientSelectedCustomFields = _.map(this.form.clientCustomFields, (clientCustomField) => {
+                    return clientCustomField.customField.id
+                });
+            },
+
             /**
              * Events / Parent component callbacks
              */
@@ -649,30 +705,47 @@
                 this.backToClientAddressesList();
             },
 
-            // client custom fields
+            // custom fields
 
-            onClientCustomFieldSelect(clientCustomFieldId){
+            onCustomFieldSave(name){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    clientCustomFieldId: clientCustomFieldId
+                    name: name
+                };
+                console.log("Emitting draft:custom-field-save", emitData);
+                this.$socket.emit('draft:custom-field-save', emitData);
+            },
+
+            // client custom fields
+
+            onClientCustomFieldSelect(customFieldId){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    customFieldId: customFieldId
                 };
                 console.log("Emitting draft:client-custom-field-add", emitData);
                 this.$socket.emit('draft:client-custom-field-add', emitData);
             },
-            onClientCustomFieldUnselect(clientCustomFieldId){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    clientCustomFieldId: clientCustomFieldId
-                };
-                console.log("Emitting draft:client-custom-field-remove", emitData);
-                this.$socket.emit('draft:client-custom-field-remove', emitData);
+            onClientCustomFieldUnselect(customFieldId){
+                const clientCustomField = _.find(this.form.clientCustomFields, (clientCustomField) => {
+                    if(clientCustomField.customField.id === customFieldId) return true;
+                });
+                if(clientCustomField){
+                    const emitData = {
+                        draftId: this.activeMorphScreen.draft.draftId,
+                        clientCustomFieldId: clientCustomField.id
+                    };
+                    console.log("Emitting draft:client-custom-field-remove", emitData);
+                    this.$socket.emit('draft:client-custom-field-remove', emitData);
+                }
+
             },
-            onClientCustomFieldInput(customField){
+            onClientCustomFieldInput(clientCustomField){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    clientCustomFieldId: customField.clientCustomFieldId,
+                    clientCustomFieldId: clientCustomField.id,
                     clientCustomFieldForm: {
-                        value: customField.value
+                        value: clientCustomField.value
                     }
                 };
                 console.log("Emitting draft:client-custom-field-update", emitData);
@@ -760,6 +833,14 @@
         },
         mounted(){
             this.syncWithParentForm();
+            this.$bus.$on('draft:update', ({draftId, form}) => {
+                if(this.activeMorphScreen.draft.draftId === draftId){
+                    const client = form.client;
+                    this.form.clientSelectedCustomFields = _.map(client.clientCustomFields, (clientCustomField) => {
+                        return clientCustomField.customField.id
+                    });
+                }
+            })
         }
     }
 </script>

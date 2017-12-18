@@ -1,6 +1,6 @@
 <template>
     <div class="product-input">
-        <app-select :items="selectEmployees" title="Responśavel" :verticalOffset="8" showInput="true" v-model="selectedEmployee">
+        <app-select :items="selectEmployees" title="Responśavel" :verticalOffset="8" showInput="false" v-model="selectedEmployee">
             <input type="text" class="input--borderless" style="text-align: right; cursor: pointer; padding-right: 24px;" readonly :value="selectedEmployeeName" placeholder="ESCOLHA UM" />
             <icon-dropdown style="position: absolute; top: 7px; right: 0px;"></icon-dropdown>
             <template slot="item" slot-scope="itemProps">
