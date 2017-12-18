@@ -1,9 +1,9 @@
-const Protocol = require('./Protocol');
+const Protocol = require('../Protocol');
 const moment = require('moment');
 const log = new require('pretty-logger')();
 const _ = require('lodash');
-const config = require('../config');
-const utils = require('../utils');
+const config = require('../../../config');
+const utils = require('../../../utils');
 const restify = require('restify');
 const corsMiddleware = require('restify-cors-middleware');
 

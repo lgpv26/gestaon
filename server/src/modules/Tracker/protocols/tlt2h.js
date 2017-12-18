@@ -1,9 +1,9 @@
-const Protocol = require('./Protocol');
+const Protocol = require('../Protocol');
 const net = require('net');
 const moment = require('moment');
 const log = new require('pretty-logger')();
 const _ = require('lodash');
-const config = require('../config');
+const config = require('../../../config');
 
 module.exports = class TLT2H extends Protocol {
 

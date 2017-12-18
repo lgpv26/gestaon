@@ -1,27 +1,27 @@
-const basePath = require('./../middlewares/base-path.middleware');
+const basePath = require('../../middlewares/base-path.middleware');
 const _ = require('lodash');
 
-module.exports = class Drafts {
+module.exports = class Draft {
 
     constructor(server, channels, socket) {
         // global variabels
         this.server = server
         this.channels = channels
         this.socket = socket
-        this.controller = require('./../controllers/drafts.controller')(server)
+        this.controller = require('../../controllers/drafts.controller')(server)
 
         // local variables
         this._timer = null
 
         // functions
-        this.setSocketDraftListeners()
+        this.setDraftEventListeners()
     }
 
     /**
      * Events on Request Listeners
      * 
      */
-    setSocketDraftListeners() {
+    setDraftEventListeners() {
 
         this.socket.on('draft:presence', (presenceUser) => {
             this.onPresenceUpdate(presenceUser)

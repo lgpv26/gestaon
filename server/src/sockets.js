@@ -1,29 +1,29 @@
 var fs = require('fs')
 
 module.exports = function (server) {
+
     /* import all sockets files */
 
     let socketFiles = [
-        "request.js"
+        "Request"
     ];
 
-    let sockets = [];
+    let drafts = [];
 
     socketFiles.forEach(function (fileName) {
         // Ignore this file and invalid ones
         if (fileName === 'index.js' || fileName.substr(0, 1) === '.' || fileName.substr(0, 1) === '_') {
             return;
         }
-        // Require all files inside this directory
-        sockets.push(require('./' + fileName));
-    })
-
+        // Require all drafts business logics
+        drafts.push(require('./events/Draft/' + fileName));
+    });
     
     let channels = { 
-            updates: {
-                drafts: []
-            }
+        updates: {
+            drafts: []
         }
+    }
    
     // clients connected to real-time features
     server.io.on('connection', (socket) => {
@@ -61,7 +61,7 @@ module.exports = function (server) {
                         console.log(err);
                     });
                 });
-                sockets.forEach((s) => {
+                drafts.forEach((s) => {
                     new s(server, channels, socket);
                 });
             }

@@ -44,5 +44,11 @@ export default {
             city: null,
             state: null
         }
+    },
+
+    createOrderProductModel(){
+        return {
+            id: null,
+        }
     }
 }

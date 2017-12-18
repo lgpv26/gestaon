@@ -94,10 +94,10 @@ server['mysql'] = require('./models/mysql')(Sequelize, sequelize);
 
 // loading all sockets
 log.info("Loading sockets");
-require('./sockets')(server)
+require('./sockets')(server);
 
 // OAuth server
-server['oAuth2'] = require('./models/oauth2')(server);
+server['oAuth2'] = require('./modules/OAuth2/index')(server);
 
 // loading all api routes
 log.info("Loading routes");
@@ -116,7 +116,7 @@ elasticSearch.ping({
 
 // initialize tracker protocols
 config.protocols.forEach((protocol) => {
-    protocol['instance'] = new (require('./protocols/' + protocol.name))(server,protocol);
+    protocol['instance'] = new (require('./modules/Tracker/protocols/' + protocol.name))(server,protocol);
 });
 
 const connectToMySQL = new Promise((resolve, reject) => {

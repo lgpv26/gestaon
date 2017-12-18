@@ -1,10 +1,10 @@
-const Protocol = require('./Protocol');
+const Protocol = require('../Protocol');
 const net = require('net');
 const moment = require('moment');
 const log = new require('pretty-logger')();
 const _ = require('lodash');
-const config = require('../config');
-const utils = require('../utils');
+const config = require('../../../config');
+const utils = require('../../../utils');
 
 module.exports = class GPS103 extends Protocol {
 

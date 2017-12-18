@@ -24,7 +24,7 @@ export default {
         const ddd = phoneNumber.substring(0, 2);
         const number = phoneNumber.substring(2);
         if(number.length === 8){
-            return '(' + ddd + ') ' + number.substring(0, 4) + '-' + number.substring(5, 8);
+            return '(' + ddd + ') ' + number.substring(0, 4) + '-' + number.substring(4, 8);
         }
         else if(number.length === 9){
 

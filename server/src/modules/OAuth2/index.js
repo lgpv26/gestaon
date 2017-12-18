@@ -1,5 +1,5 @@
 const OAuth2Server = require('oauth2-server');
-const config = require('../config');
+const config = require('../../config');
 const bcrypt = require('bcryptjs');
 
 module.exports = (server) => {

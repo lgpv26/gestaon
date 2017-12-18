@@ -192,7 +192,7 @@
                         <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
                             <ul class="content__list--mini">
                                 <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
-                                    <span>{{ clientCustomField.customField.name }}</span>
+                                    <span style="white-space: nowrap">{{ clientCustomField.customField.name }}</span>
                                     <div class="item__mini-circle"></div>
                                     <input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" />
                                     <span class="push-both-sides"></span>

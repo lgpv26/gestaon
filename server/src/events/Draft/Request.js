@@ -1,22 +1,24 @@
-const Drafts = require('./drafts')
-const basePath = require('./../middlewares/base-path.middleware')
+const Draft = require('.')
+const basePath = require('../../middlewares/base-path.middleware')
 const _ = require('lodash')
+const RequestPersistance = require('../../modules/Draft/RequestPersistance');
 
-module.exports = class Request extends Drafts {
+module.exports = class Request extends Draft {
 
     constructor(server, channels, socket) {
-        //exptends
-        super(server, channels, socket)
-        
+        // extends
+        super(server, channels, socket);
+        // private
+        this._persistance = new RequestPersistance();
         // functions
-        this.setSocketRequestListeners()
+        this.setRequestEventListeners();
     }
 
     /**
      * Events on Request Listeners
      * 
      */
-    setSocketRequestListeners() {
+    setRequestEventListeners() {
      
         ///////////////////////
         ///     CLIENT      ///
