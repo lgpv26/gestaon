@@ -1,8 +1,8 @@
 module.exports = (server) => {
-    return server.models.Company.create({
+    return server.mysql.Company.create({
         name: 'Empresa ERP'
     }).then((company) => {
-        return server.models.User.create({
+        return server.mysql.User.create({
             name: 'Thiago Rocha',
             email: 'thyoity@gmail.com',
             type: 'admin',
@@ -15,11 +15,11 @@ module.exports = (server) => {
             password: '123'
         }, {
             include: [{
-                model: server.models.CompanyUser,
+                model: server.mysql.CompanyUser,
                 as: 'userCompanies'
             }]
         }).then(() => {
-            return server.models.User.create({
+            return server.mysql.User.create({
                 name: 'Mailon Ruan',
                 email: 'maailon@msn.com',
                 type: 'admin',
@@ -32,11 +32,11 @@ module.exports = (server) => {
                 password: '140992'
             }, {
                 include: [{
-                    model: server.models.CompanyUser,
+                    model: server.mysql.CompanyUser,
                     as: 'userCompanies'
                 }]
             }).then(() => {
-                return server.models.User.create({
+                return server.mysql.User.create({
                     name: 'Acimar Rocha',
                     email: 'acimarrocha@gmail.com',
                     type: 'admin',
@@ -49,7 +49,7 @@ module.exports = (server) => {
                     password: '123'
                 }, {
                     include: [{
-                        model: server.models.CompanyUser,
+                        model: server.mysql.CompanyUser,
                         as: 'userCompanies'
                     }]
                 })

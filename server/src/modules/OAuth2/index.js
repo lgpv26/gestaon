@@ -4,6 +4,8 @@ const bcrypt = require('bcryptjs');
 
 module.exports = (server) => {
     return new OAuth2Server({
+        accessTokenLifetime: 86400,
+        refreshTokenLifetime: 1209600,
         requireClientAuthentication: {
             password: false
         },

@@ -254,80 +254,77 @@ module.exports = class Draft {
             this.controller.getOne(draftId).then((draft) => {
                 this.socket.emit('draftUpdate', { draftId: draftId, form: draft.form })
                 this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
-                if (err) console.log(err)
-
-                if(draft.form.activeStep === 'client'){
-
-                    if (checkEdition.clientFormEdition) {
-                        const update = JSON.parse(checkEdition.clientFormUpdate)
-                        checkEdition = JSON.parse(checkEdition.clientFormEdition)
-                        if (checkEdition.clientAddress.inEdition) {
-                            if (checkEdition.clientAddress.clientAddressId) {
-                                this.socket.emit('draftClientAddressEdit', checkEdition.clientAddress.clientAddressId)
-                                if (update.clientAddressForm) {
-                                    this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
-                                    if (update.clientAddressForm.address.reset) {
-                                        this.socket.emit('draftClientAddressAddressReset')
-                                    }
-                                    else {
-                                        if (update.clientAddressForm.address.select) {
-                                            this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                    if (err) console.log(err)
+                    if(draft.form.activeStep === 'client'){
+                        if (_.has(checkEdition, 'clientFormEdition') && checkEdition.clientFormEdition) {
+                            const update = JSON.parse(checkEdition.clientFormUpdate)
+                            checkEdition = JSON.parse(checkEdition.clientFormEdition)
+                            if (checkEdition.clientAddress.inEdition) {
+                                if (checkEdition.clientAddress.clientAddressId) {
+                                    this.socket.emit('draftClientAddressEdit', checkEdition.clientAddress.clientAddressId)
+                                    if (update.clientAddressForm) {
+                                        this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
+                                        if (update.clientAddressForm.address.reset) {
+                                            this.socket.emit('draftClientAddressAddressReset')
                                         }
                                         else {
+                                            if (update.clientAddressForm.address.select) {
+                                                this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                            }
+                                            else {
+                                                this.socket.emit('draftClientAddressAddressReset')
+                                                this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                            }
+                                        }
+                                    }
+                                }
+                                else {
+                                    this.socket.emit('draftClientAddressAdd')
+                                    if (update.clientAddressForm) {
+                                        this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
+                                        if (update.clientAddressForm.address.reset) {
                                             this.socket.emit('draftClientAddressAddressReset')
+                                        }
+                                        else {
                                             this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
                                         }
                                     }
                                 }
                             }
-                            else {
-                                this.socket.emit('draftClientAddressAdd')
-                                if (update.clientAddressForm) {
-                                    this.socket.emit('draftClientAddressUpdate', update.clientAddressForm)
-                                    if (update.clientAddressForm.address.reset) {
-                                        this.socket.emit('draftClientAddressAddressReset')
+                            if(checkEdition.clientPhone.inEdition) {
+                                if (checkEdition.clientPhone.inEdition) {
+                                    if (checkEdition.clientPhone.clientPhoneId) {
+                                        this.socket.emit('draftClientPhoneEdit', checkEdition.clientPhone.clientPhoneId)
+                                        this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
                                     }
                                     else {
-                                        this.socket.emit('draftClientAddressAddressSelect', update.clientAddressForm.address)
+                                        this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
                                     }
                                 }
+                                else {
+                                    this.socket.emit('draftClientPhoneEditionCancel')
+                                }
                             }
                         }
-                        if(checkEdition.clientPhone.inEdition) {
-                            if (checkEdition.clientPhone.inEdition) {
-                                if (checkEdition.clientPhone.clientPhoneId) {
-                                    this.socket.emit('draftClientPhoneEdit', checkEdition.clientPhone.clientPhoneId)
-                                    this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
-                                }
-                                else {
-                                    this.socket.emit('draftClientPhoneUpdate', update.clientPhoneForm)
-                                }
-                            }
-                            else {
-                                this.socket.emit('draftClientPhoneEditionCancel')
-                            }
+                        else {
+                            const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
+                            this.setDraftRedis(objSetDraftRedis)
                         }
                     }
-                    else {
-                        const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
+                    else if(draft.form.activeStep === 'order'){
+                        if (checkEdition.orderProduct) {
+
+                        }
+                        else {
+                            const objSetDraftRedis = {draftId: draftId, orderProductId: draft.form.order.orderProducts[0].orderProductId}
+                            this.setDraftRedis(objSetDraftRedis, false, true)
+                        }
+                    }
+                    else{
+                        const objSetDraftRedis = {draftId: draftId, isNull: true}
                         this.setDraftRedis(objSetDraftRedis)
                     }
-                }
-                else if(draft.form.activeStep === 'order'){
-                    if (checkEdition.orderProduct) {
-
-                    }
-                    else {
-                        const objSetDraftRedis = {draftId: draftId, orderProductId: draft.form.order.orderProducts[0].orderProductId}
-                        this.setDraftRedis(objSetDraftRedis, false, true)
-                    }
-                }
-                else{
-                    const objSetDraftRedis = {draftId: draftId, isNull: true}
-                    this.setDraftRedis(objSetDraftRedis) 
-                }
-            })
-            
+                })
             }).catch(() => {
                 console.log('catch do CONSULTDRAFT')
             })

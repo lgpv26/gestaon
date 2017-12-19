@@ -29,7 +29,11 @@ module.exports = (server, restify) => {
             console.log('catch da rota do client', err)
         })
     });
-    server.post('/clients', clientsController.createOne);
+    server.post('/clients', (req, res, next) => {
+        clientsController.createOne().then(() => {
+
+        })
+    });
     server.patch('/clients/:id', clientsController.updateOne);
 
     // CLIENTS GROUP //

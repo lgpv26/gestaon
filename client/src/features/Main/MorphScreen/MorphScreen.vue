@@ -20,8 +20,8 @@
                             <div class="header__tags">
                                 <span>Termos da busca: </span>
                                 <ul>
-                                    <li><span>Junho</span><icon-copy></icon-copy></li>
-                                    <li><span>(44) 3268-5858</span><icon-copy></icon-copy></li>
+                                    <li class="copiable-content" data-clipboard-text="Junho"><span>Junho</span><icon-copy></icon-copy></li>
+                                    <li class="copiable-content" data-clipboard-text="(44) 3268-5858"><span>(44) 3268-5858</span><icon-copy></icon-copy></li>
                                 </ul>
                             </div>
                             <div class="header__actions">
@@ -39,8 +39,10 @@
                         <div class="container__actions">
                             <a>Excluir Rascunho</a>
                             <span class="push-both-sides"></span>
+                            <a style="margin-right: 20px;" @click="closeScreen()">Voltar</a>
                             <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
-                            <a @click="closeScreen()">Voltar</a>
+                            <a style="color: var(--font-color--primary)" @click="persistClient()" v-if="!isPersisting">Salvar cliente</a>
+                            <a style="color: var(--font-color--primary)" v-else>{{ persistingText }}</a>
                         </div>
                     </div>
                 </transition>
@@ -55,6 +57,7 @@
     import anime from 'animejs';
     import moment from 'moment';
     import Scrollbar from 'smooth-scrollbar';
+    import Clipboard from 'clipboard';
 
     import RequestForm from "./Request/RequestForm.vue";
 
@@ -68,10 +71,18 @@
                 contentEl: null,
                 selectedContent: null,
                 windowResizeEventListener: null,
-                isAnimating: false
+                isAnimating: false,
+                clipboardInstance: null,
+
+                isPersisting: false,
+                persistingText: "Salvando..."
             }
         },
         sockets: {
+            draftClientPersist(draft){
+                console.log("Received draftClientPersist", draft);
+                this.isPersisting = false;
+            },
             draftCreated(socketData){
                 if(socketData.emittedBy !== this.user.id){
                     this.ADD_DRAFT(socketData.data);
@@ -104,6 +115,7 @@
             ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS_SCREEN','SHOW_MS', 'ADD_DRAFT']),
             ...mapActions('morph-screen', ['createMorphScreen']),
             ...mapActions('loading', ['startLoading','setLoadingText']),
+            // <editor-fold desc="MorphScreen animations">
             animateMorphScreenDirectlyToDraft(){
                 const vm = this;
                 vm.isAnimating = true;
@@ -366,11 +378,21 @@
                     let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen);
                     vm.$refs.morphScreenItems[activeScreenIndex].style.height = windowHeight + 'px';
                 }
+            },
+            // </editor-fold>
+            persistClient(){
+                this.isPersisting = true;
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                };
+                console.log("Emitting draft:client-persist", emitData);
+                this.$socket.emit('draft:client-persist', emitData);
             }
         },
         mounted(){
             this.contentEl = document.getElementById('content');
             window.addEventListener('resize', this.calculateActiveMorphScreenHeight);
+            this.clipboardInstance = new Clipboard('.copiable-content');
         },
         beforeDestroy(){
             this.close();
@@ -503,8 +525,11 @@
         margin-left: 15px;
         cursor: pointer;
         margin-right: 5px;
-        color: var(--primary-color);
+        color: var(--font-color--8);
         font-weight: 600;
+    }
+    .container__header .header__tags ul li:hover > span {
+        color: var(--font-color--primary);
     }
     .container__header .header__tags ul li > svg {
         position: relative;

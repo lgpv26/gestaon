@@ -83,53 +83,52 @@ module.exports = (server, restify) => {
                 return err
             });
         },
-
-        savePhones(req) {
-            return new Promise((resolve, reject) => {
-                let clientPhones = _.map(req.body.clientPhones, clientPhone => _.extend({
-                    clientId: parseInt(req.params.id)
-                }, clientPhone));
-    
-                server.mysql.ClientPhone.bulkCreate(clientPhones, {
-                    updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdate', 'dateRemoved']
-                }).then((response) => {
-                    server.mysql.Client.findOne({
-                        where: {
-                            id: parseInt(req.params.id),
-                            status: 'activated'
-                        },
-                        include: [{
-                            model: server.mysql.ClientPhone,
-                            as: 'clientPhones'
-                        }]
-                    }).then((client) => {
+        saveClientPhones(controller) {
+            let clientPhones = _.cloneDeep(controller.request.data);
+            clientPhones = _.map(clientPhones, clientPhone => _.assign(clientPhone, {
+                clientId: parseInt(controller.request.clientId)
+            }));
+            return server.mysql.ClientPhone.bulkCreate(clientPhones, {
+                updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdate', 'dateRemoved'],
+                transaction: controller.transaction
+            }).then(() => {
+                return server.mysql.Client.findOne({
+                    where: {
+                        id: parseInt(controller.request.clientId)
+                    },
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: 'clientPhones'
+                    }],
+                    transaction: controller.transaction
+                }).then((client) => {
+                    return new Promise((resolve, reject) => {
                         if (!client) {
-                            reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                            return reject(new restify.ResourceNotFoundError("Registro não encontrado."));
                         }
-                        let clientPhones = _.map(client.clientPhones, clientPhone => {
+                        const esClientPhones = _.map(client.clientPhones, clientPhone => {
                             return {
                                 clientPhoneId: clientPhone.id,
                                 ddd: clientPhone.ddd,
                                 number: clientPhone.number
                             };
                         });
-                        server.elasticSearch.update({
+                        return server.elasticSearch.update({
                             index: 'main',
                             type: 'client',
-                            id: parseInt(req.params.id),
+                            id: parseInt(controller.request.clientId),
                             body: {
                                 doc: {
-                                    phones: clientPhones
+                                    phones: esClientPhones
                                 }
                             }
                         }, function (esErr, esRes) {
-                            resolve(response);
+                            if(esErr){
+                                return reject(new Error('Erro ao salvar o(s) clientPhone(s) no ES.'));
+                            }
+                            return resolve();
                         })
-                    }).catch((error) => {
-                        reject(error);
                     });
-                }).catch(function (error) {
-                    reject(error);
                 });
             });
         }

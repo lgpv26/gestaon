@@ -156,22 +156,6 @@
                 </div>
                 <div class="form-groups">
                     <div class="form-group">
-                        <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
-                            <div class="header__icon">
-                                <icon-client-group></icon-client-group>
-                            </div>
-                            <span class="static" v-if="!selectedClientGroup.value">Grupo de cliente</span>
-                            <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</span>
-                            <span class="push-both-sides"></span>
-                            <icon-dropdown class="header__action-icon"></icon-dropdown>
-                            <template slot="item" slot-scope="itemProps">
-                                <span>{{itemProps.text }}</span>
-                            </template>
-                        </app-select>
-                    </div>
-                </div>
-                <div class="form-groups">
-                    <div class="form-group">
                         <app-select class="form-group__header" :verticalOffset="8" :items="customFieldsSelectOptions" v-model="form.clientSelectedCustomFields"
                             :multiple="true" :showInput="true" @select="onClientCustomFieldSelect($event)" @unselect="onClientCustomFieldUnselect($event)"
                             @save="onCustomFieldSave($event)">
@@ -196,10 +180,26 @@
                                     <div class="item__mini-circle"></div>
                                     <input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" />
                                     <span class="push-both-sides"></span>
-                                    <icon-remove></icon-remove>
+                                    <icon-remove style="flex-shrink: 0;"></icon-remove>
                                 </li>
                             </ul>
                         </div>
+                    </div>
+                </div>
+                <div class="form-groups">
+                    <div class="form-group">
+                        <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
+                            <div class="header__icon">
+                                <icon-client-group></icon-client-group>
+                            </div>
+                            <span class="static" v-if="!selectedClientGroup.value">Grupo de cliente</span>
+                            <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</span>
+                            <span class="push-both-sides"></span>
+                            <icon-dropdown class="header__action-icon"></icon-dropdown>
+                            <template slot="item" slot-scope="itemProps">
+                                <span>{{itemProps.text }}</span>
+                            </template>
+                        </app-select>
                     </div>
                 </div>
             </div>

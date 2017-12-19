@@ -1,7 +1,8 @@
 const Draft = require('.')
 const basePath = require('../../middlewares/base-path.middleware')
 const _ = require('lodash')
-const RequestPersistance = require('../../modules/Draft/RequestPersistance');
+const RequestPersistance = require('../../modules/Draft/Persistance/RequestPersistance');
+const ClientPersistance = require('../../modules/Draft/Persistance/ClientPersistance');
 
 module.exports = class Request extends Draft {
 
@@ -9,7 +10,8 @@ module.exports = class Request extends Draft {
         // extends
         super(server, channels, socket);
         // private
-        this._persistance = new RequestPersistance();
+        this._requestPersistance = new RequestPersistance(server);
+        this._clientPersistance = new ClientPersistance(server);
         // functions
         this.setRequestEventListeners();
     }
@@ -35,6 +37,13 @@ module.exports = class Request extends Draft {
             super.resetTimeout()
             super.saveDraft(clientReset.draftId).then(() => {
                 this.onClientReset(clientReset)
+            })
+        })
+
+        this.socket.on('draft:client-persist', (clientPersist) => {
+            super.resetTimeout()
+            super.saveDraft(clientPersist.draftId).then(() => {
+                this.onClientPersist(clientPersist)
             })
         })
 
@@ -257,6 +266,32 @@ module.exports = class Request extends Draft {
                 console.log('catch do RESET CLIENT - QUE É DENTRO DO ON CLIENT RESET')
             })
         })
+    }
+
+    /**
+     * Client Persist
+     * @desc Send to all sockets in Draft/:id the persist client event
+     *
+     * @param {object} clientPersist - expected: draftId
+     * @return {} @property {Socket}
+     */
+    onClientPersist(clientPersist) {
+        let companyId;
+        if(this.socket.user.activeCompanyUserId){
+            companyId = parseInt(this.socket.user.activeCompanyUserId);
+        }
+        else {
+            if(this.socket.user.companies.length) companyId = _.first(this.socket.user.companies)
+        }
+        if(companyId){
+            this._clientPersistance.setDraftId(clientPersist.draftId);
+            this._clientPersistance.setCompanyId(companyId);
+            this._clientPersistance.start().then((draft) => {
+                this.server.io.in('draft/' + clientPersist.draftId).emit('draftClientPersist', draft)
+            }).catch((err) => {
+                console.log("ERROR", err);
+            });
+        }
     }
 
         ///////////////////////

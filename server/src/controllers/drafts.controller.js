@@ -1,9 +1,10 @@
-const utils = require('../utils');
+const utils = require('../utils')
 const _ = require('lodash')
 const Op = require('sequelize').Op
 const shortid = require('shortid')
+const restify = require('restify');
 
-module.exports = (server, restify) => {
+module.exports = (server) => {
 
     ///////////////////////
     ///   CONTROLLERS   ///

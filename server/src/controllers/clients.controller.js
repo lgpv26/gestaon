@@ -1,8 +1,10 @@
-const _ = require('lodash');
-const utils = require('../utils');
+const _ = require('lodash')
+const utils = require('../utils')
 const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
+
     const addressesController = require('./../controllers/addresses.controller')(server, restify);
     const clientsAddressesController = require('./../controllers/clients-addresses.controller')(server, restify);
     const clientsPhonesController = require('./../controllers/clients-phones.controller')(server, restify);
@@ -52,10 +54,12 @@ module.exports = (server, restify) => {
                   return client
             })
         },
-        createOne: (req, res, next) => {
-            let createData = _.cloneDeep(req.body);
-            createData.companyId = req.params.companyId
-            server.mysql.Client.create(createData, {
+        createOne: (controller) => {
+            const createData = _.cloneDeep(controller.request.data);
+            _.assign(createData, {
+                companyId: controller.request.companyId
+            })
+            return server.mysql.Client.create(createData, {
                 include: [{
                     model: server.mysql.ClientPhone,
                     as: 'clientPhones'
@@ -73,91 +77,74 @@ module.exports = (server, restify) => {
                         model: server.mysql.CustomField,
                         as: 'customField'
                     }]
-                }]
+                }],
+                transaction: controller.transaction
             }).then((client) => {
-                if (!client) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado.")
-                    );
+                if (!client){
+                    throw new Error("Não foi possível encontrar o cliente criado.")
                 }
-                server.elasticSearch.index({
-                    index: 'main',
-                    type: 'client',
-                    id: client.id,
-                    body: {
-                        companyId: client.companyId,
-                        name: client.name,
-                        obs: client.obs,
-                        legalDocument: client.legalDocument
-                    }
-                }, function (esErr, esRes, esStatus) {
-                    if (esErr) {
-                        console.error(esErr);
-                        return next(
-                            new restify.ResourceNotFoundError(esErr)
-                        );
-                    }
-                    if ((_.has(createData, "clientAddresses") && createData.clientAddresses.length > 0) ||
-                        (_.has(createData, "clientPhones") && createData.clientPhones.length > 0) ||
-                        (_.has(createData, "clientCustomFields") && createData.clientCustomFields.length > 0)) {
-                        if (_.has(createData, "clientAddresses") && createData.clientAddresses.length > 0) {
-                            req.params['id'] = client.id;
-                            saveAddresses(req, res, next).then((client) => {
-                                return res.send(200, {
-                                    data: client
-                                });
-                            }).catch((err) => {
-                                next(err);
-                            });
+                return new Promise((resolve, reject) => {
+                    return server.elasticSearch.index({
+                        index: 'main',
+                        type: 'client',
+                        id: client.id,
+                        body: {
+                            companyId: client.companyId,
+                            name: client.name,
+                            obs: client.obs,
+                            legalDocument: client.legalDocument
                         }
-                        else if (_.has(createData, "clientPhones") && createData.clientPhones.length > 0) {
-                            req.params['id'] = client.id;
-                            savePhones(req, res, next).then((client) => {
-                                return res.send(200, {
-                                    data: client
-                                });
-                            }).catch((err) => {
-                                next(err);
-                            });
+                    }, function (esErr, esRes, esStatus) {
+                        if (esErr) {
+                            return reject(new Error(esErr))
                         }
-                        else if (_.has(createData, "clientCustomFields") && createData.clientCustomFields.length > 0) {
-                            req.params['id'] = client.id;
-                            saveCustomFields(req, res, next).then((client) => {
-                                return res.send(200, {
-                                    data: client
-                                });
-                            }).catch((err) => {
-                                console.log(err);
-                                next(err);
-                            });
+
+                        const promises = [];
+
+                        /* save clientPhones if existent */
+                        if(_.has(createData, "clientPhones") && createData.clientPhones.length) {
+                            const clientPhonesControllerObj = new Controller({
+                                request: {
+                                    clientId: client.id,
+                                    data: createData.clientPhones
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(clientsPhonesController.saveClientPhones(clientPhonesControllerObj))
                         }
-                    }
-                    else {
-                        return res.send(200, {
-                            data: client
-                        });
-                    }
+
+                        // /* save clientAddresses if existent */
+                        // if(_.has(createData, "clientAddresses") && createData.clientAddresses.length) {
+                        //     promises.push(clientsAddressesController.saveClientAddresses(controller))
+                        // }
+                        //
+                        // /* save clientCustomFields if existent */
+                        // if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
+                        //     promises.push(clientsCustomFieldsController.saveClientCustomFields(controller))
+                        // }
+
+                        /* return only when all promises are satisfied */
+                        return Promise.all(promises).then(() => {
+                            return resolve()
+                        }).catch((err) => {
+                            return reject(err)
+                        })
+                    });
                 });
             })
         },
-        updateOne: (req, res, next) => {
-            const updateData = _.cloneDeep(req.body);
-            server.mysql.Client.update(updateData, {
+        updateOne: (controller) => {
+            const updateData = _.cloneDeep(controller.request.data);
+            return server.mysql.Client.update(updateData, {
                 where: {
-                    id: req.params.id,
-                    status: 'activated'
-                }
+                    id: controller.request.clientId
+                },
+                transaction: controller.transaction
             }).then((client) => {
                 if (!client) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado.")
-                    );
+                    throw new Error("Cliente não encontrado.");
                 }
-                server.mysql.Client.findById(req.params.id, {
-                    where: {
-                        id: req.params.id,
-                        status: 'activated'
-                    },
+                return server.mysql.Client.findById(controller.request.clientId, {
                     include: [{
                         model: server.mysql.ClientPhone,
                         as: 'clientPhones'
@@ -175,75 +162,62 @@ module.exports = (server, restify) => {
                             model: server.mysql.CustomField,
                             as: 'customField'
                         }]
-                    }]
+                    }],
+                    transaction: controller.transaction
                 }).then((client) => {
-                    if (!client) {
-                        return next(
-                            new restify.ResourceNotFoundError("Registro não encontrado.")
-                        );
-                    }
-                    server.elasticSearch.update({
-                        index: 'main',
-                        type: 'client',
-                        id: client.id,
-                        body: {
-                            doc: {
-                                companyId: client.companyId,
-                                name: client.name,
-                                obs: client.obs,
-                                legalDocument: client.legalDocument,
-                                dateUpdated: client.dateUpdated,
-                                dateCreated: client.dateCreated,
-                                status: client.status
+                    if (!client) throw new Error("Cliente não encontrado.");
+                    return new Promise((resolve, reject) => {
+                        return server.elasticSearch.update({
+                            index: 'main',
+                            type: 'client',
+                            id: client.id,
+                            body: {
+                                doc: {
+                                    companyId: client.companyId,
+                                    name: client.name,
+                                    obs: client.obs,
+                                    legalDocument: client.legalDocument,
+                                    dateUpdated: client.dateUpdated,
+                                    dateCreated: client.dateCreated,
+                                    status: client.status
+                                }
                             }
-                        }
-                    }, function (esErr, esRes) {
-                        if (esErr) {
-                            return new restify.ResourceNotFoundError(esErr)
-                        }
+                        }, function (esErr, esRes) {
+                            if (esErr) {
+                                return reject(new Error(esErr))
+                            }
 
-                        if ((_.has(updateData, "clientAddresses") && updateData.clientAddresses.length > 0) ||
-                            (_.has(updateData, "clientPhones") && updateData.clientPhones.length > 0) ||
-                            (_.has(updateData, "clientCustomFields") && updateData.clientCustomFields.length > 0)) {
-                            if (_.has(updateData, "clientAddresses") && updateData.clientAddresses.length > 0) {
-                                req.params['id'] = client.id;
-                                saveAddresses(req, res, next).then((client) => {
-                                    return res.send(200, {
-                                        data: client
-                                    });
-                                }).catch((err) => {
-                                    console.log(err);
-                                    next(err);
-                                });
+                            const promises = [];
+
+                            /* save clientPhones if existent */
+                            if(_.has(updateData, "clientPhones") && updateData.clientPhones.length) {
+                                const clientPhonesControllerObj = new Controller({
+                                    request: {
+                                        clientId: controller.request.clientId,
+                                        data: updateData.clientPhones
+                                    },
+                                    transaction: controller.transaction
+                                })
+                                promises.push(clientsPhonesController.saveClientPhones(clientPhonesControllerObj))
                             }
-                            else if (_.has(updateData, "clientPhones") && updateData.clientPhones.length > 0) {
-                                req.params['id'] = client.id;
-                                savePhones(req, res, next).then((client) => {
-                                    return res.send(200, {
-                                        data: client
-                                    });
-                                }).catch((err) => {
-                                    console.log(err);
-                                    next(err);
-                                });
-                            }
-                            else if (_.has(updateData, "clientCustomFields") && updateData.clientCustomFields.length > 0) {
-                                req.params['id'] = client.id;
-                                saveCustomFields(req, res, next).then((client) => {
-                                    return res.send(200, {
-                                        data: client
-                                    });
-                                }).catch((err) => {
-                                    console.log(err);
-                                    next(err);
-                                });
-                            }
-                        }
-                        else {
-                            return res.send(200, {
-                                data: client
-                            });
-                        }
+
+                            // /* save clientAddresses if existent */
+                            // if(_.has(createData, "clientAddresses") && createData.clientAddresses.length) {
+                            //     promises.push(clientsAddressesController.saveClientAddresses(controller))
+                            // }
+                            //
+                            // /* save clientCustomFields if existent */
+                            // if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
+                            //     promises.push(clientsCustomFieldsController.saveClientCustomFields(controller))
+                            // }
+
+                            /* return only when all promises are satisfied */
+                            return Promise.all(promises).then(() => {
+                                return resolve()
+                            }).catch((err) => {
+                                return reject(err)
+                            })
+                        })
                     })
                 })
             });
@@ -418,7 +392,6 @@ module.exports = (server, restify) => {
                     };
                     esRequestBody.push(docObj);
                 });
-                console.log(esRequestBody);
                 server.elasticSearch.bulk({
                     body: esRequestBody
                 }, function (esErr, esRes) {
