@@ -23,6 +23,7 @@ module.exports = (server, restify) => {
                 });
             });
         },
+
         getOne(req) {
            return server.mysql.Client.findOne({
                 where: {
@@ -47,13 +48,14 @@ module.exports = (server, restify) => {
                         as: 'customField'
                     }]
                 }, {
-                    model: server.mysql.ClientsGroup,
-                    as: 'clientsGroup'
+                    model: server.mysql.ClientGroup,
+                    as: 'clientGroup'
                 }]
             }).then((client) => {
                   return client
             })
         },
+
         createOne: (controller) => {
             const createData = _.cloneDeep(controller.request.data);
             _.assign(createData, {

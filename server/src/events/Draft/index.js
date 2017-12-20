@@ -252,7 +252,7 @@ module.exports = class Draft {
 
         consultDraft(draftId) {
             this.controller.getOne(draftId).then((draft) => {
-                this.socket.emit('draftUpdate', { draftId: draftId, form: draft.form })
+                this.socket.emit('draftUpdate', { draftId: draftId, form: draft.form, data: draft.data })
                 this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
                     if (err) console.log(err)
                     if(draft.form.activeStep === 'client'){
@@ -321,7 +321,7 @@ module.exports = class Draft {
                         }
                     }
                     else{
-                        const objSetDraftRedis = {draftId: draftId, isNull: true}
+                        const objSetDraftRedis = {draftId: draftId, isNull: true, companyId: (this.socket.user.activeCompanyUserId) ? this.socket.user.activeCompanyUserId: this.socket.user.companies[0]}
                         this.setDraftRedis(objSetDraftRedis)
                     }
                 })
@@ -366,7 +366,7 @@ module.exports = class Draft {
     setDraftRedis(setDraftRedis, selectedAddress = false, orderProduct = false) {
         return new Promise((resolve, reject) => {
             if(orderProduct){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProduct', JSON.stringify({"orderProduct": [{orderProductId: setDraftRedis.orderProductId}]}), (err, res) => {
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProducts', JSON.stringify({"orderProducts": [{orderProductId: setDraftRedis.orderProductId}]}), (err, res) => {
                     if (err) {
                         reject()
                     }
@@ -376,9 +376,9 @@ module.exports = class Draft {
                 }) 
             }
             else if(setDraftRedis.isNull){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, (err, res) => {
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'companyId', JSON.stringify(setDraftRedis.companyId), (err, res) => {
                     if (err) {
-                        reject()
+                        reject(err)
                     }
                     else {
                         resolve()
@@ -404,9 +404,10 @@ module.exports = class Draft {
                 const checkUpdate = JSON.parse(redisConsult.clientFormUpdate)
 
                 let update = { clientAddressForm: checkUpdate.clientAddressForm,
-                                clientPhoneForm: checkUpdate.clientPhoneForm, 
-                                orderProduct: checkUpdate.orderProduct
+                               clientPhoneForm: checkUpdate.clientPhoneForm, 
+                               orderProducts: (redisConsult.orderProducts) ? redisConsult.orderProducts : null
                             }
+                            
                 update.inEdition = _.merge(JSON.parse(redisConsult.clientFormEdition), contentDraft.inEdition)
 
                 if (resetOrSelectAddress) {
@@ -418,7 +419,7 @@ module.exports = class Draft {
                     }
                 }
                 else {
-                    if (contentDraft.clientAddressForm) {
+                    if (_.has(contentDraft, "clientAddressForm") && contentDraft.clientAddressForm.length) {
                         if (!newEdit) {
                             delete checkUpdate.clientAddressForm.address.reset
                             const address = _.assign(checkUpdate.clientAddressForm.address, contentDraft.form.clientAddressForm.address)
@@ -430,7 +431,7 @@ module.exports = class Draft {
                         }
 
                     }
-                    if (contentDraft.clientPhoneForm) {
+                    if (_.has(contentDraft, "clientPhoneForm") && contentDraft.clientPhoneForm.length) {
                         if (contentDraft.clientPhoneForm.reset) {
                             update.clientPhoneForm = {}
                         }
@@ -438,8 +439,15 @@ module.exports = class Draft {
                             update.clientPhoneForm = _.assign(checkUpdate.clientPhoneForm, contentDraft.form.clientPhoneForm)
                         }
                     }
-                    if(contentDraft.orderProduct) {
+                    if(_.has(contentDraft, "orderProduct") && contentDraft.orderProduct.length) {
+                        const indexOrderProduct = _.findIndex(update.orderProducts, (productOrder) => { return productOrder.orderProductId === orderProduct.orderProductId })
                         
+                        if(indexOrderProduct){
+
+                        }
+                        else {
+                            update.orderProducts.push(contentDraft.orderProduct.form)
+                        }
                     }
                 }
 

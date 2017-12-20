@@ -13,7 +13,7 @@ const Controller = require('../../../models/Controller')
  * finally, respond with success or failure with its respective errors.
  * @type {RequestPersistance}
  */
-module.exports = class RequestPersistance extends Persistance  {
+module.exports = class RequestPersistance extends Persistance {
 
     constructor(server) {
         super(server);
@@ -28,28 +28,28 @@ module.exports = class RequestPersistance extends Persistance  {
         this.clientsController = clientsController(this.server);
     }
 
-    setDraftId(draftId = null){
-        if(draftId) this._draftId = draftId;
+    setDraftId(draftId = null) {
+        if (draftId) this._draftId = draftId;
     }
 
-    setCompanyId(companyId = null){
-        if(companyId) this._companyId = companyId;
+    setCompanyId(companyId = null) {
+        if (companyId) this._companyId = companyId;
     }
 
     /**
      * Start client persistence from draft to definitive (MySQL)
      * @returns {Promise}
      */
-    start(){
+    start() {
         return new Promise((resolve, reject) => {
             return super.getDraftById(this._draftId).then((draft) => {
-                if(!draft){
+                if (!draft) {
                     return reject(new Error("Draft não encontrado."));
                 }
                 this._draft = draft;
                 return this.server.sequelize.transaction().then((transaction) => {
                     this._transaction = transaction;
-                    if(draft.form.client.id){
+                    if (draft.form.client.id) {
                         this._clientId = parseInt(draft.form.client.id)
                     }
                     return this.saveClient()
@@ -65,18 +65,18 @@ module.exports = class RequestPersistance extends Persistance  {
      * Save client (create or update)
      * @returns {Promise}
      */
-    saveClient(){
+    saveClient() {
 
         const controller = new Controller({
             request: {
                 companyId: this._companyId,
                 clientId: this._clientId || null,
-                data: this._draft.form.client,
+                data: this.mapDraftObjToModelObj(this._draft.form.client),
             },
             transaction: this._transaction
         });
 
-        if(this._clientId){ // update client
+        if (this._clientId) { // update client
             return this.clientsController.updateOne(controller).then(() => {
                 console.log("Success updating");
                 this.commit();
@@ -96,16 +96,37 @@ module.exports = class RequestPersistance extends Persistance  {
         }
     }
 
-    mapDraftObjToModelObj(){
+    mapDraftObjToModelObj(client) {
 
+        if (_.has(client, "clientAddresses") && client.clientAddresses.length) {
+            this.removeTempIds(client, "clientAddresses")
+        }
+
+        if (_.has(client, "clientPhones") && client.clientPhones.length) {
+            this.removeTempIds(client, "clientPhones")
+        }
+        
+        return client
+    }
+
+    removeTempIds(client, key){
+        _.map(client[key], (obj) => {
+            if (_.has(obj, "id")) {
+                const checkId = obj.id.toString().split(':')
+                if (_.first(checkId) === 'temp') {
+                    delete obj.id
+                }
+            }
+            return obj
+        })
     }
 
     /**
      * Commit persistence
      */
-    commit(){
+    commit() {
         console.log("Commit everything!");
-        if(this._transaction){
+        if (this._transaction) {
             this._transaction.commit();
         }
     }
@@ -113,9 +134,9 @@ module.exports = class RequestPersistance extends Persistance  {
     /**
      * Rollback persistence
      */
-    rollback(){
+    rollback() {
         console.log("Just... Rollback...");
-        if(this._transaction){
+        if (this._transaction) {
             this._transaction.rollback();
         }
     }

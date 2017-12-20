@@ -1,4 +1,6 @@
-const _ = require('lodash');
+const _ = require('lodash')
+const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
     return {
@@ -34,24 +36,28 @@ module.exports = (server, restify) => {
             });
         },
 
-        removeOne(req) {
-            return server.sequelize.transaction(function (t) {
-                return server.mysql.ClientPhone.destroy({
-                    where: {
-                        id: req.params.clientPhoneId
-                    },
-                    transaction: t
-                }).then((clientPhone) => {
-                    if (!clientPhone) {
-                        throw new restify.ResourceNotFoundError("Registro não encontrado.");
+        removeClientPhones(controller) {
+            let deleteClientPhones = JSON.parse(JSON.stringify(controller.request.data))
+            return server.mysql.ClientPhone.destroy({
+                where: {
+                    id: {
+                        [Op.in]: deleteClientPhones
                     }
-
-                    server.mysql.ClientPhone.findAll({
-                        where: {
-                            clientId: parseInt(req.params.id)
+                },
+                transaction: controller.transaction
+            }).then(() => {
+                return server.mysql.ClientPhone.findAll({
+                    where: {
+                        clientId: parseInt(controller.request.clientId)
+                    },
+                    transaction: controller.transaction
+                }).then((clientPhones) => {
+                    return new Promise((resolve, reject) => {
+                        if (!clientPhones) {
+                            return reject(new restify.ResourceNotFoundError("Registro não encontrado."))
                         }
-                    }).then((findClientPhones) => {
-                        let clientPhonesES = _.map(findClientPhones, clientPhone => {
+
+                        let clientPhonesES = _.map(clientPhones, clientPhone => {
                             return {
                                 clientPhoneId: clientPhone.id,
                                 number: clientPhone.number,
@@ -61,7 +67,7 @@ module.exports = (server, restify) => {
                         server.elasticSearch.update({
                             index: 'main',
                             type: 'client',
-                            id: parseInt(req.params.id),
+                            id: parseInt(controller.request.clientId),
                             body: {
                                 doc: {
                                     phones: clientPhonesES
@@ -69,20 +75,15 @@ module.exports = (server, restify) => {
                             }
                         }, (esErr, esRes) => {
                             if (esErr) {
-                                throw esErr;
+                                return reject(new Error('Erro ao excluir o(s) clientPhone(s) no ES.'));
                             }
-                            return clientPhone;
+                            resolve()
                         });
                     })
                 })
-            }).then(function (clientPhone) {
-                // Transaction has been committed
-                return clientPhone
-            }).catch(function (err) {
-                // Transaction has been rolled back
-                return err
-            });
+            })
         },
+
         saveClientPhones(controller) {
             let clientPhones = _.cloneDeep(controller.request.data);
             clientPhones = _.map(clientPhones, clientPhone => _.assign(clientPhone, {
@@ -106,27 +107,60 @@ module.exports = (server, restify) => {
                         if (!client) {
                             return reject(new restify.ResourceNotFoundError("Registro não encontrado."));
                         }
-                        const esClientPhones = _.map(client.clientPhones, clientPhone => {
-                            return {
-                                clientPhoneId: clientPhone.id,
-                                ddd: clientPhone.ddd,
-                                number: clientPhone.number
-                            };
-                        });
-                        return server.elasticSearch.update({
-                            index: 'main',
-                            type: 'client',
-                            id: parseInt(controller.request.clientId),
-                            body: {
-                                doc: {
-                                    phones: esClientPhones
+
+                        const deleteClientPhones = _.reduce(client.clientPhones, (accumulator, clientPhone, index) => {
+                            const mongoClientPhone = _.find(clientPhones, (mongoClientPhone) => {
+                                console.log(mongoClientPhone)
+                                if (!mongoClientPhone.id) {
+                                    return
                                 }
+                                else {
+                                    if (mongoClientPhone.id === clientPhone.id) {
+                                        return
+                                    }
+                                }
+                            })
+
+                            if (mongoClientPhone) {
+                                accumulator.push(clientPhone.id)
                             }
-                        }, function (esErr, esRes) {
-                            if(esErr){
-                                return reject(new Error('Erro ao salvar o(s) clientPhone(s) no ES.'));
-                            }
-                            return resolve();
+
+                            return accumulator
+                        }, [])
+
+                        console.log('delete', deleteClientPhones)
+
+                        const deleteClientPhonesControllerObj = new Controller({
+                            request: {
+                                clientId: client.id,
+                                data: deleteClientPhones
+                            },
+                            transaction: controller.transaction
+                        })
+
+                        return this.removeClientPhones(deleteClientPhonesControllerObj).then(() => {
+                            const esClientPhones = _.map(client.clientPhones, clientPhone => {
+                                return {
+                                    clientPhoneId: clientPhone.id,
+                                    ddd: clientPhone.ddd,
+                                    number: clientPhone.number
+                                };
+                            });
+                            return server.elasticSearch.update({
+                                index: 'main',
+                                type: 'client',
+                                id: parseInt(controller.request.clientId),
+                                body: {
+                                    doc: {
+                                        phones: esClientPhones
+                                    }
+                                }
+                            }, function (esErr, esRes) {
+                                if (esErr) {
+                                    return reject(new Error('Erro ao salvar o(s) clientPhone(s) no ES.'));
+                                }
+                                return resolve();
+                            })
                         })
                     });
                 });

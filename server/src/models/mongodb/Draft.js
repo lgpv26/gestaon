@@ -23,7 +23,7 @@ module.exports = {
                 type: Array,
                 default: []
             },
-            changedData: {
+            data: {
                 type: Object,
                 default: {}
             },

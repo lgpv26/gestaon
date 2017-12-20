@@ -65,8 +65,8 @@ module.exports = (server) => {
                 req.body.createdBy = req.auth.id
                 req.body.companyId = req.query.companyId
                 req.body.presence = []
-                req.body.form = { client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId }, order: { orderProducts: [{orderProductId: 'temp:' + shortid.generate()}] } }
-                req.body.changedData = { company: null, client: null }
+                req.body.form = { activeStep: null, client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId }, order: { orderProducts: [{orderProductId: 'temp:' + shortid.generate()}] } }
+                req.body.data = { company: null, client: null }
                 return server.mongodb.Draft.create(req.body).then((draft) => {
 
                     draft = JSON.parse(JSON.stringify(draft))
@@ -237,7 +237,7 @@ module.exports = (server) => {
                         update.addressClientReturn = _.assign(saveClientAddresses[index], clientAddressForm)
                     }
                     else {
-                        saveClientAddresses.push(_.assign(draft.form.clientAddressForm, { id: (draft.form.clientAddressForm.id) ? draft.form.clientAddressForm.id : 'temp:' + (saveClientAddresses.length + 1) }))
+                        saveClientAddresses.push(_.assign(draft.form.clientAddressForm, { id: (draft.form.clientAddressForm.id) ? draft.form.clientAddressForm.id : 'temp:' + shortid.generate() }))
                         update.addressClientReturn = draft.form.clientAddressForm
                     }
 
@@ -340,7 +340,7 @@ module.exports = (server) => {
                             update.phoneClientReturn = _.assign(saveClientPhones[index], draft.form.clientPhoneForm)
                         }
                         else {
-                            saveClientPhones.push(_.assign(draft.form.clientPhoneForm, { id: (draft.form.clientPhoneForm.id) ? draft.form.clientPhoneForm.id : 'temp:' + (saveClientPhones.length + 1) }))
+                            saveClientPhones.push(_.assign(draft.form.clientPhoneForm, { id: (draft.form.clientPhoneForm.id) ? draft.form.clientPhoneForm.id : 'temp:' + shortid.generate() }))
                             update.phoneClientReturn = draft.form.clientPhoneForm
                         }
 
@@ -393,9 +393,9 @@ module.exports = (server) => {
                         if (!_.isInteger(clientCustomFieldAdd.customFieldId)) {
                             const checkCustomFieldId = clientCustomFieldAdd.customFieldId.split(':')
                             if (_.first(checkCustomFieldId) === 'temp') {
-                                const index = _.findIndex(draft.changedData.company.customFields, { id: clientCustomFieldAdd.customFieldId })
+                                const index = _.findIndex(draft.data.company.customFields, { id: clientCustomFieldAdd.customFieldId })
 
-                                resolve(draft.changedData.company.customFields[index])
+                                resolve(draft.data.company.customFields[index])
                             }
                         }
                         else {
@@ -463,15 +463,15 @@ module.exports = (server) => {
             customFieldChange(customFieldChange) {
                 return this.getOne(customFieldChange.draftId).then((draft) => {
 
-                    if (!draft.changedData.company) {
-                        draft.changedData.company = { customFields: null }
+                    if (!draft.data.company) {
+                        draft.data.company = { customFields: null }
                     }
 
-                    const index = _.findIndex(draft.changedData.company.customFields, (customField) => {
+                    const index = _.findIndex(draft.data.company.customFields, (customField) => {
                         return customField.id === (customFieldChange.customFieldId) ? customFieldChange.customFieldId : null
                     })
 
-                    let saveCustomFields = (draft.changedData.company.customFields) ? draft.changedData.company.customFields : []
+                    let saveCustomFields = (draft.data.company.customFields) ? draft.data.company.customFields : []
                     let update = {}
 
                     update.customField = {
@@ -490,10 +490,10 @@ module.exports = (server) => {
                         update.customFieldReturn = update.customField
                     }
 
-                    const company = _.assign(draft.changedData.company, { customFields: saveCustomFields })
-                    update.changedData = _.assign(draft.changedData, { company: company })
+                    const company = _.assign(draft.data.company, { customFields: saveCustomFields })
+                    update.data = _.assign(draft.data, { company: company })
 
-                    return server.mongodb.Draft.update({ draftId: customFieldChange.draftId }, { $set: { changedData: update.changedData } }).then(() => {
+                    return server.mongodb.Draft.update({ draftId: customFieldChange.draftId }, { $set: { data: update.data } }).then(() => {
                         return update
                     })
                 })

@@ -1,6 +1,6 @@
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
-        const modelName = 'ClientsGroup';
+        const modelName = 'ClientGroup';
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
@@ -32,7 +32,7 @@ module.exports = {
                     defaultValue: 'activated'
                 }
             }, {
-                tableName: "clients_group",
+                tableName: "client_group",
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -42,7 +42,7 @@ module.exports = {
             })
         }
     },
-    postSettings: ({ClientsGroup, Client}) => {
-        ClientsGroup.hasMany(Client, {as: 'groupClients', foreignKey: 'clientsGroupId'});
+    postSettings: ({ClientGroup, Client}) => {
+        ClientGroup.hasMany(Client, {as: 'groupClient', foreignKey: 'clientGroupId'});
     }
 };

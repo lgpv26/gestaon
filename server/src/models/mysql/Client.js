@@ -24,7 +24,7 @@ module.exports = {
                         this.setDataValue('obs', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
                 },
-                clientsGroupId: {
+                clientGroupId: {
                     type: Sequelize.INTEGER
                 },
                 legalDocument: {
@@ -57,12 +57,12 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Client,Address,ClientAddress,ClientPhone,ClientCustomField,CustomField, ClientsGroup}) => {
+    postSettings: ({Client,Address,ClientAddress,ClientPhone,ClientCustomField,CustomField, ClientGroup}) => {
         Client.hasMany(ClientAddress, {as: 'clientAddresses', foreignKey: 'clientId'});
         Client.belongsToMany(Address, {through: ClientAddress, as: 'addresses', foreignKey: 'clientId'});
 
         Client.hasMany(ClientPhone, {as: 'clientPhones', foreignKey: 'clientId'});
-        Client.belongsTo(ClientsGroup, {as: 'clientsGroup'});
+        Client.belongsTo(ClientGroup, {as: 'clientGroup'});
         
         Client.hasMany(ClientCustomField, {as: 'clientCustomFields', foreignKey: 'clientId'});
         Client.belongsToMany(CustomField, { through: ClientCustomField, as: 'customFields', foreignKey: 'clientId' });
