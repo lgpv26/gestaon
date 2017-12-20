@@ -47,7 +47,10 @@ module.exports = {
                 dateRemoved: {
                     type: Sequelize.DATE
                 },
-                status: Sequelize.STRING
+                status: {
+                    type: Sequelize.STRING,
+                    defaultValue: 'activated'
+                }
             }, {
                 tableName: 'client_phone',
                 timestamps: true,

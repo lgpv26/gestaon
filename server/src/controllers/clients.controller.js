@@ -104,7 +104,7 @@ module.exports = (server, restify) => {
                         const promises = [];
 
                         /* save clientPhones if existent */
-                        if(_.has(createData, "clientPhones") && createData.clientPhones.length) {
+                        if(_.has(createData, "clientPhones")) {
                             const clientPhonesControllerObj = new Controller({
                                 request: {
                                     clientId: client.id,
@@ -112,7 +112,7 @@ module.exports = (server, restify) => {
                                 },
                                 transaction: controller.transaction
                             })
-                            promises.push(clientsPhonesController.saveClientPhones(clientPhonesControllerObj))
+                            promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
                         }
 
                         // /* save clientAddresses if existent */
@@ -168,6 +168,7 @@ module.exports = (server, restify) => {
                     transaction: controller.transaction
                 }).then((client) => {
                     if (!client) throw new Error("Cliente não encontrado.");
+
                     return new Promise((resolve, reject) => {
                         return server.elasticSearch.update({
                             index: 'main',
@@ -192,7 +193,7 @@ module.exports = (server, restify) => {
                             const promises = [];
 
                             /* save clientPhones if existent */
-                            if(_.has(updateData, "clientPhones") && updateData.clientPhones.length) {
+                            if(_.has(updateData, "clientPhones")) {
                                 const clientPhonesControllerObj = new Controller({
                                     request: {
                                         clientId: controller.request.clientId,
@@ -200,7 +201,7 @@ module.exports = (server, restify) => {
                                     },
                                     transaction: controller.transaction
                                 })
-                                promises.push(clientsPhonesController.saveClientPhones(clientPhonesControllerObj))
+                                promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
                             }
 
                             // /* save clientAddresses if existent */
@@ -274,27 +275,6 @@ module.exports = (server, restify) => {
                     })
                 }*/
                 return address
-            }).catch((err) => {
-                return err
-            });
-        },
-
-        ///////////////////
-        //     PHONES    //
-        ///////////////////
-        removeOnePhone(req) {
-            return clientsPhonesController.removeOne(req).then((phoneDeleted) => {
-                return phoneDeleted
-            })
-        },
-        getPhones(req) {
-            return clientsPhonesController.getPhones(req).then((getAllPhones) => {
-                return getAllPhones
-            })
-        },
-        savePhones(req) {
-            return clientsPhonesController.savePhones(req).then((phone) => {
-                return phone
             }).catch((err) => {
                 return err
             });

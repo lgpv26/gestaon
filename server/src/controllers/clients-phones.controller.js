@@ -84,61 +84,39 @@ module.exports = (server, restify) => {
             })
         },
 
-        saveClientPhones(controller) {
-            let clientPhones = _.cloneDeep(controller.request.data);
-            clientPhones = _.map(clientPhones, clientPhone => _.assign(clientPhone, {
-                clientId: parseInt(controller.request.clientId)
-            }));
-            return server.mysql.ClientPhone.bulkCreate(clientPhones, {
-                updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdate', 'dateRemoved'],
+        setClientPhones(controller) {
+            let setData = _.cloneDeep(controller.request.data);
+            setData = _.map(setData, (clientPhone) => {
+                _.assign(clientPhone, {
+                    clientId: parseInt(controller.request.clientId)
+                })
+                if(_.has(clientPhone, 'dateUpdated')) delete clientPhone.dateUpdated // remove dateUpdated fields so it updates the dateUpdated field
+                return clientPhone
+            });
+            return server.mysql.ClientPhone.destroy({
+                where: {
+                    clientId: parseInt(controller.request.clientId)
+                },
                 transaction: controller.transaction
             }).then(() => {
-                return server.mysql.Client.findOne({
-                    where: {
-                        id: parseInt(controller.request.clientId)
-                    },
-                    include: [{
-                        model: server.mysql.ClientPhone,
-                        as: 'clientPhones'
-                    }],
+                return server.mysql.ClientPhone.bulkCreate(setData, {
+                    updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdated', 'dateRemoved'],
                     transaction: controller.transaction
-                }).then((client) => {
-                    return new Promise((resolve, reject) => {
-                        if (!client) {
-                            return reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                }).then(() => {
+                    return server.mysql.Client.findOne({
+                        where: {
+                            id: parseInt(controller.request.clientId)
+                        },
+                        include: [{
+                            model: server.mysql.ClientPhone,
+                            as: 'clientPhones'
+                        }],
+                        transaction: controller.transaction
+                    }).then((client) => {
+                        return new Promise((resolve, reject) => {
+                            if (!client) {
+                                return reject(new restify.ResourceNotFoundError("Registro não encontrado."));
                         }
-
-                        const deleteClientPhones = _.reduce(client.clientPhones, (accumulator, clientPhone, index) => {
-                            const mongoClientPhone = _.find(clientPhones, (mongoClientPhone) => {
-                                console.log(mongoClientPhone)
-                                if (!mongoClientPhone.id) {
-                                    return
-                                }
-                                else {
-                                    if (mongoClientPhone.id === clientPhone.id) {
-                                        return
-                                    }
-                                }
-                            })
-
-                            if (mongoClientPhone) {
-                                accumulator.push(clientPhone.id)
-                            }
-
-                            return accumulator
-                        }, [])
-
-                        console.log('delete', deleteClientPhones)
-
-                        const deleteClientPhonesControllerObj = new Controller({
-                            request: {
-                                clientId: client.id,
-                                data: deleteClientPhones
-                            },
-                            transaction: controller.transaction
-                        })
-
-                        return this.removeClientPhones(deleteClientPhonesControllerObj).then(() => {
                             const esClientPhones = _.map(client.clientPhones, clientPhone => {
                                 return {
                                     clientPhoneId: clientPhone.id,
@@ -162,9 +140,9 @@ module.exports = (server, restify) => {
                                 return resolve();
                             })
                         })
-                    });
-                });
-            });
+                    })
+                })
+            })
         }
     }
 };

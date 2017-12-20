@@ -160,6 +160,7 @@ connectToRedis.then(() => {
             logging: false
         }).then(() => {
             log.info("Successfully connected to MySQL");
+
             return new Promise((resolve, reject) => {
                 if(databaseCreated){
                     return require("./first-seed.js")(server).then(() => {

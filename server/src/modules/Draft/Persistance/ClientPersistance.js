@@ -41,24 +41,20 @@ module.exports = class RequestPersistance extends Persistance {
      * @returns {Promise}
      */
     start() {
-        return new Promise((resolve, reject) => {
-            return super.getDraftById(this._draftId).then((draft) => {
-                if (!draft) {
-                    return reject(new Error("Draft não encontrado."));
+        return super.getDraftById(this._draftId).then((draft) => {
+            if (!draft) {
+                throw new Error("Draft não encontrado.");
+            }
+            this._draft = draft;
+            return this.server.sequelize.transaction().then((transaction) => {
+                this._transaction = transaction;
+                if (draft.form.client.id) {
+                    this._clientId = parseInt(draft.form.client.id)
                 }
-                this._draft = draft;
-                return this.server.sequelize.transaction().then((transaction) => {
-                    this._transaction = transaction;
-                    if (draft.form.client.id) {
-                        this._clientId = parseInt(draft.form.client.id)
-                    }
-                    return this.saveClient()
-                })
-                // return resolve(draft);
-            }).catch((err) => {
-                return reject(err);
+                return this.saveClient()
             })
-        });
+            // return resolve(draft);
+        })
     }
 
     /**
