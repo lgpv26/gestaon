@@ -134,7 +134,21 @@
             },
             sync(path){
                 this.saving = true;
-                const emitData = { draftId: this.activeMorphScreen.draft.draftId, form: this.getIsolatedFormPathObj(path)};
+                let pathWithoutArrayIndex = path
+                if(path.charAt(path.length - 1) === ']'){ // remove index from path
+                    pathWithoutArrayIndex = ''
+                    const pathArray = path.split('[')
+                    pathArray.forEach((pathSection, index) => {
+                        if(index !== pathArray.length - 1){
+                            pathWithoutArrayIndex += pathSection
+                        }
+                    })
+                }
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    form: this.getIsolatedFormPathObj(path),
+                    path: pathWithoutArrayIndex
+                };
                 console.log("Emitting draft:update", emitData);
                 this.$socket.emit('draft:update', emitData);
             }

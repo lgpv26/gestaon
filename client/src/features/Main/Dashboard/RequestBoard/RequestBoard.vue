@@ -1,8 +1,8 @@
 <template>
     <div id="request-panel" ref="requestPanel">
-        <app-draggable class="board" ref="board" v-model="boardSections" :options="{ handle: '.board-section__header', forceFallback: true }"
+        <app-draggable class="board" ref="board" :value="sections" @input="onDraggableInput($event)" :options="{ handle: '.board-section__header', forceFallback: true }"
             @start="onSectionDragStart" @end="onSectionDragEnd">
-            <div class="board-section" v-for="(boardSection, index) in boardSections" :key="boardSection.name" ref="boardSections"
+            <div class="board-section" v-for="(boardSection, index) in sections" :key="boardSection.name" ref="boardSections"
                  :style="{ width: boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize)) + 'px' }"
                  :class="{dragging: isDraggingBoardColumn}">
                 <div class="board-section__header" :style="{ height: boardOptions.headerHeight }">
@@ -43,6 +43,7 @@
     import DraggableComponent from 'vuedraggable';
     import Scrollbar from 'smooth-scrollbar';
     import _ from 'lodash';
+    import utils from '@/utils'
 
     export default {
         components: {
@@ -64,9 +65,7 @@
                             { request: { client: { name: 'LELÉ' } } },
                             { request: { client: { name: 'LULU' } } },
                             { request: { client: { name: 'LILI' } } }
-                        ],
-                        contentHeight: 0,
-                        scrollbar: null
+                        ]
                     },
                     {
                         name: 'Com o entregador',
@@ -74,9 +73,7 @@
                         cards: [
                             { request: { client: { name: 'THAIS THIEMI' } } },
                             { request: { client: { name: 'DANIEL ROCHA' } } }
-                        ],
-                        contentHeight: 0,
-                        scrollbar: null
+                        ]
                     }
                 ],
                 boardOptions: {
@@ -93,10 +90,13 @@
         computed: {
             ...mapState(['mainContentArea']),
             ...mapState('auth', ['user', 'token', 'company']),
-            ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' })
+            ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
+            ...mapState('request-board', ['sections', 'requests']),
+            ...mapGetters('request-board', ['sectionRequests'])
         },
         methods: {
             ...mapMutations('morph-screen', []),
+            ...mapMutations('request-board', ['RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST']),
             requestCardClicked(card, ev){
                 /*
                 if(!this.isDraggingBoardColumn && !this.isDraggingCard){
@@ -147,18 +147,40 @@
             onMove(ev, originalEv){
                 this.updateScrolls();
             },
+            onDraggableInput(sections){
+                this.SET_SECTIONS(sections)
+            },
             updateScrolls(){
+                const vm = this;
                 setImmediate(() => {
-                    this.boardSections.forEach((boardSection) => {
+                    /*this.boardSections.forEach((boardSection) => {
                         boardSection.scrollable.updateScroll();
-                    });
+                    });*/
+                    vm.sections.forEach((section) => {
+                        section.scrollable.updateScroll()
+                    })
                 });
             }
         },
         mounted(){
-            this.boardSections.forEach((boardSection, index) => {
-                this.boardSections[index].scrollable = this.$refs.scrollables[index];
-            });
+            const vm = this
+            this.ADD_SECTION({
+                id: _.uniqueId("section#"),
+                name: 'Fila de espera',
+                size: 1
+            })
+            this.ADD_SECTION({
+                id: _.uniqueId("section#"),
+                name: 'Com o entregador',
+                size: 1
+            })
+            setImmediate(() => {
+                vm.sections.forEach((section, index) => {
+                    vm.SET_SECTION(section.id, {
+                        scrollable: vm.$refs.scrollables[index]
+                    })
+                })
+            })
         }
     }
 </script>

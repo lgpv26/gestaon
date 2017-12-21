@@ -17,8 +17,8 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(orderProduct, index) in form.orderProducts" :key="orderProduct.id">
-                                        <td><app-product-input v-model="orderProduct.productId" /></td>
+                                    <tr v-for="(orderProduct, index) in form.orderProducts" :key="orderProduct.orderProductId">
+                                        <td><app-product-input :orderProduct.sync="orderProduct" :product.sync="orderProduct.product" @input="onOrderProductInput($event, orderProduct, index)" /></td>
                                         <td class="content-size"><input v-model="orderProduct.quantity" type="text" style="text-align: center;" /></td>
                                         <td><money v-model="form.price"  style="text-align: right;"/></td>
                                         <td><money v-model="form.price" type="text" style="text-align: right;" /></td>
@@ -39,7 +39,7 @@
                                     </tr>
                                     <tr>
                                         <td colspan="3">
-                                            <a class="btn btn--border-only" @click="addProduct" style="display: inline-flex; padding: 0 7px; color: var(--font-color--secondary);">Adicionar produto</a>
+                                            <a class="btn btn--border-only" @click="addProduct" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Adicionar produto</a>
                                         </td>
                                         <td style="text-align: right; font-weight: 800;">R$ XX,XX</td>
                                         <td style="text-align: right; font-weight: 800; color: var(--font-color--secondary)">R$ XX,XX</td>
@@ -75,7 +75,7 @@
                                     </tr>
                                     <tr>
                                         <td colspan="1">
-                                            <a class="btn btn--border-only" @click="addPaymentMethod" style="display: inline-flex; padding: 0 7px; color: var(--font-color--secondary);">Incluir pagamento</a>
+                                            <a class="btn btn--border-only" @click="addPaymentMethod" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Incluir pagamento</a>
                                         </td>
                                         <td style="text-align: right; font-weight: 600;">Saldo</td>
                                         <td style="text-align: right; font-weight: 800; color: var(--font-color--secondary)">R$ XX,XX</td>
@@ -230,6 +230,10 @@
                         {
                             orderProductId: _.uniqueId("product#"),
                             productId: null,
+                            product: {
+                                id: 1,
+                                name: 'TESTE 123'
+                            },
                             quantity: 1
                         }
                     ],
@@ -267,6 +271,10 @@
                 this.form.orderProducts.push({
                     orderProductId: orderProductId,
                     productId: null,
+                    product: {
+                        id: null,
+                        name: null
+                    },
                     quantity: 1
                 });
             },
@@ -309,6 +317,16 @@
             },
             activateTab(tab){
                 this.activeTab = tab;
+            },
+
+            /**
+             * Events
+             */
+
+            // order product
+
+            onOrderProductInput(value, orderProduct, index){
+                this.commitSocketChanges('order.orderProducts[' + index + ']')
             },
 
             /**

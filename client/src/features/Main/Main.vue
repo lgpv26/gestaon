@@ -1,5 +1,6 @@
 <template>
     <div class="body">
+        <app-active-request-card></app-active-request-card>
         <app-morph-screen></app-morph-screen>
         <app-modals></app-modals>
         <app-device-details-window></app-device-details-window>
@@ -129,6 +130,7 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import { MorphScreen } from "./MorphScreen/index";
     import Search from "./Main/Search.vue";
+    import ActiveRequestCard from "./Dashboard/RequestBoard/ActiveRequestCard.vue";
     import Modals from "./Dashboard/Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
     import SettingsComponent from "./Settings/Settings.vue";
@@ -149,6 +151,7 @@
     export default {
         name: 'app-main',
         components: {
+            "app-active-request-card": ActiveRequestCard,
             "app-modals": Modals,
             "app-morph-screen": MorphScreen,
             "app-settings": SettingsComponent,

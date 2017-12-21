@@ -1,4 +1,23 @@
 export default {
+    createRequestBoardSectionModel(){
+        return {
+            id: null,
+            name: null,
+            cards: [],
+            size: 1
+        }
+    },
+    createRequestBoardCardModel(){
+        return {
+            id: null,
+            request: {
+                client: {
+                    name: null
+                }
+            },
+            sectionId: null
+        }
+    },
     createClientCustomFieldModel(){
         return {
             id: null,

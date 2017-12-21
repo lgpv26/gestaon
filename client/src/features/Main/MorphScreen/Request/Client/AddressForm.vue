@@ -106,7 +106,6 @@
                 }, 300);
             },
             addressSearchItemSelected(item){
-                const vm = this;
                 if(this.clientAddress){
                     this.$socket.emit('draft:client-address-address-select', {
                         draftId: this.activeMorphScreen.draft.draftId,

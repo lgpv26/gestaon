@@ -3,7 +3,8 @@
         <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :query="query" :verticalOffset="5" :horizontalOffset="-20"
                     @itemSelected="onSearchProductSelect($event)" >
             <input type="text" class="search-input__field" placeholder="ENCONTRAR" v-model="searchValue" ref="searchInput"
-                   @keydown="onSearchValueUpdate()" @focus="isInputFocused = true" @blur="isInputFocused = false" />
+                   @keydown="onSearchValueUpdate()" @focus="isInputFocused = true" @blur="isInputFocused = false"
+                   @input="onSearchInput()" />
             <template slot="item" slot-scope="props">
                 <div class="search-input__item">
                     <span class="detail__name">{{ props.item.product }}</span>
@@ -29,7 +30,7 @@
         components: {
             'app-search': SearchComponent
         },
-        props: ['value'],
+        props: ['product','orderProduct'],
         data(){
             return {
                 isInputFocused: false,
@@ -39,7 +40,13 @@
                 searchValue: ''
             }
         },
+        watch: {
+            'product.name': function(){
+                this.searchValue = this.product.name
+            }
+        },
         computed: {
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company'])
         },
         methods: {
@@ -59,17 +66,22 @@
                 }).then(({data}) => {
                     vm.searchItems = data;
                     vm.$refs.search.search();
-                    console.log(vm.searchItems);
                 }).catch((err) => {
                     vm.searchItems = [];
                 });
             },
-            onSearchProductSelect(searchItem){
+            onSearchProductSelect(item){
                 const vm = this;
+                if(this.orderProduct){
+                    const emitData = {
+                        draftId: this.activeMorphScreen.draft.draftId,
+                        productId: item.id,
+                        orderProductId: (this.orderProduct.orderProductId) ? this.orderProduct.orderProductId : null
+                    };
+                    console.log("Emitting draft:order-product-product-select", emitData)
+                    vm.searchItems = [];
+                }
 
-                const toBeEmitted = { draftId: this.activeMorphScreen.draft.draftId, clientId: searchItem.client.id};
-                /*this.$socket.emit('draft:client-select', toBeEmitted);*/
-                vm.searchItems = [];
             },
             onSearchValueUpdate(){
                 if(this.commitTimeout) clearTimeout(this.commitTimeout);
@@ -84,7 +96,15 @@
                     this.search();
                 }
             },
-
+            onSearchInput(){
+                _.assign(this.orderProduct.product, {
+                    name: this.searchValue
+                })
+                this.$emit('input', this.searchValue)
+            }
+        },
+        mounted(){
+            this.searchValue = this.product.name
         }
     }
 </script>
