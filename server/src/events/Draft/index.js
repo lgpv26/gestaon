@@ -400,12 +400,12 @@ module.exports = class Draft {
 
     updateDraftRedis(contentDraft, newEdit = false, resetOrSelectAddress = false) {
         return new Promise((resolve, reject) => {
+            console.log(contentDraft)
             this.consultRedisDraft(contentDraft.draftId).then((redisConsult) => {
                 const checkUpdate = JSON.parse(redisConsult.clientFormUpdate)
 
                 let update = { clientAddressForm: checkUpdate.clientAddressForm,
-                               clientPhoneForm: checkUpdate.clientPhoneForm, 
-                               orderProducts: (redisConsult.orderProducts) ? redisConsult.orderProducts : null
+                               clientPhoneForm: checkUpdate.clientPhoneForm
                             }
                             
                 update.inEdition = _.merge(JSON.parse(redisConsult.clientFormEdition), contentDraft.inEdition)
@@ -419,7 +419,7 @@ module.exports = class Draft {
                     }
                 }
                 else {
-                    if (_.has(contentDraft, "clientAddressForm") && contentDraft.clientAddressForm.length) {
+                    if (_.has(contentDraft, "clientAddressForm")) {
                         if (!newEdit) {
                             delete checkUpdate.clientAddressForm.address.reset
                             const address = _.assign(checkUpdate.clientAddressForm.address, contentDraft.form.clientAddressForm.address)
@@ -431,22 +431,12 @@ module.exports = class Draft {
                         }
 
                     }
-                    if (_.has(contentDraft, "clientPhoneForm") && contentDraft.clientPhoneForm.length) {
+                    if (_.has(contentDraft, "clientPhoneForm")) {
                         if (contentDraft.clientPhoneForm.reset) {
                             update.clientPhoneForm = {}
                         }
                         else {
                             update.clientPhoneForm = _.assign(checkUpdate.clientPhoneForm, contentDraft.form.clientPhoneForm)
-                        }
-                    }
-                    if(_.has(contentDraft, "orderProduct") && contentDraft.orderProduct.length) {
-                        const indexOrderProduct = _.findIndex(update.orderProducts, (productOrder) => { return productOrder.orderProductId === orderProduct.orderProductId })
-                        
-                        if(indexOrderProduct){
-
-                        }
-                        else {
-                            update.orderProducts.push(contentDraft.orderProduct.form)
                         }
                     }
                 }
