@@ -208,10 +208,12 @@ module.exports = class Request extends Draft {
             })
         })
 
-        this.socket.on('draft:order-product-select', (clientAddressBack) => {
+        this.socket.on('draft:order-product-product-select', (orderProductSelect) => {
             super.resetTimeout()
-            super.saveDraft(clientAddressBack.draftId).then(() => {
-                this.onClientAddressBack(clientAddressBack)
+            console.log('vou pro saveDraft')
+            super.saveDraft(orderProductSelect.draftId).then(() => {
+                console.log(orderProductSelect)
+                this.onOrderProductProductSelect(orderProductSelect)
             })
         })
     //<-- end ORDER ** product | setSocketRequestListeners
@@ -726,53 +728,21 @@ module.exports = class Request extends Draft {
             })
         }
 
-         /**
-         * Order Product Update
-         * @desc Send to all sockets in Draft/:id the remove form product event
+        /**
+         * Order Product Select
+         * @desc Send to all sockets in Draft/:id that an product has been selected
          * 
-         * @param {object} orderProductUpdate - expected: draftId, orderProductId
-         * @return {int} order Product Id (removed) @property {Socket}
+         * @param {object} orderProductProductSelect - expected: draftId, productId, orderProductId
+         * @return {object} address @property {Socket}
          */
-        onOrderProductUpdate(orderProductUpdate) {
-            this.setArrayDraftOrderProduct(orderProductUpdate).then((redisUpdate) => {
-                redisUpdate.draftId = orderProductUpdate.draftId
-                super.updateDraftRedis(redisUpdate).then(() => {
-                    this.server.io.in('draft/' + orderProductRemove.draftId).emit('draftOrderProductUpdate', orderProductUpdate.orderProductId)
-                })
+        onOrderProductProductSelect(orderProductProductSelect) {
+            console.log(orderProductProductSelect)
+            this.controller.selectProductOrderProdut(orderProductProductSelect).then((product) => {
+                this.server.io.in('draft/' + orderProductProductSelect.draftId).emit('draftOrderProductProductSelect', product)
+            }).catch(() => {
+                console.log('catch do SELECT PRODUCT ORDER PRODUCT')
             })
         }
-
-        /////////////////////////////////////
-        //ORDER PRODUCT => SET PERSISTENCE //
-        /////////////////////////////////////
-        //
-            /** 
-             * Set Array Draft Client Custom Field
-             * @desc Prepares the custom field update to persist in server memory
-             * 
-             * @param {object} clientCustomField - expected: draftId, customFieldId, clientCustomFieldForm
-             * @return {object} clientCustomFieldId, clientCustomFieldForm @property {Promise}
-             */
-            setArrayDraftOrderProduct(orderProduct) {
-                return new Promise((resolve, reject) => {
-                    return this.controller.getOne(orderProduct.draftId).then((draft) => {
-                        const draftUpdateMemory = _.find(this.channels.updates.drafts, { draftId: orderProduct.draftId })
-
-                        const indexOrderProduct = _.findIndex(draft.form.order.orderProducts, (productOrder) => { return productOrder.orderProductId === orderProduct.orderProductId })
-                        draft.form.order.orderProducts[indexOrderProduct] = _.assign(draft.form.order.orderProducts[indexOrderProduct], orderProduct.form)
-
-                        if (draftUpdateMemory) {
-                            const draftUpdateIndex = this.channels.updates.drafts.indexOf(draftUpdateMemory)
-                            this.channels.updates.drafts[draftUpdateIndex] = _.assign(this.channels.updates.drafts[draftUpdateIndex], draft)
-                            resolve({ orderProductId: orderProduct.orderProductId, orderProduct: orderProduct.form })
-                        }
-                        else {
-                            this.channels.updates.drafts.push(draft)
-                            resolve({ orderProductId: orderProduct.orderProductId, orderProduct: orderProduct.form })
-                        }
-                    })
-                })
-            }
-        // <-- end ORDER PRODUCT => SET PERSISTENCE
+  
 
 }

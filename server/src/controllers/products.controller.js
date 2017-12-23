@@ -1,10 +1,11 @@
 const _ = require('lodash')
 const utils = require('../utils')
+const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
     return {
         search(req) {
-
             return new Promise((resolve, reject) => {
                 server.elasticSearch.search(
                     {
@@ -200,23 +201,29 @@ module.exports = (server, restify) => {
                 });
             });
         },
-        getOne: (req, res, next) => {
-            server.mysql.Product.findOne({
+
+        getOne: (controller) => {
+            return server.mysql.Product.findOne({
                 where: {
-                    id: req.params.id,
-                    status: 'activated'
+                    id: controller.request.id,
+                    status: 'activated',
+                    include: [{
+                        model: server.mysql.SupplierProduct,
+                        as: 'productSuppliers',
+                        include: [{
+                            model: server.mysql.Supplier,
+                            as: 'supplier'
+                        }]
+                    }]
                 }
             }).then((product) => {
                 if (!product) {
-                    return next(
-                        new restify.ResourceNotFoundError("Nenhum dado encontrado.")
-                    );
+                    return new restify.ResourceNotFoundError("Nenhum dado encontrado.")
                 }
-                return res.send(200, {
-                    data: product
-                });
-            });
+                return product
+            })
         },
+
         createOne(req) {
             let createData = _.cloneDeep(req.body)
             createData.companyId = req.params.companyId

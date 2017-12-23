@@ -255,7 +255,7 @@
                 const vm = this;
                 const allAnimationsCompleted = [];
                 let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen);
-                vm.$socket.emit('presence-update-draft', {
+                vm.$socket.emit('draft:presence', {
                     draftId: vm.activeMorphScreen.draft.draftId,
                     userId: vm.user.id,
                     leave: true
@@ -314,7 +314,7 @@
             },
             closeScreen(screen){
                 const vm = this;
-                vm.$socket.emit('presence-update-draft', {
+                vm.$socket.emit('draft:presence', {
                     draftId: vm.activeMorphScreen.draft.draftId,
                     userId: vm.user.id,
                     leave: true

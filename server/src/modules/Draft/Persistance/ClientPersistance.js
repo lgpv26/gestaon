@@ -70,7 +70,7 @@ module.exports = class RequestPersistance extends Persistance {
                 data: this.mapDraftObjToModelObj(this._draft.form.client),
             },
             transaction: this._transaction
-        });
+        })
 
         if (this._clientId) { // update client
             return this.clientsController.updateOne(controller).then(() => {

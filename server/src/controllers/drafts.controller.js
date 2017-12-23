@@ -2,7 +2,8 @@ const utils = require('../utils')
 const _ = require('lodash')
 const Op = require('sequelize').Op
 const shortid = require('shortid')
-const restify = require('restify');
+const restify = require('restify')
+const Controller = require('./../models/Controller')
 
 module.exports = (server) => {
 
@@ -13,6 +14,8 @@ module.exports = (server) => {
     const clientsController = require('./../controllers/clients.controller')(server)
     const addressesController = require('./../controllers/addresses.controller')(server)
     const customFieldsController = require('./../controllers/custom-fields.controller')(server)
+    const productsController = require('./../controllers/products.controller')(server)
+
     //  <-- end CONTORLLERS
 
     return {
@@ -96,7 +99,34 @@ module.exports = (server) => {
         updateDraft(draftReq) {
             return new Promise((resolve, reject) => {
                 server.mongodb.Draft.findOne({ draftId: draftReq.draftId }).then((draftConsult) => {
+                    const path = draftReq.path
+                    delete draftReq.path
+
+                    if (draftReq.hasArray) {
+                        delete draftReq.hasArray
+
+                        return new Promise((resolve, reject) => {
+                            let update = []
+                            _.get(draftConsult, 'form.' + path).map((value, index) => {
+                                const arrayIndex = _.findIndex(_.get(draftReq, 'form.' + path), {orderProductId: value.orderProductId})
+                                if(arrayIndex !== -1){
+                                    update.push(_.assign(value, _.get(draftReq, 'form.' + path)[arrayIndex]))
+                                }
+                                else {
+                                    update.push(value)
+                                }
+                            })
+                            resolve(update)
+                        }).then((update) => {
+                            _.set(draftReq, 'form.' + path,
+                                update
+                            )
+                            resolve(_.mergeWith(draftConsult.form, draftReq.form))
+                        })
+                    }
+                    else {
                     resolve(_.mergeWith(draftConsult.form, draftReq.form))
+                }
                 }).catch((err) => {
                     reject(err)
                 })
@@ -540,6 +570,31 @@ module.exports = (server) => {
 
                 return server.mongodb.Draft.update({ draftId: orderProductRemove.draftId }, { $set: { form: update } }).then(() => {
                     return true
+                })
+            })
+        },
+
+        selectProductOrderProdut(productSelect) {
+            return this.getOne(productSelect.draftId).then((draft) => {
+
+                const controller = new Controller({
+                    request: {
+                        id: 1 //productSelect.productId
+                    }
+                })
+
+                return productsController.getOne(controller).then((product) => {
+                    product = JSON.parse(JSON.stringify(product))
+
+                    const arrayIndex = _.findIndex(draft.form.order.orderProducts, {orderProductId: productSelect.orderProductId})
+
+                    draft.form.order.orderProducts[arrayIndex] = _.assign(draft.form.order.orderProducts[arrayIndex], {product: product})
+                    
+                    const update = _.assign(draft.form, { order: draft.form.order })
+
+                    return server.mongodb.Draft.update({ draftId: productSelect.draftId }, { $set: { form: update } }).then(() => {
+                        return product
+                    })
                 })
             })
         },

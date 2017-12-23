@@ -1,3 +1,5 @@
+import { isArray } from 'util';
+
 const basePath = require('../../middlewares/base-path.middleware');
 const _ = require('lodash');
 
@@ -51,7 +53,6 @@ module.exports = class Draft {
     onPresenceUpdate(presenceUser) {
         if (presenceUser.leave) {
             const objPresenceUser = { name: this.socket.user.name, email: this.socket.user.email }
-            this.saveDraft(presenceUser.draftId)
             this.onLeavePresence(presenceUser.draftId, objPresenceUser)
             this.setRedisUserPresence({ draftId: null, userId: presenceUser.userId })
         }
@@ -111,11 +112,27 @@ module.exports = class Draft {
     onDraftUpdate(contentDraft) {
         this.socket.broadcast.in('draft/' + contentDraft.draftId).emit('draftUpdate', contentDraft)
 
-        this.setArrayDraft(contentDraft).then(() => {
-            this.timerSocketUpdate(contentDraft.draftId)
-        }).catch(() => {
-            console.log('catch do SET ARRAY DENTRO DO ONUPDATEDRAFT')
-        })
+        const arrayPath = _.get(contentDraft, 'form.' + contentDraft.path)
+
+        if (isArray(arrayPath)) {
+            _.set(contentDraft, 'form.' + contentDraft.path,
+                _.filter(arrayPath, (value) => {
+                    return value !== null
+                })
+            )
+        }
+        if(contentDraft.path === 'activeStep'){
+            this.setArrayDraft(contentDraft).then(() => {
+                this.saveDraft(contentDraft.draftId)
+            })
+        }
+        else {
+            this.setArrayDraft(contentDraft).then(() => {
+                this.timerSocketUpdate(contentDraft.draftId)
+            }).catch(() => {
+                console.log('catch do SET ARRAY DENTRO DO ONUPDATEDRAFT')
+            })
+        }
     }
 
     /** 
@@ -136,7 +153,7 @@ module.exports = class Draft {
                 })
                 if (userFound) {
                     this.controller.savePresenceUser(tempDraft.draftId, tempDraft.presence).then((newPresence) => {
-                        this.server.io.in('draft/' + tempDraft.draftId).emit('presenceDraft', tempDraft.presence)
+                        this.server.io.in('draft/' + tempDraft.draftId).emit('draftPresence', tempDraft.presence)
                     }).catch(() => {
                         console.log('catch do SAVEPRESENCE USER - DENTRO DO SOCKET DISCONECT')
                     })
@@ -207,7 +224,7 @@ module.exports = class Draft {
                 })
             }).then((userPresence) => {
                 this.controller.savePresenceUser(draftId, userPresence).then((newPresence) => {
-                    this.server.io.in('draft/' + draftId).emit('presenceDraft', newPresence)
+                    this.server.io.in('draft/' + draftId).emit('draftPresence', newPresence)
                 }).catch(() => {
                     console.log('catch do SAVEPRESENCEUSER - DENTRO DO LEAVE PRESENCE')
                 })
@@ -222,18 +239,39 @@ module.exports = class Draft {
         setArrayDraft(contentDraft) {
             return new Promise((resolve, reject) => {
                 const draft = _.find(this.channels.updates.drafts, { draftId: contentDraft.draftId })
-                if (draft) {
-                    const draftUpdateIndex = this.channels.updates.drafts.indexOf(draft);
-                    this.channels.updates.drafts[draftUpdateIndex] = _.mergeWith(draft, contentDraft)
+                const arrayPath = _.get(contentDraft, 'form.' + contentDraft.path)
 
+                if (draft) {
+                    const draftUpdateIndex = this.channels.updates.drafts.indexOf(draft)
+
+                    const pathUpdate = _.get(this.channels.updates.drafts[draftUpdateIndex], 'form.' + contentDraft.path)
+
+                    if (isArray(arrayPath)) {
+                        const arrayIndex = _.findIndex(pathUpdate, (value) => {
+                            return value.orderProductId === _.first(arrayPath).orderProductId
+                        })
+
+                        if(arrayIndex !== -1){
+                            pathUpdate.splice(arrayIndex, 1, _.first(arrayPath))
+                            _.set(contentDraft, 'form.' + contentDraft.path,
+                                pathUpdate
+                            )
+                        }
+                        else {
+                            _.set(contentDraft, 'form.' + contentDraft.path,
+                                _.concat((pathUpdate) ? pathUpdate : [], _.first(arrayPath))
+                            )
+                        }
+                    }
+                    this.channels.updates.drafts[draftUpdateIndex] = _.assignIn(draft, contentDraft)
                     resolve()
                 }
                 else {
-                    this.channels.updates.drafts.push(contentDraft)
+                    this.channels.updates.drafts.push(_.assignIn(contentDraft, { hasArray: (isArray(arrayPath)) ? true : false, path: contentDraft.path }))
                     resolve()
                 }
-            }).catch(() => {
-                console.log('catch do SET ARRAY DRAFT MESMO')
+            }).catch((err) => {
+                console.log(err, 'catch do SET ARRAY DRAFT MESMO')
             })
         }
 
@@ -256,9 +294,10 @@ module.exports = class Draft {
                 this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
                     if (err) console.log(err)
                     if(draft.form.activeStep === 'client'){
-                        if (_.has(checkEdition, 'clientFormEdition') && checkEdition.clientFormEdition) {
+                        if (_.has(checkEdition, 'clientFormEdition')) {
                             const update = JSON.parse(checkEdition.clientFormUpdate)
                             checkEdition = JSON.parse(checkEdition.clientFormEdition)
+
                             if (checkEdition.clientAddress.inEdition) {
                                 if (checkEdition.clientAddress.clientAddressId) {
                                     this.socket.emit('draftClientAddressEdit', checkEdition.clientAddress.clientAddressId)
@@ -312,7 +351,7 @@ module.exports = class Draft {
                         }
                     }
                     else if(draft.form.activeStep === 'order'){
-                        if (checkEdition.orderProduct) {
+                        if (checkEdition.orderProducts) {
 
                         }
                         else {
@@ -342,8 +381,8 @@ module.exports = class Draft {
                                 this.consultDraft(draftId)
                             }
                             resolve()
-                        }).catch(() => {
-                            console.log('catch do UPDATEDRAFT - QUE TA DENTRO DO SAVEDRAFT')
+                        }).catch((err) => {
+                            console.log(err, 'catch do UPDATEDRAFT - QUE TA DENTRO DO SAVEDRAFT')
                             reject()
                         })
                     }
@@ -400,7 +439,6 @@ module.exports = class Draft {
 
     updateDraftRedis(contentDraft, newEdit = false, resetOrSelectAddress = false) {
         return new Promise((resolve, reject) => {
-            console.log(contentDraft)
             this.consultRedisDraft(contentDraft.draftId).then((redisConsult) => {
                 const checkUpdate = JSON.parse(redisConsult.clientFormUpdate)
 
