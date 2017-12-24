@@ -68,70 +68,103 @@ module.exports = (server, restify) => {
                     throw new Error("Não foi possível encontrar o cliente criado.")
                 }
                 return new Promise((resolve, reject) => {
-                    return server.elasticSearch.index({
-                        index: 'main',
-                        type: 'client',
-                        id: client.id,
-                        body: {
-                            companyId: client.companyId,
-                            name: client.name,
-                            obs: client.obs,
-                            legalDocument: client.legalDocument
-                        }
-                    }, function (esErr, esRes, esStatus) {
-                        if (esErr) {
-                            return reject(new Error(esErr))
-                        }
 
-                        const promises = [];
+                    const promises = [];
 
-                        /* save clientPhones if existent */
-                        if(_.has(createData, "clientPhones")) {
-                            const clientPhonesControllerObj = new Controller({
-                                request: {
-                                    clientId: client.id,
-                                    data: createData.clientPhones
-                                },
-                                transaction: controller.transaction
-                            })
-                            promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
+                    promises.push(new Promise((resolve, reject) => {
+                        const esClient = {
+                            id: client.id,
+                            body: {
+                                companyId: client.companyId,
+                                name: client.name,
+                                obs: client.obs,
+                                legalDocument: client.legalDocument
+                            }
                         }
+                        resolve({clientES: esClient})
+                    }))
 
-                        /* save clientAddresses if existent */
-                        if(_.has(createData, "clientAddresses") && createData.clientAddresses.length) {
-                            const clientAddressesControllerObj = new Controller({
-                                request: {
-                                    clientId: client.id,
-                                    companyId: createData.companyId,
-                                    data: createData.clientAddresses
-                                },
-                                transaction: controller.transaction
-                            })
-                            promises.push(clientsAddressesController.saveClientAddresses(clientAddressesControllerObj))
-                        }
-          
-                        /* save clientCustomFields if existent */
-                        if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
-
-                            const clientCustomFieldControllerObj = new Controller({
-                                request: {
-                                    clientId: client.id,
-                                    companyId: createData.companyId,
-                                    data: createData.clientCustomFields
-                                },
-                                transaction: controller.transaction
-                            })
-                            promises.push(clientsCustomFieldsController.saveClientCustomFields(clientCustomFieldControllerObj))
-                        }
-
-                        /* return only when all promises are satisfied */
-                        return Promise.all(promises).then(() => {
-                            return resolve()
-                        }).catch((err) => {
-                            return reject(err)
+                 /* save clientPhones if existent */
+                    if(_.has(createData, "clientPhones")) {
+                        const clientPhonesControllerObj = new Controller({
+                            request: {
+                                clientId: client.id,
+                                data: createData.clientPhones
+                            },
+                            transaction: controller.transaction
                         })
-                    });
-                });
+                        promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
+                    }
+
+                    /* save clientAddresses if existent */
+                    if(_.has(createData, "clientAddresses") && createData.clientAddresses.length) {
+                        const clientAddressesControllerObj = new Controller({
+                            request: {
+                                clientId: client.id,
+                                companyId: createData.companyId,
+                                data: createData.clientAddresses
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(clientsAddressesController.setClientAddresses(clientAddressesControllerObj))
+                    }
+        
+                    /* save clientCustomFields if existent */
+                    if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
+
+                        const clientCustomFieldControllerObj = new Controller({
+                            request: {
+                                clientId: client.id,
+                                companyId: createData.companyId,
+                                data: createData.clientCustomFields
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(clientsCustomFieldsController.setClientCustomFields(clientCustomFieldControllerObj))
+                    }
+
+                    /* return only when all promises are satisfied */
+                    return Promise.all(promises).then((clientEs) => {
+                        const objES = {}
+                        _.map(clientEs, (value) => {
+                            _.assign(objES, value)
+                        })
+
+                        let addressesESPromise = []
+                            if(_.has(objES, "addressesES") && objES.addressesES){
+                                objES.addressesES.forEach((addressEs) => {  
+                                    const addressESControllerObj = new Controller({
+                                        request: {
+                                            data: addressEs
+                                        },
+                                        transaction: controller.transaction
+                                    })
+                                    addressesESPromise.push(addressesController.saveAddressesInES(addressESControllerObj))
+                                })
+                            }
+
+                            return Promise.all(addressesESPromise).then(() => {
+                                const body = _.assign({}, objES.clientES.body, {addresses: objES.clientAddressesES}, {customFields: objES.customFieldsES}, {phones: objES.phonesES})
+
+                                return server.elasticSearch.index({
+                                        index: 'main',
+                                        type: 'client',
+                                        id: objES.clientES.id,
+                                        body: body
+                                    }, function (esErr, esRes, esStatus) {
+                                        if (esErr) {
+                                            return reject(new Error(esErr))
+                                        }
+                                        return resolve()
+                                    }
+                                )
+                            }).catch((err) => {
+                                return reject()
+                            })
+                    }).catch((err) => {
+                        return reject(err)
+                    })
+                })
             })
         },
         updateOne: (controller) => {
@@ -169,75 +202,103 @@ module.exports = (server, restify) => {
                     if (!client) throw new Error("Cliente não encontrado.");
 
                     return new Promise((resolve, reject) => {
-                        return server.elasticSearch.update({
-                            index: 'main',
-                            type: 'client',
-                            id: client.id,
-                            body: {
-                                doc: {
+
+                        const promises = [];
+
+                        promises.push(new Promise((resolve, reject) => {
+                            const esClient = {
+                                id: client.id,
+                                body: {
                                     companyId: client.companyId,
                                     name: client.name,
                                     obs: client.obs,
-                                    legalDocument: client.legalDocument,
-                                    dateUpdated: client.dateUpdated,
-                                    dateCreated: client.dateCreated,
-                                    status: client.status
+                                    legalDocument: client.legalDocument
                                 }
                             }
-                        }, function (esErr, esRes) {
-                            if (esErr) {
-                                return reject(new Error(esErr))
-                            }
+                            resolve({clientES: esClient})
+                        }))
 
-                            const promises = [];
-
-                            /* save clientPhones if existent */
-                            if(_.has(updateData, "clientPhones") && updateData.clientPhones.length) {
-                                const clientPhonesControllerObj = new Controller({
-                                    request: {
-                                        clientId: controller.request.clientId,
-                                        data: updateData.clientPhones
-                                    },
-                                    transaction: controller.transaction
-                                })
-                                promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
-                            }
-
-                            /* save clientAddresses if existent */
-                            if(_.has(updateData, "clientAddresses") && updateData.clientAddresses.length) {
-                                const clientAddressesControllerObj = new Controller({
-                                    request: {
-                                        clientId: controller.request.clientId,
-                                        companyId: controller.request.companyId,
-                                        data: updateData.clientAddresses
-                                    },
-                                    transaction: controller.transaction
-                                })
-                                promises.push(clientsAddressesController.saveClientAddresses(clientAddressesControllerObj))
-                            }
-
-                            /* save clientCustomFields if existent */
-                            if(_.has(updateData, "clientCustomFields") && updateData.clientCustomFields.length) {
-
-                                const clientCustomFieldControllerObj = new Controller({
-                                    request: {
-                                        clientId: controller.request.clientId,
-                                        companyId: controller.request.companyId,
-                                        data: updateData.clientCustomFields
-                                    },
-                                    transaction: controller.transaction
-                                })
-                                promises.push(clientsCustomFieldsController.saveClientCustomFields(clientCustomFieldControllerObj))
-                            }
-                            
-
-                            /* return only when all promises are satisfied */
-                            return Promise.all(promises).then(() => {
-                                return resolve()
-                            }).catch((err) => {
-                                return reject(err)
+                        /* save clientPhones if existent */
+                        if(_.has(updateData, "clientPhones") && updateData.clientPhones.length) {
+                            const clientPhonesControllerObj = new Controller({
+                                request: {
+                                    clientId: controller.request.clientId,
+                                    data: updateData.clientPhones
+                                },
+                                transaction: controller.transaction
                             })
-                        })
+                            promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
+                        }
+
+                        /* save clientAddresses if existent */
+                        if(_.has(updateData, "clientAddresses") && updateData.clientAddresses.length) {
+                            const clientAddressesControllerObj = new Controller({
+                                request: {
+                                    clientId: controller.request.clientId,
+                                    companyId: controller.request.companyId,
+                                    data: updateData.clientAddresses
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(clientsAddressesController.setClientAddresses(clientAddressesControllerObj))
+                        }
+
+                        /* save clientCustomFields if existent */
+                        if(_.has(updateData, "clientCustomFields") && updateData.clientCustomFields.length) {
+
+                            const clientCustomFieldControllerObj = new Controller({
+                                request: {
+                                    clientId: controller.request.clientId,
+                                    companyId: controller.request.companyId,
+                                    data: updateData.clientCustomFields
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(clientsCustomFieldsController.setClientCustomFields(clientCustomFieldControllerObj))
+                        }
+                        
+
+                        /* return only when all promises are satisfied */
+                        return Promise.all(promises).then((clientEs) => {
+                            const objES = {}
+                            _.map(clientEs, (value) => {
+                                _.assign(objES, value)
+                            })
+
+                            let addressesESPromise = []
+                                if(_.has(objES, "addressesES") && objES.addressesES){
+                                    objES.addressesES.forEach((addressEs) => {  
+                                        const addressESControllerObj = new Controller({
+                                            request: {
+                                                data: addressEs
+                                            },
+                                            transaction: controller.transaction
+                                        })
+                                        addressesESPromise.push(addressesController.saveAddressesInES(addressESControllerObj))
+                                    })
+                                }
+
+                                return Promise.all(addressesESPromise).then(() => {
+                                    const body = _.assign({}, objES.clientES.body, {addresses: objES.clientAddressesES}, {customFields: objES.customFieldsES}, {phones: objES.phonesES})
+
+                                    return server.elasticSearch.index({
+                                            index: 'main',
+                                            type: 'client',
+                                            id: objES.clientES.id,
+                                            body: body
+                                        }, function (esErr, esRes, esStatus) {
+                                            if (esErr) {
+                                                return reject(new Error(esErr))
+                                            }
+                                            return resolve()
+                                        }
+                                    )
+                                }).catch((err) => {
+                                    return reject()
+                                })
+                            })
+                        }).catch((err) => {
+                            return reject(err)
                     })
                 })
             });
@@ -439,7 +500,7 @@ module.exports = (server, restify) => {
                     })
 
                     let clientAddressesPromisses = []
-                    clientAddressesPromisses.push(clientsAddressesController.saveClientAddresses(req).then((response) => {
+                    clientAddressesPromisses.push(clientsAddressesController.setClientAddresses(req).then((response) => {
                         return response
                     }))
 

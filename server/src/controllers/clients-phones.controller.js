@@ -123,22 +123,9 @@ module.exports = (server, restify) => {
                                     ddd: clientPhone.ddd,
                                     number: clientPhone.number
                                 };
-                            });
-                            return server.elasticSearch.update({
-                                index: 'main',
-                                type: 'client',
-                                id: parseInt(controller.request.clientId),
-                                body: {
-                                    doc: {
-                                        phones: esClientPhones
-                                    }
-                                }
-                            }, function (esErr, esRes) {
-                                if (esErr) {
-                                    return reject(new Error('Erro ao salvar o(s) clientPhone(s) no ES.', esErr));
-                                }
-                                return resolve();
                             })
+                              
+                            return resolve({phonesES: esClientPhones})
                         })
                     })
                 })

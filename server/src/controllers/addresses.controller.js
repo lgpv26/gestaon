@@ -143,7 +143,7 @@ module.exports = (server, restify) => {
                                 transaction: controller.transaction
                             })
                             addressChangePromises.push(createOne(addressCreate).then((createdAddress) => {
-                                return _.assign(clientAddress, {address: createdAddress} )
+                                return _.assign(clientAddress, {address: createdAddress.address}, {addressES: createdAddress.esAddress})
                             })
                             )
                         }
@@ -232,7 +232,44 @@ module.exports = (server, restify) => {
                     });
                 });
             });
+        },
+
+        saveAddressesInES: (controller) => {
+            return new Promise((resolve, reject) => {
+                let setData = _.cloneDeep(controller.request.data)
+                if(setData.createES){
+                    return server.elasticSearch.index({
+                        index: 'main',
+                        type: 'address',
+                        id: setData.id,
+                        body: setData.body
+    
+                    }, function (esErr, esRes, esStatus) {
+                        if (esErr) {
+                            reject(esErr)
+                        }
+                        resolve()
+                    })
+                }
+                else{
+                    return server.elasticSearch.update({
+                        index: 'main',
+                        type: 'address',
+                        id: setData.id,
+                        body: {
+                            doc: setData.body
+                        }    
+                    }, function (esErr, esRes, esStatus) {
+                        if (esErr) {
+                            reject(esErr)
+                        }
+                        resolve()
+                    })
+
+                }
+            })
         }
+
     }
 
     function createOne(controller) {
@@ -246,9 +283,8 @@ module.exports = (server, restify) => {
                     reject("Não foi possível encontrar o address criado.")
                 }
                 address = JSON.parse(JSON.stringify(address))
-                return server.elasticSearch.index({
-                    index: 'main',
-                    type: 'address',
+
+                const esAddress = {
                     id: address.id,
                     body: {
                         companyId: address.companyId,
@@ -260,13 +296,10 @@ module.exports = (server, restify) => {
                         dateUpdated: address.dateUpdated,
                         dateCreated: address.dateCreated,
                         status: address.status
-                    }
-                }, function (esErr, esRes, esStatus) {
-                    if (esErr) {
-                        reject(esErr)
-                    }
-                    resolve(address)
-                })
+                    },
+                    createES: true
+                }
+                resolve({address: address, esAddress: esAddress})
             })
         }).then((address) => {
             return address

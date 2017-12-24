@@ -43,7 +43,7 @@ module.exports = (server, restify) => {
             });
         },
 
-        saveClientCustomFields: (controller) => {
+        setClientCustomFields: (controller) => {
             return new Promise((resolve, reject) => {
                 let customFieldsResolverPromisses = []
                 const saveData = _.cloneDeep(controller.request.data)
@@ -102,9 +102,11 @@ module.exports = (server, restify) => {
                     }))
 
                     return Promise.all(clientCustomFieldPromisses).then((resultCustomFieldPromises) => {
+                        let clientCustomFieldsES = []
                         _.map(resultCustomFieldPromises, (result) => {
-                            resolve(result)
+                            clientCustomFieldsES.push(result.clientCustomFieldES) 
                         })
+                        resolve({customFieldsES: _.first(clientCustomFieldsES)})
                     }).catch((err) => {
                         //console.log(err)
                         reject(err)
@@ -177,22 +179,8 @@ module.exports = (server, restify) => {
                                 documentValue: clientCustomField.value
                             };
                         })
-                        
-                        server.elasticSearch.update({
-                            index: 'main',
-                            type: 'client',
-                            id: parseInt(controller.request.clientId),
-                            body: {
-                                doc: {
-                                    customFields: clientCustomFieldES
-                                }
-                            }
-                        }, (esErr, esRes) => {
-                            if (esErr) {
-                                reject(esErr)
-                            }
-                            resolve(findClientCustomFields);
-                        })
+
+                        resolve({clientCustomField: findClientCustomFields, clientCustomFieldES: clientCustomFieldES});
                     })
 
                 }).catch((error) => {

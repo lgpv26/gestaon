@@ -66,7 +66,7 @@ module.exports = class RequestPersistance extends Persistance {
             request: {
                 companyId: this._companyId,
                 clientId: this._clientId || null,
-                data: this.mapDraftObjToModelObj(this._draft.form.client),
+                data: this.mapDraftObjToModelObj(this._draft.form.client)
             },
             transaction: this._transaction
         })

@@ -44,7 +44,7 @@ module.exports = (server, restify) => {
             });
         },
 
-        saveClientAddresses: (controller) => {
+        setClientAddresses: (controller) => {
             return new Promise((resolve, reject) => {
                 let addressesResolverPromisses = []
 
@@ -74,6 +74,7 @@ module.exports = (server, restify) => {
                             name: (result.name) ? result.name : null,
                             number: (result.number) ? result.number : null,
                             complement: (result.complement) ? result.complement : null,
+                            addressES: (result.addressES) ? result.addressES : null
                         })
                     })                    
 
@@ -92,9 +93,18 @@ module.exports = (server, restify) => {
                     }))
 
                     return Promise.all(clientAddressesPromisses).then((resultAddressPromises) => {
+                        let clientAddressesES = []
                         _.map(resultAddressPromises, (result) => {
-                            resolve(result)
+                            clientAddressesES.push(result.clientAddressesES) 
                         })
+
+                        let addressesES = []
+                        _.map(resultAddressPromises, (result) => {
+                            addressesES.push(result.addressesES) 
+                        })
+
+                        resolve({clientAddressesES: _.first(clientAddressesES), addressesES: _.first(addressesES)})
+
                     }).catch((err) => {
                         //console.log(err)
                         reject(err)
@@ -182,6 +192,8 @@ module.exports = (server, restify) => {
                                 neighborhood: clientAddress.address.neighborhood
                             };
                         })
+
+                        /*
                         server.elasticSearch.update({
                             index: 'main',
                             type: 'client',
@@ -195,8 +207,17 @@ module.exports = (server, restify) => {
                             if (esErr) {
                                 reject(esErr)
                             }
-                            resolve(findClientAddresses);
+                            
                         })
+                        */
+                        let addressesES = []
+                        controller.request.data.forEach((value) => {
+                            if(_.has(value, 'addressES') && value.addressES){
+                                addressesES.push(value.addressES) 
+                            }
+                        })
+
+                        resolve({clientAddressesES: clientAddressesES, addressesES: addressesES});
                     })
 
                 }).catch((error) => {
