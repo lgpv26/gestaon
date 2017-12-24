@@ -46,7 +46,6 @@ module.exports = (server, restify) => {
 
         saveClientAddresses: (controller) => {
             return new Promise((resolve, reject) => {
-                let errors = []
                 let addressesResolverPromisses = []
 
                 let setData = _.cloneDeep(controller.request.data)
@@ -92,9 +91,8 @@ module.exports = (server, restify) => {
                         return response
                     }))
 
-
-                    return Promise.all(clientAddressesPromisses).then((resultAddressPromise) => {
-                        _.map(resultAddressPromise, (result) => {
+                    return Promise.all(clientAddressesPromisses).then((resultAddressPromises) => {
+                        _.map(resultAddressPromises, (result) => {
                             resolve(result)
                         })
                     }).catch((err) => {
@@ -161,9 +159,6 @@ module.exports = (server, restify) => {
                     if (!response) {
                         reject(new restify.ResourceNotFoundError("Registro não encontrado."));
                     }
-
-                    let clientAddressesES = {}
-                    let clientId = null
 
                     return server.mysql.ClientAddress.findAll({
                         where: {

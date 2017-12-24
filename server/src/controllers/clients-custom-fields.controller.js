@@ -1,8 +1,11 @@
 const _ = require('lodash');
 const utils = require('../utils');
 const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
+
+    const customFieldsController = require('./../controllers/custom-fields.controller')(server)
 
     return {
         getClientCustomFields(req) {
@@ -40,27 +43,76 @@ module.exports = (server, restify) => {
             });
         },
 
-        saveClientCustomFields(req) {
+        saveClientCustomFields: (controller) => {
             return new Promise((resolve, reject) => {
+                let customFieldsResolverPromisses = []
+                const saveData = _.cloneDeep(controller.request.data)
 
-                let clientCustomFields = _.map(req.body.clientCustomFields, clientCustomField => _.extend({
-                    clientId: parseInt(req.params.id)
-                }, clientCustomField));
-    
-                server.mysql.ClientCustomField.bulkCreate(clientCustomFields, {
-                    updateOnDuplicate: ['customFieldId', 'value', 'dateRemoved','dateUpdate']
-                }).then((response) => {
-                    if (!response) {
-                        reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                let customField = []
+                _.map(saveData, (clientCustomField, index) => {
+                    if (_.has(clientCustomField.customField, "id")) {
+                        const checkId = clientCustomField.customField.id.toString().split(':')
+                        if (_.first(checkId) === 'temp') {
+                            delete clientCustomField.customField.id
+                            customField.push(clientCustomField)
+                        }
+                        else{
+                            customField.push(clientCustomField)
+                        }
                     }
+                })
+
+                const customFieldsControllerObj = new Controller({
+                    request: {
+                        companyId: controller.request.companyId,
+                        data: customField
+                    },
+                    transaction: controller.transaction
+                })
+
+                customFieldsResolverPromisses.push(customFieldsController.saveCustomFields(customFieldsControllerObj).then((response) => {
+                    return response
+                }))
+
+                return Promise.all(customFieldsResolverPromisses).then((resolvedCustomFieldsPromisses) => {
                     
-                    updateES(req)
-                    
-                    resolve(response)
-                }).catch(function (error) {
-                    reject(error)
-                });
-            });
+                    let clientCustomFieldData = []
+                    _.first(resolvedCustomFieldsPromisses).forEach((result, index) => {
+                        clientCustomFieldData.push({
+                            id: (result.id) ? result.id : null,
+                            clientId: parseInt(controller.request.clientId),
+                            customFieldId: parseInt(result.customField.id),
+                            value: (result.value) ? result.value : null
+                        })
+                    })
+
+                    let clientCustomFieldPromisses = []
+
+                    const clientCustomFieldControllerObj = new Controller({
+                        request: {
+                            companyId: controller.request.companyId,
+                            clientId: controller.request.clientId,
+                            data: clientCustomFieldData
+                        },
+                        transaction: controller.transaction
+                    })
+
+                    clientCustomFieldPromisses.push(saveInClientCustomField(clientCustomFieldControllerObj).then((response) => {
+                        return response
+                    }))
+
+                    return Promise.all(clientCustomFieldPromisses).then((resultCustomFieldPromises) => {
+                        _.map(resultCustomFieldPromises, (result) => {
+                            resolve(result)
+                        })
+                    }).catch((err) => {
+                        //console.log(err)
+                        reject(err)
+                    })
+                }).catch((err) => {
+                    reject(err)
+                })
+            })
         },
 
         removeOne(req) {
@@ -75,7 +127,7 @@ module.exports = (server, restify) => {
                         throw new restify.ResourceNotFoundError("Registro não encontrado.")
                     }
 
-                    updateES(req)
+                    
 
                     return customField
                 })
@@ -89,38 +141,68 @@ module.exports = (server, restify) => {
         }
     }
 
-    function updateES(req) {
+    function saveInClientCustomField(controller) {
         return new Promise((resolve, reject) => {
-            server.mysql.ClientCustomField.findAll({
+            return server.mysql.ClientCustomField.destroy({
                 where: {
-                    clientId: parseInt(req.params.id)
+                    clientId: parseInt(controller.request.clientId)
                 },
-                include: [{
-                    model: server.mysql.CustomField,
-                    as: 'customField'
-                }]
-            }).then((findClientCustomFields) => {
-                if (!findClientCustomFields) {
-                    return reject(new restify.ResourceNotFoundError("Custom Field not found."))
-                }
-                let clientCustomFieldES = _.map(findClientCustomFields, clientCustomField => {
-                    return { clientCustomFieldId: clientCustomField.id,
-                        documentType: clientCustomField.customField.name, 
-                        documentValue: clientCustomField.value }
-                })
-                server.elasticSearch.update({
-                    index: 'main',
-                    type: 'client',
-                    id: parseInt(req.params.id),
-                    body: {
-                        doc: {
-                            customFields: clientCustomFieldES
-                        }
+                transaction: controller.transaction
+            }).then(() => {
+                return server.mysql.ClientCustomField.bulkCreate(controller.request.data, {
+                    updateOnDuplicate: ['clientId', 'customFieldId', 'value', 'dateUpdate', 'dateRemoved'],
+                    returning: true,
+                    transaction: controller.transaction
+                }).then((response) => {
+                    if (!response) {
+                        reject(new restify.ResourceNotFoundError("Registro não encontrado."));
                     }
-                }, (esErr, esRes) => {
-                    resolve(findClientCustomFields);
+
+                    return server.mysql.ClientCustomField.findAll({
+                        where: {
+                            clientId: parseInt(controller.request.clientId)
+                        },
+                        include: [{
+                            model: server.mysql.CustomField,
+                            as: 'customField'
+                        }],
+                        transaction: controller.transaction
+                    }).then((findClientCustomFields) => {
+                        findClientCustomFields = JSON.parse(JSON.stringify(findClientCustomFields))
+
+                        let clientCustomFieldES = _.map(findClientCustomFields, clientCustomField => {
+                            return {
+                                clientCustomFieldId: clientCustomField.id,
+                                documentType: clientCustomField.customField.name, 
+                                documentValue: clientCustomField.value
+                            };
+                        })
+                        
+                        server.elasticSearch.update({
+                            index: 'main',
+                            type: 'client',
+                            id: parseInt(controller.request.clientId),
+                            body: {
+                                doc: {
+                                    customFields: clientCustomFieldES
+                                }
+                            }
+                        }, (esErr, esRes) => {
+                            if (esErr) {
+                                reject(esErr)
+                            }
+                            resolve(findClientCustomFields);
+                        })
+                    })
+
+                }).catch((error) => {
+                    reject(error);
                 })
             })
+        }).then((response) => {
+            return response
+        }).catch((error) => {
+            return error
         })
     }
 }

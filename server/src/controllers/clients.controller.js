@@ -62,24 +62,6 @@ module.exports = (server, restify) => {
                 companyId: controller.request.companyId
             })
             return server.mysql.Client.create(createData, {
-                include: [{
-                    model: server.mysql.ClientPhone,
-                    as: 'clientPhones'
-                }, {
-                    model: server.mysql.ClientAddress,
-                    as: 'clientAddresses',
-                    include: [{
-                        model: server.mysql.Address,
-                        as: 'address'
-                    }]
-                }, {
-                    model: server.mysql.ClientCustomField,
-                    as: 'clientCustomFields',
-                    include: [{
-                        model: server.mysql.CustomField,
-                        as: 'customField'
-                    }]
-                }],
                 transaction: controller.transaction
             }).then((client) => {
                 if (!client){
@@ -116,22 +98,31 @@ module.exports = (server, restify) => {
                         }
 
                         /* save clientAddresses if existent */
-                        if(_.has(createData, "clientAddresses")) {
+                        if(_.has(createData, "clientAddresses") && createData.clientAddresses.length) {
                             const clientAddressesControllerObj = new Controller({
                                 request: {
-                                    clientId: controller.request.clientId,
-                                    companyId: controller.request.companyId,
+                                    clientId: client.id,
+                                    companyId: createData.companyId,
                                     data: createData.clientAddresses
                                 },
                                 transaction: controller.transaction
                             })
                             promises.push(clientsAddressesController.saveClientAddresses(clientAddressesControllerObj))
                         }
-                        //
-                        // /* save clientCustomFields if existent */
-                        // if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
-                        //     promises.push(clientsCustomFieldsController.saveClientCustomFields(controller))
-                        // }
+          
+                        /* save clientCustomFields if existent */
+                        if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
+
+                            const clientCustomFieldControllerObj = new Controller({
+                                request: {
+                                    clientId: client.id,
+                                    companyId: createData.companyId,
+                                    data: createData.clientCustomFields
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(clientsCustomFieldsController.saveClientCustomFields(clientCustomFieldControllerObj))
+                        }
 
                         /* return only when all promises are satisfied */
                         return Promise.all(promises).then(() => {
@@ -201,7 +192,7 @@ module.exports = (server, restify) => {
                             const promises = [];
 
                             /* save clientPhones if existent */
-                            if(_.has(updateData, "clientPhones")) {
+                            if(_.has(updateData, "clientPhones") && updateData.clientPhones.length) {
                                 const clientPhonesControllerObj = new Controller({
                                     request: {
                                         clientId: controller.request.clientId,
@@ -213,7 +204,7 @@ module.exports = (server, restify) => {
                             }
 
                             /* save clientAddresses if existent */
-                            if(_.has(updateData, "clientAddresses")) {
+                            if(_.has(updateData, "clientAddresses") && updateData.clientAddresses.length) {
                                 const clientAddressesControllerObj = new Controller({
                                     request: {
                                         clientId: controller.request.clientId,
@@ -224,11 +215,21 @@ module.exports = (server, restify) => {
                                 })
                                 promises.push(clientsAddressesController.saveClientAddresses(clientAddressesControllerObj))
                             }
+
+                            /* save clientCustomFields if existent */
+                            if(_.has(updateData, "clientCustomFields") && updateData.clientCustomFields.length) {
+
+                                const clientCustomFieldControllerObj = new Controller({
+                                    request: {
+                                        clientId: controller.request.clientId,
+                                        companyId: controller.request.companyId,
+                                        data: updateData.clientCustomFields
+                                    },
+                                    transaction: controller.transaction
+                                })
+                                promises.push(clientsCustomFieldsController.saveClientCustomFields(clientCustomFieldControllerObj))
+                            }
                             
-                            // /* save clientCustomFields if existent */
-                            // if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
-                            //     promises.push(clientsCustomFieldsController.saveClientCustomFields(controller))
-                            // }
 
                             /* return only when all promises are satisfied */
                             return Promise.all(promises).then(() => {

@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const utils = require('../utils');
 const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
 
@@ -33,19 +34,20 @@ module.exports = (server, restify) => {
             });
         },
 
-        saveCustomFields(req) {
+        saveCustomFields: (controller) => {
             let customFieldsCantChange = []
             return new Promise((resolve, reject) => {
                 let customFieldsResolverPromisses = []
+                let setData = _.cloneDeep(controller.request.data)
                 
                 customFieldsResolverPromisses.push(new Promise((resolve, reject) => {
                     let customFieldsIds = []
-                    req.params.customFields.forEach((forEachCustomField, index) => {
-                        if (forEachCustomField.id) {
-                            customFieldsIds.push(forEachCustomField.id)
+                    setData.forEach((forEachCustomField, index) => {
+                        if (forEachCustomField.customField.id) {
+                            customFieldsIds.push(forEachCustomField.customField.id)
                         }
                         else {
-                            req.params.customFields[index].companyId = parseInt(req.params.companyId)
+                            setData[index].customField.companyId = parseInt(controller.request.companyId)
                         }
                     })
                     server.mysql.CustomField.findAll({
@@ -53,39 +55,56 @@ module.exports = (server, restify) => {
                             id: {
                                 [Op.in]: customFieldsIds
                             }
-                        }
+                        },
+                        transaction: controller.transaction
                     }).then((customFieldConsult) => {
                         customFieldConsult.forEach((result) => {
-                            const index = _.findIndex(req.params.customFields, (customFieldFind) => {
-                                return customFieldFind.id === result.id
+                            const index = _.findIndex(setData, (customFieldFind) => {
+                                return customFieldFind.customField.id === result.id
                             })
                             if (result.companyId === 0) {
-                                customFieldsCantChange.push(result)
-                                req.params.customFields.splice(index, 1)
+                                customFieldsCantChange.push(_.assign(setData[index], {customField: JSON.parse(JSON.stringify(result))}))
+                                setData.splice(index, 1)
                             }
                         })
-                        resolve(req.params.customFields)
+                        resolve(setData)
                     })
                 })
                 )
 
-                return Promise.all(customFieldsResolverPromisses).then(() => {
-                    server.mysql.CustomField.bulkCreate(req.params.customFields, {
-                        updateOnDuplicate: ['name', 'dateUpdated', 'dateRemoved'],
-                        returning: true
-                    }).then((customFieldBulk) => {
-                        if (!customFieldBulk) {
-                            reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                return Promise.all(customFieldsResolverPromisses).then((setData) => {
+
+                    let customFieldChangePromises = []
+                    _.first(setData).forEach((clientCustomField) => {
+                        if (clientCustomField.customField.id) {
+
+                            const customFieldUpdate = new Controller({
+                                 request: {
+                                     data: clientCustomField.customField
+                                 },
+                                 transaction: controller.transaction
+                            })
+                            customFieldChangePromises.push(updateOne(customFieldUpdate).then((updatedCustomField) => {
+                                    return _.assign(clientCustomField, {customField: updatedCustomField} )
+                                })
+                            )
                         }
-                        let customFieldChange = []
-
-                        _.map(customFieldBulk, (customField) => {
-                            customFieldChange.push(customField)
-                        })
-
-                        resolve(customFieldChange)
-                    }).catch((error) => {
-                        reject(error);
+                        else {
+                            const customFieldCreate = new Controller({
+                                request: {
+                                    companyId: controller.request.companyId,
+                                    data: clientCustomField.customField
+                                },
+                                transaction: controller.transaction
+                            })
+                            customFieldChangePromises.push(createOne(customFieldCreate).then((createdCustomField) => {
+                                return _.assign(clientCustomField, {customField: createdCustomField} )
+                            })
+                            )
+                        }
+                    })
+                    return Promise.all(customFieldChangePromises).then((customFields) => {
+                        resolve(customFields)
                     })
                 })
             }).then((response) => {
@@ -120,6 +139,53 @@ module.exports = (server, restify) => {
                 return err
             });
         }
+    }
+
+
+    function createOne(controller) {
+        return new Promise((resolve, reject) => {
+
+            const createData = _.cloneDeep(controller.request.data)
+            return server.mysql.CustomField.create(createData, {
+                transaction: controller.transaction
+            }).then((customField) => {
+                if (!customField) {
+                    reject("Não foi possível encontrar o customField criado.")
+                }
+                resolve(JSON.parse(JSON.stringify(customField)))                
+            })
+        }).then((customField) => {
+            return customField
+        }).catch((err) => {
+            return err
+        })
+    }
+
+    function updateOne(controller) {
+
+        return new Promise((resolve, reject) => {
+
+            const updateData = _.cloneDeep(controller.request.data)
+            return server.mysql.CustomField.update(updateData, {
+                where: {
+                    id: updateData.id
+                },
+                transaction: controller.transaction
+            }).then((customFieldUpdate) => {
+                    if (!customFieldUpdate) {
+                        reject("Não foi possível encontrar o address editado.")
+                    }
+                    return server.mysql.CustomField.findById(controller.request.data.id, {
+                        transaction: controller.transaction
+                    }).then((customField) => {
+                        resolve(JSON.parse(JSON.stringify(customField)))
+                })
+            })
+        }).then((customField) => {
+            return customField
+        }).catch((err) => {
+            return err
+        })
     }
 
 }

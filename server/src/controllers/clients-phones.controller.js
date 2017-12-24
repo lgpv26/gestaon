@@ -135,7 +135,7 @@ module.exports = (server, restify) => {
                                 }
                             }, function (esErr, esRes) {
                                 if (esErr) {
-                                    return reject(new Error('Erro ao salvar o(s) clientPhone(s) no ES.'));
+                                    return reject(new Error('Erro ao salvar o(s) clientPhone(s) no ES.', esErr));
                                 }
                                 return resolve();
                             })

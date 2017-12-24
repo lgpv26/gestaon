@@ -62,7 +62,6 @@ module.exports = class RequestPersistance extends Persistance {
      * @returns {Promise}
      */
     saveClient() {
-
         const controller = new Controller({
             request: {
                 companyId: this._companyId,
@@ -100,6 +99,10 @@ module.exports = class RequestPersistance extends Persistance {
 
         if (_.has(client, "clientPhones") && client.clientPhones.length) {
             this.removeTempIds(client, "clientPhones")
+        }
+
+        if (_.has(client, "clientCustomFields") && client.clientCustomFields.length) {
+            this.removeTempIds(client, "clientCustomFields")
         }
         
         return client

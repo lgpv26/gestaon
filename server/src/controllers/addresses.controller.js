@@ -236,7 +236,6 @@ module.exports = (server, restify) => {
     }
 
     function createOne(controller) {
-
         return new Promise((resolve, reject) => {
 
             const createData = _.cloneDeep(controller.request.data)
@@ -277,7 +276,6 @@ module.exports = (server, restify) => {
     }
 
     function updateOne(controller) {
-
         return new Promise((resolve, reject) => {
 
             const updateData = _.cloneDeep(controller.request.data)
