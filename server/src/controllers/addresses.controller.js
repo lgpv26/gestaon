@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const utils = require('../utils');
 const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
     return {
@@ -67,9 +68,9 @@ module.exports = (server, restify) => {
                 }
             )
         },
-        
+
         getOne(req) {
-           return server.mysql.Address.findOne({
+            return server.mysql.Address.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
@@ -79,19 +80,21 @@ module.exports = (server, restify) => {
             })
         },
 
-        saveAddresses(req) {
+        saveAddresses: (controller) => {
             let addressCantChange = []
             return new Promise((resolve, reject) => {
                 let addressesResolverPromisses = []
-                
+
+                let setData = _.cloneDeep(controller.request.data)
+
                 addressesResolverPromisses.push(new Promise((resolve, reject) => {
                     let addressesIds = []
-                    req.params.addresses.forEach((forEachAddress, index) => {
-                        if (forEachAddress.id) {
-                            addressesIds.push(forEachAddress.id)
+                    setData.forEach((forEachAddress, index) => {
+                        if (forEachAddress.address.id) {
+                            addressesIds.push(forEachAddress.address.id)
                         }
                         else {
-                            req.params.addresses[index].companyId = parseInt(req.params.companyId)
+                            setData[index].address.companyId = parseInt(controller.request.companyId)
                         }
                     })
                     server.mysql.Address.findAll({
@@ -99,73 +102,56 @@ module.exports = (server, restify) => {
                             id: {
                                 [Op.in]: addressesIds
                             }
-                        }
+                        },
+                        transaction: controller.transaction
                     }).then((addressesConsult) => {
                         addressesConsult.forEach((result) => {
-                            const index = _.findIndex(req.params.addresses, (addressesFind) => {
-                                return addressesFind.id === result.id
+                            const index = _.findIndex(setData, (addressesFind) => {
+                                return addressesFind.address.id === result.id
                             })
                             if (result.companyId === 0) {
-                                addressCantChange.push(result)
-                                req.params.addresses.splice(index, 1)
+                                addressCantChange.push(_.assign(setData[index], {address: JSON.parse(JSON.stringify(result))}))
+                                setData.splice(index, 1)
                             }
                         })
-                        resolve(req.params.addresses)
+                        resolve(setData)
                     })
                 })
                 )
 
-                return Promise.all(addressesResolverPromisses).then(() => {
-                   
-                    server.mysql.Address.bulkCreate(req.params.addresses, {
-                        updateOnDuplicate: ['name', 'neighborhood', 'city', 'state', 'cep'],
-                        returning: true
-                    }).then((addressesBulk) => {
-                        if (!addressesBulk) {
-                            reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                return Promise.all(addressesResolverPromisses).then((setData) => {
+                    let addressChangePromises = []
+                    _.first(setData).forEach((clientAddress) => {
+                        if (clientAddress.address.id) {
+                            const addressUpdate = new Controller({
+                                 request: {
+                                     data: clientAddress.address
+                                 },
+                                 transaction: controller.transaction
+                             })
+                             addressChangePromises.push(updateOne(addressUpdate).then((updatedAddress) => {
+                                        return _.assign(clientAddress, {address: updatedAddress} )
+                                 })
+                             )
                         }
-                        let addressChange = []
-
-                        let esRequestBody = []
-                        _.map(addressesBulk, (address) => {
-                            addressChange.push(address)
-
-                            let metaObj = {}
-                            metaObj.index = {
-                                _index: 'main',
-                                _type: 'address',
-                                _id: address.id
-                            }
-                            esRequestBody.push(metaObj)
-                            let docObj = {
-                                companyId: address.companyId,
-                                name: address.name,
-                                neighborhood: address.neighborhood,
-                                city: address.city,
-                                state: address.state,
-                                cep: address.cep,
-                                dateUpdated: address.dateUpdated,
-                                dateCreated: address.dateCreated,
-                                status: address.status
-                            }
-                            esRequestBody.push(docObj)
-                        })
-                        
-                        server.elasticSearch.bulk({
-                            body: esRequestBody
-                        }, function (esErr) {
-                            if (esErr) {
-                                reject(addressChange)
-                            }
-                            else {
-                                resolve(addressChange)
-                            }
-                        })
-                        resolve(addressChange)
-                    }).catch((error) => {
-                        reject(error);
+                        else {
+                            const addressCreate = new Controller({
+                                request: {
+                                    companyId: controller.request.companyId,
+                                    data: clientAddress.address
+                                },
+                                transaction: controller.transaction
+                            })
+                            addressChangePromises.push(createOne(addressCreate).then((createdAddress) => {
+                                return _.assign(clientAddress, {address: createdAddress} )
+                            })
+                            )
+                        }
                     })
 
+                    return Promise.all(addressChangePromises).then((addresses) => {
+                        resolve(addresses)
+                    })
                 })
             }).then((response) => {
                 return _.concat((response) ? response : [], (addressCantChange) ? addressCantChange : [])
@@ -247,5 +233,97 @@ module.exports = (server, restify) => {
                 });
             });
         }
+    }
+
+    function createOne(controller) {
+
+        return new Promise((resolve, reject) => {
+
+            const createData = _.cloneDeep(controller.request.data)
+            return server.mysql.Address.create(createData, {
+                transaction: controller.transaction
+            }).then((address) => {
+                if (!address) {
+                    reject("Não foi possível encontrar o address criado.")
+                }
+                address = JSON.parse(JSON.stringify(address))
+                return server.elasticSearch.index({
+                    index: 'main',
+                    type: 'address',
+                    id: address.id,
+                    body: {
+                        companyId: address.companyId,
+                        name: address.name,
+                        neighborhood: address.neighborhood,
+                        city: address.city,
+                        state: address.state,
+                        cep: address.cep,
+                        dateUpdated: address.dateUpdated,
+                        dateCreated: address.dateCreated,
+                        status: address.status
+                    }
+                }, function (esErr, esRes, esStatus) {
+                    if (esErr) {
+                        reject(esErr)
+                    }
+                    resolve(address)
+                })
+            })
+        }).then((address) => {
+            return address
+        }).catch((err) => {
+            return err
+        })
+    }
+
+    function updateOne(controller) {
+
+        return new Promise((resolve, reject) => {
+
+            const updateData = _.cloneDeep(controller.request.data)
+            return server.mysql.Address.update(updateData, {
+                where: {
+                    id: updateData.id
+                },
+                transaction: controller.transaction
+            }).then((addressUpdate) => {
+                    if (!addressUpdate) {
+                        reject("Não foi possível encontrar o address editado.")
+                    }
+                    return server.mysql.Address.findById(controller.request.data.id, {
+                        transaction: controller.transaction
+                    }).then((address) => {
+                        address = JSON.parse(JSON.stringify(address))
+
+                        server.elasticSearch.update({
+                            index: 'main',
+                            type: 'address',
+                            id: address.id,
+                            body: {
+                                doc: {
+                                    companyId: address.companyId,
+                                    name: address.name,
+                                    neighborhood: address.neighborhood,
+                                    city: address.city,
+                                    state: address.state,
+                                    cep: address.cep,
+                                    dateUpdated: address.dateUpdated,
+                                    dateCreated: address.dateCreated,
+                                    status: address.status
+                                }
+                            }
+                        }, function (esErr, esRes, esStatus) {
+                            if (esErr) {
+                                reject(esErr)
+                            }
+                            resolve(address)
+                        })
+                })
+            })
+        }).then((address) => {
+            return address
+        }).catch((err) => {
+            return err
+        })
     }
 };

@@ -237,6 +237,7 @@ module.exports = class Draft {
     ////////////////////////////////
     //
         setArrayDraft(contentDraft) {
+            console.log(contentDraft)
             return new Promise((resolve, reject) => {
                 const draft = _.find(this.channels.updates.drafts, { draftId: contentDraft.draftId })
                 const arrayPath = _.get(contentDraft, 'form.' + contentDraft.path)
@@ -251,7 +252,7 @@ module.exports = class Draft {
                             return value.orderProductId === _.first(arrayPath).orderProductId
                         })
 
-                        if(arrayIndex !== -1){
+                        if (arrayIndex !== -1) {
                             pathUpdate.splice(arrayIndex, 1, _.first(arrayPath))
                             _.set(contentDraft, 'form.' + contentDraft.path,
                                 pathUpdate
@@ -263,13 +264,15 @@ module.exports = class Draft {
                             )
                         }
                     }
-                    this.channels.updates.drafts[draftUpdateIndex] = _.assignIn(draft, contentDraft)
+                    this.channels.updates.drafts[draftUpdateIndex] = _.mergeWith(draft, contentDraft)
                     resolve()
                 }
                 else {
-                    this.channels.updates.drafts.push(_.assignIn(contentDraft, { hasArray: (isArray(arrayPath)) ? true : false, path: contentDraft.path }))
+                    this.channels.updates.drafts.push(_.assignIn(contentDraft, { hasArray: (isArray(arrayPath)) ? true : false, path: (contentDraft.path) ? contentDraft.path : null }))
+                    
                     resolve()
                 }
+                console.log('na memoria', this.channels.updates.drafts[0].form.clientAddressForm)
             }).catch((err) => {
                 console.log(err, 'catch do SET ARRAY DRAFT MESMO')
             })
@@ -438,6 +441,7 @@ module.exports = class Draft {
     }
 
     updateDraftRedis(contentDraft, newEdit = false, resetOrSelectAddress = false) {
+        console.log(contentDraft)
         return new Promise((resolve, reject) => {
             this.consultRedisDraft(contentDraft.draftId).then((redisConsult) => {
                 const checkUpdate = JSON.parse(redisConsult.clientFormUpdate)
@@ -457,7 +461,7 @@ module.exports = class Draft {
                     }
                 }
                 else {
-                    if (_.has(contentDraft, "clientAddressForm")) {
+                    if (_.has(contentDraft, "clientAddressForm") && (contentDraft.clientAddressForm)) {
                         if (!newEdit) {
                             delete checkUpdate.clientAddressForm.address.reset
                             const address = _.assign(checkUpdate.clientAddressForm.address, contentDraft.form.clientAddressForm.address)
@@ -469,7 +473,7 @@ module.exports = class Draft {
                         }
 
                     }
-                    if (_.has(contentDraft, "clientPhoneForm")) {
+                    if (_.has(contentDraft, "clientPhoneForm") && (contentDraft.clientPhoneForm)) {
                         if (contentDraft.clientPhoneForm.reset) {
                             update.clientPhoneForm = {}
                         }

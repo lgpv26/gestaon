@@ -85,7 +85,7 @@ module.exports = (server, restify) => {
         },
 
         setClientPhones(controller) {
-            let setData = _.cloneDeep(controller.request.data);
+            let setData = _.cloneDeep(controller.request.data)
             setData = _.map(setData, (clientPhone) => {
                 _.assign(clientPhone, {
                     clientId: parseInt(controller.request.clientId)

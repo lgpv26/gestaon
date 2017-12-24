@@ -1,7 +1,12 @@
 const _ = require('lodash');
 const utils = require('../utils');
+const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
+
+    const addressesController = require('./../controllers/addresses.controller')(server)
+
     return {
         getClientAddresses(req) {
             return server.mysql.ClientAddress.findAll({
@@ -39,67 +44,66 @@ module.exports = (server, restify) => {
             });
         },
 
-        saveClientAddresses(req) {            
+        saveClientAddresses: (controller) => {
             return new Promise((resolve, reject) => {
-                return server.mysql.ClientAddress.bulkCreate(req.body.clientAddresses, {
-                    updateOnDuplicate: ['clientId', 'addressId', 'name', 'number', 'complement', 'dateUpdate', 'dateRemoved'],
-                    returning: true
-                }).then((response) => {
-                    if (!response) {
-                        reject(new restify.ResourceNotFoundError("Registro não encontrado."));
-                    }
-                    
-                    let clientAddressesES = {}
-                    let clientId = null
+                let errors = []
+                let addressesResolverPromisses = []
 
-                    server.mysql.ClientAddress.findAll({
-                        where: {
-                            clientId: parseInt(req.params.id)
-                        },
-                        include: [{
-                                model: server.mysql.Address,
-                                as: 'address'
-                            }]
-                    }).then((findClientAddresses) => {
-                        let clientAddressesES = _.map(findClientAddresses, clientAddress => {
-                            return {
-                                clientAddressId: clientAddress.id,
-                                complement: clientAddress.complement,
-                                address: clientAddress.address.name,
-                                number: clientAddress.number,
-                                cep: clientAddress.address.cep,
-                                neighborhood: clientAddress.address.neighborhood
-                            };
-                        })
-                        server.elasticSearch.update({
-                            index: 'main',
-                            type: 'client',
-                            id: parseInt(req.params.id),
-                            body: {
-                                doc: {
-                                    addresses: clientAddressesES
-                                }
-                            }
-                        }, (esErr, esRes) => {
-                            _.map(response, (dataResponse, indexResponse) => {
-                                req.body.clientAddresses.forEach((addressClient) => {
-                                    const indexAddress = _.findIndex(req.body.clientAddresses, (findAddress) => {
-                                        return findAddress.address.id === addressClient.address.id
-                                    })
-                                    response[indexResponse].dataValues.address = req.body.clientAddresses[indexAddress].address.dataValues
-                                })
-                            })
-                            resolve(response);
-                        })
-                    })
+                let setData = _.cloneDeep(controller.request.data)
 
-                }).catch((error) => {
-                    reject(error);
+                const addressesControllerObj = new Controller({
+                    request: {
+                        companyId: controller.request.companyId,
+                        clientId: controller.request.clientId,
+                        data: setData
+                    },
+                    transaction: controller.transaction
                 })
-            }).then((response) => {
-                return response
-            }).catch((error) => {
-                return error
+
+                addressesResolverPromisses.push(addressesController.saveAddresses(addressesControllerObj).then((response) => {
+                    return response
+                }))
+
+                return Promise.all(addressesResolverPromisses).then((resolvedAddressPromisses) => {
+                    
+                    let clientAddressData = []
+                    _.first(resolvedAddressPromisses).forEach((result) => {
+                        clientAddressData.push({
+                            id: (result.id) ? result.id : null,
+                            clientId: parseInt(controller.request.clientId),
+                            addressId: parseInt(result.address.id),
+                            name: (result.name) ? result.name : null,
+                            number: (result.number) ? result.number : null,
+                            complement: (result.complement) ? result.complement : null,
+                        })
+                    })                    
+
+                    let clientAddressesPromisses = []
+
+                    const clientAddressControllerObj = new Controller({
+                        request: {
+                            companyId: controller.request.companyId,
+                            clientId: controller.request.clientId,
+                            data: clientAddressData
+                        },
+                        transaction: controller.transaction
+                    })
+                    clientAddressesPromisses.push(saveInClientAddresses(clientAddressControllerObj).then((response) => {
+                        return response
+                    }))
+
+
+                    return Promise.all(clientAddressesPromisses).then((resultAddressPromise) => {
+                        _.map(resultAddressPromise, (result) => {
+                            resolve(result)
+                        })
+                    }).catch((err) => {
+                        //console.log(err)
+                        reject(err)
+                    })
+                }).catch((err) => {
+                    reject(err)
+                })
             })
         },
 
@@ -139,5 +143,75 @@ module.exports = (server, restify) => {
                 return err
             });
         }
+    }
+
+    function saveInClientAddresses(controller) {
+        return new Promise((resolve, reject) => {
+            return server.mysql.ClientAddress.destroy({
+                where: {
+                    clientId: parseInt(controller.request.clientId)
+                },
+                transaction: controller.transaction
+            }).then(() => {
+                return server.mysql.ClientAddress.bulkCreate(controller.request.data, {
+                    updateOnDuplicate: ['clientId', 'addressId', 'name', 'number', 'complement', 'dateUpdate', 'dateRemoved'],
+                    returning: true,
+                    transaction: controller.transaction
+                }).then((response) => {
+                    if (!response) {
+                        reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                    }
+
+                    let clientAddressesES = {}
+                    let clientId = null
+
+                    return server.mysql.ClientAddress.findAll({
+                        where: {
+                            clientId: parseInt(controller.request.clientId)
+                        },
+                        include: [{
+                            model: server.mysql.Address,
+                            as: 'address'
+                        }],
+                        transaction: controller.transaction
+                    }).then((findClientAddresses) => {
+                        findClientAddresses = JSON.parse(JSON.stringify(findClientAddresses))
+
+                        let clientAddressesES = _.map(findClientAddresses, clientAddress => {
+                            return {
+                                clientAddressId: clientAddress.id,
+                                complement: clientAddress.complement,
+                                address: clientAddress.address.name,
+                                number: clientAddress.number,
+                                cep: clientAddress.address.cep,
+                                neighborhood: clientAddress.address.neighborhood
+                            };
+                        })
+                        server.elasticSearch.update({
+                            index: 'main',
+                            type: 'client',
+                            id: parseInt(controller.request.clientId),
+                            body: {
+                                doc: {
+                                    addresses: clientAddressesES
+                                }
+                            }
+                        }, (esErr, esRes) => {
+                            if (esErr) {
+                                reject(esErr)
+                            }
+                            resolve(findClientAddresses);
+                        })
+                    })
+
+                }).catch((error) => {
+                    reject(error);
+                })
+            })
+        }).then((response) => {
+            return response
+        }).catch((error) => {
+            return error
+        })
     }
 };

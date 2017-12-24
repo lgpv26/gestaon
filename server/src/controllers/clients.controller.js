@@ -115,10 +115,18 @@ module.exports = (server, restify) => {
                             promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
                         }
 
-                        // /* save clientAddresses if existent */
-                        // if(_.has(createData, "clientAddresses") && createData.clientAddresses.length) {
-                        //     promises.push(clientsAddressesController.saveClientAddresses(controller))
-                        // }
+                        /* save clientAddresses if existent */
+                        if(_.has(createData, "clientAddresses")) {
+                            const clientAddressesControllerObj = new Controller({
+                                request: {
+                                    clientId: controller.request.clientId,
+                                    companyId: controller.request.companyId,
+                                    data: createData.clientAddresses
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(clientsAddressesController.saveClientAddresses(clientAddressesControllerObj))
+                        }
                         //
                         // /* save clientCustomFields if existent */
                         // if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
@@ -204,11 +212,19 @@ module.exports = (server, restify) => {
                                 promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
                             }
 
-                            // /* save clientAddresses if existent */
-                            // if(_.has(createData, "clientAddresses") && createData.clientAddresses.length) {
-                            //     promises.push(clientsAddressesController.saveClientAddresses(controller))
-                            // }
-                            //
+                            /* save clientAddresses if existent */
+                            if(_.has(updateData, "clientAddresses")) {
+                                const clientAddressesControllerObj = new Controller({
+                                    request: {
+                                        clientId: controller.request.clientId,
+                                        companyId: controller.request.companyId,
+                                        data: updateData.clientAddresses
+                                    },
+                                    transaction: controller.transaction
+                                })
+                                promises.push(clientsAddressesController.saveClientAddresses(clientAddressesControllerObj))
+                            }
+                            
                             // /* save clientCustomFields if existent */
                             // if(_.has(createData, "clientCustomFields") && createData.clientCustomFields.length) {
                             //     promises.push(clientsCustomFieldsController.saveClientCustomFields(controller))
