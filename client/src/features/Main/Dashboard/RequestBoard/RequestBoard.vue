@@ -9,23 +9,27 @@
                     <div class="header__section-title">
                         <h3>{{ boardSection.name }}</h3>
                         <span class="push-both-sides"></span>
-                        <ul>
-                            <li @click="collapseSection(index)"><icon-section-collapse></icon-section-collapse></li>
-                            <li @click="expandSection(index)" class="section-title__expand-button"><icon-section-expand></icon-section-expand></li>
-                            <li @click="addRequest(index)" class="section-title__settings-button"><icon-section-settings></icon-section-settings></li>
+                        <ul style="display: flex; flex-direction: row">
+                            <li @click="collapseSection(boardSection)" style="width: 15px; height: 16px;">
+                                <icon-section-collapse></icon-section-collapse>
+                            </li>
+                            <li @click="expandSection(boardSection)" style="width: 15px; height: 16px;">
+                                <icon-section-expand></icon-section-expand>
+                            </li>
+                            <li @click="addRequest(index)" class="section-title__settings-button" style="width: 15px; height: 16px;">
+                                <icon-section-settings></icon-section-settings>
+                            </li>
                         </ul>
                     </div>
                 </div>
                 <div class="scrollable-content">
                     <app-scrollable ref="scrollables" @updated="onSectionScrollUpdated($event)">
                         <div class="board-section__viewport" :style="{ 'width': (boardOptions.gutterSize + ((boardSection.size * boardOptions.columnWidth) + ((boardSection.size + 1) * boardOptions.gutterSize))) + 'px', 'height': mainContentArea.height - boardOptions.headerHeight - (boardOptions.gutterSize * 2) + 'px' }">
-                            <app-draggable class="board-section__cards" v-model="boardSection.cards" :options="{ handle: '.request-card__main', scroll: false, forceFallback: false, ghostClass: 'ghost', group: 'cards' }"
+                            <app-draggable class="board-section__cards" :value="boardSection.cards" @input="onDraggableCardInput($event, boardSection.id)" :options="{ handle: '.request-card__main', scroll: false, forceFallback: false, ghostClass: 'ghost', group: 'cards' }"
                                 :style="{'padding-bottom': boardOptions.gutterSize + 'px', 'padding-left': boardOptions.gutterSize + 'px'}"
                                 :move="onMove" @start="isDraggingCard=true" @end="isDraggingCard=false" >
                                 <div class="request-card" v-for="card in boardSection.cards" :key="card.request.client.name" :style="{ height: boardOptions.cardHeight + 'px', width: boardOptions.columnWidth + 'px', 'margin-top': boardOptions.gutterSize + 'px', 'margin-right': boardOptions.gutterSize + 'px'}">
-                                    <div class="request-card__main" @click="requestCardClicked(card, $event)">
-                                        <h3 class="card-title">{{ card.request.client.name }}</h3>
-                                    </div>
+                                    <app-request-board-card class="request-card__main" :card="card" @click="requestCardClicked(card, $event)"></app-request-board-card>
                                 </div>
                             </app-draggable>
                             <div class="drag-space-hider" :style="{ width: '100%', position: 'absolute', top: 0, height: boardOptions.gutterSize + (Math.floor((boardSection.cards.length / boardSection.size)) * (boardOptions.cardHeight + boardOptions.gutterSize)) + 'px' }">
@@ -42,16 +46,20 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import DraggableComponent from 'vuedraggable';
     import Scrollbar from 'smooth-scrollbar';
+    import Vue from 'vue'
     import _ from 'lodash';
     import utils from '@/utils'
 
+    import RequestBoardCard from './RequestBoardCard.vue'
+
     export default {
         components: {
-            'app-draggable': DraggableComponent
+            'app-draggable': DraggableComponent,
+            'app-request-board-card': RequestBoardCard
         },
         data(){
             return {
-                boardSections: [
+                /*boardSections: [
                     {
                         name: 'Fila de espera',
                         size: 2,
@@ -75,12 +83,12 @@
                             { request: { client: { name: 'DANIEL ROCHA' } } }
                         ]
                     }
-                ],
+                ],*/
                 boardOptions: {
-                    columnWidth: 250,
+                    columnWidth: 320,
                     gutterSize: 10,
                     headerHeight: 62,
-                    cardHeight: 120
+                    cardHeight: 140
                 },
                 scrollbars: null,
                 isDraggingBoardColumn: false,
@@ -96,7 +104,7 @@
         },
         methods: {
             ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', ['RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST']),
+            ...mapMutations('request-board', ['RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
             requestCardClicked(card, ev){
                 /*
                 if(!this.isDraggingBoardColumn && !this.isDraggingCard){
@@ -121,13 +129,25 @@
                 });
                 this.updateScrolls();
             },
-            expandSection(index){
-                if(this.boardSections[index].size === 3) return;
-                this.boardSections[index].size ++;
+            expandSection(section){
+                if(section.size < 3){
+                    this.SET_SECTION({
+                        sectionId: section.id,
+                        section: {
+                            size: section.size + 1
+                        }
+                    })
+                }
             },
-            collapseSection(index){
-                if(this.boardSections[index].size === 1) return;
-                this.boardSections[index].size --;
+            collapseSection(section){
+                if(section.size > 1){
+                    this.SET_SECTION({
+                        sectionId: section.id,
+                        section: {
+                            size: section.size - 1
+                        }
+                    })
+                }
             },
             onSectionScrollUpdated(els){
                 const dragSpaceHiderEl = _.first(els.viewportElement.getElementsByClassName('drag-space-hider'));
@@ -150,20 +170,30 @@
             onDraggableInput(sections){
                 this.SET_SECTIONS(sections)
             },
+            onDraggableCardInput(sectionCards, sectionId){
+                sectionCards = utils.removeReactivity(sectionCards)
+                _.map(sectionCards, (sectionCard) => {
+                    return _.assign(sectionCard, {
+                        sectionId
+                    })
+                })
+                this.SET_SECTION_REQUESTS({
+                    sectionId,
+                    requests: sectionCards
+                })
+            },
             updateScrolls(){
                 const vm = this;
                 setImmediate(() => {
-                    /*this.boardSections.forEach((boardSection) => {
-                        boardSection.scrollable.updateScroll();
-                    });*/
-                    vm.sections.forEach((section) => {
-                        section.scrollable.updateScroll()
+                    vm.$refs.scrollables.forEach((scrollable) => {
+                        scrollable.updateScroll()
                     })
                 });
             }
         },
         mounted(){
             const vm = this
+            this.SET_SECTIONS([])
             this.ADD_SECTION({
                 id: _.uniqueId("section#"),
                 name: 'Fila de espera',
@@ -174,12 +204,22 @@
                 name: 'Com o entregador',
                 size: 1
             })
-            setImmediate(() => {
-                vm.sections.forEach((section, index) => {
-                    vm.SET_SECTION(section.id, {
-                        scrollable: vm.$refs.scrollables[index]
-                    })
-                })
+            Vue.nextTick(() => {
+                if(vm.sections.length) {
+                    for (let i = 1; i <= 5; i++) {
+                        const randomIndex = _.random(vm.sections.length - 1)
+                        const randomSection = vm.sections[randomIndex]
+                        vm.ADD_REQUEST({
+                            id: _.uniqueId("card#"),
+                            sectionId: randomSection.id,
+                            request: {
+                                client: {
+                                    name: "TESTE " + i
+                                }
+                            }
+                        })
+                    }
+                }
             })
         }
     }
@@ -234,19 +274,22 @@
         flex-grow: 1;
     }
     #request-panel > .board .board-section > .board-section__header > .header__section-title ul li {
-        display: inline;
         cursor: pointer;
-        position: relative;
-        z-index: 1000;
-        margin-right: 4px;
+        margin-right: 5px;
     }
-    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li.section-title__expand-button {
-        margin-right: 0;
-        margin-left: 5px;
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li svg {
+        pointer-events: none;
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li:hover .fill,
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li:hover .colorizable {
+        fill: var(--font-color--primary)
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li:hover .stroke
+    {
+        stroke: var(--font-color--primary)
     }
     #request-panel > .board .board-section > .board-section__header > .header__section-title ul li.section-title__settings-button {
         margin-right: 0;
-        margin-left: 4px;
     }
     #request-panel > .board .board-section > .board-section__header > .header__section-title ul li.section-title__settings-button svg {
         position: relative;
@@ -280,10 +323,7 @@
     }
     #request-panel > .board .request-card > .request-card__main {
         cursor: pointer;
-        padding: 10px;
         flex-grow:1;
-        background: var(--bg-color--9);
-        box-shadow: var(--card-shadow);
     }
     #request-panel > .board .request-card.ghost > .request-card__main {
         border: 2px dashed rgba(255,255,255,.1);

@@ -13,12 +13,12 @@
                 <g id="Col-1">
                     <g id="col-header" transform="translate(10.000000, 17.000000)">
                         <g id="ic-col-add" transform="translate(321.000000, 3.000000)">
-                            <polyline id="ic-select" stroke="#6C7077" transform="translate(12.000000, 6.000000) rotate(-90.000000) translate(-12.000000, -6.000000) " points="8 4.03050001 11.9846916 8 16 4"></polyline>
+                            <polyline id="ic-select" class="stroke" stroke="#6C7077" transform="translate(12.000000, 6.000000) rotate(-90.000000) translate(-12.000000, -6.000000) " points="8 4.03050001 11.9846916 8 16 4"></polyline>
                             <g id="Rectangle">
-                                <use fill="#6C7077" fill-rule="evenodd" xlink:href="#path-1"></use>
-                                <path stroke="#6C7077" stroke-width="1" d="M3.5,11.5 L3.5,0.5 L1,0.5 C0.723857625,0.5 0.5,0.723857625 0.5,1 L0.5,11 C0.5,11.2761424 0.723857625,11.5 1,11.5 L3.5,11.5 Z"></path>
+                                <use class="fill" fill="#6C7077" fill-rule="evenodd" xlink:href="#path-1"></use>
+                                <path class="stroke" stroke="#6C7077" stroke-width="1" d="M3.5,11.5 L3.5,0.5 L1,0.5 C0.723857625,0.5 0.5,0.723857625 0.5,1 L0.5,11 C0.5,11.2761424 0.723857625,11.5 1,11.5 L3.5,11.5 Z"></path>
                             </g>
-                            <use id="Rectangle" stroke="#6C7077" mask="url(#mask-3)" stroke-width="2" stroke-linecap="square" stroke-dasharray="1,1,1" xlink:href="#path-2"></use>
+                            <use id="Rectangle" class="stroke" stroke="#6C7077" mask="url(#mask-3)" stroke-width="2" stroke-linecap="square" stroke-dasharray="1,1,1" xlink:href="#path-2"></use>
                         </g>
                     </g>
                 </g>

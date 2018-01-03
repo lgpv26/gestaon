@@ -9,10 +9,10 @@
                 <g id="Col-1">
                     <g id="col-header" transform="translate(10.000000, 17.000000)">
                         <g id="ic-col-rm" transform="translate(299.000000, 3.000000)">
-                            <polyline id="ic-select" stroke="#6C7077" transform="translate(2.000000, 6.000000) rotate(-270.000000) translate(-2.000000, -6.000000) " points="-2 4.03050001 1.98469163 8 6 4"></polyline>
+                            <polyline class="stroke" id="ic-select" stroke="#6C7077" transform="translate(2.000000, 6.000000) rotate(-270.000000) translate(-2.000000, -6.000000) " points="-2 4.03050001 1.98469163 8 6 4"></polyline>
                             <g id="Rectangle-2">
-                                <use fill="#6C7077" fill-rule="evenodd" xlink:href="#path-1"></use>
-                                <rect stroke="#6C7077" stroke-width="1" x="6.5" y="0.5" width="4" height="11" rx="1"></rect>
+                                <use class="fill" fill="#6C7077" fill-rule="evenodd" xlink:href="#path-1"></use>
+                                <rect class="stroke" stroke="#6C7077" stroke-width="1" x="6.5" y="0.5" width="4" height="11" rx="1"></rect>
                             </g>
                         </g>
                     </g>
