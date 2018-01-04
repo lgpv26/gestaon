@@ -11,11 +11,46 @@ export default {
         return {
             id: null,
             request: {
+                requestAddresses: [
+                    {
+                        type: 'delivery',
+                        clientAddress: {
+                            address: {
+                                name: "RUA 28 DE JUNHO",
+                                // ...
+                            },
+                            number: 22,
+                            // ...
+                        }
+                        // ...
+                    },
+                    {
+                        type: 'bill',
+                        clientAddress: {
+                            address: {
+                                name: "RUA MARCIANO HALCHUK",
+                                // ...
+                            },
+                            number: 420,
+                            // ...
+                        },
+                        // ...
+                    }
+                ],
                 client: {
                     name: null
+                    // ...
+                },
+                order: {
+                    // ... << aqui
+                },
+                task: {
+                    text: null,
+                    // ...
                 }
             },
-            sectionId: null
+            sectionId: null,
+            // ...
         }
     },
     createClientCustomFieldModel(){

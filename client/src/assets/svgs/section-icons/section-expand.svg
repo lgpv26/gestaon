@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="15px" height="12px" viewBox="0 0 15 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="21px" height="16px" viewBox="0 0 21 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <defs>
-        <path d="M1,0 L4,0 L4,12 L1,12 L1,12 C0.44771525,12 6.76353751e-17,11.5522847 0,11 L0,1 L0,1 C-6.76353751e-17,0.44771525 0.44771525,1.01453063e-16 1,0 Z" id="path-1"></path>
-        <rect id="path-2" x="3" y="0" width="5" height="12" rx="1"></rect>
-        <mask id="mask-3" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox" x="0" y="0" width="5" height="12" fill="white">
+        <path d="M1,0 L5.33333333,0 L5.33333333,16 L1,16 L1,16 C0.44771525,16 6.76353751e-17,15.5522847 0,15 L0,1 L0,1 C-6.76353751e-17,0.44771525 0.44771525,1.01453063e-16 1,0 Z" id="path-1"></path>
+        <rect id="path-2" x="4" y="0" width="6.66666667" height="16" rx="1"></rect>
+        <mask id="mask-3" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox" x="0" y="0" width="6.66666667" height="16" fill="white">
             <use xlink:href="#path-2"></use>
         </mask>
     </defs>
     <g id="Atendimento-Card" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="Request-Board" transform="translate(-405.000000, -89.000000)">
-            <g id="Group" transform="translate(74.000000, 69.000000)">
+        <g id="Cards-Request-Board" transform="translate(-360.000000, -89.000000)">
+            <g id="Group" transform="translate(75.000000, 70.000000)">
                 <g id="Col-1">
                     <g id="col-header" transform="translate(10.000000, 17.000000)">
-                        <g id="ic-col-add" transform="translate(321.000000, 3.000000)">
-                            <polyline id="ic-select" class="stroke" stroke="#6C7077" transform="translate(12.000000, 6.000000) rotate(-90.000000) translate(-12.000000, -6.000000) " points="8 4.03050001 11.9846916 8 16 4"></polyline>
+                        <g id="ic-col-add" transform="translate(275.000000, 2.000000)">
+                            <polyline class="stroke" id="ic-select" stroke="#3E414C" stroke-width="2" transform="translate(16.000000, 8.000000) rotate(-90.000000) translate(-16.000000, -8.000000) " points="10.6666667 5.37400001 15.9795888 10.6666667 21.3333333 5.33333333"></polyline>
                             <g id="Rectangle">
-                                <use class="fill" fill="#6C7077" fill-rule="evenodd" xlink:href="#path-1"></use>
-                                <path class="stroke" stroke="#6C7077" stroke-width="1" d="M3.5,11.5 L3.5,0.5 L1,0.5 C0.723857625,0.5 0.5,0.723857625 0.5,1 L0.5,11 C0.5,11.2761424 0.723857625,11.5 1,11.5 L3.5,11.5 Z"></path>
+                                <use class="fill" fill="#3E414C" fill-rule="evenodd" xlink:href="#path-1"></use>
+                                <path class="stroke"  stroke="#3E414C" stroke-width="1" d="M4.83333333,15.5 L4.83333333,0.5 L1,0.5 C0.723857625,0.5 0.5,0.723857625 0.5,1 L0.5,15 C0.5,15.2761424 0.723857625,15.5 1,15.5 L4.83333333,15.5 Z"></path>
                             </g>
-                            <use id="Rectangle" class="stroke" stroke="#6C7077" mask="url(#mask-3)" stroke-width="2" stroke-linecap="square" stroke-dasharray="1,1,1" xlink:href="#path-2"></use>
+                            <use  class="stroke" id="Rectangle" stroke="#3E414C" mask="url(#mask-3)" stroke-width="2" stroke-linecap="square" stroke-dasharray="1,1,1" xlink:href="#path-2"></use>
                         </g>
                     </g>
                 </g>

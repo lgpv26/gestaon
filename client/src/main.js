@@ -125,6 +125,12 @@ require.context('./assets/svgs/menu-icons/', true, /\.svg$/).keys().forEach((svg
     Vue.component('menu-icon-' + svgFileName, require('./assets/svgs/menu-icons/' + svgFilePath + '.svg'));
 });
 
+require.context('./assets/svgs/request-board-icons/', true, /\.svg$/).keys().forEach((svgFile) => {
+    const svgFilePath = svgFile.split('.')[1].replace('/','');
+    const svgFileName = _.last(svgFilePath.split('/'));
+    Vue.component('request-board-icon-' + svgFileName, require('./assets/svgs/request-board-icons/' + svgFilePath + '.svg'));
+});
+
 require.context('./assets/svgs/section-icons/', true, /\.svg$/).keys().forEach((svgFile) => {
     const svgFilePath = svgFile.split('.')[1].replace('/','');
     const svgFileName = _.last(svgFilePath.split('/'));
