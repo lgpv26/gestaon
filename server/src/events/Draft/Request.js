@@ -725,6 +725,7 @@ module.exports = class Request extends Draft {
         if(companyId){
             this._orderPersistance.setDraftId(orderPersist.draftId);
             this._orderPersistance.setCompanyId(companyId);
+            this._orderPersistance.setUserId(this.socket.user.id);
             this._orderPersistance.start().then((draft) => {
                 this.server.io.in('draft/' + orderPersist.draftId).emit('draftOrderPersist', draft)
             }).catch((err) => {

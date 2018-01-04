@@ -228,9 +228,9 @@ module.exports = (server, restify) => {
             return new Promise((resolve, reject) => {  
 
                 let setData = _.cloneDeep(controller.request.data)
-
+                
                 let productsPromises = []
-                _.first(setData).forEach((orderProduct) => {
+                setData.forEach((orderProduct) => {
                     if (orderProduct.product.id) {
                         const productUpdate = new Controller({
                                 request: {
@@ -422,6 +422,42 @@ module.exports = (server, restify) => {
             });
         },
 
+        saveProductsInES: (controller) => {
+            return new Promise((resolve, reject) => {
+                let setData = _.cloneDeep(controller.request.data)
+                if(setData.createES){
+                    return server.elasticSearch.index({
+                        index: 'main',
+                        type: 'product',
+                        id: setData.id,
+                        body: setData.body
+    
+                    }, function (esErr, esRes, esStatus) {
+                        if (esErr) {
+                            reject(esErr)
+                        }
+                        resolve()
+                    })
+                }
+                else{
+                    return server.elasticSearch.update({
+                        index: 'main',
+                        type: 'product',
+                        id: setData.id,
+                        body: {
+                            doc: setData.body
+                        }    
+                    }, function (esErr, esRes, esStatus) {
+                        if (esErr) {
+                            reject(esErr)
+                        }
+                        resolve()
+                    })
+
+                }
+            })
+        },
+
         ///////////////////
         // EXPORT TO ES  //  
         ///////////////////
@@ -483,54 +519,36 @@ module.exports = (server, restify) => {
         return new Promise((resolve, reject) => {
 
             const createData = _.cloneDeep(controller.request.data)
+            _.assign(createData, {
+                companyId: controller.request.companyId
+            })
             return server.mysql.Product.create(createData.product, {
                 transaction: controller.transaction
-            }).then((createProduct) => {
-                if (!createProduct) {
+            }).then((product) => {
+                if (!product) {
                     reject("Não foi possível encontrar o product criado.")
                 }
-                createProduct = JSON.parse(JSON.stringify(createProduct))
+                product = JSON.parse(JSON.stringify(product))
 
-                _.assign(createProduct, {
-                    productSuppliers: [{
-                        supplierId: null,
-                        productId: createProduct.id,
-                        price: createData.price,
-                        quantity: createData.quantity
-                    }] // < _---- continuar daqui
-                })
-
-                const productSupplierCreate = new Controller({
-                    request: {
-                        data: createProduct
+                const esProduct = {
+                    id: product.id,
+                    body: {
+                        companyId: product.companyId,
+                        name: product.name,
+                        suppliers: [{
+                                supplierProductId: null,
+                                supplierId: null,
+                                name: "SEM FORNECEDOR DEFINIDO",
+                                quantity: product.quantity,
+                                price: product.price
+                        }],
+                        dateUpdated: product.dateUpdated,
+                        dateCreated: product.dateCreated,
+                        status: product.status
                     },
-                    transaction: controller.transaction
-                })
-
-                return saveProductSuppliers(productSupplierCreate).then((product) => {
-                    const esProduct = {
-                        id: product.id,
-                        body: {
-                            companyId: product.companyId,
-                            name: product.name,
-                            suppliers: _.map(product.productSuppliers, productSupplier => {
-                                return {
-                                    supplierProductId: productSupplier.id,
-                                    supplierId: productSupplier.supplier.id,
-                                    name: productSupplier.supplier.name,
-                                    obs: productSupplier.supplier.obs,
-                                    quantity: productSupplier.quantity,
-                                    price: productSupplier.price
-                                };
-                            }),
-                            dateUpdated: product.dateUpdated,
-                            dateCreated: product.dateCreated,
-                            status: product.status
-                        },
-                        createES: true
-                    }
-                    resolve({product: product, esProduct: esProduct})
-                })
+                    createES: true
+                }
+                resolve({product: product, esProduct: esProduct})
             })
         }).then((product) => {
             return product
@@ -541,13 +559,14 @@ module.exports = (server, restify) => {
 
     function updateOne(controller) {
         return new Promise((resolve, reject) => {
-
+            
             const updateData = _.cloneDeep(controller.request.data)
 
-            return server.mysql.Product.update(updateData, {
+            console.log(controller.request.companyId, updateData.product.id)
+
+            return server.mysql.Product.update(updateData.product, {
                 where: {
-                    id: updateData.id,
-                    status: 'activated',
+                    id: updateData.product.id,
                     companyId: controller.request.companyId
                 },
                 include: [{
@@ -563,7 +582,8 @@ module.exports = (server, restify) => {
                     if (!productUpdate) {
                         reject("Não foi possível encontrar o product editado.")
                     }
-                    return server.mysql.Product.findById(controller.request.data.id, {
+                    
+                    return server.mysql.Product.findById(controller.request.data.product.id, {
                         include: [{
                             model: server.mysql.SupplierProduct,
                             as: 'productSuppliers',
@@ -610,16 +630,16 @@ module.exports = (server, restify) => {
     function saveProductSuppliers(controller) {
 
         return new Promise((resolve, reject) => {
-            let productSuppliers = _.map(controller.productSuppliers, productSupplier => _.extend({
+            let productSuppliers = _.map(controller.request.data.productSuppliers, productSupplier => _.extend({
                 productId: parseInt(req.params.id)
             }, productSupplier));
 
             server.mysql.SupplierProduct.bulkCreate(productSuppliers, {
-                updateOnDuplicate: ['price', 'quantity', 'dateUpdate']
+                updateOnDuplicate: ['productId', 'price', 'quantity', 'dateUpdate', 'dateRemoved']
             }).then((response) => {
                 server.mysql.Product.findOne({
                     where: {
-                        id: parseInt(req.params.id),
+                        id: parseInt(controller.request.productId),
                         status: 'activated'
                     },
                     include: [{
@@ -643,19 +663,9 @@ module.exports = (server, restify) => {
                             quantity: productSupplier.quantity,
                             price: productSupplier.price
                         };
-                    });
-                    server.elasticSearch.update({
-                        index: 'main',
-                        type: 'product',
-                        id: parseInt(req.params.id),
-                        body: {
-                            doc: {
-                                suppliers: productSuppliers
-                            }
-                        }
-                    }, (esErr, esRes) => {
-                        resolve(response)
                     })
+                    
+                    resolve({productId: product.id, productSuppliers: productSuppliers})
                 }).catch((error) => {
                     reject(error)
                 })

@@ -7,7 +7,7 @@ module.exports = (server, restify) => {
     const productsController = require('./../controllers/products.controller')(server);
 
     return {
-    
+
         setOrdersProducts: (controller) => {
             return new Promise((resolve, reject) => {
                 let productsResolverPromisses = []
@@ -29,6 +29,7 @@ module.exports = (server, restify) => {
                     
                     let ordersProductsData = []
                     _.first(resolvedProductPromisses).forEach((result) => {
+                        
                         ordersProductsData.push({
                             id: (result.id) ? result.id : null,
                             orderId: parseInt(controller.request.orderId),
@@ -68,7 +69,7 @@ module.exports = (server, restify) => {
                     reject(err)
                 })
             })         
-        }
+        },
 
     }
 

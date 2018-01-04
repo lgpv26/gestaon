@@ -4,6 +4,10 @@ const Op = require('sequelize').Op
 const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
+
+    const ordersProductsController = require('./../controllers/orders-products.controller')(server, restify);
+    const productsController = require('./../controllers/products.controller')(server, restify);
+
     return {
         getAll: (req, res, next) => {
             server.mysql.Order.findAndCountAll(req.queryParser).then((orders) => {
@@ -57,6 +61,7 @@ module.exports = (server, restify) => {
             const createData = _.cloneDeep(controller.request.data)
             _.assign(createData, {
                 companyId: controller.request.companyId,
+                userId: controller.request.userId,  
                 clientId: controller.request.clientId,
                 clientAddressId: controller.request.clientAddressId,
                 clientPhoneId: controller.request.clientPhoneId
@@ -70,39 +75,53 @@ module.exports = (server, restify) => {
                 }
 
                 return new Promise((resolve, reject) => {
-                    const promises = [];
+                const promises = [];
 
                 /* save orderProducts if existent */
                 if(_.has(createData, "orderProducts")) {
                     const orderProductsControllerObj = new Controller({
                         request: {
                             orderId: order.id,
+                            companyId: controller.request.companyId,
                             data: createData.orderProducts
                         },
                         transaction: controller.transaction
                     })
-                    promises.push(clientsPhonesController.setClientPhones(orderProductsControllerObj))
+                    promises.push(ordersProductsController.setOrdersProducts(orderProductsControllerObj))
                 }
 
-                })
-                
-                if ((_.has(createData, "orderProducts") && createData.orderProducts.length > 0)) {
-                    req.params['id'] = order.id;
-                    saveProducts(req, res, next).then((order) => {
-                        return res.send(200, {
-                            data: order
-                        });
+                    /* return only when all promises are satisfied */
+                    return Promise.all(promises).then((orderEs) => {
+                        const objES = {}
+                        _.map(orderEs, (value) => {
+                            _.assign(objES, value)
+                        })
+
+                        let productsESPromise = []
+                        if (_.has(objES, "productsES") && objES.productsES) {
+                            objES.productsES.forEach((productES) => {
+                                const productESControllerObj = new Controller({
+                                    request: {
+                                        data: productES
+                                    },
+                                    transaction: controller.transaction
+                                })
+                                productsESPromise.push(productsController.saveProductsInES(productESControllerObj))
+                            })
+                        }
+
+                        return Promise.all(productsESPromise).then(() => {
+                            return resolve()
+                        }).catch((err) => {
+                            return reject()
+                        })
                     }).catch((err) => {
-                        console.log(err);
-                        next(err);
-                    });
-                }
-                else {
-                    return res.send(200, {
-                        data: order
-                    });
-                }
+                        return reject(err)
+                    })
+                })
+
             })
+
         },
 
         updateOne: (req, res, next) => {

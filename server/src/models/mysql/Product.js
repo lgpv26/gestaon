@@ -18,6 +18,14 @@ module.exports = {
                 companyId: {
                     type: Sequelize.INTEGER
                 },
+                price: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: null
+                },
+                quantity: {
+                    type: Sequelize.INTEGER,
+                    default: null
+                },
                 dateUpdated: {
                     type: Sequelize.DATE
                 },
