@@ -10,10 +10,10 @@
                         <h3>{{ boardSection.name }}</h3>
                         <span class="push-both-sides"></span>
                         <ul style="display: flex; flex-direction: row">
-                            <li @click="collapseSection(boardSection)" style="width: 15px; height: 16px;">
+                            <li @click="collapseSection(boardSection)" style="width: 21px; height: 16px;">
                                 <icon-section-collapse></icon-section-collapse>
                             </li>
-                            <li @click="expandSection(boardSection)" style="width: 15px; height: 16px;">
+                            <li @click="expandSection(boardSection)" style="width: 21px; height: 16px;">
                                 <icon-section-expand></icon-section-expand>
                             </li>
                             <li @click="addRequest(index)" class="section-title__settings-button" style="width: 15px; height: 16px;">
@@ -39,6 +39,9 @@
                 </div>
             </div>
         </app-draggable>
+        <a class="add-section" @click="addSection()">
+            <request-board-icon-add-section></request-board-icon-add-section>
+        </a>
     </div>
 </template>
 
@@ -105,29 +108,15 @@
         methods: {
             ...mapMutations('morph-screen', []),
             ...mapMutations('request-board', ['RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
-            requestCardClicked(card, ev){
-                /*
-                if(!this.isDraggingBoardColumn && !this.isDraggingCard){
-                    if(!this.isShowingMorphScreen){
-                        this.showMorphScreen({
-                            show: true,
-                            sourceEl: ev.target,
-                            sourceElBgColor: 'var(--bg-color--7)',
-                            mimicBorderRadius: 0
-                        })
-                    } else {
-                        this.showMorphScreen(false)
-                    }
-                }
-                */
-            },
-            addRequest(index){
-                this.boardSections[index].cards.push({
-                    request: {
-                        client: { name: 'PEDIDO ' + (this.boardSections[index].cards.length + 1) }
-                    }
-                });
-                this.updateScrolls();
+
+            /* Sections */
+
+            addSection(){
+                this.ADD_SECTION({
+                    id: _.uniqueId("section#"),
+                    name: 'Nova seção #' + (this.sections.length + 1),
+                    size: 1
+                })
             },
             expandSection(section){
                 if(section.size < 3){
@@ -164,6 +153,33 @@
                 const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
                 viewport.style.display = 'initial';
             },
+
+            /* Request / Cards */
+
+            requestCardClicked(card, ev){
+                /*
+                if(!this.isDraggingBoardColumn && !this.isDraggingCard){
+                    if(!this.isShowingMorphScreen){
+                        this.showMorphScreen({
+                            show: true,
+                            sourceEl: ev.target,
+                            sourceElBgColor: 'var(--bg-color--7)',
+                            mimicBorderRadius: 0
+                        })
+                    } else {
+                        this.showMorphScreen(false)
+                    }
+                }
+                */
+            },
+            addRequest(index){
+                this.boardSections[index].cards.push({
+                    request: {
+                        client: { name: 'PEDIDO ' + (this.boardSections[index].cards.length + 1) }
+                    }
+                });
+                this.updateScrolls();
+            },
             onMove(ev, originalEv){
                 this.updateScrolls();
             },
@@ -182,6 +198,9 @@
                     requests: sectionCards
                 })
             },
+
+            /* In-component utilities */
+
             updateScrolls(){
                 const vm = this;
                 setImmediate(() => {
@@ -206,16 +225,37 @@
             })
             Vue.nextTick(() => {
                 if(vm.sections.length) {
+                    const taskArray = [
+                        {
+                            text: "Rever a instalação do fogão"
+                        },
+                        {
+                            text: "Assistência de regulador"
+                        },
+                        {
+                            text: "Lalalala"
+                        }
+                    ]
                     for (let i = 1; i <= 5; i++) {
                         const randomIndex = _.random(vm.sections.length - 1)
                         const randomSection = vm.sections[randomIndex]
+
+                        let randomTask
+
+                        if(_.random(1) && taskArray.length){
+                            const randomIndex = _.random(taskArray.length - 1)
+                            randomTask = taskArray[randomIndex]
+                            taskArray.splice(randomIndex, 1)
+                        }
+
                         vm.ADD_REQUEST({
                             id: _.uniqueId("card#"),
                             sectionId: randomSection.id,
                             request: {
                                 client: {
                                     name: "TESTE " + i
-                                }
+                                },
+                                task: randomTask
                             }
                         })
                     }
@@ -227,6 +267,8 @@
 
 <style>
     #request-panel {
+        display: flex;
+        flex-direction: row;
         position: absolute;
         z-index: 999;
         height: 100%;
@@ -255,8 +297,8 @@
         cursor: -moz-grab;
         cursor: grab;
         padding: 10px 10px 8px;
-        height: 60px;
-        background: var(--bg-color--9);
+        height: 50px;
+        background: var(--bg-color);
     }
     #request-panel > .board .board-section > .board-section__header {
         display: flex;
@@ -272,6 +314,7 @@
     #request-panel > .board .board-section > .board-section__header > .header__section-title > h3 {
         color: var(--font-color--8);
         flex-grow: 1;
+        font-size: 14px;
     }
     #request-panel > .board .board-section > .board-section__header > .header__section-title ul li {
         cursor: pointer;
@@ -279,6 +322,14 @@
     }
     #request-panel > .board .board-section > .board-section__header > .header__section-title ul li svg {
         pointer-events: none;
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li .fill,
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li .colorizable {
+        fill: var(--font-color--2)
+    }
+    #request-panel > .board .board-section > .board-section__header > .header__section-title ul li .stroke
+    {
+        stroke: var(--font-color--2)
     }
     #request-panel > .board .board-section > .board-section__header > .header__section-title ul li:hover .fill,
     #request-panel > .board .board-section > .board-section__header > .header__section-title ul li:hover .colorizable {
@@ -332,5 +383,22 @@
     #request-panel > .board .request-card > .request-card__main h3.card-title {
         color: var(--font-color--7);
         font-size: 14px;
+    }
+
+    #request-panel > .add-section {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 16px 0 0 10px;
+        background-color: var(--bg-color);
+        border-radius: 100%;
+        box-shadow: var(--dial-button-shadow);
+        cursor: pointer;
+    }
+
+    #request-panel > .add-section:hover .colorizable {
+        fill: var(--bg-color--primary)
     }
 </style>

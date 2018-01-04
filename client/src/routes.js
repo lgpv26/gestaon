@@ -2,7 +2,7 @@ const LoginRoute = () => import('./features/Auth/Login.vue');
 const RegisterRoute = () => import('./features/Auth/Register.vue');
 const MainRoute = () => import('./features/Main/Main.vue');
 const DashboardRoute = () => import('./features/Main/Dashboard/Dashboard.vue');
-const UsersRoute = () => import('./features/Main/Users/Users.vue');
+const ClientsRoute = () => import('./features/Main/CRUDs/Clients/Clients.vue');
 const CompaniesRoute = () => import('./features/Main/Companies/Companies.vue');
 
 export default [
@@ -10,14 +10,14 @@ export default [
         path: '/login',
         component: LoginRoute,
         meta: {
-            title: 'Login - Agiliza.me'
+            title: 'Login - Agiliza ERP'
         }
     },
     {
         path: '/register',
         component: RegisterRoute,
         meta: {
-            title: 'Criar nova conta - Agiliza.me'
+            title: 'Criar nova conta - Agiliza ERP'
         }
     },
     {
@@ -26,23 +26,24 @@ export default [
         children: [
             {
                 path: 'dashboard',
+                name: 'dashboard',
                 component: DashboardRoute,
                 meta: {
-                    title: 'Agiliza ERP'
+                    title: 'Painel de pedidos - Agiliza ERP'
                 }
             },
             {
-                path: 'users',
-                component: UsersRoute,
+                path: 'clients',
+                component: ClientsRoute,
                 meta: {
-                    title: 'Usuários - Agiliza.me'
+                    title: 'Clientes - Agiliza ERP'
                 }
             },
             {
                 path: 'companies',
                 component: CompaniesRoute,
                 meta: {
-                    title: 'Empresas - Agiliza.me'
+                    title: 'Empresas - Agiliza ERP'
                 }
             },
             {

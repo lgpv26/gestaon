@@ -23,11 +23,12 @@
                     <nav class="main-menu">
                         <ul>
                             <!-- <router-link to="/dashboard" exact tag="li"><i class="mi mi-dashboard"></i></router-link> -->
-                            <router-link to="/tracker" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimento'">
+                            <router-link to="/dashboard" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimento'">
                                 <menu-icon-dashboard class="icon"></menu-icon-dashboard>
                             </router-link>
-                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Ligações'">
-                                <menu-icon-sale class="icon"></menu-icon-sale></li>
+                            <router-link to="/clients" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Ligações #Clientes'">
+                                <menu-icon-sale class="icon"></menu-icon-sale>
+                            </router-link>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Caixa / conferência'">
                                 <menu-icon-cash-check class="icon"></menu-icon-cash-check></li>
                             <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Financeiro'">
@@ -50,7 +51,7 @@
                 </div>
                 <div class="main-column">
                     <header class="main-column__header">
-                        <div class="header__container" v-if="app.header === 'request-board'">
+                        <div class="header__container" v-if="$route.name === 'dashboard'">
                             <div class="container__request-board">
                                 <app-datetime-picker class="request-board__filter  filter--date" :offset="{ bottom: 15 }">
                                     <div class="filter-item__target">
@@ -129,7 +130,7 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import { MorphScreen } from "./MorphScreen/index";
-    import Search from "./Main/Search.vue";
+    import Search from "./_Shared/Search.vue";
     import ActiveRequestCard from "./Dashboard/RequestBoard/ActiveRequestCard.vue";
     import Modals from "./Dashboard/Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
@@ -467,7 +468,7 @@
     }
 </script>
 
-<style scoped>
+<style>
 
     div.body #content {
         width: 100%;
@@ -602,8 +603,7 @@
         height: 48px;
         cursor: pointer;
         color: #CCC;
-        border-bottom: 1px solid var(--bg-color--5-d);
-        transition: all 0.3s;
+        border-bottom: 1px solid var(--bg-color--5);
         font-size: 18px;
         text-align: center;
     }
@@ -617,8 +617,15 @@
     }
 
     .left-column nav.main-menu ul li.router-link-active {
-        background: var(--bg-color--4);
-        color: #61AFEF;
+        background: var(--bg-color--9);
+    }
+
+    .left-column nav.main-menu ul li.router-link-active .fill {
+        fill: var(--font-color--10);
+    }
+
+    .left-column nav.main-menu ul li.router-link-active .fill--primary {
+        fill: var(--font-color--secondary);
     }
 
     .left-column nav.main-menu ul li:last-child {
@@ -763,8 +770,13 @@
     .main-column__header .container__title {
         display: flex;
         flex-direction: row;
-        min-height: 60px;
-        padding: 0 0 0 20px;
+        padding: 0 0 0 10px;
+        justify-content: center;
+        align-self: center;
+    }
+
+    .main-column__header .container__title > h3 {
+        font-size: 14px;
     }
 
     .main-column main {

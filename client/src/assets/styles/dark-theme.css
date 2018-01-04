@@ -83,6 +83,7 @@
     /* Shadows */
 
     --popover-shadow: 0 2px 5px 0 var(--bg-color--2);
+    --dial-button-shadow: 0 1px 2px 0 var(--bg-color--3);
     --card-shadow: 0 2px 5px 0 var(--bg-color--3);
     --main-menu-shadow: 0 0 15px -5px var(--bg-color--0);
     --main-header-shadow: 0 0 15px -5px var(--bg-color--0);
