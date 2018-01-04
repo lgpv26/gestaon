@@ -2,6 +2,7 @@ const Draft = require('.')
 const basePath = require('../../middlewares/base-path.middleware')
 const _ = require('lodash')
 const RequestPersistance = require('../../modules/Draft/Persistance/RequestPersistance');
+const OrderPersistance = require('../../modules/Draft/Persistance/OrderPersistance');
 const ClientPersistance = require('../../modules/Draft/Persistance/ClientPersistance');
 
 module.exports = class Request extends Draft {
@@ -11,6 +12,7 @@ module.exports = class Request extends Draft {
         super(server, channels, socket);
         // private
         this._requestPersistance = new RequestPersistance(server);
+        this._orderPersistance = new OrderPersistance(server);
         this._clientPersistance = new ClientPersistance(server);
         // functions
         this.setRequestEventListeners();
@@ -189,6 +191,13 @@ module.exports = class Request extends Draft {
         ///     ORDER       ///
         ///////////////////////
 //
+
+    this.socket.on('draft:order-persist', (orderPersist) => {
+        super.resetTimeout()
+        super.saveDraft(orderPersist.draftId).then(() => {
+            this.onOrderPersist(orderPersist)
+        })
+    })
             ///////////////////////
             ///     ORDER      ///
             ///  ** product     ///
@@ -696,6 +705,33 @@ module.exports = class Request extends Draft {
     ///////////////////////
     ///     ORDEN       ///
     ///////////////////////
+//
+    
+    /**
+     * Order Persist
+     * @desc Send to all sockets in Draft/:id the persist order event
+     *
+     * @param {object} orderPersist - expected: draftId
+     * @return {} @property {Socket}
+     */
+    onOrderPersist(orderPersist) {
+        let companyId;
+        if(this.socket.user.activeCompanyUserId){
+            companyId = parseInt(this.socket.user.activeCompanyUserId);
+        }
+        else {
+            if(this.socket.user.companies.length) companyId = _.first(this.socket.user.companies)
+        }
+        if(companyId){
+            this._orderPersistance.setDraftId(orderPersist.draftId);
+            this._orderPersistance.setCompanyId(companyId);
+            this._orderPersistance.start().then((draft) => {
+                this.server.io.in('draft/' + orderPersist.draftId).emit('draftOrderPersist', draft)
+            }).catch((err) => {
+                console.log("ERROR", err);
+            });
+        }
+    }
 
         //////////////////////
         ///     ORDEN      ///
@@ -743,6 +779,6 @@ module.exports = class Request extends Draft {
                 console.log('catch do SELECT PRODUCT ORDER PRODUCT')
             })
         }
-  
+//  
 
 }

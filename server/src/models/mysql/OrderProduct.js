@@ -4,13 +4,16 @@ module.exports = {
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
-                orderId: {
+                id: {
                     type: Sequelize.INTEGER,
-                    primaryKey: true
+                    primaryKey: true,
+                    autoIncrement: true
+                },
+                orderId: {
+                    type: Sequelize.INTEGER
                 },
                 productId: {
-                    type: Sequelize.INTEGER,
-                    primaryKey: true
+                    type: Sequelize.INTEGER
                 },
                 quantity: Sequelize.INTEGER,
                 unitPrice: {

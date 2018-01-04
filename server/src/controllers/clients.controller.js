@@ -57,7 +57,7 @@ module.exports = (server, restify) => {
         },
 
         createOne: (controller) => {
-            const createData = _.cloneDeep(controller.request.data);
+            const createData = _.cloneDeep(controller.request.data)
             _.assign(createData, {
                 companyId: controller.request.companyId
             })

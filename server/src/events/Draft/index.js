@@ -272,7 +272,7 @@ module.exports = class Draft {
                     
                     resolve()
                 }
-                console.log('na memoria', this.channels.updates.drafts[0].form.clientAddressForm)
+                
             }).catch((err) => {
                 console.log(err, 'catch do SET ARRAY DRAFT MESMO')
             })

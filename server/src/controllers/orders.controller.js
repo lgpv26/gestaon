@@ -1,4 +1,7 @@
-const _ = require('lodash');
+const _ = require('lodash')
+const utils = require('../utils')
+const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
     return {
@@ -50,59 +53,55 @@ module.exports = (server, restify) => {
             });
         },
 
-        createOne: (req, res, next) => {
-            if (!req.body) {
-                return next(
-                    new restify.ResourceNotFoundError("Erro, dados não enviados.")
-                );
-            }
-            const createData = _.cloneDeep(req.body);
-            server.mysql.Order.create(createData, {
-                include: [{
-                    model: server.mysql.OrderProduct,
-                    as: 'orderProducts'
-                }]
+        createOne: (controller) => {
+            const createData = _.cloneDeep(controller.request.data)
+            _.assign(createData, {
+                companyId: controller.request.companyId,
+                clientId: controller.request.clientId,
+                clientAddressId: controller.request.clientAddressId,
+                clientPhoneId: controller.request.clientPhoneId
+            })
+
+            return server.mysql.Order.create(createData, {
+                transaction: controller.transaction
             }).then((order) => {
                 if (!order) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado.")
-                    );
+                    throw new Error("Não foi possível encontrar o pedido criado.")
                 }
-                server.elasticSearch.index({
-                    index: 'main',
-                    type: 'order',
-                    id: order.id,
-                    body: {
-                        companyId: order.company_id,
-                        userId: order.user_id,
-                        clientId: order.client_id,
-                        obs: order.obs,
-                        status: order.status
-                    }
-                }, function (esErr, esRes, esStatus) {
-                    if (esErr) {
-                        console.error(esErr);
-                        return next(
-                            new restify.ResourceNotFoundError(esErr)
-                        );
-                    }
-                    if ((_.has(createData, "orderProducts") && createData.orderProducts.length > 0)) {
-                        req.params['id'] = order.id;
-                        saveProducts(req, res, next).then((order) => {
-                            return res.send(200, {
-                                data: order
-                            });
-                        }).catch((err) => {
-                            console.log(err);
-                            next(err);
-                        });
-                    }
-                    else {
+
+                return new Promise((resolve, reject) => {
+                    const promises = [];
+
+                /* save orderProducts if existent */
+                if(_.has(createData, "orderProducts")) {
+                    const orderProductsControllerObj = new Controller({
+                        request: {
+                            orderId: order.id,
+                            data: createData.orderProducts
+                        },
+                        transaction: controller.transaction
+                    })
+                    promises.push(clientsPhonesController.setClientPhones(orderProductsControllerObj))
+                }
+
+                })
+                
+                if ((_.has(createData, "orderProducts") && createData.orderProducts.length > 0)) {
+                    req.params['id'] = order.id;
+                    saveProducts(req, res, next).then((order) => {
                         return res.send(200, {
                             data: order
                         });
-                    }
-                });
+                    }).catch((err) => {
+                        console.log(err);
+                        next(err);
+                    });
+                }
+                else {
+                    return res.send(200, {
+                        data: order
+                    });
+                }
             })
         },
 

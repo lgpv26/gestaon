@@ -41,7 +41,7 @@
                             <span class="push-both-sides"></span>
                             <a style="margin-right: 20px;" @click="closeScreen()">Voltar</a>
                             <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
-                            <a style="color: var(--font-color--primary)" @click="persistClient()" v-if="!isPersisting">Salvar cliente</a>
+                            <a style="color: var(--font-color--primary)" @click="persistRequest()" v-if="!isPersisting">Salvar request</a>
                             <a style="color: var(--font-color--primary)" v-else>{{ persistingText }}</a>
                         </div>
                     </div>
@@ -387,6 +387,14 @@
                 };
                 console.log("Emitting draft:client-persist", emitData);
                 this.$socket.emit('draft:client-persist', emitData);
+            },
+            persistRequest(){
+                this.isPersisting = true;
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                };
+                console.log("Emitting draft:request-persist", emitData);
+                this.$socket.emit('draft:request-persist', emitData);
             }
         },
         mounted(){
