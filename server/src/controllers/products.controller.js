@@ -224,6 +224,50 @@ module.exports = (server, restify) => {
             })
         },
 
+        saveProducts: (controller) => {
+            return new Promise((resolve, reject) => {  
+
+                let setData = _.cloneDeep(controller.request.data)
+
+                let productsPromises = []
+                _.first(setData).forEach((orderProduct) => {
+                    if (orderProduct.product.id) {
+                        const productUpdate = new Controller({
+                                request: {
+                                    data: orderProduct
+                                },
+                                transaction: controller.transaction
+                            })
+                            productsPromises.push(updateOne(productUpdate).then((updatedProduct) => {
+                                    return _.assign(orderProduct, {product: updatedProduct.product}, {productES: updatedProduct.esProduct})
+                                })
+                            )
+                    }
+                    else {
+                        const productCreate = new Controller({
+                            request: {
+                                companyId: controller.request.companyId,
+                                data: orderProduct
+                            },
+                            transaction: controller.transaction
+                        })
+                        productsPromises.push(createOne(productCreate).then((createdProduct) => {
+                            return _.assign(orderProduct, {product: createdProduct.product}, {productES: createdProduct.esProduct})
+                        })
+                        )
+                    }
+                })
+
+                return Promise.all(productsPromises).then((products) => {
+                    resolve(products)
+                })
+            }).then((response) => {
+                return (response) ? response : []
+            }).catch((error) => {
+                return error
+            })
+        },
+
         createOne(req) {
             let createData = _.cloneDeep(req.body)
             createData.companyId = req.params.companyId
@@ -434,14 +478,141 @@ module.exports = (server, restify) => {
         }
     }
 
-    function saveProductSuppliers(req) {
-        console.log(req.params)
+
+    function createOne(controller) {
         return new Promise((resolve, reject) => {
-            let productSuppliers = _.map(req.body.productSuppliers, productSupplier => _.extend({
+
+            const createData = _.cloneDeep(controller.request.data)
+            return server.mysql.Product.create(createData.product, {
+                transaction: controller.transaction
+            }).then((createProduct) => {
+                if (!createProduct) {
+                    reject("Não foi possível encontrar o product criado.")
+                }
+                createProduct = JSON.parse(JSON.stringify(createProduct))
+
+                _.assign(createProduct, {
+                    productSuppliers: [{
+                        supplierId: null,
+                        productId: createProduct.id,
+                        price: createData.price,
+                        quantity: createData.quantity
+                    }] // < _---- continuar daqui
+                })
+
+                const productSupplierCreate = new Controller({
+                    request: {
+                        data: createProduct
+                    },
+                    transaction: controller.transaction
+                })
+
+                return saveProductSuppliers(productSupplierCreate).then((product) => {
+                    const esProduct = {
+                        id: product.id,
+                        body: {
+                            companyId: product.companyId,
+                            name: product.name,
+                            suppliers: _.map(product.productSuppliers, productSupplier => {
+                                return {
+                                    supplierProductId: productSupplier.id,
+                                    supplierId: productSupplier.supplier.id,
+                                    name: productSupplier.supplier.name,
+                                    obs: productSupplier.supplier.obs,
+                                    quantity: productSupplier.quantity,
+                                    price: productSupplier.price
+                                };
+                            }),
+                            dateUpdated: product.dateUpdated,
+                            dateCreated: product.dateCreated,
+                            status: product.status
+                        },
+                        createES: true
+                    }
+                    resolve({product: product, esProduct: esProduct})
+                })
+            })
+        }).then((product) => {
+            return product
+        }).catch((err) => {
+            return err
+        })
+    }
+
+    function updateOne(controller) {
+        return new Promise((resolve, reject) => {
+
+            const updateData = _.cloneDeep(controller.request.data)
+
+            return server.mysql.Product.update(updateData, {
+                where: {
+                    id: updateData.id,
+                    status: 'activated',
+                    companyId: controller.request.companyId
+                },
+                include: [{
+                    model: server.mysql.SupplierProduct,
+                    as: 'productSuppliers',
+                    include: [{
+                        model: server.mysql.Supplier,
+                        as: 'supplier'
+                    }]
+                }],
+                transaction: controller.transaction
+            }).then((productUpdate) => {
+                    if (!productUpdate) {
+                        reject("Não foi possível encontrar o product editado.")
+                    }
+                    return server.mysql.Product.findById(controller.request.data.id, {
+                        include: [{
+                            model: server.mysql.SupplierProduct,
+                            as: 'productSuppliers',
+                            include: [{
+                                model: server.mysql.Supplier,
+                                as: 'supplier'
+                            }]
+                        }],
+                        transaction: controller.transaction
+                    }).then((product) => {
+                        product = JSON.parse(JSON.stringify(product))
+
+                        const esProduct = {
+                            id: product.id,
+                            body: {
+                                companyId: product.companyId,
+                                name: product.name,
+                                suppliers: _.map(product.productSuppliers, productSupplier => {
+                                    return {
+                                        supplierProductId: productSupplier.id,
+                                        supplierId: productSupplier.supplier.id,
+                                        name: productSupplier.supplier.name,
+                                        obs: productSupplier.supplier.obs,
+                                        quantity: productSupplier.quantity,
+                                        price: productSupplier.price
+                                    };
+                                }),
+                                dateUpdated: product.dateUpdated,
+                                dateCreated: product.dateCreated,
+                                status: product.status
+                            },
+                            createES: false
+                        }
+                        resolve({product: product, esProduct: esProduct})
+                })
+            })
+        }).then((product) => {
+            return product
+        }).catch((err) => {
+            return err
+        })
+    }
+
+    function saveProductSuppliers(controller) {
+
+        return new Promise((resolve, reject) => {
+            let productSuppliers = _.map(controller.productSuppliers, productSupplier => _.extend({
                 productId: parseInt(req.params.id)
             }, productSupplier));
-
-            console.log(productSuppliers)
 
             server.mysql.SupplierProduct.bulkCreate(productSuppliers, {
                 updateOnDuplicate: ['price', 'quantity', 'dateUpdate']

@@ -326,29 +326,22 @@ module.exports = (server, restify) => {
                     }).then((address) => {
                         address = JSON.parse(JSON.stringify(address))
 
-                        server.elasticSearch.update({
-                            index: 'main',
-                            type: 'address',
+                        const esAddress = {
                             id: address.id,
                             body: {
-                                doc: {
-                                    companyId: address.companyId,
-                                    name: address.name,
-                                    neighborhood: address.neighborhood,
-                                    city: address.city,
-                                    state: address.state,
-                                    cep: address.cep,
-                                    dateUpdated: address.dateUpdated,
-                                    dateCreated: address.dateCreated,
-                                    status: address.status
-                                }
-                            }
-                        }, function (esErr, esRes, esStatus) {
-                            if (esErr) {
-                                reject(esErr)
-                            }
-                            resolve(address)
-                        })
+                                companyId: address.companyId,
+                                name: address.name,
+                                neighborhood: address.neighborhood,
+                                city: address.city,
+                                state: address.state,
+                                cep: address.cep,
+                                dateUpdated: address.dateUpdated,
+                                dateCreated: address.dateCreated,
+                                status: address.status
+                            },
+                            createES: false
+                        }
+                        resolve({address: address, esAddress: esAddress})
                 })
             })
         }).then((address) => {

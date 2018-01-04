@@ -3,12 +3,12 @@ const basePath = require('../../../middlewares/base-path.middleware')
 const _ = require('lodash')
 const sequelize = require('sequelize')
 
-const clientsController = require('../../../controllers/clients.controller')
+const ordersController = require('../../../controllers/orders.controller')
 
 const Controller = require('../../../models/Controller')
 
 /**
- * this class should be responsible for converting a client in draft to a persitance data,
+ * this class should be responsible for converting a order in draft to a persitance data,
  * execute its saving operations through the use of controllers.
  * finally, respond with success or failure with its respective errors.
  * @type {RequestPersistance}
@@ -18,14 +18,20 @@ module.exports = class RequestPersistance extends Persistance {
     constructor(server) {
         super(server);
 
+        this._userId = null;
+        this._orderId = null;
+
         this._clientId = null;
         this._companyId = null;
         this._draftId = null;
 
+        this._clientAddressId = null;
+        this._clientPhoneId = null;
+
         this._draft = null;
         this._transaction = null;
 
-        this.clientsController = clientsController(this.server);
+        this.ordersController = ordersController(this.server);
     }
 
     setDraftId(draftId = null) {
@@ -36,8 +42,20 @@ module.exports = class RequestPersistance extends Persistance {
         if (companyId) this._companyId = companyId;
     }
 
+    setClientId(clientId = null) {
+        if (clientId) this._clientId = clientId;
+    }
+
+    setClientAddressId(clientAddressId = null) {
+        if (clientAddressId) this._clientAddressId = clientAddressId;
+    }
+
+    setClientPhoneId(clientPhoneId = null) {
+        if (clientPhoneId) this._clientPhoneId = clientPhoneId;
+    }
+
     /**
-     * Start client persistence from draft to definitive (MySQL)
+     * Start order persistence from draft to definitive (MySQL)
      * @returns {Promise}
      */
     start() {
@@ -48,31 +66,35 @@ module.exports = class RequestPersistance extends Persistance {
             this._draft = draft;
             return this.server.sequelize.transaction().then((transaction) => {
                 this._transaction = transaction;
-                if (draft.form.client.id) {
-                    this._clientId = parseInt(draft.form.client.id)
+
+                if (draft.form.order.id) {
+                    this._orderId = parseInt(draft.form.order.id)
                 }
-                return this.saveClient()
+
+                return this.saveOrder()
             })
-            // return resolve(draft);
         })
     }
 
     /**
-     * Save client (create or update)
+     * Save order (create or update)
      * @returns {Promise}
      */
-    saveClient() {
+    saveOrder() {
         const controller = new Controller({
             request: {
                 companyId: this._companyId,
+                orderId: this._orderId || null,                
                 clientId: this._clientId || null,
-                data: this.mapDraftObjToModelObj(this._draft.form.client)
+                clientAddressId = this._clientAddressId || null,
+                clientPhoneId = this._clientPhoneId || null,
+                data: this.mapDraftObjToModelObj(this._draft.form)
             },
             transaction: this._transaction
         })
 
-        if (this._clientId) { // update client
-            return this.clientsController.updateOne(controller).then(() => {
+        if (this._orderId) { // update order
+            return this.ordersController.updateOne(controller).then(() => {
                 console.log("Success updating");
                 this.commit();
             }).catch((err) => {
@@ -80,8 +102,8 @@ module.exports = class RequestPersistance extends Persistance {
                 this.rollback();
             });
         }
-        else { // create client
-            return this.clientsController.createOne(controller).then(() => {
+        else { // create order
+            return this.ordersController.createOne(controller).then(() => {
                 console.log("Success creating");
                 this.commit();
             }).catch((err) => {
@@ -91,25 +113,19 @@ module.exports = class RequestPersistance extends Persistance {
         }
     }
 
-    mapDraftObjToModelObj(client) {
+    mapDraftObjToModelObj(form) {
+        if(form.clientAddressId) this._clientAddressId = parseInt(form.clientAddressId)
+        if(form.clientPhoneId) this._clientPhoneId = parseInt(form.clientPhoneId)
 
-        if (_.has(client, "clientAddresses") && client.clientAddresses.length) {
-            this.removeTempIds(client, "clientAddresses")
-        }
-
-        if (_.has(client, "clientPhones") && client.clientPhones.length) {
-            this.removeTempIds(client, "clientPhones")
-        }
-
-        if (_.has(client, "clientCustomFields") && client.clientCustomFields.length) {
-            this.removeTempIds(client, "clientCustomFields")
+        if (_.has(form.order, "orderProducts") && form.order.orderProducts.length) {
+            this.removeTempIds(form.order, "orderProducts")
         }
         
-        return client
+        return form.order
     }
 
-    removeTempIds(client, key){
-        _.map(client[key], (obj) => {
+    removeTempIds(order, key){
+        _.map(order[key], (obj) => {
             if (_.has(obj, "id")) {
                 const checkId = obj.id.toString().split(':')
                 if (_.first(checkId) === 'temp') {
