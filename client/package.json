@@ -40,7 +40,7 @@
     "vue-socket.io": "^2.1.1-a",
     "vue-the-mask": "^0.11.1",
     "vue-timeago": "^3.3.6",
-    "vue-tippy": "^0.2.8",
+    "vue-tippy": "^2.0.5",
     "vuedraggable": "^2.15.0",
     "vuex": "^2.1.1"
   },

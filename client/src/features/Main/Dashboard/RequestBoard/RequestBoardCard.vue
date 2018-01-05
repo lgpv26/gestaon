@@ -1,40 +1,47 @@
 <template>
     <div class="request-board-card">
-        <h3 class="card-title">{{ card.request.client.name }}</h3>
-        <h3 class="card-title" v-if="hasTaskInstruction">{{ card.request.task.text }}</h3>
-        <div class="card__middle">
-            <div class="card__timer">
-                <div class="timer__objects">
-                    <div class="objects__timer">
-                        <span class="timer__hours">09</span>
-                        <span class="timer__minutes">51</span>
-                        <request-board-icon-timer></request-board-icon-timer>
-                    </div>
-                    <div class="objects__timeline">
-                        <div class="timeline__progress">
-                            <span class="progress__progress">07</span>
-                            <request-board-icon-progress-shield></request-board-icon-progress-shield>
+        <div class="request-board-card__container">
+            <h3 class="card__client-name" data-card-tippy v-tippy="RBCClientTippyOptions">{{ card.request.client.name }}</h3>
+            <h3 class="card__task" v-if="hasTaskInstruction">{{ card.request.task.text }}</h3>
+            <h3 class="card__task--add" v-else>+ Incluir Tarefa ou Anotação</h3>
+            <div class="card__middle">
+                <div class="card__timer">
+                    <div class="timer__objects">
+                        <div class="objects__timer">
+                            <span class="timer__hours">09</span>
+                            <span class="timer__minutes">51</span>
+                            <request-board-icon-timer></request-board-icon-timer>
                         </div>
-                        <div class="timeline__progress--current">
-                            <span class="progress__progress">17</span>
-                            <request-board-icon-progress-shield></request-board-icon-progress-shield>
+                        <div class="objects__timeline">
+                            <div class="timeline__progress" data-card-tippy v-tippy="getRBCProgressTippyOptions(0)">
+                                <span class="progress__progress" >07</span>
+                                <request-board-icon-progress-shield></request-board-icon-progress-shield>
+                            </div>
+                            <div class="timeline__progress--current" data-card-tippy v-tippy="getRBCProgressTippyOptions(1)">
+                                <span class="progress__progress">17</span>
+                                <request-board-icon-progress-shield></request-board-icon-progress-shield>
+                            </div>
+                        </div>
+                        <div class="objects__deadline" data-card-tippy v-tippy="RBCDeadlineTippyOptions">
+                            <span class="deadline__time">30</span>
+                            <span class="deadline__label">min</span>
                         </div>
                     </div>
-                    <div class="objects__deadline">
-                        <span class="deadline__time">30</span>
-                        <span class="deadline__label">min</span>
-                    </div>
+                    <div class="timer__line"></div>
                 </div>
-                <div class="timer__line"></div>
             </div>
-        </div>
-        <div class="card__footer">
-            <span class="footer__location">
-                <request-board-icon-location></request-board-icon-location> 4,3 km
-            </span>
-            <span class="push-both-sides"></span>
-            <a><request-board-icon-status></request-board-icon-status> Pendente</a>
-            <a><request-board-icon-flag></request-board-icon-flag> Cintia</a>
+            <div class="card__footer">
+                <span class="footer__location" ref="footerLocation" data-card-tippy v-tippy="RBCLocationTippyOptions">
+                    <request-board-icon-location></request-board-icon-location> 4,3 km
+                </span>
+                <span class="push-both-sides"></span>
+                <a><request-board-icon-status></request-board-icon-status> Pendente</a>
+                <a><request-board-icon-flag></request-board-icon-flag> Cintia</a>
+            </div>
+            <app-rbc-location id="rbc-location"></app-rbc-location>
+            <app-rbc-client id="rbc-client"></app-rbc-client>
+            <app-rbc-progress v-for="(progress, index) in progresses" :key="index" :id="'rbc-progress' + '-' + index"></app-rbc-progress>
+            <app-rbc-progress id="rbc-deadline"></app-rbc-progress>
         </div>
     </div>
 </template>
@@ -47,10 +54,60 @@
     import _ from 'lodash';
     import utils from '@/utils'
 
+    import RBCLocation from './RequestBoardCard/RBCLocation.vue'
+    import RBCClient from './RequestBoardCard/RBCClient.vue'
+    import RBCProgress from './RequestBoardCard/RBCProgress.vue'
+
     export default {
-        props: ['card'],
+        props: ['card','isDragging'],
+        components: {
+            'app-rbc-location': RBCLocation,
+            'app-rbc-client': RBCClient,
+            'app-rbc-progress': RBCProgress
+        },
         data(){
             return {
+                progresses: [{}, {}],
+                RBCLocationTippyOptions: {
+                    html: '#rbc-location',
+                    delay: 500,
+                    hideOnClick: false,
+                    placement: 'top-start',
+                    theme: 'erp',
+                    interactive: true,
+                    reactive : true,
+                    duration: 100,
+                    inertia: true,
+                    arrow: true,
+                    animation: 'perspective'
+                },
+                RBCClientTippyOptions: {
+                    html: '#rbc-client',
+                    delay: 500,
+                    hideOnClick: false,
+                    placement: 'bottom',
+                    theme: 'erp',
+                    interactive: true,
+                    reactive : true,
+                    duration: 100,
+                    inertia: true,
+                    arrow: true,
+                    animation: 'perspective'
+                },
+                RBCDeadlineTippyOptions: {
+                    html: '#rbc-deadline',
+                    delay: 500,
+                    hideOnClick: false,
+                    placement: 'bottom-end',
+                    theme: 'erp',
+                    interactive: true,
+                    reactive : true,
+                    duration: 100,
+                    inertia: true,
+                    arrow: true,
+                    animation: 'perspective',
+                    distance: 0
+                }
             }
         },
         computed: {
@@ -59,7 +116,21 @@
             }
         },
         methods: {
-
+            getRBCProgressTippyOptions(index){
+                return {
+                    html: '#rbc-progress-' + index,
+                    delay: 500,
+                    hideOnClick: false,
+                    placement: 'bottom',
+                    theme: 'erp',
+                    interactive: true,
+                    reactive : true,
+                    duration: 100,
+                    inertia: true,
+                    arrow: true,
+                    animation: 'perspective'
+                }
+            }
         }
     }
 </script>
@@ -67,11 +138,37 @@
 <style>
     .request-board-card {
         display: flex;
-        flex-direction: column;
-        padding: 10px;
         background: var(--bg-color);
         box-shadow: var(--card-shadow);
+    }
+
+    .request-board-card__container {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        padding: 10px;
         text-align: center;
+    }
+
+    .request-board-card h3.card__client-name {
+        color: var(--font-color--7);
+        font-size: 14px;
+    }
+
+    .request-board-card h3.card__task {
+        color: var(--font-color--7);
+        font-size: 14px;
+        font-weight: initial;
+    }
+
+    .request-board-card h3.card__task--add {
+        color: var(--font-color--2);
+        font-size: 14px;
+        font-weight: initial;
+    }
+
+    .request-board-card h3.card__task--add:hover {
+        color: var(--font-color);
     }
 
     /* middle */

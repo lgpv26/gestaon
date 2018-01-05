@@ -23,25 +23,25 @@
                     <nav class="main-menu">
                         <ul>
                             <!-- <router-link to="/dashboard" exact tag="li"><i class="mi mi-dashboard"></i></router-link> -->
-                            <router-link to="/dashboard" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimento'">
+                            <router-link to="/dashboard" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimento'">
                                 <menu-icon-dashboard class="icon"></menu-icon-dashboard>
                             </router-link>
-                            <router-link to="/clients" exact tag="li" v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Ligações #Clientes'">
+                            <router-link to="/clients" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Ligações #Clientes'">
                                 <menu-icon-sale class="icon"></menu-icon-sale>
                             </router-link>
-                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Caixa / conferência'">
+                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Caixa / conferência'">
                                 <menu-icon-cash-check class="icon"></menu-icon-cash-check></li>
-                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Financeiro'">
+                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Financeiro'">
                                 <menu-icon-finance class="icon"></menu-icon-finance></li>
-                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Nota fiscal'">
+                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Nota fiscal'">
                                 <menu-icon-nfe class="icon"></menu-icon-nfe></li>
-                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Estoque'">
+                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Estoque'">
                                 <menu-icon-stock class="icon"></menu-icon-stock></li>
-                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Relatórios'">
+                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Relatórios'">
                                 <menu-icon-chart class="icon"></menu-icon-chart></li>
-                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Lalala'">
+                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Lalala'">
                                 <menu-icon-phone class="icon"></menu-icon-phone></li>
-                            <li v-tippy="{ position: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Rastreamento'">
+                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Rastreamento'">
                                 <menu-icon-track class="icon"></menu-icon-track></li>
                         </ul>
                     </nav>

@@ -351,3 +351,31 @@ li.router-link-active svg.icon {
 .iziToast-wrapper {
     z-index: 9999999;
 }
+
+/* Vue Tippy theme */
+
+.tippy-tooltip.erp-theme {
+    /* Your styling here. Example: */
+    background-color: var(--bg-color--primary);
+    box-shadow: var(--popover-shadow)
+}
+
+.tippy-tooltip.erp-theme .tippy-content * {
+    color: var(--font-color--10)
+}
+
+.tippy-popper[x-placement^=top] .tippy-tooltip.erp-theme .tippy-arrow {
+    border-top-color: var(--bg-color--primary)
+}
+
+.tippy-popper[x-placement^=left] .tippy-tooltip.erp-theme .tippy-arrow {
+    border-left-color: var(--bg-color--primary)
+}
+
+.tippy-popper[x-placement^=right] .tippy-tooltip.erp-theme .tippy-arrow {
+    border-right-color: var(--bg-color--primary)
+}
+
+.tippy-popper[x-placement^=bottom] .tippy-tooltip.erp-theme .tippy-arrow {
+    border-bottom-color: var(--bg-color--primary)
+}
