@@ -29,6 +29,9 @@
                             <router-link to="/clients" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Ligações #Clientes'">
                                 <menu-icon-sale class="icon"></menu-icon-sale>
                             </router-link>
+                            <router-link to="/requests" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimentos'">
+                                <menu-icon-sale class="icon"></menu-icon-sale>
+                            </router-link>
                             <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Caixa / conferência'">
                                 <menu-icon-cash-check class="icon"></menu-icon-cash-check></li>
                             <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Financeiro'">

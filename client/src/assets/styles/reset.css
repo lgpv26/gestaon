@@ -79,9 +79,11 @@ h1 {  font-size: 18px;  }
 h3 {  font-size: 16px;  }
 
 a {
-    color: var(--font-color--7);
+    color: var(--font-color--primary);
     outline: 0 none;
     box-shadow: 0 0 0;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 a:hover, a:active, a:focus {
@@ -100,6 +102,22 @@ ul li {
 }
 
 /* classes */
+
+.dot-separator {
+    width: 4px;
+    height: 4px;
+    border-radius: 4px;
+    background-color: var(--border-color--secondary)
+}
+.dot-separator.primary {
+    background-color: var(--border-color--primary)
+}
+.dot-separator.secondary {
+    background-color: var(--border-color--secondary)
+}
+.dot-separator.terciary {
+    background-color: var(--border-color--terciary)
+}
 
 .btn {
     cursor: pointer;

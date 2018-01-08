@@ -140,7 +140,6 @@
             onRequestBoardCardMove(ev, originalEv){
                 this.$emit('updateScrolls')
             },
-
             /**
              * When cards changes its positions, its vuex state should be updated through mutations
              */

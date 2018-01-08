@@ -3,6 +3,7 @@ const RegisterRoute = () => import('./features/Auth/Register.vue');
 const MainRoute = () => import('./features/Main/Main.vue');
 const DashboardRoute = () => import('./features/Main/Dashboard/Dashboard.vue');
 const ClientsRoute = () => import('./features/Main/CRUDs/Clients/Clients.vue');
+const RequestsRoute = () => import('./features/Main/CRUDs/Requests/Requests.vue');
 const CompaniesRoute = () => import('./features/Main/Companies/Companies.vue');
 
 export default [
@@ -37,6 +38,13 @@ export default [
                 component: ClientsRoute,
                 meta: {
                     title: 'Clientes - Agiliza ERP'
+                }
+            },
+            {
+                path: 'requests',
+                component: RequestsRoute,
+                meta: {
+                    title: 'Atendimentos - Agiliza ERP'
                 }
             },
             {
