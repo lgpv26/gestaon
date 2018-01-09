@@ -68,7 +68,7 @@ module.exports = (server) => {
                 req.body.createdBy = req.auth.id
                 req.body.companyId = req.query.companyId
                 req.body.presence = []
-                req.body.form = { activeStep: null, client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId }, order: { orderProducts: [{orderProductId: 'temp:' + shortid.generate()}] } }
+                req.body.form = { activeStep: null, client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId, isNull: true }, order: { orderProducts: [{orderProductId: 'temp:' + shortid.generate()}] } }
                 req.body.data = { company: null, client: null }
                 return server.mongodb.Draft.create(req.body).then((draft) => {
 
@@ -228,7 +228,7 @@ module.exports = (server) => {
 
         resetClient(clientReset) {
             return this.getOne(clientReset.draftId).then((draft) => {
-                const update = _.assign(draft.form, { client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [] }, clientAddressForm: {}, clientAddressId: null })
+                const update = _.assign(draft.form, { client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], isNull: true }, clientAddressForm: {}, clientAddressId: null})
                 return server.mongodb.Draft.update({ draftId: clientReset.draftId }, { $set: { form: update } }).then(() => {
                     return null
                 })
@@ -271,7 +271,7 @@ module.exports = (server) => {
                         update.addressClientReturn = draft.form.clientAddressForm
                     }
 
-                    const client = _.assign(draft.form.client, { clientAddresses: saveClientAddresses })
+                    const client = _.assign(draft.form.client, { clientAddresses: saveClientAddresses, isNull: false })
                     update.form = _.assign(draft.form, { client: client, clientAddressForm: {} })
 
                     resolve(update)
@@ -292,9 +292,16 @@ module.exports = (server) => {
                         return clientAddress.id !== clientAddressRemove.clientAddressId
                     })
 
+                    let isNull = false
+                    if(!update.saveClientAddresses.length){
+                        if(!draft.form.client.clientPhones.length && !draft.form.client.clientCustomFields.length && _.isEmpty(draft.form.client.name) && _.isEmpty(draft.form.client.legalDocument)){
+                            isNull = true
+                        }
+                    }
+
                     update.clientAddressId = clientAddressRemove.clientAddressId
                     const selectedClientAddressId = (draft.form.clientAddressId === clientAddressRemove.clientAddressId) ? null : draft.form.clientAddressId
-                    const client = _.assign(draft.form.client, { clientAddresses: update.saveClientAddresses })
+                    const client = _.assign(draft.form.client, { clientAddresses: update.saveClientAddresses, isNull})
                     update.form = _.assign(draft.form, { client: client, clientAddressForm: {}, clientAddressId: selectedClientAddressId })
 
                     resolve(update)
@@ -374,7 +381,7 @@ module.exports = (server) => {
                             update.phoneClientReturn = draft.form.clientPhoneForm
                         }
 
-                        const client = _.assign(draft.form.client, { clientPhones: saveClientPhones })
+                        const client = _.assign(draft.form.client, { clientPhones: saveClientPhones, isNull: false })
                         update.form = _.assign(draft.form, { client: client, clientPhoneForm: {} })
 
                         resolve(update)
@@ -395,9 +402,16 @@ module.exports = (server) => {
                             return clientPhone.id !== clientPhoneRemove.clientPhoneId
                         })
 
+                        let isNull = false
+                        if(!update.saveClientPhones.length){
+                            if(!draft.form.client.clientAddresses.length && !draft.form.client.clientCustomFields.length && _.isEmpty(draft.form.client.name) && _.isEmpty(draft.form.client.legalDocument)){
+                                isNull = true
+                            }
+                        }
+
                         update.clientPhoneId = clientPhoneRemove.clientPhoneId
 
-                        const client = _.assign(draft.form.client, { clientPhones: update.saveClientPhones })
+                        const client = _.assign(draft.form.client, { clientPhones: update.saveClientPhones, isNull })
                         update.form = _.assign(draft.form, { client: client, clientPhoneForm: {} })
 
                         resolve(update)

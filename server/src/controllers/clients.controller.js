@@ -155,7 +155,7 @@ module.exports = (server, restify) => {
                                         if (esErr) {
                                             return reject(new Error(esErr))
                                         }
-                                        return resolve()
+                                        return resolve({clientId: objES.clientES.id, clientAddressId: objES.clientAddressId})
                                     }
                                 )
                             }).catch((err) => {
@@ -265,6 +265,7 @@ module.exports = (server, restify) => {
                                 _.assign(objES, value)
                             })
 
+                            //obs ES rollback check
                             let addressesESPromise = []
                                 if(_.has(objES, "addressesES") && objES.addressesES){
                                     objES.addressesES.forEach((addressEs) => {  
@@ -290,7 +291,7 @@ module.exports = (server, restify) => {
                                             if (esErr) {
                                                 return reject(new Error(esErr))
                                             }
-                                            return resolve()
+                                            return resolve({clientId: objES.clientES.id, clientAddressId: objES.clientAddressId, clientPhoneId: objES.clientPhoneId})
                                         }
                                     )
                                 }).catch((err) => {

@@ -1,3 +1,5 @@
+import { resolve } from 'dns';
+
 const Drafts = require('../../../events/Draft/index')
 const basePath = require('../../../middlewares/base-path.middleware')
 const _ = require('lodash')
@@ -10,6 +12,17 @@ module.exports = class Draft {
     constructor(server) {
         this.server = server;
         this.draftsController = draftsController(this.server);
+
+        this.transaction = null
+    }
+
+    getTransaction(){
+        console.log('aqui: ', this.transaction)
+        return this.transaction
+    }
+
+    setTransaction(transaction){
+        if(transaction) this.transaction = transaction  
     }
 
     getDraftById(draftId){

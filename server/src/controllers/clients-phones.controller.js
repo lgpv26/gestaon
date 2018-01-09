@@ -91,6 +91,9 @@ module.exports = (server, restify) => {
                     clientId: parseInt(controller.request.clientId)
                 })
                 if(_.has(clientPhone, 'dateUpdated')) delete clientPhone.dateUpdated // remove dateUpdated fields so it updates the dateUpdated field
+
+                clientPhone.status = (clientPhone.selected) ? 'selected' : 'activated'
+
                 return clientPhone
             });
             return server.mysql.ClientPhone.destroy({
@@ -100,7 +103,7 @@ module.exports = (server, restify) => {
                 transaction: controller.transaction
             }).then(() => {
                 return server.mysql.ClientPhone.bulkCreate(setData, {
-                    updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdated', 'dateRemoved'],
+                    updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdated', 'dateRemoved', 'status'],
                     transaction: controller.transaction
                 }).then(() => {
                     return server.mysql.Client.findOne({
@@ -117,6 +120,15 @@ module.exports = (server, restify) => {
                             if (!client) {
                                 return reject(new restify.ResourceNotFoundError("Registro não encontrado."));
                         }
+                            let clientPhoneIdSelect = null
+                            let clientPhoneStatus = []
+                            client.clientPhones.forEach((checkClientPhoneSelect) => {
+                                if(checkClientPhoneSelect.status === 'selected'){
+                                    clientPhoneIdSelect = parseInt(checkClientPhoneSelect.id)
+                                    clientPhoneStatus.push({id: parseInt(checkClientPhoneSelect.id), status: 'activated'})
+                                }
+                            })
+                            
                             const esClientPhones = _.map(client.clientPhones, clientPhone => {
                                 return {
                                     clientPhoneId: clientPhone.id,
@@ -124,8 +136,15 @@ module.exports = (server, restify) => {
                                     number: clientPhone.number
                                 };
                             })
-                              
-                            return resolve({phonesES: esClientPhones})
+
+                            return server.mysql.ClientPhone.bulkCreate(clientPhoneStatus, {
+                                updateOnDuplicate: ['status'],
+                                transaction: controller.transaction
+                            }).then(() => {
+                                resolve({phonesES: esClientPhones, clientPhoneId: clientPhoneIdSelect});
+                            }).catch((err) => {
+                                reject(err)
+                            })
                         })
                     })
                 })

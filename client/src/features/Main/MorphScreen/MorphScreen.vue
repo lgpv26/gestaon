@@ -41,7 +41,7 @@
                             <span class="push-both-sides"></span>
                             <a style="margin-right: 20px;" @click="closeScreen()">Voltar</a>
                             <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
-                            <a style="color: var(--font-color--primary)" @click="persistOrder()" v-if="!isPersisting">Salvar request</a>
+                            <a style="color: var(--font-color--primary)" @click="persistRequest()" v-if="!isPersisting">Salvar request</a>
                             <a style="color: var(--font-color--primary)" v-else>{{ persistingText }}</a>
                         </div>
                     </div>
@@ -81,6 +81,10 @@
         sockets: {
             draftClientPersist(draft){
                 console.log("Received draftClientPersist", draft);
+                this.isPersisting = false;
+            },
+            draftRequestPersist(draft){
+                console.log("Received draftRequestPersist", draft);
                 this.isPersisting = false;
             },
             draftCreated(socketData){

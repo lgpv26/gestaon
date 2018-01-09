@@ -2,7 +2,6 @@ const Draft = require('.')
 const basePath = require('../../middlewares/base-path.middleware')
 const _ = require('lodash')
 const RequestPersistance = require('../../modules/Draft/Persistance/RequestPersistance');
-const OrderPersistance = require('../../modules/Draft/Persistance/OrderPersistance');
 const ClientPersistance = require('../../modules/Draft/Persistance/ClientPersistance');
 
 module.exports = class Request extends Draft {
@@ -12,7 +11,6 @@ module.exports = class Request extends Draft {
         super(server, channels, socket);
         // private
         this._requestPersistance = new RequestPersistance(server);
-        this._orderPersistance = new OrderPersistance(server);
         this._clientPersistance = new ClientPersistance(server);
         // functions
         this.setRequestEventListeners();
@@ -23,6 +21,13 @@ module.exports = class Request extends Draft {
      * 
      */
     setRequestEventListeners() {
+
+    this.socket.on('draft:request-persist', (requestPersist) => {
+        super.resetTimeout()
+        super.saveDraft(requestPersist.draftId).then(() => {
+            this.onRequestPersist(requestPersist)
+        })
+    })
      
         ///////////////////////
         ///     CLIENT      ///
@@ -192,12 +197,6 @@ module.exports = class Request extends Draft {
         ///////////////////////
 //
 
-    this.socket.on('draft:order-persist', (orderPersist) => {
-        super.resetTimeout()
-        super.saveDraft(orderPersist.draftId).then(() => {
-            this.onOrderPersist(orderPersist)
-        })
-    })
             ///////////////////////
             ///     ORDER      ///
             ///  ** product     ///
@@ -230,6 +229,56 @@ module.exports = class Request extends Draft {
 //<-- end ORDER | setSocketRequestListeners
 
     } // <-- end setSocketRequestListeners
+
+
+    /**
+     * Request Persist
+     * @desc Send to all sockets in Draft/:id the persist client event
+     *
+     * @param {object} requestPersist - expected: draftId
+     * @return {} @property {Socket}
+     */
+    onRequestPersist(requestPersist) {
+        let companyId;
+        if(this.socket.user.activeCompanyUserId){
+            companyId = parseInt(this.socket.user.activeCompanyUserId);
+        }
+        else {
+            if(this.socket.user.companies.length) companyId = _.first(this.socket.user.companies)
+        }
+        if(companyId){
+            this._clientPersistance.setSaveInRequest(true)
+
+            this._clientPersistance.setDraftId(requestPersist.draftId)
+            this._clientPersistance.setCompanyId(companyId)
+
+            this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'Started saving request')
+
+            this._requestPersistance.setTransaction().then((transaction) => {
+                this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', 'saving the client')
+                this._clientPersistance.start(transaction).then((client) => {
+                    this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', (client) ? 'client saved' : 'client set as Null' )
+
+                    this._requestPersistance.setDraftId(requestPersist.draftId)
+                    this._requestPersistance.setCompanyId(companyId)
+                    this._requestPersistance.setUserId(this.socket.user.id)
+
+                    if(client){
+                        this._requestPersistance.setClientId(client.clientId)                
+                        this._requestPersistance.setClient(client) 
+                    }
+
+                    this._requestPersistance.start().then((order) => {
+                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'request saved, id: ' + order.id)
+                    })                       
+                }).catch((err) => {
+                    this._requestPersistance.rollback().then(() => {
+                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', 'error in saving client')
+                    })
+                })
+            })
+        }
+    }
 
     ///////////////////////
     ///     CLIENT      ///
@@ -706,33 +755,7 @@ module.exports = class Request extends Draft {
     ///     ORDEN       ///
     ///////////////////////
 //
-    
-    /**
-     * Order Persist
-     * @desc Send to all sockets in Draft/:id the persist order event
-     *
-     * @param {object} orderPersist - expected: draftId
-     * @return {} @property {Socket}
-     */
-    onOrderPersist(orderPersist) {
-        let companyId;
-        if(this.socket.user.activeCompanyUserId){
-            companyId = parseInt(this.socket.user.activeCompanyUserId);
-        }
-        else {
-            if(this.socket.user.companies.length) companyId = _.first(this.socket.user.companies)
-        }
-        if(companyId){
-            this._orderPersistance.setDraftId(orderPersist.draftId);
-            this._orderPersistance.setCompanyId(companyId);
-            this._orderPersistance.setUserId(this.socket.user.id);
-            this._orderPersistance.start().then((draft) => {
-                this.server.io.in('draft/' + orderPersist.draftId).emit('draftOrderPersist', draft)
-            }).catch((err) => {
-                console.log("ERROR", err);
-            });
-        }
-    }
+
 
         //////////////////////
         ///     ORDEN      ///

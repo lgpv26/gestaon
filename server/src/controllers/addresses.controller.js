@@ -130,8 +130,8 @@ module.exports = (server, restify) => {
                                  transaction: controller.transaction
                              })
                              addressChangePromises.push(updateOne(addressUpdate).then((updatedAddress) => {
-                                        return _.assign(clientAddress, {address: updatedAddress} )
-                                 })
+                                    return _.assign(clientAddress, {address: updatedAddress.address}, {addressES: updatedAddress.esAddress})
+                                })
                              )
                         }
                         else {

@@ -29,7 +29,6 @@ module.exports = (server, restify) => {
                     
                     let ordersProductsData = []
                     _.first(resolvedProductPromisses).forEach((result) => {
-                        
                         ordersProductsData.push({
                             id: (result.id) ? result.id : null,
                             orderId: parseInt(controller.request.orderId),
@@ -82,8 +81,8 @@ module.exports = (server, restify) => {
                 },
                 transaction: controller.transaction
             }).then(() => {
-                return server.mysql.ClientAddress.bulkCreate(controller.request.data, {
-                    updateOnDuplicate: ['productId', 'orderId', 'quantity', 'unitPrice', 'unitDiscount', 'dateUpdate', 'dateRemoved'],
+                return server.mysql.OrderProduct.bulkCreate(controller.request.data, {
+                    updateOnDuplicate: ['orderId', 'productId', 'quantity', 'unitPrice', 'unitDiscount', 'dateUpdate', 'dateRemoved'],
                     returning: true,
                     transaction: controller.transaction
                 }).then((response) => {

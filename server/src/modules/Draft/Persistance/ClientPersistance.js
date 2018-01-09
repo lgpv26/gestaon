@@ -23,9 +23,13 @@ module.exports = class RequestPersistance extends Persistance {
         this._draftId = null;
 
         this._draft = null;
+
+        this._saveInRequest = null;
+
         this._transaction = null;
 
         this.clientsController = clientsController(this.server);
+
     }
 
     setDraftId(draftId = null) {
@@ -36,23 +40,45 @@ module.exports = class RequestPersistance extends Persistance {
         if (companyId) this._companyId = companyId;
     }
 
+    setSaveInRequest(saveInRequest = null) {
+        if (saveInRequest) this._saveInRequest = saveInRequest;
+    }
+
+    setTransaction(transaction = null) {
+        if (transaction) this._transaction = transaction;
+    }
+
     /**
      * Start client persistence from draft to definitive (MySQL)
      * @returns {Promise}
      */
-    start() {
+    start(transactionRequest = null) {
         return super.getDraftById(this._draftId).then((draft) => {
             if (!draft) {
                 throw new Error("Draft não encontrado.");
             }
-            this._draft = draft;
-            return this.server.sequelize.transaction().then((transaction) => {
-                this._transaction = transaction;
+            if(!draft.form.client.isNull){
+                this._draft = draft;
+
                 if (draft.form.client.id) {
                     this._clientId = parseInt(draft.form.client.id)
                 }
-                return this.saveClient()
-            })
+                if(this._saveInRequest) {
+                    this._draft.saveRequest = true
+                    this._transaction = transactionRequest
+
+                    return this.saveClient()
+                }
+                else {
+                    return this.server.sequelize.transaction().then((transaction) => {
+                        this._transaction = transaction; 
+                        return this.saveClient()
+                    })
+                }
+            }
+            else {
+                return false
+            }
             // return resolve(draft);
         })
     }
@@ -62,55 +88,79 @@ module.exports = class RequestPersistance extends Persistance {
      * @returns {Promise}
      */
     saveClient() {
-        const controller = new Controller({
-            request: {
-                companyId: this._companyId,
-                clientId: this._clientId || null,
-                data: this.mapDraftObjToModelObj(this._draft.form.client)
-            },
-            transaction: this._transaction
-        })
-
-        if (this._clientId) { // update client
-            return this.clientsController.updateOne(controller).then(() => {
-                console.log("Success updating");
-                this.commit();
-            }).catch((err) => {
-                console.log(err);
-                this.rollback();
-            });
-        }
-        else { // create client
-            return this.clientsController.createOne(controller).then(() => {
-                console.log("Success creating");
-                this.commit();
-            }).catch((err) => {
-                console.log(err);
-                this.rollback();
-            });
-        }
+        return new Promise ((resolve, reject) => {
+            const controller = new Controller({
+                request: {
+                    companyId: this._companyId,
+                    clientId: this._clientId || null,
+                    data: this.mapDraftObjToModelObj(this._draft.form)
+                },
+                transaction: this._transaction
+            })
+    
+            if (this._clientId) { // update client
+                return this.clientsController.updateOne(controller).then((client) => {
+                    if(this._draft.saveRequest){
+                        resolve(client)
+                    } 
+                    else {
+                    console.log("Success updating");
+                        this.commit();
+                    }                
+                }).catch((err) => {
+                    if(this._draft.saveRequest){
+                        reject()
+                    } 
+                    else {
+                    console.log(err);
+                        this.rollback();
+                    }                   
+                });
+            }
+            else { // create client
+                return this.clientsController.createOne(controller).then((client) => {
+                    if(this._draft.saveRequest){
+                        resolve(client)
+                    } 
+                    else {
+                    console.log("Success creating");
+                        this.commit();
+                    }  
+                }).catch((err) => {
+                    if(this._draft.saveRequest){
+                        reject()
+                    } 
+                    else {
+                    console.log(err);
+                        this.rollback();
+                    }  
+                });
+            }
+        })        
     }
 
-    mapDraftObjToModelObj(client) {
-
-        if (_.has(client, "clientAddresses") && client.clientAddresses.length) {
-            this.removeTempIds(client, "clientAddresses")
+    mapDraftObjToModelObj(form) {
+    
+        if (_.has(form.client, "clientAddresses") && form.client.clientAddresses.length) {
+            this.removeTempIds(form, "clientAddresses", "clientAddressId")
         }
 
-        if (_.has(client, "clientPhones") && client.clientPhones.length) {
-            this.removeTempIds(client, "clientPhones")
+        if (_.has(form.client, "clientPhones") && form.client.clientPhones.length) {
+            this.removeTempIds(form, "clientPhones", "clientPhoneId")
         }
 
-        if (_.has(client, "clientCustomFields") && client.clientCustomFields.length) {
-            this.removeTempIds(client, "clientCustomFields")
+        if (_.has(form.client, "clientCustomFields") && form.client.clientCustomFields.length) {
+            this.removeTempIds(form, "clientCustomFields")
         }
-        
-        return client
+
+        return form.client
     }
 
-    removeTempIds(client, key){
-        _.map(client[key], (obj) => {
+    removeTempIds(form, key, selectKey = null){
+        _.map(form.client[key], (obj) => {
             if (_.has(obj, "id")) {
+                if(selectKey && obj.id === form[selectKey]) obj.selected = true
+
                 const checkId = obj.id.toString().split(':')
                 if (_.first(checkId) === 'temp') {
                     delete obj.id

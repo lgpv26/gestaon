@@ -228,22 +228,27 @@ module.exports = (server, restify) => {
             return new Promise((resolve, reject) => {  
 
                 let setData = _.cloneDeep(controller.request.data)
-                
+
                 let productsPromises = []
                 setData.forEach((orderProduct) => {
                     if (orderProduct.product.id) {
                         const productUpdate = new Controller({
                                 request: {
-                                    data: orderProduct
+                                    data: orderProduct,
+                                    companyId: controller.request.companyId
                                 },
                                 transaction: controller.transaction
                             })
-                            productsPromises.push(updateOne(productUpdate).then((updatedProduct) => {
+                            productsPromises.push(update(productUpdate).then((updatedProduct) => {
                                     return _.assign(orderProduct, {product: updatedProduct.product}, {productES: updatedProduct.esProduct})
                                 })
                             )
                     }
                     else {
+                        if (!_.has(orderProduct, "productSuppliers")) {
+                            orderProduct.product.price = (orderProduct.unitPrice) ? orderProduct.unitPrice : null
+                            orderProduct.product.quantity = (orderProduct.quantity) ? orderProduct.quantity : null
+                        }
                         const productCreate = new Controller({
                             request: {
                                 companyId: controller.request.companyId,
@@ -251,7 +256,7 @@ module.exports = (server, restify) => {
                             },
                             transaction: controller.transaction
                         })
-                        productsPromises.push(createOne(productCreate).then((createdProduct) => {
+                        productsPromises.push(create(productCreate).then((createdProduct) => {
                             return _.assign(orderProduct, {product: createdProduct.product}, {productES: createdProduct.esProduct})
                         })
                         )
@@ -515,13 +520,14 @@ module.exports = (server, restify) => {
     }
 
 
-    function createOne(controller) {
+    function create(controller) {
         return new Promise((resolve, reject) => {
 
             const createData = _.cloneDeep(controller.request.data)
-            _.assign(createData, {
+            _.assign(createData.product, {
                 companyId: controller.request.companyId
             })
+
             return server.mysql.Product.create(createData.product, {
                 transaction: controller.transaction
             }).then((product) => {
@@ -533,7 +539,7 @@ module.exports = (server, restify) => {
                 const esProduct = {
                     id: product.id,
                     body: {
-                        companyId: product.companyId,
+                        companyId: controller.request.companyId,
                         name: product.name,
                         suppliers: [{
                                 supplierProductId: null,
@@ -557,13 +563,11 @@ module.exports = (server, restify) => {
         })
     }
 
-    function updateOne(controller) {
+    function update(controller) {
         return new Promise((resolve, reject) => {
             
             const updateData = _.cloneDeep(controller.request.data)
-
-            console.log(controller.request.companyId, updateData.product.id)
-
+            
             return server.mysql.Product.update(updateData.product, {
                 where: {
                     id: updateData.product.id,

@@ -111,7 +111,7 @@ module.exports = (server, restify) => {
                         }
 
                         return Promise.all(productsESPromise).then(() => {
-                            return resolve()
+                            return resolve({id: order.id})
                         }).catch((err) => {
                             return reject()
                         })
