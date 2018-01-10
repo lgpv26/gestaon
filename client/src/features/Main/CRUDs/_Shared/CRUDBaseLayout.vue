@@ -6,26 +6,28 @@
                 <slot></slot>
             </ul>
             <div class="items-list">
-                <table>
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th v-for="column in columns">
-                                {{ column.text }}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="item in items">
-                            <td style="width: 30px;">
-                                <div class="check"></div>
-                            </td>
-                            <td v-for="column in columns">
-                                {{ getItemColumnValue(item, column) }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div ref="scrollbar">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th v-for="column in columns">
+                                    {{ column.text }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in items">
+                                <td style="width: 30px;">
+                                    <div class="check"></div>
+                                </td>
+                                <td v-for="column in columns">
+                                    {{ getItemColumnValue(item, column) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="footer">
                 <div class="left-side">
@@ -55,15 +57,30 @@
     import moment from 'moment';
     import _ from 'lodash';
 
+    import Scrollbar from 'smooth-scrollbar';
+
     export default {
         props: ['title', 'columns', 'items'],
+        data(){
+            return {
+                scrollbar: null
+            }
+        },
         computed: {
             getItemColumnValue(){
                 return (item, column) => {
                     return item[column.name]
                 }
             }
+        },
+        mounted(){
+            this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
+                overscrollEffect: 'bounce',
+                alwaysShowTracks: true
+            });
         }
+
+
     }
 </script>
 

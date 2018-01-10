@@ -32,10 +32,10 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import AddressesAPI from '../../../../../api/addresses';
-    import SearchComponent from '../../../../../components/Inputs/Search.vue';
-    import utils from '../../../../../utils/index';
-    import models from '../../../../../models';
+    import AddressesAPI from '../../../../../../api/addresses';
+    import SearchComponent from '../../../../../../components/Inputs/Search.vue';
+    import utils from '../../../../../../utils/index';
+    import models from '../../../../../../models';
     import Vue from 'vue';
 
     export default {

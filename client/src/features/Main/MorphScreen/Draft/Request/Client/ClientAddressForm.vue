@@ -43,9 +43,9 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import utils from '../../../../../utils/index';
-    import AddressesAPI from '../../../../../api/addresses';
-    import ClientAPI from '../../../../../api/clients';
+    import utils from '../../../../../../utils/index';
+    import AddressesAPI from '../../../../../../api/addresses';
+    import ClientAPI from '../../../../../../api/clients';
     import AddressForm from './AddressForm.vue';
     import Vue from 'vue';
 

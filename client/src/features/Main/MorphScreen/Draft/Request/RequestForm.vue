@@ -28,7 +28,7 @@
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import utils from '../../../../utils'
+    import utils from '../../../../../utils/index'
     import _ from 'lodash';
     import ClientForm from './Client/ClientForm.vue';
     import OrderForm from './Order/OrderForm.vue';
@@ -118,7 +118,6 @@
                         name: ''
                     }
                 },
-                timeout: null,
                 saving: false
             }
         },

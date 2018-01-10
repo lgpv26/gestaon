@@ -1,8 +1,8 @@
 <template>
     <div class="product-input">
-        <app-select :items="selectPaymentMethods" title="Escolha" :verticalOffset="8" showInput="true" v-model="selectedPaymentMethod">
-            <input type="text" style="cursor: pointer;" readonly :value="selectedPaymentMethodName" placeholder="ESCOLHA UM" />
-            <icon-dropdown style="position: absolute; top: 6px; right: 5px;"></icon-dropdown>
+        <app-select :items="selectStorages" title="Armazenamento" :verticalOffset="8" showInput="true" v-model="selectedStorage">
+            <input type="text" class="input--borderless" style="text-align: right; cursor: pointer; padding-right: 24px;" readonly :value="selectedStorageName" placeholder="ESCOLHA UM" />
+            <icon-dropdown style="position: absolute; top: 7px; right: 0px;"></icon-dropdown>
             <template slot="item" slot-scope="itemProps">
                 <span>{{itemProps.text }}</span>
             </template>
@@ -13,48 +13,48 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import utils from '../../../../../utils/index';
+    import utils from '../../../../../../utils/index';
 
     export default {
         props: ['value'],
         watch: {
-            selectedPaymentMethod(selectedPaymentMethod){
-                this.$emit('input', selectedPaymentMethod.value);
+            selectedStorage(selectedStorage){
+                this.$emit('input', selectedStorage.value);
             }
         },
         data(){
             return {
-                selectedPaymentMethod: null,
-                selectPaymentMethods: [
+                selectedStorage: null,
+                selectStorages: [
                     {
                         value: 1,
-                        text: 'À VISTA'
+                        text: 'AHS-8565'
                     },
                     {
                         value: 2,
-                        text: 'CARTÃO DE CRÉDITO'
+                        text: 'IDEAL GÁS'
                     },
                     {
                         value: 3,
-                        text: 'CARTÃO DE DÉBITO'
+                        text: 'AZZU'
                     },
                     {
                         value: 4,
-                        text: 'ELO CRÉDITO'
+                        text: 'ARS-3424'
                     },
                     {
                         value: 5,
-                        text: 'CARTÃO 2X'
+                        text: 'LALALA'
                     }
                 ]
             }
         },
         computed: {
             ...mapState('auth', ['user','company']),
-            selectedPaymentMethodName(){
-                if(this.selectedPaymentMethod){
-                    const selectedPaymentMethod = _.find(this.selectPaymentMethods, { value: this.selectedPaymentMethod });
-                    if(selectedPaymentMethod) return selectedPaymentMethod.text;
+            selectedStorageName(){
+                if(this.selectedStorage){
+                    const selectedStorage = _.find(this.selectStorages, { value: this.selectedStorage });
+                    if(selectedStorage) return selectedStorage.text;
                 }
             }
         },

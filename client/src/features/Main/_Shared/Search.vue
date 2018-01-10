@@ -109,7 +109,7 @@
                 if(!vm.isShowingMorphScreen){
                     const createDraftArgs = { body: {type: 'request'}, companyId: vm.company.id };
                     vm.createDraft(createDraftArgs).then((response) => {
-                        vm.SET_MS_SCREEN({
+                        vm.SET_MS({
                             active: true,
                             draft: response.data
                         });

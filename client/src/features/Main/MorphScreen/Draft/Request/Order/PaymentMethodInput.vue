@@ -1,8 +1,8 @@
 <template>
     <div class="product-input">
-        <app-select :items="selectEmployees" title="Responśavel" :verticalOffset="8" showInput="false" v-model="selectedEmployee">
-            <input type="text" class="input--borderless" style="text-align: right; cursor: pointer; padding-right: 24px;" readonly :value="selectedEmployeeName" placeholder="ESCOLHA UM" />
-            <icon-dropdown style="position: absolute; top: 7px; right: 0px;"></icon-dropdown>
+        <app-select :items="selectPaymentMethods" title="Escolha" :verticalOffset="8" showInput="true" v-model="selectedPaymentMethod">
+            <input type="text" style="cursor: pointer;" readonly :value="selectedPaymentMethodName" placeholder="ESCOLHA UM" />
+            <icon-dropdown style="position: absolute; top: 6px; right: 5px;"></icon-dropdown>
             <template slot="item" slot-scope="itemProps">
                 <span>{{itemProps.text }}</span>
             </template>
@@ -13,48 +13,48 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import utils from '../../../../../utils/index';
+    import utils from '../../../../../../utils/index';
 
     export default {
         props: ['value'],
         watch: {
-            selectedEmployee(selectedEmployee){
-                this.$emit('input', selectedEmployee.value);
+            selectedPaymentMethod(selectedPaymentMethod){
+                this.$emit('input', selectedPaymentMethod.value);
             }
         },
         data(){
             return {
-                selectedEmployee: null,
-                selectEmployees: [
+                selectedPaymentMethod: null,
+                selectPaymentMethods: [
                     {
                         value: 1,
-                        text: 'GISELE TAKAHASHI'
+                        text: 'À VISTA'
                     },
                     {
                         value: 2,
-                        text: 'DANIEL ROCHA'
+                        text: 'CARTÃO DE CRÉDITO'
                     },
                     {
                         value: 3,
-                        text: 'TÂNIA ROCHA'
+                        text: 'CARTÃO DE DÉBITO'
                     },
                     {
                         value: 4,
-                        text: 'CINTIA GONÇALVES'
+                        text: 'ELO CRÉDITO'
                     },
                     {
                         value: 5,
-                        text: 'CLEVERSON'
+                        text: 'CARTÃO 2X'
                     }
                 ]
             }
         },
         computed: {
             ...mapState('auth', ['user','company']),
-            selectedEmployeeName(){
-                if(this.selectedEmployee){
-                    const selectedEmployee = _.find(this.selectEmployees, { value: this.selectedEmployee });
-                    if(selectedEmployee) return selectedEmployee.text;
+            selectedPaymentMethodName(){
+                if(this.selectedPaymentMethod){
+                    const selectedPaymentMethod = _.find(this.selectPaymentMethods, { value: this.selectedPaymentMethod });
+                    if(selectedPaymentMethod) return selectedPaymentMethod.text;
                 }
             }
         },

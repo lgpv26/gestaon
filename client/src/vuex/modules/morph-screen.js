@@ -37,7 +37,7 @@ const mutations = {
             state.isShowing = value;
         }
     },
-    SET_MS_SCREEN(state, screenObj){
+    SET_MS(state, screenObj){
         state.screens.forEach((screen) => {
             screen.active = false;
         });
@@ -65,7 +65,8 @@ const mutations = {
     },
     ADD_DRAFT(state, draft){
         state.screens.push({
-            draft: draft,
+            draft,
+            isPersisting: false,
             active: false
         });
     },
@@ -84,6 +85,19 @@ const actions = {
             response.data.forEach((draft) => {
                 context.commit('ADD_DRAFT', draft);
             });
+
+            // temp
+            context.commit('ADD_DRAFT', {
+                companyId: 1,
+                createdAt: "2017-12-19T20:24:18.668Z",
+                createdBy: "THIAGO ROCHA",
+                draftId: 55,
+                form: {},
+                id: "5a397572351480387e573cd0",
+                type: "client",
+                updatedAt: "2018-01-10T18:36:26.870Z"
+            })
+
             return response;
         });
     },
