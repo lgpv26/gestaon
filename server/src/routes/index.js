@@ -10,7 +10,7 @@ module.exports = function(server, restify){
         "companies.js","devices.js","import.js",
         "positions.js","service.js","users.js",
         "products.js","oauth.js", "sms.js",
-        "geofences.js", "events.js", "orders.js",
+        "geofences.js", "events.js", "request.js",
         "suppliers.js", "drafts.js", "custom-fields.js",
         "clients-group.js"
     ]; // "main-search.js",

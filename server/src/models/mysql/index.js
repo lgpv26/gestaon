@@ -10,7 +10,7 @@ module.exports = function(Sequelize, sequelize){
         "ClientAddress.js","Address.js",
         "ClientPhone.js","Device.js", "DeviceSetting.js",
         "UserAccessToken.js","UserRefreshToken.js",
-        "Order.js","OrderProduct.js", "Supplier.js", "SupplierProduct.js", "SupplierCompany.js",
+        "Request.js","RequestProduct.js", "Supplier.js", "SupplierProduct.js", "SupplierCompany.js",
         "CustomField.js", "ClientCustomField.js", "ClientGroup.js"
     ];
 

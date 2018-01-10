@@ -1,33 +1,22 @@
-const Draft = require('.')
-const basePath = require('../../middlewares/base-path.middleware')
+const Drafts = require('./drafts')
+const basePath = require('./../middlewares/base-path.middleware')
 const _ = require('lodash')
-const RequestPersistance = require('../../modules/Draft/Persistance/RequestPersistance');
-const ClientPersistance = require('../../modules/Draft/Persistance/ClientPersistance');
 
-module.exports = class Request extends Draft {
+module.exports = class Request extends Drafts {
 
     constructor(server, channels, socket) {
-        // extends
-        super(server, channels, socket);
-        // private
-        this._requestPersistance = new RequestPersistance(server);
-        this._clientPersistance = new ClientPersistance(server);
+        //exptends
+        super(server, channels, socket)
+        
         // functions
-        this.setRequestEventListeners();
+        this.setSocketRequestListeners()
     }
 
     /**
      * Events on Request Listeners
      * 
      */
-    setRequestEventListeners() {
-
-    this.socket.on('draft:request-persist', (requestPersist) => {
-        super.resetTimeout()
-        super.saveDraft(requestPersist.draftId).then(() => {
-            this.onRequestPersist(requestPersist)
-        })
-    })
+    setSocketRequestListeners() {
      
         ///////////////////////
         ///     CLIENT      ///
@@ -44,13 +33,6 @@ module.exports = class Request extends Draft {
             super.resetTimeout()
             super.saveDraft(clientReset.draftId).then(() => {
                 this.onClientReset(clientReset)
-            })
-        })
-
-        this.socket.on('draft:client-persist', (clientPersist) => {
-            super.resetTimeout()
-            super.saveDraft(clientPersist.draftId).then(() => {
-                this.onClientPersist(clientPersist)
             })
         })
 
@@ -192,92 +174,7 @@ module.exports = class Request extends Draft {
 
     // <-- end CLIENT | setSocketRequestListeners
 
-        ///////////////////////
-        ///     ORDER       ///
-        ///////////////////////
-//
-
-            ///////////////////////
-            ///     ORDER      ///
-            ///  ** product     ///
-            ///////////////////////
-    //
-        this.socket.on('draft:request-product-add', (requestProductAdd) => {
-            super.resetTimeout()
-            super.saveDraft(requestProductAdd.draftId).then(() => {
-                this.onRequestProductAdd(requestProductAdd)
-            })
-        })
-
-        this.socket.on('draft:request-product-remove', (requestProductRemove) => {
-            super.resetTimeout()
-            super.saveDraft(requestProductRemove.draftId).then(() => {
-                this.onRequestProductRemove(requestProductRemove)
-            })
-        })
-
-        this.socket.on('draft:request-product-product-select', (requestProductSelect) => {
-            super.resetTimeout()
-            console.log('vou pro saveDraft')
-            super.saveDraft(requestProductSelect.draftId).then(() => {
-                this.onRequestProductProductSelect(requestProductSelect)
-            })
-        })
-    //<-- end ORDER ** product | setSocketRequestListeners
-
-//<-- end ORDER | setSocketRequestListeners
-
     } // <-- end setSocketRequestListeners
-
-
-    /**
-     * Request Persist
-     * @desc Send to all sockets in Draft/:id the persist client event
-     *
-     * @param {object} requestPersist - expected: draftId
-     * @return {} @property {Socket}
-     */
-    onRequestPersist(requestPersist) {
-        let companyId;
-        if(this.socket.user.activeCompanyUserId){
-            companyId = parseInt(this.socket.user.activeCompanyUserId);
-        }
-        else {
-            if(this.socket.user.companies.length) companyId = _.first(this.socket.user.companies)
-        }
-        if(companyId){
-            this._clientPersistance.setSaveInRequest(true)
-
-            this._clientPersistance.setDraftId(requestPersist.draftId)
-            this._clientPersistance.setCompanyId(companyId)
-
-            this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'Started saving request')
-
-            this._requestPersistance.setTransaction().then((transaction) => {
-                this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', 'saving the client')
-                this._clientPersistance.start(transaction).then((client) => {
-                    this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', (client) ? 'client saved' : 'client set as Null' )
-
-                    this._requestPersistance.setDraftId(requestPersist.draftId)
-                    this._requestPersistance.setCompanyId(companyId)
-                    this._requestPersistance.setUserId(this.socket.user.id)
-
-                    if(client){
-                        this._requestPersistance.setClientId(client.clientId)                
-                        this._requestPersistance.setClient(client) 
-                    }
-
-                    this._requestPersistance.start().then((request) => {
-                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'request saved, id: ' + request.id)
-                    })                       
-                }).catch((err) => {
-                    this._requestPersistance.rollback().then(() => {
-                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', 'error in saving client')
-                    })
-                })
-            })
-        }
-    }
 
     ///////////////////////
     ///     CLIENT      ///
@@ -314,7 +211,6 @@ module.exports = class Request extends Draft {
     onClientReset(clientReset) {
         clientReset.clientAddress = { inEdition: true, clientAddressId: null }
         clientReset.clientPhone = { inEdition: true, clientPhoneId: null }
-        
         super.setDraftRedis(clientReset).then(() => {
             this.controller.resetClient(clientReset).then(() => {
                 this.server.io.in('draft/' + clientReset.draftId).emit('draftClientAddressAdd')
@@ -325,32 +221,6 @@ module.exports = class Request extends Draft {
                 console.log('catch do RESET CLIENT - QUE É DENTRO DO ON CLIENT RESET')
             })
         })
-    }
-
-    /**
-     * Client Persist
-     * @desc Send to all sockets in Draft/:id the persist client event
-     *
-     * @param {object} clientPersist - expected: draftId
-     * @return {} @property {Socket}
-     */
-    onClientPersist(clientPersist) {
-        let companyId;
-        if(this.socket.user.activeCompanyUserId){
-            companyId = parseInt(this.socket.user.activeCompanyUserId);
-        }
-        else {
-            if(this.socket.user.companies.length) companyId = _.first(this.socket.user.companies)
-        }
-        if(companyId){
-            this._clientPersistance.setDraftId(clientPersist.draftId);
-            this._clientPersistance.setCompanyId(companyId);
-            this._clientPersistance.start().then((draft) => {
-                this.server.io.in('draft/' + clientPersist.draftId).emit('draftClientPersist', draft)
-            }).catch((err) => {
-                console.log("ERROR", err);
-            });
-        }
     }
 
         ///////////////////////
@@ -693,7 +563,7 @@ module.exports = class Request extends Draft {
                         const draftUpdateMemory = _.find(this.channels.updates.drafts, { draftId: clientCustomField.draftId })
 
                         const indexClientCustomField = _.findIndex(draft.form.client.clientCustomFields, (customField) => { return customField.id === clientCustomField.clientCustomFieldId })
-                        draft.form.client.clientCustomFields[indexClientCustomField] = _.assign(draft.form.client.clientCustomFields[indexClientCustomField], { value: _.toUpper(clientCustomField.clientCustomFieldForm.value) })
+                        draft.form.client.clientCustomFields[indexClientCustomField] = _.assign(draft.form.client.clientCustomFields[indexClientCustomField], { value: clientCustomField.clientCustomFieldForm.value })
 
                         if (draftUpdateMemory) {
                             const draftUpdateIndex = this.channels.updates.drafts.indexOf(draftUpdateMemory)
@@ -748,60 +618,8 @@ module.exports = class Request extends Draft {
 
     //<-- end CUSTOM FIELD ** in company
 
+
+
 //  <-- end CLIENT
-
-    ///////////////////////
-    ///     ORDEN       ///
-    ///////////////////////
-//
-
-
-        //////////////////////
-        ///     ORDEN      ///
-        ///  ** product    ///
-        //////////////////////
-    //
-        /**
-         * Request Product Add
-         * @desc Send to all sockets in Draft/:id the add form product event
-         * 
-         * @param {object} requestProductAdd - expected: draftId
-         * @return {int} request Product Id @property {Socket}
-         */
-        onRequestProductAdd(requestProductAdd) {
-            this.controller.requestProductAdd(requestProductAdd).then((requestProduct) => {
-                this.server.io.in('draft/' + requestProductAdd.draftId).emit('draftRequestProductAdd', requestProduct.requestProductId)
-            })
-        }
-
-        /**
-         * Request Product Remove
-         * @desc Send to all sockets in Draft/:id the remove form product event
-         * 
-         * @param {object} requestProductRemove - expected: draftId, RequestProductId
-         * @return {int} request Product Id (removed) @property {Socket}
-         */
-        onRequestProductRemove(requestProductRemove) {
-            this.controller.requestProductRemove(requestProductRemove).then(() => {
-                this.server.io.in('draft/' + requestProductRemove.draftId).emit('draftRequestProductRemove', requestProductRemove.requestProductId)
-            })
-        }
-
-        /**
-         * Request Product Select
-         * @desc Send to all sockets in Draft/:id that an product has been selected
-         * 
-         * @param {object} requestProductProductSelect - expected: draftId, productId, requestProductId
-         * @return {object} address @property {Socket}
-         */
-        onRequestProductProductSelect(requestProductProductSelect) {
-            console.log(requestProductProductSelect)
-            this.controller.selectProductRequestProdut(requestProductProductSelect).then((product) => {
-                this.server.io.in('draft/' + requestProductProductSelect.draftId).emit('draftRequestProductProductSelect', product)
-            }).catch(() => {
-                console.log('catch do SELECT PRODUCT REQUEST PRODUCT')
-            })
-        }
-//  
 
 }

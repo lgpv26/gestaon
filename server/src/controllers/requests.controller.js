@@ -5,19 +5,19 @@ const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
 
-    const ordersProductsController = require('./../controllers/orders-products.controller')(server, restify);
+    const requestsProductsController = require('./../controllers/requests-products.controller')(server, restify);
     const productsController = require('./../controllers/products.controller')(server, restify);
 
     return {
         getAll: (req, res, next) => {
-            server.mysql.Order.findAndCountAll(req.queryParser).then((orders) => {
-                if (orders.count === 0) {
+            server.mysql.Request.findAndCountAll(req.queryParser).then((requests) => {
+                if (requests.count === 0) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
                     );
                 }
                 return res.send(200, {
-                    data: orders
+                    data: requests
                 });
             }).catch((err) => {
                 return next(
@@ -32,27 +32,27 @@ module.exports = (server, restify) => {
             });
         },
         getOne: (req, res, next) => {
-            server.mysql.Order.findOne({
+            server.mysql.Request.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
                 },
                 include: [{
-                    model: server.mysql.OrderProduct,
+                    model: server.mysql.RequestProduct,
                     as: 'orderProducts',
                     include: [{
                         model: server.mysql.Product,
                         as: 'product'
                     }]
                 }]
-            }).then((order) => {
-                if (!order) {
+            }).then((request) => {
+                if (!request) {
                     return next(
                         new restify.ResourceNotFoundError("Registro não encontrado.")
                     );
                 }
                 return res.send(200, {
-                    data: order
+                    data: request
                 });
             });
         },
@@ -67,10 +67,10 @@ module.exports = (server, restify) => {
                 clientPhoneId: controller.request.clientPhoneId
             })
 
-            return server.mysql.Order.create(createData, {
+            return server.mysql.Request.create(createData, {
                 transaction: controller.transaction
-            }).then((order) => {
-                if (!order) {
+            }).then((request) => {
+                if (!request) {
                     throw new Error("Não foi possível encontrar o pedido criado.")
                 }
 
@@ -78,22 +78,22 @@ module.exports = (server, restify) => {
                 const promises = [];
 
                 /* save orderProducts if existent */
-                if(_.has(createData, "orderProducts")) {
-                    const orderProductsControllerObj = new Controller({
+                if(_.has(createData, "requestProducts")) {
+                    const requestProductsControllerObj = new Controller({
                         request: {
-                            orderId: order.id,
+                            requestId: request.id,
                             companyId: controller.request.companyId,
-                            data: createData.orderProducts
+                            data: createData.requestProducts
                         },
                         transaction: controller.transaction
                     })
-                    promises.push(ordersProductsController.setOrdersProducts(orderProductsControllerObj))
+                    promises.push(requestsProductsController.setRequestsProducts(requestProductsControllerObj))
                 }
 
                     /* return only when all promises are satisfied */
-                    return Promise.all(promises).then((orderEs) => {
+                    return Promise.all(promises).then((requestEs) => {
                         const objES = {}
-                        _.map(orderEs, (value) => {
+                        _.map(requestEs, (value) => {
                             _.assign(objES, value)
                         })
 
@@ -111,7 +111,7 @@ module.exports = (server, restify) => {
                         }
 
                         return Promise.all(productsESPromise).then(() => {
-                            return resolve({id: order.id})
+                            return resolve({id: request.id})
                         }).catch((err) => {
                             return reject()
                         })
@@ -131,7 +131,7 @@ module.exports = (server, restify) => {
                 );
             }
             const updateData = _.cloneDeep(req.body);
-            server.mysql.Order.update(updateData, {
+            server.mysql.Request.update(updateData, {
                 where: {
                     id: req.params.id,
                     status: 'activated'

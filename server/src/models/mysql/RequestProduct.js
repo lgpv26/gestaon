@@ -1,6 +1,6 @@
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
-        const modelName = 'OrderProduct';
+        const modelName = 'RequestProduct';
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
@@ -9,7 +9,7 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
-                orderId: {
+                requestId: {
                     type: Sequelize.INTEGER
                 },
                 productId: {
@@ -34,7 +34,7 @@ module.exports = {
                     type: Sequelize.DATE
                 }
             }, {
-                tableName: 'order_product',
+                tableName: 'request_product',
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -43,8 +43,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({OrderProduct, Order, Product}) => {
-        OrderProduct.belongsTo(Order, {as: 'order', foreignKey: 'orderId'});
-        OrderProduct.belongsTo(Product, {as: 'product', foreignKey: 'productId'});
+    postSettings: ({RequestProduct, Request, Product}) => {
+        RequestProduct.belongsTo(Request, {as: 'request', foreignKey: 'requestId'});
+        RequestProduct.belongsTo(Product, {as: 'product', foreignKey: 'productId'});
     }
 };

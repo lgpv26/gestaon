@@ -87,7 +87,7 @@ module.exports = {
             })
         };
     },
-    postSettings({User, CompanyUser, Company, UserAccessToken, UserRefreshToken, Order}){
+    postSettings({User, CompanyUser, Company, UserAccessToken, UserRefreshToken, Request}){
         User.belongsToMany(Company, {through: CompanyUser, as: 'companies', foreignKey: 'userId'});
         User.hasMany(CompanyUser, {as: 'userCompanies', foreignKey: 'userId'});
         User.hasMany(UserAccessToken, {as: 'userAccessTokens', foreignKey: 'userId'});
@@ -110,7 +110,7 @@ module.exports = {
                 { model: CompanyUser, as: 'userCompanies' }
             ]
         });
-        User.hasMany(Order, {as: 'userOrders', foreignKey: 'userId'});
+        User.hasMany(Request, {as: 'userRequests', foreignKey: 'userId'});
     },
     afterPostSettings(models){
     }

@@ -248,7 +248,7 @@ module.exports = class Draft {
 
                     if (isArray(arrayPath)) {
                         const arrayIndex = _.findIndex(pathUpdate, (value) => {
-                            return value.orderProductId === _.first(arrayPath).orderProductId
+                            return value.id === _.first(arrayPath).id
                         })
 
                         if (arrayIndex !== -1) {
@@ -367,11 +367,8 @@ module.exports = class Draft {
                         }
                     }
                     else if(draft.form.activeStep === 'order'){
-                        if (checkEdition.orderProducts) {
-
-                        }
-                        else {
-                            const objSetDraftRedis = {draftId: draftId, orderProductId: draft.form.order.orderProducts[0].orderProductId}
+                        if (!checkEdition.requestProducts) {
+                            const objSetDraftRedis = {draftId: draftId, id: draft.form.order.requestProducts[0].id}
                             this.setDraftRedis(objSetDraftRedis, false, true)
                         }
                     }
@@ -418,10 +415,10 @@ module.exports = class Draft {
             /// REDIS ///
             /////////////
 //
-    setDraftRedis(setDraftRedis, selectedAddress = false, orderProduct = false) {
+    setDraftRedis(setDraftRedis, selectedAddress = false, requestProduct = false) {
         return new Promise((resolve, reject) => {
-            if(orderProduct){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProducts', JSON.stringify({"orderProducts": [{orderProductId: setDraftRedis.orderProductId}]}), (err, res) => {
+            if(requestProduct){
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'requestProducts', JSON.stringify({"requestProducts": [{id: setDraftRedis.id}]}), (err, res) => {
                     if (err) {
                         reject()
                     }
@@ -492,6 +489,9 @@ module.exports = class Draft {
                         else {
                             update.clientPhoneForm = _.assign(checkUpdate.clientPhoneForm, contentDraft.form.clientPhoneForm)
                         }
+                    }
+                    if(contentDraft.clientCustomFieldForm) {
+                        
                     }
                 }
 

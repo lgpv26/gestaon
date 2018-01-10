@@ -1,6 +1,6 @@
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
-        const modelName = 'Order';
+        const modelName = 'Request';
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
@@ -51,7 +51,7 @@ module.exports = {
                 },
                 status: Sequelize.STRING
             }, {
-                tableName: "order",
+                tableName: "request",
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -61,11 +61,11 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Order,Client,User,OrderProduct,Product}) => {
-        Order.belongsTo(Client, {as: 'client', foreignKey: 'clientId'});
-        Order.belongsTo(User, {as: 'user', foreignKey: 'userId'});
+    postSettings: ({Request,Client,User,RequestProduct,Product}) => {
+        Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'});
+        Request.belongsTo(User, {as: 'user', foreignKey: 'userId'});
         
-        Order.hasMany(OrderProduct, {as: 'orderProducts', foreignKey: 'orderId'});
-        Order.belongsToMany(Product, {through: OrderProduct, as: 'products', foreignKey: 'orderId'});
+        Request.hasMany(RequestProduct, {as: 'requestProducts', foreignKey: 'requestId'});
+        Request.belongsToMany(Product, {through: RequestProduct, as: 'products', foreignKey: 'requestId'});
     }
 }
