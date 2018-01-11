@@ -367,7 +367,7 @@ module.exports = class Draft {
                         }
                     }
                     else if(draft.form.activeStep === 'order'){
-                        if (!checkEdition.requestProducts) {
+                        if (!_.has(checkEdition, 'requestProducts')) {
                             const objSetDraftRedis = {draftId: draftId, id: draft.form.order.requestProducts[0].id}
                             this.setDraftRedis(objSetDraftRedis, false, true)
                         }
@@ -489,9 +489,6 @@ module.exports = class Draft {
                         else {
                             update.clientPhoneForm = _.assign(checkUpdate.clientPhoneForm, contentDraft.form.clientPhoneForm)
                         }
-                    }
-                    if(contentDraft.clientCustomFieldForm) {
-                        
                     }
                 }
 
