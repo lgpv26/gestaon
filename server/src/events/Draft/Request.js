@@ -770,7 +770,7 @@ module.exports = class Request extends Draft {
          */
         onRequestProductAdd(requestProductAdd) {
             this.controller.requestProductAdd(requestProductAdd).then((requestProduct) => {
-                this.server.io.in('draft/' + requestProductAdd.draftId).emit('draftRequestProductAdd', requestProduct.requestProductId)
+                this.server.io.in('draft/' + requestProductAdd.draftId).emit('draftRequestProductAdd', requestProduct.id)
             })
         }
 
@@ -783,7 +783,7 @@ module.exports = class Request extends Draft {
          */
         onRequestProductRemove(requestProductRemove) {
             this.controller.requestProductRemove(requestProductRemove).then(() => {
-                this.server.io.in('draft/' + requestProductRemove.draftId).emit('draftRequestProductRemove', requestProductRemove.requestProductId)
+                this.server.io.in('draft/' + requestProductRemove.draftId).emit('draftRequestProductRemove', requestProductRemove.id)
             })
         }
 

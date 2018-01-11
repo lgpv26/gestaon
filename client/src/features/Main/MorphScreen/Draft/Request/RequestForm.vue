@@ -112,7 +112,7 @@
                         clientCustomFields: []
                     },
                     order: {
-                        orderProducts: []
+                        requestProducts: []
                     },
                     task: {
                         name: ''
@@ -145,7 +145,7 @@
                 }
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    form: this.getIsolatedFormPathObj(path),
+                    form: this. (path),
                     path: pathWithoutArrayIndex
                 };
                 console.log("Emitting draft:update", emitData);

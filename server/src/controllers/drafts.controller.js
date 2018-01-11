@@ -108,7 +108,7 @@ module.exports = (server) => {
                         return new Promise((resolve, reject) => {
                             let update = []
                             _.get(draftConsult, 'form.' + path).map((value, index) => {
-                                const arrayIndex = _.findIndex(_.get(draftReq, 'form.' + path), {requestProductId: value.requestProductId})
+                                const arrayIndex = _.findIndex(_.get(draftReq, 'form.' + path), {id: value.id})
                                 if(arrayIndex !== -1){
                                     update.push(_.assign(value, _.get(draftReq, 'form.' + path)[arrayIndex]))
                                 }
@@ -559,7 +559,7 @@ module.exports = (server) => {
 
         requestProductAdd(requestProductAdd) {
             return this.getOne(requestProductAdd.draftId).then((draft) => {
-                const requestProduct = {requestProductId: 'temp:' + shortid.generate()}
+                const requestProduct = {id: 'temp:' + shortid.generate()}
 
                 draft.form.order.requestProducts.push(requestProduct)
 

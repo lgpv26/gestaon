@@ -5,7 +5,7 @@
                 <div class="form-groups">
                     <div class="form-group" style="padding: 0; background: transparent;">
                         <div class="form-group__content">
-                            <table class="order-products" style="width: 100%; text-align: left;">
+                            <table class="request-products" style="width: 100%; text-align: left;">
                                 <thead>
                                     <tr>
                                         <th>Produto</th>
@@ -17,7 +17,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(orderProduct, index) in form.orderProducts" :key="orderProduct.orderProductId">
+                                    <tr v-for="(orderProduct, index) in form.orderProducts" :key="orderProduct.id">
                                         <td><app-product-input :orderProduct.sync="orderProduct" :product.sync="orderProduct.product" @input="onOrderProductInput($event, orderProduct, index)" /></td>
                                         <td class="content-size"><input v-model="orderProduct.quantity" type="text" style="text-align: center;" /></td>
                                         <td><money v-model="form.price"  style="text-align: right;"/></td>
@@ -28,7 +28,7 @@
                                                 <div style="cursor: pointer; margin-right: 8px;">
                                                     <icon-mini-chart></icon-mini-chart>
                                                 </div>
-                                                <div style="cursor: pointer; margin-top: -1px;" @click="removeProduct(orderProduct.orderProductId)" v-if="form.orderProducts.length > 1">
+                                                <div style="cursor: pointer; margin-top: -1px;" @click="removeProduct(orderProduct.id)" v-if="form.orderProducts.length > 1">
                                                     <icon-remove></icon-remove>
                                                 </div>
                                                 <div style="cursor: not-allowed; opacity: .3; margin-top: -1px;" v-else>
@@ -228,7 +228,7 @@
                     paymentMethodId: null,
                     orderProducts: [
                         {
-                            orderProductId: _.uniqueId("product#"),
+                            id: _.uniqueId("product#"),
                             productId: null,
                             product: {
                                 id: 1,
@@ -266,10 +266,10 @@
 
             /* draft order products */
 
-            draftOrderProductAdd(orderProductId){
-                console.log("Received draftOrderProductAdd", orderProductId);
+            draftRequestProductAdd(orderProductId){
+                console.log("Received draftRequestProductAdd", orderProductId);
                 this.form.orderProducts.push({
-                    orderProductId: orderProductId,
+                    id: orderProductId,
                     productId: null,
                     product: {
                         id: null,
@@ -278,9 +278,9 @@
                     quantity: 1
                 });
             },
-            draftOrderProductRemove(orderProductId){
-                console.log("Received draftOrderProductRemove", orderProductId);
-                const orderProductIndex = _.findIndex(this.form.orderProducts, { orderProductId: orderProductId });
+            draftRequestProductRemove(orderProductId){
+                console.log("Received draftRequestProductRemove", orderProductId);
+                const orderProductIndex = _.findIndex(this.form.orderProducts, { id: orderProductId });
                 if(orderProductIndex !== -1){
                     this.form.orderProducts.splice(orderProductIndex, 1);
                 }
@@ -292,8 +292,8 @@
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
                 };
-                console.log("Emitting draft:order-product-add", emitData);
-                this.$socket.emit('draft:order-product-add', emitData);
+                console.log("Emitting draft:request-product-add", emitData);
+                this.$socket.emit('draft:request-product-add', emitData);
             },
             addPaymentMethod(){
                 this.form.orderPaymentMethods.push({
@@ -304,10 +304,10 @@
             removeProduct(orderProductId){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    orderProductId: orderProductId
+                    id: orderProductId
                 };
-                console.log("Emitting draft:order-product-remove", emitData);
-                this.$socket.emit('draft:order-product-remove', emitData);
+                console.log("Emitting draft:request-product-remove", emitData);
+                this.$socket.emit('draft:request-product-remove', emitData);
             },
             removePaymentMethod(orderPaymentMethodId){
                 let orderPaymentMethodIndex = _.findIndex(this.form.orderPaymentMethods, { id: orderPaymentMethodId });
@@ -325,8 +325,8 @@
 
             // order product
 
-            onOrderProductInput(value, orderProduct, index){
-                this.commitSocketChanges('order.orderProducts[' + index + ']')
+            onOrderProductInput(value, requestProduct, index){
+                this.commitSocketChanges('order.requestProducts[' + index + ']')
             },
 
             /**
