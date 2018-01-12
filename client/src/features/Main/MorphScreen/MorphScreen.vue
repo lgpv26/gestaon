@@ -87,6 +87,13 @@
                             formatedCreatedAt: moment(draft.createdAt).format('DD/MM HH:mm')
                         }
                         break;
+                    case "accounts":
+                        return {
+                            text: "Plano de contas",
+                            entryComponent: 'accounts-form',
+                            formatedCreatedAt: moment(draft.createdAt).format('DD/MM HH:mm')
+                        }
+                        break;
                 }
             },
 
@@ -217,7 +224,7 @@
                         }).add({
                             targets: _.first(morphScreen.getElementsByClassName('option__title')),
                             duration: 500,
-                            scale: [1, 2.5],
+                            scale: [1, 2],
                             offset: 0,
                             easing: 'easeOutSine'
                         }).finished);
@@ -416,6 +423,10 @@
         -moz-user-select: none;
         -ms-user-select: none;
         user-select: none;
+        -webkit-transform: translate3d(0, 0, 0);
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0); /*for older browsers*/
+        will-change: transform;
     }
 
     .morph-screen__item .item__option {

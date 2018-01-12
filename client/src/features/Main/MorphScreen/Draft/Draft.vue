@@ -49,11 +49,13 @@
 
     import ClientForm from "./Client/ClientForm.vue";
     import RequestForm from "./Request/RequestForm.vue";
+    import AccountsForm from "./Accounts/AccountsForm.vue";
 
     export default {
         components: {
             "app-request-form": RequestForm,
             "app-client-form": ClientForm,
+            "app-accounts-form": AccountsForm,
         },
         data(){
             return {
@@ -116,7 +118,6 @@
             }
         },
         mounted(){
-            console.log(this.details)
             this.clipboardInstance = new Clipboard('.copiable-content');
         }
     }

@@ -6,8 +6,8 @@
                 <slot></slot>
             </ul>
             <div class="items-list">
-                <div ref="scrollbar">
-                    <table>
+                <div class="items-list__container" ref="scrollbar">
+                    <table ref="table">
                         <thead>
                             <tr>
                                 <th></th>
@@ -16,7 +16,7 @@
                                 </th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody ref="tbody">
                             <tr v-for="item in items">
                                 <td style="width: 30px;">
                                     <div class="check"></div>
@@ -56,6 +56,7 @@
     import utils from '../../../../utils/index';
     import moment from 'moment';
     import _ from 'lodash';
+    import Clusterize from 'clusterize.js'
 
     import Scrollbar from 'smooth-scrollbar';
 
@@ -63,7 +64,8 @@
         props: ['title', 'columns', 'items'],
         data(){
             return {
-                scrollbar: null
+                scrollbar: null,
+                clusterize: null
             }
         },
         computed: {
@@ -78,13 +80,27 @@
                 overscrollEffect: 'bounce',
                 alwaysShowTracks: true
             });
+            /*this.clusterize = new Clusterize({
+                scrollElem: this.$refs.scrollbar,
+                contentElem: this.$refs.tbody,
+                callbacks: {
+                    clusterWillChange: function() {
+                        console.log("clusterWillChange")
+                    },
+                    clusterChanged: function() {
+                        console.log("clusterChanged")
+                    },
+                    scrollingProgress: function(progress) {
+                        console.log("scrollingProgress", progress)
+                    }
+                }
+            });*/
         }
-
-
     }
 </script>
 
 <style scoped>
+
     .page--crud {
         display: flex;
         flex-grow: 1;
@@ -144,6 +160,7 @@
     ul.filter-menu li a .dot-separator.terciary {
         background-color: var(--border-color--terciary)
     }
+
     div.items-list {
         display: flex;
         flex-grow: 1;

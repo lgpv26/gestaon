@@ -1,4 +1,7 @@
 (function(){
+
+    const _ = require('lodash')
+
     var attachEvent = document.attachEvent;
     var isIE = navigator.userAgent.match(/Trident/);
     var requestFrame = (function(){
@@ -25,7 +28,7 @@
     }
 
     function objectLoad(e){
-        if(this.contentDocument.defaultView){
+        if(_.has(this.contentDocument, 'defaultView') && this.contentDocument.defaultView){
             this.contentDocument.defaultView.__resizeTrigger__ = this.__resizeElement__;
             this.contentDocument.defaultView.addEventListener('resize', resizeListener);
         }
@@ -58,7 +61,7 @@
         if (!element.__resizeListeners__.length) {
             if (attachEvent) element.detachEvent('onresize', resizeListener);
             else {
-                if(element.__resizeTrigger__.contentDocument.defaultView) {
+                if(_.has(element, '__resizeTrigger__.contentDocument.defaultView') && element.__resizeTrigger__.contentDocument.defaultView) {
                     element.__resizeTrigger__.contentDocument.defaultView.removeEventListener('resize', resizeListener);
                 }
                 element.__resizeTrigger__ = !element.removeChild(element.__resizeTrigger__);

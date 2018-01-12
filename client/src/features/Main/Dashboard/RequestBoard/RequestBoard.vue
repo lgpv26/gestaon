@@ -86,8 +86,9 @@
             /* In-component utilities */
 
             updateScrolls(){
+
                 setImmediate(() => {
-                    this.scrollables.forEach((scrollable) => {
+                    this.scrollables.forEach(({ scrollable }) => {
                         scrollable.updateScroll()
                     })
                 });

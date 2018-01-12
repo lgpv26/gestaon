@@ -93,8 +93,19 @@ const actions = {
                 createdBy: "THIAGO ROCHA",
                 draftId: 55,
                 form: {},
-                id: "5a397572351480387e573cd0",
+                id: "5a397572351480387e573cde",
                 type: "client",
+                updatedAt: "2018-01-10T18:36:26.870Z"
+            })
+
+            context.commit('ADD_DRAFT', {
+                companyId: 1,
+                createdAt: "2017-12-19T20:24:18.668Z",
+                createdBy: "THIAGO ROCHA",
+                draftId: 78,
+                form: {},
+                id: "5a397572351480387e573cdx",
+                type: "accounts",
                 updatedAt: "2018-01-10T18:36:26.870Z"
             })
 

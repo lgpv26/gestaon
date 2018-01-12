@@ -11,17 +11,19 @@
                 <div class="instruction__container">
                     <div class="container__area">
                         <small>O que vamos fazer?</small>
-                        <span>Monte o atendimento de forma ágil usando os painéis abaixo</span>
+                        <span>Monte o plano que vai deixar seu "money" sob controle!</span>
                     </div>
-                    <img-request-form></img-request-form>
+                    <img-accounts-form></img-accounts-form>
                 </div>
             </div>
             <div class="separator" v-if="!form.activeStep"></div>
-            <app-client-form :activeStep.sync="form.activeStep" :clientAddressId.sync="form.clientAddressId" :clientPhoneId.sync="form.clientPhoneId" :client.sync="form.client" @sync="sync($event)"></app-client-form>
+            <app-incomes-form :activeStep.sync="form.activeStep" :incomes.sync="form.incomes" @sync="sync($event)"></app-incomes-form>
             <div class="separator"></div>
-            <app-order-form :activeStep.sync="form.activeStep" :order.sync="form.order" @sync="sync($event)"></app-order-form>
+            <app-outcomes-form :activeStep.sync="form.activeStep" :outcomes.sync="form.outcomes" @sync="sync($event)"></app-outcomes-form>
             <div class="separator"></div>
-            <app-task-form :activeStep.sync="form.activeStep" :task.sync="form.task" @sync="sync($event)"></app-task-form>
+            <app-transaction-accounts-form :activeStep.sync="form.activeStep" :transactionAccounts.sync="form.transactionAccounts" @sync="sync($event)"></app-transaction-accounts-form>
+            <div class="separator"></div>
+            <app-cost-centers-form :activeStep.sync="form.activeStep" :costCenters.sync="form.costCenters" @sync="sync($event)"></app-cost-centers-form>
         </div>
     </div>
 </template>
@@ -30,35 +32,21 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import utils from '../../../../../utils/index'
     import _ from 'lodash';
-    import ClientForm from './Client/ClientForm.vue';
-    import OrderForm from './Order/OrderForm.vue';
-    import TaskForm from './Task/TaskForm.vue';
     import Scrollbar from 'smooth-scrollbar';
+
+    import IncomesForm from './Incomes/IncomesForm.vue'
+    import OutcomesForm from './Outcomes/OutcomesForm.vue'
+    import TransactionAccountsForm from './TransactionAccounts/TransactionAccountsForm.vue'
+    import CostCentersForm from './CostCenters/CostCentersForm.vue'
 
     export default {
         sockets: {
-            draftPresence(data){
-                this.presenceUsers = data;
-            },
-            draftSave(){
-                this.saving = false;
-            },
-            draftUpdate({draftId, form}){
-                if(draftId === this.activeMorphScreen.draft.draftId) {
-                    console.log("Received draft:update", { draftId, form });
-                    this.form = _.merge(this.form, form);
-                    this.$bus.$emit('draft:update', {
-                        draftId: draftId,
-                        form: this.form
-                    });
-                    this.stopLoading();
-                }
-            }
         },
         components: {
-            'app-client-form': ClientForm,
-            'app-order-form': OrderForm,
-            'app-task-form': TaskForm
+            'app-incomes-form': OutcomesForm,
+            'app-outcomes-form': IncomesForm,
+            'app-transaction-accounts-form': TransactionAccountsForm,
+            'app-cost-centers-form': CostCentersForm
         },
         data(){
             return {
@@ -67,56 +55,15 @@
                 lastForm: null,
                 draftId: null, // requestId
                 originalId: null, // se estiver editando um draft originado de um dado já salvo no MySQL
-                type: 'request',
+                type: 'client',
                 createdBy: null,
                 createdAt: null,
                 updatedAt: null,
                 form: {
-                    activeStep: null,
-                    clientPhoneId: null,
-                    clientAddressId: null,
-                    client: {
-                        id: null, // se passar, atualizar cliente. se não, criar.
-                        name: '', // se passar e tiver id, atualizar. se não, criar.
-                        clientGroup: null,
-                        legalDocument: '', // cpf, cnpj
-                        clientAddresses: [
-                            {
-                                active: false,
-                                clientAddressId: null,
-                                name: null,
-                                number: null,
-                                complement: null,
-                                addressId: null, // o id do endereço salvo no MySQL (address).
-                                type: ['billing','invoicing','delivery'], // billing - cobrança. invoicing - faturamento. delivery - entrega.
-                                /* salva no mysql -- nao no draft */
-                                address: {
-                                    companyId: null,
-                                    id: null, // se passar, usar e ignorar os outros campos. se não, criar usando os outros dados do address.
-                                    name: null,
-                                    neighborhood: null,
-                                    cep: null,
-                                    city: null,
-                                    state: null
-                                },
-                                /* --- */
-                            }
-                        ],
-                        clientPhones: [
-                            {
-                                ddd: null, // string
-                                number: null, // string
-                                name: null // string
-                            }
-                        ],
-                        clientCustomFields: []
-                    },
-                    order: {
-                        requestProducts: []
-                    },
-                    task: {
-                        name: ''
-                    }
+                    incomes: [],
+                    outcomes: [],
+                    transactionAccounts: [],
+                    costCenters: []
                 },
                 saving: false
             }
@@ -160,6 +107,10 @@
             const emitData = { draftId: this.activeMorphScreen.draft.draftId, userId: this.user.id};
             console.log("Emitting draft:presence", emitData);
             this.$socket.emit('draft:presence', emitData);
+
+            setTimeout(() => {
+                this.stopLoading();
+            }, 100)
         },
         updated(){
             this.scrollbar.update();
@@ -396,8 +347,8 @@
         position: absolute;
         display: flex;
         flex-direction: column;
-        top: 74px;
-        left: 24px;
+        top: 88px;
+        left: 40px;
         width: 210px;
     }
     div.ms-form .form__instruction .instruction__container > .container__area > small{

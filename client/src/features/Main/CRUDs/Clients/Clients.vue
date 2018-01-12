@@ -1,5 +1,5 @@
 <template>
-    <app-crud-base-layout :title="'Lista de clientes'" :columns="columns" :items="items">
+    <app-crud-base-layout :title="'Lista de clientes'" :columns="columns" :items.sync="items">
         <li><a class="btn btn--border-only">Últimos 30 dias <div class="dot-separator primary" style="margin: 0 10px;"></div> <span class="primary">1214</span></a></li>
         <li><a class="btn btn--border-only">Operação</a></li>
         <li><a class="btn btn--border-only">Grupo</a></li>

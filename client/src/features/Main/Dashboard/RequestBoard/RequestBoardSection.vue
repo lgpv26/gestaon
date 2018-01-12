@@ -156,7 +156,18 @@
                 })
             },
         },
+        mounted(){
+            this.$refs.scrollable['id'] = _.uniqueId('scrollable#')
+            this.scrollables.push({
+                id: this.$refs.scrollable['id'],
+                scrollable: this.$refs.scrollable
+            })
+        },
         beforeDestroy(){
+            const scrollableIndex = _.findIndex(this.scrollables, { id: this.$refs.scrollable.id })
+            if(scrollableIndex !== -1){
+                this.scrollables.splice(scrollableIndex, 1)
+            }
         }
     }
 </script>
