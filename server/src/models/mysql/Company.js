@@ -46,12 +46,13 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Company, Device, CompanyUser, User, CompanySetting, Supplier, SupplierCompany}) => {
+    postSettings: ({Company, Device, CompanyUser, User, Supplier, SupplierCompany, CompanySetting, Request}) => {
         Company.belongsToMany(User, {through: CompanyUser, as: 'users', foreignKey: 'companyId'});
         Company.belongsToMany(Supplier, {through: SupplierCompany, as: 'companySuppliers', foreignKey: 'companyId'});
         
         Company.hasMany(CompanyUser, {as: 'companyUsers', foreignKey: 'companyId'});
         Company.hasMany(Device, {as: 'devices', foreignKey: 'companyId'});
         Company.hasMany(CompanySetting,  {as: 'companySettings', foreignKey: 'companyId'});
+        Company.hasMany(Request, {as: 'companyRequests', foreignKey: 'companyId'});
     }
 }

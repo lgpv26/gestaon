@@ -100,14 +100,6 @@
                 console.log("Emitting draft:client-persist", emitData);
                 this.$socket.emit('draft:client-persist', emitData);
             },
-            persistOrder(){
-                this.isPersisting = true;
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId
-                };
-                console.log("Emitting draft:order-persist", emitData);
-                this.$socket.emit('draft:order-persist', emitData);
-            },
             persistRequest(){
                 this.isPersisting = true;
                 const emitData = {

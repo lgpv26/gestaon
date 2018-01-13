@@ -68,7 +68,7 @@ module.exports = (server) => {
                 req.body.createdBy = req.auth.id
                 req.body.companyId = req.query.companyId
                 req.body.presence = []
-                req.body.form = { activeStep: null, client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId, isNull: true }, order: { requestProducts: [{id: 'temp:' + shortid.generate()}] } }
+                req.body.form = { activeStep: null, client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId, isNull: true }, order: { orderProducts: [{id: 'temp:' + shortid.generate()}] } }
                 req.body.data = { company: null, client: null }
                 return server.mongodb.Draft.create(req.body).then((draft) => {
 
@@ -557,38 +557,38 @@ module.exports = (server) => {
             /// ** product     ///
             //////////////////////
 
-        requestProductAdd(requestProductAdd) {
-            return this.getOne(requestProductAdd.draftId).then((draft) => {
-                const requestProduct = {id: 'temp:' + shortid.generate()}
+        orderProductAdd(orderProductAdd) {
+            return this.getOne(orderProductAdd.draftId).then((draft) => {
+                const orderProduct = {id: 'temp:' + shortid.generate()}
 
-                draft.form.order.requestProducts.push(requestProduct)
+                draft.form.order.orderProducts.push(orderProduct)
 
-                const order = _.assign(draft.form.order, {requestProducts: draft.form.order.requestProducts})
+                const order = _.assign(draft.form.order, {orderProducts: draft.form.order.orderProducts})
                 const update = _.assign(draft.form, { order: order })
 
-                return server.mongodb.Draft.update({ draftId: requestProductAdd.draftId }, { $set: { form: update } }).then(() => {
-                    return requestProduct
+                return server.mongodb.Draft.update({ draftId: orderProductAdd.draftId }, { $set: { form: update } }).then(() => {
+                    return orderProduct
                 })
             })
         },
 
-        requestProductRemove(requestProductRemove) {
-            return this.getOne(requestProductRemove.draftId).then((draft) => {
+        orderProductRemove(orderProductRemove) {
+            return this.getOne(orderProductRemove.draftId).then((draft) => {
 
-                let requestProducts = _.filter(draft.form.order.requestProducts, (requestProduct) => {
-                    return requestProduct.id !== requestProductRemove.id
+                let orderProducts = _.filter(draft.form.order.orderProducts, (orderProduct) => {
+                    return orderProduct.id !== orderProductRemove.id
                 })
 
-                const order = _.assign(draft.form.order, {requestProducts: requestProducts})
+                const order = _.assign(draft.form.order, {orderProducts: orderProducts})
                 const update = _.assign(draft.form, { order: order })
 
-                return server.mongodb.Draft.update({ draftId: requestProductRemove.draftId }, { $set: { form: update } }).then(() => {
+                return server.mongodb.Draft.update({ draftId: orderProductRemove.draftId }, { $set: { form: update } }).then(() => {
                     return true
                 })
             })
         },
 
-        selectProductRequestProdut(productSelect) {
+        selectProductOrderProdut(productSelect) {
             return this.getOne(productSelect.draftId).then((draft) => {
 
                 const controller = new Controller({
@@ -600,9 +600,9 @@ module.exports = (server) => {
                 return productsController.getOne(controller).then((product) => {
                     product = JSON.parse(JSON.stringify(product))
 
-                    const arrayIndex = _.findIndex(draft.form.order.requestProducts, {id: productSelect.id})
+                    const arrayIndex = _.findIndex(draft.form.order.orderProducts, {id: productSelect.id})
 
-                    draft.form.order.requestProducts[arrayIndex] = _.assign(draft.form.order.requestProducts[arrayIndex], {product: product})
+                    draft.form.order.orderProducts[arrayIndex] = _.assign(draft.form.order.orderProducts[arrayIndex], {product: product})
                     
                     const update = _.assign(draft.form, { order: draft.form.order })
 

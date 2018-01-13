@@ -57,7 +57,7 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Client,Address,ClientAddress,ClientPhone,ClientCustomField,CustomField, ClientGroup}) => {
+    postSettings: ({Client,Address,ClientAddress,ClientPhone,ClientCustomField,CustomField, ClientGroup,Request}) => {
         Client.hasMany(ClientAddress, {as: 'clientAddresses', foreignKey: 'clientId'});
         Client.belongsToMany(Address, {through: ClientAddress, as: 'addresses', foreignKey: 'clientId'});
 
@@ -67,5 +67,7 @@ module.exports = {
         
         Client.hasMany(ClientCustomField, {as: 'clientCustomFields', foreignKey: 'clientId'});
         Client.belongsToMany(CustomField, { through: ClientCustomField, as: 'customFields', foreignKey: 'clientId' });
+
+        Client.hasMany(Request, {as: 'clientRequest', foreignKey: 'clientId'})
     }
 }

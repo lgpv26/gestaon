@@ -1,6 +1,6 @@
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
-        const modelName = 'Request';
+        const modelName = 'Order';
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
@@ -9,31 +9,16 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
-                companyId: {
-                    type: Sequelize.INTEGER
-                },
-                userId: {
-                    type: Sequelize.INTEGER
-                },
-                clientId: {
+                clientAddressId: {
                     type: Sequelize.INTEGER,
-                    allowNull: true,
                     set(val) {
-                        this.setDataValue('clientId', (val == '' | val == null) ? null : val);
+                        this.setDataValue('clientAddressId', (val == '' | val == null) ? null : val);
                     }
                 },
-                orderId: {
+                clientPhoneId: {
                     type: Sequelize.INTEGER,
-                    allowNull: true,
                     set(val) {
-                        this.setDataValue('orderId', (val == '' | val == null) ? null : val);
-                    }
-                },
-                taskId: {
-                    type: Sequelize.INTEGER,
-                    allowNull: true,
-                    set(val) {
-                        this.setDataValue('taskId', (val == '' | val == null) ? null : val);
+                        this.setDataValue('clientPhoneId', (val == '' | val == null) ? null : val);
                     }
                 },
                 obs: {
@@ -53,7 +38,7 @@ module.exports = {
                 },
                 status: Sequelize.STRING
             }, {
-                tableName: "request",
+                tableName: "order",
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -63,10 +48,9 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Request,Company,Client,User,Order}) => {
-        Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
-        Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
-        Request.belongsTo(User, {as: 'user', foreignKey: 'userId'});
-        Request.belongsTo(Order, {as: 'order', foreignKey: 'orderId'});
+    postSettings: ({Order,OrderProduct,Product}) => {
+        
+        Order.hasMany(OrderProduct, {as: 'orderProducts', foreignKey: 'orderId'});
+        Order.belongsToMany(Product, {through: OrderProduct, as: 'products', foreignKey: 'orderId'});
     }
 }

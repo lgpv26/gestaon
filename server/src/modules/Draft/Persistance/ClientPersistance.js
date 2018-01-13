@@ -1,3 +1,5 @@
+import { resolve } from 'dns';
+
 const Persistance = require('./index')
 const basePath = require('../../../middlewares/base-path.middleware')
 const _ = require('lodash')
@@ -63,6 +65,7 @@ module.exports = class RequestPersistance extends Persistance {
                 if (draft.form.client.id) {
                     this._clientId = parseInt(draft.form.client.id)
                 }
+
                 if(this._saveInRequest) {
                     this._draft.saveRequest = true
                     this._transaction = transactionRequest
@@ -72,7 +75,12 @@ module.exports = class RequestPersistance extends Persistance {
                 else {
                     return this.server.sequelize.transaction().then((transaction) => {
                         this._transaction = transaction; 
-                        return this.saveClient()
+                        return this.saveClient().then((client) => {
+                            return client
+                        }).catch((err) => {
+                            console.log(err)
+                            return false
+                        })
                     })
                 }
             }
@@ -105,7 +113,9 @@ module.exports = class RequestPersistance extends Persistance {
                     } 
                     else {
                     console.log("Success updating");
-                        this.commit();
+                        this.commit().then(() => {
+                            resolve(client.clientId)
+                        })
                     }                
                 }).catch((err) => {
                     if(this._draft.saveRequest){
@@ -113,7 +123,9 @@ module.exports = class RequestPersistance extends Persistance {
                     } 
                     else {
                     console.log(err);
-                        this.rollback();
+                        this.rollback().then(() => {
+                            reject()
+                        })
                     }                   
                 });
             }
@@ -124,19 +136,28 @@ module.exports = class RequestPersistance extends Persistance {
                     } 
                     else {
                     console.log("Success creating");
-                        this.commit();
-                    }  
+                        this.commit().then(() => {
+                            resolve(client.clientId)
+                        })
+                    }
                 }).catch((err) => {
                     if(this._draft.saveRequest){
                         reject()
                     } 
                     else {
                     console.log(err);
-                        this.rollback();
+                        this.rollback().then(() => {
+                            reject()
+                        })
                     }  
-                });
+                })
             }
-        })        
+        }).catch((err) => {
+            console.log(err)
+            this.rollback().then(() => {
+                reject()
+            }) 
+        })       
     }
 
     mapDraftObjToModelObj(form) {
@@ -174,20 +195,32 @@ module.exports = class RequestPersistance extends Persistance {
      * Commit persistence
      */
     commit() {
-        console.log("Commit everything!");
-        if (this._transaction) {
-            this._transaction.commit();
-        }
+        return new Promise((resolve, reject) => {
+            console.log("Commit everything!");
+            if (this._transaction) {
+                this._transaction.commit()
+                resolve()
+            }
+            else {
+                reject()
+            }
+        })        
     }
 
     /**
      * Rollback persistence
      */
     rollback() {
-        console.log("Just... Rollback...");
-        if (this._transaction) {
-            this._transaction.rollback();
-        }
+        return new Promise((resolve, reject) => {
+            console.log("Just... Rollback...");
+            if (this._transaction) {
+                this._transaction.rollback()
+                resolve()
+            }
+            else {
+                reject()
+            }
+        })  
     }
 
 };

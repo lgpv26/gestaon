@@ -5,9 +5,7 @@ const basePath = require('../../../middlewares/base-path.middleware')
 const _ = require('lodash')
 const sequelize = require('sequelize')
 
-const ClientPersistance = require('../../../modules/Draft/Persistance/ClientPersistance');
-
-const ordersController = require('../../../controllers/orders.controller')
+const requestsController = require('../../../controllers/requests.controller')
 
 const Controller = require('../../../models/Controller')
 
@@ -16,23 +14,20 @@ module.exports = class RequestPersistance extends Persistance {
     constructor(server) {
         super(server)
 
-        this._userId = null;
-        this._orderId = null;
+        this._draftId = null
+        this._requestId = null
 
-        this._companyId = null;
-        this._draftId = null;
-        this._client = null
+        this._userId = null;
+        this._companyId = null
         
-        this._clientId = null;
-        this._clientAddressId = null;
-        this._clientPhoneId = null;
+        this._clientId = null
+        this._orderId = null
+        this._taskId = null
 
         this._draft = null;
         this._transaction = null;
 
-        this._clientPersistance = new ClientPersistance(server);
-
-        this.ordersController = ordersController(this.server);
+        this.requestsController = requestsController(this.server);
 
     }
 
@@ -53,20 +48,16 @@ module.exports = class RequestPersistance extends Persistance {
         if (companyId) this._companyId = companyId;
     }
 
-    setClient(client = null) {
-        if (client) this._client = client;
-    }
-
     setClientId(clientId = null) {
-        if (clientId) this._clientId = clientId;
+        this._clientId = clientId;
     }
 
-    setClientAddressId(clientAddressId = null) {
-        if (clientAddressId) this._clientAddressId = clientAddressId;
+    setOrderId(orderId = null) {
+        this._orderId = orderId;
     }
 
-    setClientPhoneId(clientPhoneId = null) {
-        if (clientPhoneId) this._clientPhoneId = clientPhoneId;
+    setTaskId(taskId = null) {
+        this._taskId = taskId;
     }
 
     setTransaction() {
@@ -88,7 +79,11 @@ module.exports = class RequestPersistance extends Persistance {
             if (!draft) {
                 throw new Error("Draft não encontrado.");
             }
-            this._draft = draft;
+            this._draft = draft
+
+            if (draft.form.id) {
+                this._requestId = parseInt(draft.form.id)
+            }
 
             return this.saveRequest()
             // return resolve(draft);
@@ -97,32 +92,24 @@ module.exports = class RequestPersistance extends Persistance {
 
     saveRequest(){
         return new Promise((resolve, reject) => {
-            if(this._client){
-                if(_.has(this._client,'clientAddressId')) {
-                    this.setClientAddressId(this._client.clientAddressId)
-                }
-                if(_.has(this._client,'clientPhoneId')) {
-                    this.setClientPhoneId(this._client.clientPhoneId)
-                }
-            }
-
             const controller = new Controller({
                 request: {
                     userId: this._userId || null,
                     companyId: this._companyId,
                     clientId: this._clientId || null,
-                    clientAddressId: this._clientAddressId || null,
-                    clientPhoneId: this._clientPhoneId || null,
+                    orderId: this._orderId || null,
+                    taskId: this._taskId || null,
+
                     data: this.mapDraftObjToModelObj(this._draft.form)
                 },
                 transaction: this._transaction
             })
 
-            if (this._orderId) { // update order
-                return this.ordersController.updateOne(controller).then((order) => {
+            if (this._requestId) { // update request
+                return this.requestsController.updateOne(controller).then((request) => {
                     console.log("Success updating request");
                     this.commit().then(() => {
-                        resolve(order)
+                        resolve(request)
                     })   
                 }).catch((err) => {
                     console.log(err);
@@ -131,11 +118,11 @@ module.exports = class RequestPersistance extends Persistance {
                     })  
                 })
             }
-            else { // create order
-                return this.ordersController.createOne(controller).then((order) => {
+            else { // create request
+                return this.requestsController.createOne(controller).then((request) => {
                     console.log("Success creating request");
                     this.commit().then(() => {
-                        resolve(order)
+                        resolve(request)
                     })                
                 }).catch((err) => {
                     console.log(err);
@@ -152,17 +139,11 @@ module.exports = class RequestPersistance extends Persistance {
         })
     }
     
-    mapDraftObjToModelObj(form) {
-        if(form.clientAddressId) this._clientAddressId = parseInt(form.clientAddressId)
-        if(form.clientPhoneId) this._clientPhoneId = parseInt(form.clientPhoneId)
-
-        if (_.has(form.order, "orderProducts") && form.order.orderProducts.length) {
-            this.removeTempIds(form.order, "orderProducts")
-        }
-        
-        return form.order
+    mapDraftObjToModelObj(form) {        
+        return form
     }
 
+    /*
     removeTempIds(order, key){
         _.map(order[key], (obj) => {
             if (_.has(obj, "id")) {
@@ -174,6 +155,7 @@ module.exports = class RequestPersistance extends Persistance {
             return obj
         })
     }
+    */
 
     /**
      * Commit persistence

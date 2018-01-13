@@ -8,7 +8,7 @@ module.exports = (server, restify) => {
 
     return {
 
-        setRequestsProducts: (controller) => {
+        setOrdersProducts: (controller) => {
             return new Promise((resolve, reject) => {
                 let productsResolverPromisses = []
                 let setData = _.cloneDeep(controller.request.data)
@@ -27,11 +27,11 @@ module.exports = (server, restify) => {
 
                 return Promise.all(productsResolverPromisses).then((resolvedProductPromisses) => {
                     
-                    let requestsProductsData = []
+                    let ordersProductsData = []
                     _.first(resolvedProductPromisses).forEach((result) => {
-                        requestsProductsData.push({
+                        ordersProductsData.push({
                             id: (result.id) ? result.id : null,
-                            requestId: parseInt(controller.request.requestId),
+                            orderId: parseInt(controller.request.orderId),
                             productId: parseInt(result.product.id),
                             quantity: (result.quantity) ? result.quantity : null,
                             unitPrice: (result.unitPrice) ? result.unitPrice : null,
@@ -40,23 +40,23 @@ module.exports = (server, restify) => {
                         })
                     })                    
 
-                    let requestsProductsPromisses = []
+                    let ordersProductsPromisses = []
 
-                    const requestsProductsControllerObj = new Controller({
+                    const ordersProductsControllerObj = new Controller({
                         request: {
                             companyId: controller.request.companyId,
-                            requestId: controller.request.requestId,
-                            data: requestsProductsData
+                            orderId: controller.request.orderId,
+                            data: ordersProductsData
                         },
                         transaction: controller.transaction
                     })
-                    requestsProductsPromisses.push(saveInRequestProducts(requestsProductsControllerObj).then((response) => {
+                    ordersProductsPromisses.push(saveInOrderProducts(ordersProductsControllerObj).then((response) => {
                         return response
                     }))
 
-                    return Promise.all(requestsProductsPromisses).then((resultRequestProductsPromises) => {
+                    return Promise.all(ordersProductsPromisses).then((resultOrderProductsPromises) => {
                         let productsES = []
-                        _.map(resultRequestProductsPromises, (result) => {
+                        _.map(resultOrderProductsPromises, (result) => {
                             productsES.push(result.productsES) 
                         })
                         resolve({productsES: _.first(productsES)})
@@ -73,16 +73,16 @@ module.exports = (server, restify) => {
     }
 
     
-    function saveInRequestProducts(controller) {
+    function saveInOrderProducts(controller) {
         return new Promise((resolve, reject) => {
-            return server.mysql.RequestProduct.destroy({
+            return server.mysql.OrderProduct.destroy({
                 where: {
-                    requestId: parseInt(controller.request.requestId)
+                    orderId: parseInt(controller.request.orderId)
                 },
                 transaction: controller.transaction
             }).then(() => {
-                return server.mysql.RequestProduct.bulkCreate(controller.request.data, {
-                    updateOnDuplicate: ['requestId', 'productId', 'quantity', 'unitPrice', 'unitDiscount', 'dateUpdate', 'dateRemoved'],
+                return server.mysql.OrderProduct.bulkCreate(controller.request.data, {
+                    updateOnDuplicate: ['orderId', 'productId', 'quantity', 'unitPrice', 'unitDiscount', 'dateUpdate', 'dateRemoved'],
                     returning: true,
                     transaction: controller.transaction
                 }).then((response) => {

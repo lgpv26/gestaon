@@ -10,7 +10,7 @@ module.exports = (server, restify) => {
 
     return {
         getAll: (req, res, next) => {
-            server.mysql.Request.findAndCountAll(req.queryParser).then((orders) => {
+            server.mysql.Order.findAndCountAll(req.queryParser).then((orders) => {
                 if (orders.count === 0) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
@@ -32,11 +32,19 @@ module.exports = (server, restify) => {
             });
         },
         getOne: (req, res, next) => {
-            server.mysql.Request.findOne({
+            server.mysql.Order.findOne({
                 where: {
                     id: req.params.id,
                     status: 'activated'
-                }
+                },
+                include: [{
+                    model: server.mysql.OrderProduct,
+                    as: 'orderProducts',
+                    include: [{
+                        model: server.mysql.Product,
+                        as: 'product'
+                    }]
+                }]
             }).then((order) => {
                 if (!order) {
                     return next(
@@ -52,21 +60,65 @@ module.exports = (server, restify) => {
         createOne: (controller) => {
             const createData = _.cloneDeep(controller.request.data)
             _.assign(createData, {
-                companyId: controller.request.companyId,
-                userId: controller.request.userId,  
-                clientId: controller.request.clientId,
-                orderId: controller.request.orderId,
-                taskId: controller.request.taskId
+                clientAddressId: controller.request.clientAddressId,
+                clientPhoneId: controller.request.clientPhoneId
             })
 
-            return server.mysql.Request.create(createData, {
+            return server.mysql.Order.create(createData, {
                 transaction: controller.transaction
-            }).then((request) => {
-                if (!request) {
-                    throw new Error("Não foi possível encontrar o pedido criado.")
+            }).then((order) => {
+                if (!order) {
+                    throw new Error("Não foi possível encontrar o order criado.")
                 }
-                return {id: request.id}
+
+                return new Promise((resolve, reject) => {
+                const promises = [];
+
+                /* save orderProducts if existent */
+                if(_.has(createData, "orderProducts")) {
+                    const orderProductsControllerObj = new Controller({
+                        request: {
+                            orderId: order.id,
+                            companyId: controller.request.companyId,
+                            data: createData.orderProducts
+                        },
+                        transaction: controller.transaction
+                    })
+                    promises.push(ordersProductsController.setOrdersProducts(orderProductsControllerObj))
+                }
+
+                    /* return only when all promises are satisfied */
+                    return Promise.all(promises).then((orderEs) => {
+                        const objES = {}
+                        _.map(orderEs, (value) => {
+                            _.assign(objES, value)
+                        })
+
+                        let productsESPromise = []
+                        if (_.has(objES, "productsES") && objES.productsES) {
+                            objES.productsES.forEach((productES) => {
+                                const productESControllerObj = new Controller({
+                                    request: {
+                                        data: productES
+                                    },
+                                    transaction: controller.transaction
+                                })
+                                productsESPromise.push(productsController.saveProductsInES(productESControllerObj))
+                            })
+                        }
+
+                        return Promise.all(productsESPromise).then(() => {
+                            return resolve({orderId: order.id})
+                        }).catch((err) => {
+                            return reject()
+                        })
+                    }).catch((err) => {
+                        return reject(err)
+                    })
+                })
+
             })
+
         },
 
         updateOne: (req, res, next) => {

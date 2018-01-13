@@ -5,7 +5,7 @@
                 <div class="form-groups">
                     <div class="form-group" style="padding: 0; background: transparent;">
                         <div class="form-group__content">
-                            <table class="request-products" style="width: 100%; text-align: left;">
+                            <table class="order-products" style="width: 100%; text-align: left;">
                                 <thead>
                                     <tr>
                                         <th>Produto</th>
@@ -266,8 +266,8 @@
 
             /* draft order products */
 
-            draftRequestProductAdd(orderProductId){
-                console.log("Received draftRequestProductAdd", orderProductId);
+            draftOrderProductAdd(orderProductId){
+                console.log("Received draftOrderProductAdd", orderProductId);
                 this.form.orderProducts.push({
                     id: orderProductId,
                     productId: null,
@@ -278,8 +278,8 @@
                     quantity: 1
                 });
             },
-            draftRequestProductRemove(orderProductId){
-                console.log("Received draftRequestProductRemove", orderProductId);
+            draftOrderProductRemove(orderProductId){
+                console.log("Received draftOrderProductRemove", orderProductId);
                 const orderProductIndex = _.findIndex(this.form.orderProducts, { id: orderProductId });
                 if(orderProductIndex !== -1){
                     this.form.orderProducts.splice(orderProductIndex, 1);
@@ -292,8 +292,8 @@
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
                 };
-                console.log("Emitting draft:request-product-add", emitData);
-                this.$socket.emit('draft:request-product-add', emitData);
+                console.log("Emitting draft:order-product-add", emitData);
+                this.$socket.emit('draft:order-product-add', emitData);
             },
             addPaymentMethod(){
                 this.form.orderPaymentMethods.push({
@@ -306,8 +306,8 @@
                     draftId: this.activeMorphScreen.draft.draftId,
                     id: orderProductId
                 };
-                console.log("Emitting draft:request-product-remove", emitData);
-                this.$socket.emit('draft:request-product-remove', emitData);
+                console.log("Emitting draft:order-product-remove", emitData);
+                this.$socket.emit('draft:order-product-remove', emitData);
             },
             removePaymentMethod(orderPaymentMethodId){
                 let orderPaymentMethodIndex = _.findIndex(this.form.orderPaymentMethods, { id: orderPaymentMethodId });
@@ -325,8 +325,8 @@
 
             // order product
 
-            onOrderProductInput(value, requestProduct, index){
-                this.commitSocketChanges('order.requestProducts[' + index + ']')
+            onOrderProductInput(value, orderProduct, index){
+                this.commitSocketChanges('order.orderProducts[' + index + ']')
             },
 
             /**

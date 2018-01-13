@@ -309,6 +309,13 @@ module.exports = class Draft {
                 this.socket.emit('draftUpdate', { draftId: draftId, form: draft.form, data: draft.data })
                 this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
                     if (err) console.log(err)
+
+                    if(!_.has(checkEdition, "clientFormEdition") && !_.has(checkEdition, "clientFormUpdate")) {
+                        const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
+                        console.log('nao tem')
+                        this.setDraftRedis(objSetDraftRedis)                     
+                    }
+
                     if(draft.form.activeStep === 'client'){
                         if (_.has(checkEdition, 'clientFormEdition')) {
                             const update = JSON.parse(checkEdition.clientFormUpdate)
@@ -367,8 +374,8 @@ module.exports = class Draft {
                         }
                     }
                     else if(draft.form.activeStep === 'order'){
-                        if (!_.has(checkEdition, 'requestProducts')) {
-                            const objSetDraftRedis = {draftId: draftId, id: draft.form.order.requestProducts[0].id}
+                        if (!_.has(checkEdition, 'orderProducts')) {
+                            const objSetDraftRedis = {draftId: draftId, id: draft.form.order.orderProducts[0].id}
                             this.setDraftRedis(objSetDraftRedis, false, true)
                         }
                     }
@@ -415,10 +422,10 @@ module.exports = class Draft {
             /// REDIS ///
             /////////////
 //
-    setDraftRedis(setDraftRedis, selectedAddress = false, requestProduct = false) {
+    setDraftRedis(setDraftRedis, selectedAddress = false, orderProduct = false) {
         return new Promise((resolve, reject) => {
-            if(requestProduct){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'requestProducts', JSON.stringify({"requestProducts": [{id: setDraftRedis.id}]}), (err, res) => {
+            if(orderProduct){
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProducts', JSON.stringify({"orderProducts": [{id: setDraftRedis.id}]}), (err, res) => {
                     if (err) {
                         reject()
                     }

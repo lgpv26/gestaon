@@ -3,6 +3,7 @@ const basePath = require('../../middlewares/base-path.middleware')
 const _ = require('lodash')
 const RequestPersistance = require('../../modules/Draft/Persistance/RequestPersistance');
 const ClientPersistance = require('../../modules/Draft/Persistance/ClientPersistance');
+const OrderPersistance = require('../../modules/Draft/Persistance/OrderPersistance');
 
 module.exports = class Request extends Draft {
 
@@ -12,6 +13,7 @@ module.exports = class Request extends Draft {
         // private
         this._requestPersistance = new RequestPersistance(server);
         this._clientPersistance = new ClientPersistance(server);
+        this._orderPersistance = new OrderPersistance(server);
         // functions
         this.setRequestEventListeners();
     }
@@ -202,25 +204,25 @@ module.exports = class Request extends Draft {
             ///  ** product     ///
             ///////////////////////
     //
-        this.socket.on('draft:request-product-add', (requestProductAdd) => {
+        this.socket.on('draft:order-product-add', (orderProductAdd) => {
             super.resetTimeout()
-            super.saveDraft(requestProductAdd.draftId).then(() => {
-                this.onRequestProductAdd(requestProductAdd)
+            super.saveDraft(orderProductAdd.draftId).then(() => {
+                this.onOrderProductAdd(orderProductAdd)
             })
         })
 
-        this.socket.on('draft:request-product-remove', (requestProductRemove) => {
+        this.socket.on('draft:order-product-remove', (orderProductRemove) => {
             super.resetTimeout()
-            super.saveDraft(requestProductRemove.draftId).then(() => {
-                this.onRequestProductRemove(requestProductRemove)
+            super.saveDraft(orderProductRemove.draftId).then(() => {
+                this.onOrderProductRemove(orderProductRemove)
             })
         })
 
-        this.socket.on('draft:request-product-product-select', (requestProductSelect) => {
+        this.socket.on('draft:order-product-product-select', (orderProductSelect) => {
             super.resetTimeout()
             console.log('vou pro saveDraft')
-            super.saveDraft(requestProductSelect.draftId).then(() => {
-                this.onRequestProductProductSelect(requestProductSelect)
+            super.saveDraft(orderProductSelect.draftId).then(() => {
+                this.onOrderProductProductSelect(orderProductSelect)
             })
         })
     //<-- end ORDER ** product | setSocketRequestListeners
@@ -254,22 +256,53 @@ module.exports = class Request extends Draft {
             this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'Started saving request')
 
             this._requestPersistance.setTransaction().then((transaction) => {
-                this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', 'saving the client')
+                this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the client')
                 this._clientPersistance.start(transaction).then((client) => {
-                    this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', (client) ? 'client saved' : 'client set as Null' )
+                    this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', (client) ? 'client saved, id: ' + client.clientId : 'client set as Null' )
 
-                    this._requestPersistance.setDraftId(requestPersist.draftId)
-                    this._requestPersistance.setCompanyId(companyId)
-                    this._requestPersistance.setUserId(this.socket.user.id)
+                    this._orderPersistance.setDraftId(requestPersist.draftId)
+                    this._orderPersistance.setSaveInRequest(true)
 
-                    if(client){
-                        this._requestPersistance.setClientId(client.clientId)                
-                        this._requestPersistance.setClient(client) 
+                    if(client){              
+                        this._orderPersistance.setClient(client) 
                     }
+                    else{
+                        this._orderPersistance.setClient()
+                    }
+                    this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the order')
+                    this._orderPersistance.start(transaction).then((order) => {
+                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'order saved, id: ' + order.orderId)
+                        
+                        this._requestPersistance.setDraftId(requestPersist.draftId)
+                        this._requestPersistance.setCompanyId(companyId)
+                        this._requestPersistance.setUserId(this.socket.user.id)
 
-                    this._requestPersistance.start().then((request) => {
-                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'request saved, id: ' + request.id)
-                    })                       
+                        if(client){
+                            this._requestPersistance.setClientId(client.clientId)  
+                        }
+                        else{
+                            this._requestPersistance.setClientId()  
+                        }
+                        if(order){
+                            this._requestPersistance.setOrderId(order.orderId) 
+                        }
+                        else{
+                            this._requestPersistance.setOrderId() 
+                        }
+
+                        const task = null
+                        if(task){
+                            this._requestPersistance.setTaskId(task.taskId) 
+                        }
+                        else{
+                            this._requestPersistance.setTaskId()
+                        }
+
+                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the request')
+                        this._requestPersistance.start().then((request) => {
+                            this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'request saved, id: ' + request.id)
+                        })    
+                    })                      
                 }).catch((err) => {
                     this._requestPersistance.rollback().then(() => {
                         this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', 'error in saving client')
@@ -346,6 +379,7 @@ module.exports = class Request extends Draft {
             this._clientPersistance.setDraftId(clientPersist.draftId);
             this._clientPersistance.setCompanyId(companyId);
             this._clientPersistance.start().then((draft) => {
+                console.log(draft)
                 this.server.io.in('draft/' + clientPersist.draftId).emit('draftClientPersist', draft)
             }).catch((err) => {
                 console.log("ERROR", err);
@@ -762,42 +796,42 @@ module.exports = class Request extends Draft {
         //////////////////////
     //
         /**
-         * Request Product Add
+         * Order Product Add
          * @desc Send to all sockets in Draft/:id the add form product event
          * 
-         * @param {object} requestProductAdd - expected: draftId
-         * @return {int} request Product Id @property {Socket}
+         * @param {object} orderProductAdd - expected: draftId
+         * @return {int} order Product Id @property {Socket}
          */
-        onRequestProductAdd(requestProductAdd) {
-            this.controller.requestProductAdd(requestProductAdd).then((requestProduct) => {
-                this.server.io.in('draft/' + requestProductAdd.draftId).emit('draftRequestProductAdd', requestProduct.id)
+        onOrderProductAdd(orderProductAdd) {
+            this.controller.orderProductAdd(orderProductAdd).then((orderProduct) => {
+                this.server.io.in('draft/' + orderProductAdd.draftId).emit('draftOrderProductAdd', orderProduct.id)
             })
         }
 
         /**
-         * Request Product Remove
+         * Order Product Remove
          * @desc Send to all sockets in Draft/:id the remove form product event
          * 
-         * @param {object} requestProductRemove - expected: draftId, RequestProductId
-         * @return {int} request Product Id (removed) @property {Socket}
+         * @param {object} orderProductRemove - expected: draftId, OrderProductId
+         * @return {int} order Product Id (removed) @property {Socket}
          */
-        onRequestProductRemove(requestProductRemove) {
-            this.controller.requestProductRemove(requestProductRemove).then(() => {
-                this.server.io.in('draft/' + requestProductRemove.draftId).emit('draftRequestProductRemove', requestProductRemove.id)
+        onOrderProductRemove(orderProductRemove) {
+            this.controller.orderProductRemove(orderProductRemove).then(() => {
+                this.server.io.in('draft/' + orderProductRemove.draftId).emit('draftOrderProductRemove', orderProductRemove.id)
             })
         }
 
         /**
-         * Request Product Select
+         * Order Product Select
          * @desc Send to all sockets in Draft/:id that an product has been selected
          * 
-         * @param {object} requestProductProductSelect - expected: draftId, productId, requestProductId
+         * @param {object} orderProductProductSelect - expected: draftId, productId, orderProductId
          * @return {object} address @property {Socket}
          */
-        onRequestProductProductSelect(requestProductProductSelect) {
-            console.log(requestProductProductSelect)
-            this.controller.selectProductRequestProdut(requestProductProductSelect).then((product) => {
-                this.server.io.in('draft/' + requestProductProductSelect.draftId).emit('draftRequestProductProductSelect', product)
+        onOrderProductProductSelect(orderProductProductSelect) {
+            console.log(orderProductProductSelect)
+            this.controller.selectProductOrderProdut(orderProductProductSelect).then((product) => {
+                this.server.io.in('draft/' + orderProductProductSelect.draftId).emit('draftOrderProductProductSelect', product)
             }).catch(() => {
                 console.log('catch do SELECT PRODUCT REQUEST PRODUCT')
             })
