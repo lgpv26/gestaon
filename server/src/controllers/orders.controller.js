@@ -1,3 +1,5 @@
+import { request } from 'http';
+
 const _ = require('lodash')
 const utils = require('../utils')
 const Op = require('sequelize').Op
@@ -99,10 +101,12 @@ module.exports = (server, restify) => {
                             objES.productsES.forEach((productES) => {
                                 const productESControllerObj = new Controller({
                                     request: {
+                                        companyId: controller.request.companyId,
                                         data: productES
                                     },
                                     transaction: controller.transaction
                                 })
+
                                 productsESPromise.push(productsController.saveProductsInES(productESControllerObj))
                             })
                         }
@@ -122,6 +126,7 @@ module.exports = (server, restify) => {
         },
 
         updateOne: (req, res, next) => {
+            console.log('to no update opss')
             if (!req.body) {
                 return next(
                     new restify.ResourceNotFoundError("Erro, dados não enviados.")
@@ -170,9 +175,7 @@ module.exports = (server, restify) => {
                         });
                     }
                     else {
-                        return res.send(200, {
-                            data: order
-                        });
+                        return {orderId: 1}
                     }
                 })
             })

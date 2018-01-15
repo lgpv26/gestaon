@@ -17,6 +17,8 @@ module.exports = class OrderPersistance extends Persistance {
         this._orderId = null;
 
         this._draftId = null;
+
+        this._companyId = null
         
         this._client = null
         this._clientAddressId = null;
@@ -38,6 +40,10 @@ module.exports = class OrderPersistance extends Persistance {
     
     setDraftId(draftId = null) {
         if (draftId) this._draftId = draftId;
+    }
+
+    setCompanyId(companyId = null) {
+        if (companyId) this._companyId = companyId;
     }
 
     setSaveInRequest(saveInRequest = null) {
@@ -105,6 +111,7 @@ module.exports = class OrderPersistance extends Persistance {
             }
             const controller = new Controller({
                 request: {
+                    companyId: this._companyId,
                     clientAddressId: this._clientAddressId || null,
                     clientPhoneId: this._clientPhoneId || null,
                     data: this.mapDraftObjToModelObj(this._draft.form)
