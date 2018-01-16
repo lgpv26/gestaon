@@ -220,7 +220,6 @@ module.exports = class Request extends Draft {
 
         this.socket.on('draft:order-product-product-select', (orderProductSelect) => {
             super.resetTimeout()
-            console.log('vou pro saveDraft')
             super.saveDraft(orderProductSelect.draftId).then(() => {
                 this.onOrderProductProductSelect(orderProductSelect)
             })
@@ -263,6 +262,8 @@ module.exports = class Request extends Draft {
                     this._orderPersistance.setDraftId(requestPersist.draftId)
                     this._orderPersistance.setSaveInRequest(true)
 
+                    this._orderPersistance.setCompanyId(companyId)
+
                     if(client){              
                         this._orderPersistance.setClient(client) 
                     }
@@ -290,7 +291,7 @@ module.exports = class Request extends Draft {
                             this._requestPersistance.setOrderId() 
                         }
 
-                        const task = null
+                        //const task = null
                         if(task){
                             this._requestPersistance.setTaskId(task.taskId) 
                         }
@@ -829,11 +830,10 @@ module.exports = class Request extends Draft {
          * @return {object} address @property {Socket}
          */
         onOrderProductProductSelect(orderProductProductSelect) {
-            console.log(orderProductProductSelect)
             this.controller.selectProductOrderProdut(orderProductProductSelect).then((product) => {
                 this.server.io.in('draft/' + orderProductProductSelect.draftId).emit('draftOrderProductProductSelect', product)
-            }).catch(() => {
-                console.log('catch do SELECT PRODUCT REQUEST PRODUCT')
+            }).catch((err) => {
+                console.log(err, 'catch do SELECT PRODUCT REQUEST PRODUCT')
             })
         }
 //  

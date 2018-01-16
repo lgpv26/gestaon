@@ -593,21 +593,21 @@ module.exports = (server) => {
 
                 const controller = new Controller({
                     request: {
-                        id: 1 //productSelect.productId
+                        id: productSelect.productId
                     }
                 })
 
                 return productsController.getOne(controller).then((product) => {
                     product = JSON.parse(JSON.stringify(product))
 
-                    const arrayIndex = _.findIndex(draft.form.order.orderProducts, {id: productSelect.id})
+                    const arrayIndex = _.findIndex(draft.form.order.orderProducts, {id: productSelect.orderProductId})
 
-                    draft.form.order.orderProducts[arrayIndex] = _.assign(draft.form.order.orderProducts[arrayIndex], {product: product})
+                    draft.form.order.orderProducts[arrayIndex] = _.assign(draft.form.order.orderProducts[arrayIndex], {product: product}, {productId: product.id})
                     
                     const update = _.assign(draft.form, { order: draft.form.order })
 
                     return server.mongodb.Draft.update({ draftId: productSelect.draftId }, { $set: { form: update } }).then(() => {
-                        return product
+                        return {product: product, orderProductId: productSelect.orderProductId}
                     })
                 })
             })

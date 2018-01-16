@@ -205,16 +205,7 @@ module.exports = (server, restify) => {
         getOne: (controller) => {
             return server.mysql.Product.findOne({
                 where: {
-                    id: controller.request.id,
-                    status: 'activated',
-                    include: [{
-                        model: server.mysql.SupplierProduct,
-                        as: 'productSuppliers',
-                        include: [{
-                            model: server.mysql.Supplier,
-                            as: 'supplier'
-                        }]
-                    }]
+                    id: controller.request.id
                 }
             }).then((product) => {
                 if (!product) {
@@ -439,6 +430,7 @@ module.exports = (server, restify) => {
     
                     }, function (esErr, esRes, esStatus) {
                         if (esErr) {
+                            console.log(esErr)
                             reject(esErr)
                         }
                         resolve()
