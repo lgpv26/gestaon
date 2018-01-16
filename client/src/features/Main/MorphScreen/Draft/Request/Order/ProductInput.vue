@@ -45,6 +45,16 @@
                 this.searchValue = this.product.name
             }
         },
+        sockets: {
+
+            /* draft order products */
+
+            draftOrderProductProductSelect(orderProduct){
+                console.log("Received draftOrderProductProductSelect", orderProduct)
+                
+            }
+
+        },
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company'])
@@ -75,10 +85,11 @@
                 if(this.orderProduct){
                     const emitData = {
                         draftId: this.activeMorphScreen.draft.draftId,
-                        productId: item.id,
-                        orderProductId: (this.orderProduct.orderProductId) ? this.orderProduct.orderProductId : null
+                        productId: item.productId,
+                        orderProductId: (this.orderProduct.id) ? this.orderProduct.id : null
                     };
                     console.log("Emitting draft:order-product-product-select", emitData)
+                    this.$socket.emit('draft:order-product-product-select', emitData);
                     vm.searchItems = [];
                 }
 
