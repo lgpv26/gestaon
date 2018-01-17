@@ -263,15 +263,11 @@
 
             draftOrderProductAdd(orderProductId){
                 console.log("Received draftOrderProductAdd", orderProductId);
-                this.form.orderProducts.push({
-                    id: orderProductId,
-                    productId: null,
-                    product: {
-                        id: null,
-                        name: null
-                    },
-                    quantity: 1
-                });
+                const orderProduct = models.createOrderProductModel()
+                _.assign(orderProduct, {
+                    id: orderProductId
+                })
+                this.form.orderProducts.push(orderProduct);
             },
             draftOrderProductRemove(orderProductId){
                 console.log("Received draftOrderProductRemove", orderProductId);

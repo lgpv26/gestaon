@@ -58,19 +58,17 @@
 
             draftOrderProductProductSelect(orderProduct){
                 if(this.orderProduct.id === orderProduct.orderProductId){
-                    console.log("Product", this.product)
-                    console.log("OrderProduct", this.orderProduct)
                     console.log("Received draftOrderProductProductSelect", orderProduct)
-                    _.assign(this.orderProduct, orderProduct)
-                    this.orderProduct.id = orderProduct.orderProductId
-                    console.log(this.orderProduct)
+                    const tOrderProduct = utils.removeReactivity(orderProduct)
+                    utils.assignToExistentKeys(this.orderProduct.product, tOrderProduct.product)
+                    delete tOrderProduct.product
+                    utils.assignToExistentKeys(this.orderProduct, tOrderProduct)
                 }
-                
             },
             draftOrderProductProductReset(data){
                 console.log("Received draftOrderProductProductReset", data)
                 // Object.assign(this.client, models.createAddressModel());
-                Object.assign(this.product, models.createProductModel())
+                _.assign(this.product, models.createProductModel())
             }
 
         },
@@ -78,7 +76,7 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company']),
             issetProduct(){
-                return this.product && _.has(this.product, 'id')
+                return this.product && this.product.id
             }
         },
         methods: {
@@ -141,10 +139,12 @@
              */
 
             resetOrderProductProduct(){
-                this.$socket.emit('draft:order-product-product-reset', {
+                const emitData = {
                     orderProductId: (this.orderProduct.id) ? this.orderProduct.id : null,
                     draftId: this.activeMorphScreen.draft.draftId
-                });
+                }
+                console.log("Emitting draft:order-product-product-reset", emitData)
+                this.$socket.emit('draft:order-product-product-reset', emitData);
             }
         },
         mounted(){
