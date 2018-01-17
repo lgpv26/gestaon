@@ -15,6 +15,7 @@
                 </div>
             </div>
         </div>
+
         <div class="form__header">
             <span v-if="!isCurrentStepActive">Contas de <span style="color: var(--font-color--d-secondary)">movimentação financeira</span> e <span style="color: var(--font-color--d-secondary)">bancos</span></span>
             <span class="push-both-sides"></span>

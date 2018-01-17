@@ -99,10 +99,23 @@ export default {
             state: null
         }
     },
-
     createOrderProductModel(){
         return {
             id: null,
+            product: this.createProductModel()
+        }
+    },
+    createProductModel(){
+        return {
+            companyId: null,
+            dateCreated: null,
+            dateRemoved: null,
+            dateUpdated: null,
+            id: null,
+            name: null,
+            price: null,
+            quantity: null,
+            status: null
         }
     }
 }

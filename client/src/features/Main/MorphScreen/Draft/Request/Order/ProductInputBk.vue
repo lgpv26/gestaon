@@ -1,6 +1,6 @@
 <template>
     <div class="product-input">
-        <app-search v-if="!issetProduct" ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :query="query" :verticalOffset="5" :horizontalOffset="-20"
+        <app-search v-if="!product.id" ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :query="query" :verticalOffset="5" :horizontalOffset="-20"
                     @itemSelected="onSearchProductSelect($event)" >
             <input type="text" class="search-input__field" placeholder="ENCONTRAR" v-model="searchValue" ref="searchInput"
                    @keydown="onSearchValueUpdate()" @focus="isInputFocused = true" @blur="isInputFocused = false"
@@ -49,7 +49,7 @@
         },
         watch: {
             'product.name': function(){
-                if(_.has(this.product, 'name')) this.searchValue = this.product.name
+                this.searchValue = this.product.name
             }
         },
         sockets: {
@@ -58,12 +58,9 @@
 
             draftOrderProductProductSelect(orderProduct){
                 if(this.orderProduct.id === orderProduct.orderProductId){
-                    console.log("Product", this.product)
-                    console.log("OrderProduct", this.orderProduct)
                     console.log("Received draftOrderProductProductSelect", orderProduct)
-                    _.assign(this.orderProduct, orderProduct)
+                    utils.assignToExistentKeys(this.orderProduct, models.createOrderProductModel());
                     this.orderProduct.id = orderProduct.orderProductId
-                    console.log(this.orderProduct)
                 }
                 
             },
@@ -76,10 +73,7 @@
         },
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
-            ...mapState('auth', ['user','company']),
-            issetProduct(){
-                return this.product && _.has(this.product, 'id')
-            }
+            ...mapState('auth', ['user','company'])
         },
         methods: {
 
@@ -148,7 +142,7 @@
             }
         },
         mounted(){
-            if(_.has(this.product, 'name')) this.searchValue = this.product.name
+            this.searchValue = this.product.name
         }
     }
 </script>

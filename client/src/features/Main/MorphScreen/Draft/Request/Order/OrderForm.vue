@@ -210,6 +210,7 @@
     import StorageInput from './StorageInput.vue';
     import DivulgationChannelInput from './DivulgationChannelInput.vue';
     import ProductsAPI from '@/api/products';
+    import models from '@/models'
 
     export default {
         components: {
@@ -227,15 +228,9 @@
                 form: {
                     paymentMethodId: null,
                     orderProducts: [
-                        {
-                            id: _.uniqueId("product#"),
-                            productId: null,
-                            product: {
-                                id: 1,
-                                name: 'TESTE 123'
-                            },
-                            quantity: 1
-                        }
+                        /*Object.assign(models.createOrderProductModel(), {
+                            id: _.uniqueId("order-product#")
+                        })*/
                     ],
                     orderPaymentMethods: [
                         {
