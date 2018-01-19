@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const utils = require('../utils');
 const Op = require('sequelize').Op
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
     return {
@@ -32,63 +33,54 @@ module.exports = (server, restify) => {
             });
         },
 
-        saveClientsGroup(req) {
-            let clientsGroupCantChange = []
-            return new Promise((resolve, reject) => {
-                let clientsGroupResolverPromisses = []
-                
-                clientsGroupResolverPromisses.push(new Promise((resolve, reject) => {
-                    let clientsGroupIds = []
-                    req.params.clientsGroup.forEach((forEachClientsGroup, index) => {
-                        if (forEachClientsGroup.id) {
-                            clientsGroupIds.push(forEachClientsGroup.id)
-                        }
-                        else {
-                            req.params.clientsGroup[index].companyId = parseInt(req.params.companyId)
-                        }
-                    })
-                    server.mysql.ClientsGroup.findAll({
-                        where: {
-                            id: {
-                                [Op.in]: clientsGroupIds
-                            }
-                        }
-                    }).then((clientsGroupConsult) => {
-                        clientsGroupConsult.forEach((result) => {
-                            const index = _.findIndex(req.params.clientsGroup, (clientGroupFind) => {
-                                return clientGroupFind.id === result.id
+        setClientGroup: (controller) => {
+            let setData = _.cloneDeep(controller.request.data)
+            setData = _.map(setData, (clientGroup) => {
+                if(_.has(clientGroup, 'dateUpdated')) delete clientGroup.dateUpdated // remove dateUpdated fields so it updates the dateUpdated field
+
+                clientGroup.status = (clientGroup.selected) ? 'selected:' + parseInt(controller.request.clientId) : 'activated'
+
+                return clientGroup
+            })
+            
+            return server.mysql.ClientGroup.bulkCreate(setData, {
+                updateOnDuplicate: ['companyId', 'name', 'dateUpdated', 'dateRemoved', 'status'],
+                transaction: controller.transaction
+            }).then(() => {
+                return server.mysql.ClientGroup.findOne({
+                    where: {
+                        status: 'selected:' + parseInt(controller.request.clientId)
+                    },
+                    transaction: controller.transaction
+                }).then((clientGroup) => {
+                    return new Promise((resolve, reject) => {
+                        if (!clientGroup) {
+                            return reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                    }
+
+                        const clientGroupStatus = {id: parseInt(clientGroup.id), status: 'activated'}
+                        const clientGroupUpdate = {clientGroup: parseInt(clientGroup.id)}
+                                                    
+                        return server.mysql.ClientGroup.update(clientGroupStatus, {
+                            updateOnDuplicate: ['status'],
+                            transaction: controller.transaction
+                        }).then(() => {
+                            return server.mysql.Client.update(clientGroupUpdate, {
+                                where: {
+                                    id: controller.request.clientId
+                                },
+                                transaction: controller.transaction
+                            }).then(() => {
+                                resolve();
+                            }).catch((err) => {
+                                console.log('ERROR: IN SAVE CLIENT GROUP ID IN CLIENT (client-group.controller): ', err)
                             })
-                            if (result.companyId === 0) {
-                                clientsGroupCantChange.push(result)
-                                req.params.clientsGroup.splice(index, 1)
-                            }
+                            
+                        }).catch((err) => {
+                            reject(err)
                         })
-                        resolve()
                     })
                 })
-                )
-
-                return Promise.all(clientsGroupResolverPromisses).then(() => {
-                   
-                    server.mysql.ClientsGroup.bulkCreate(req.params.clientsGroup, {
-                        updateOnDuplicate: ['name', 'dateUpdated', 'dateRemoved', 'status'],
-                        returning: true
-                    }).then((clientsGroupBulk) => {
-                        if (!clientsGroupBulk) {
-                            reject(new restify.ResourceNotFoundError("Registro não encontrado."));
-                        }
-                        let clientsGroupChange = _.map(clientsGroupBulk, clientsGroup => clientsGroup)
-                    
-                        resolve(clientsGroupChange)
-                    }).catch((error) => {
-                        reject(error);
-                    })
-
-                })
-            }).then((response) => {
-                return _.concat((response) ? response : [], (clientsGroupCantChange) ? clientsGroupCantChange : [])
-            }).catch((error) => {
-                return error
             })
         },
 
@@ -117,4 +109,5 @@ module.exports = (server, restify) => {
             })
         }
     }
+
 }

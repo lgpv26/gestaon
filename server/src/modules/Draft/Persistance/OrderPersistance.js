@@ -105,8 +105,14 @@ module.exports = class OrderPersistance extends Persistance {
                 if(_.has(this._client,'clientAddressId')) {
                     this.setClientAddressId(this._client.clientAddressId)
                 }
+                else{
+                    this.setClientAddressId(_.first(this._client.clientAddresses).id)
+                }
                 if(_.has(this._client,'clientPhoneId')) {
                     this.setClientPhoneId(this._client.clientPhoneId)
+                }
+                else{
+                    this.setClientPhoneId(_.first(this._client.clientPhones).id)
                 }
             }
             const controller = new Controller({

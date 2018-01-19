@@ -123,6 +123,7 @@ module.exports = (server, restify) => {
                             let clientPhoneIdSelect = null
                             let clientPhoneStatus = []
                             client.clientPhones.forEach((checkClientPhoneSelect) => {
+                            
                                 if(checkClientPhoneSelect.status === 'selected'){
                                     clientPhoneIdSelect = parseInt(checkClientPhoneSelect.id)
                                     clientPhoneStatus.push({id: parseInt(checkClientPhoneSelect.id), status: 'activated'})

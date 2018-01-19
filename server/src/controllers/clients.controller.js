@@ -9,6 +9,7 @@ module.exports = (server, restify) => {
     const clientsAddressesController = require('./../controllers/clients-addresses.controller')(server, restify);
     const clientsPhonesController = require('./../controllers/clients-phones.controller')(server, restify);
     const clientsCustomFieldsController = require('./../controllers/clients-custom-fields.controller')(server, restify);
+    const clientsGroupController = require('./../controllers/clients-group.controller')(server, restify);
 
     return {
         getAll: (req, res, next) => {
@@ -123,6 +124,19 @@ module.exports = (server, restify) => {
                         promises.push(clientsCustomFieldsController.setClientCustomFields(clientCustomFieldControllerObj))
                     }
 
+                    /* save clientGroups if existent */
+                    if(_.has(createData, "clientGroups") && createData.clientGroups.length) {
+
+                        const clientGroupsControllerObj = new Controller({
+                            request: {
+                                companyId: createData.companyId,
+                                data: createData.clientGroups
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(clientsGroupController.setClientGroup(clientGroupsControllerObj))
+                    }
+
                     /* return only when all promises are satisfied */
                     return Promise.all(promises).then((clientEs) => {
                         const objES = {}
@@ -155,7 +169,34 @@ module.exports = (server, restify) => {
                                         if (esErr) {
                                             return reject(new Error(esErr))
                                         }
-                                        return resolve({clientId: objES.clientES.id, clientAddressId: objES.clientAddressId})
+
+                                        return server.mysql.Client.findById(objES.clientES.id, {
+                                            include: [{
+                                                model: server.mysql.ClientPhone,
+                                                as: 'clientPhones'
+                                            }, {
+                                                model: server.mysql.ClientAddress,
+                                                as: 'clientAddresses',
+                                                include: [{
+                                                    model: server.mysql.Address,
+                                                    as: 'address'
+                                                }]
+                                            }, {
+                                                model: server.mysql.ClientCustomField,
+                                                as: 'clientCustomFields',
+                                                include: [{
+                                                    model: server.mysql.CustomField,
+                                                    as: 'customField'
+                                                }]
+                                            }],
+                                            transaction: controller.transaction
+                                        }).then((clientReturn) => {
+                                            clientReturn = JSON.parse(JSON.stringify(clientReturn))
+                                            const clientAddressId = (objES.clientAddressId) ? {clientAddressId: objES.clientAddressId} : {}
+                                            const clientPhoneId = (objES.clientPhoneId) ? {clientPhoneId: objES.clientPhoneId} : {}
+                                            
+                                            resolve(_.assign(clientReturn, clientAddressId, clientPhoneId))
+                                        })
                                     }
                                 )
                             }).catch((err) => {
@@ -168,7 +209,8 @@ module.exports = (server, restify) => {
             })
         },
         updateOne: (controller) => {
-            const updateData = _.cloneDeep(controller.request.data);
+            
+            const updateData = _.cloneDeep(controller.request.data)
             return server.mysql.Client.update(updateData, {
                 where: {
                     id: controller.request.clientId
@@ -178,6 +220,7 @@ module.exports = (server, restify) => {
                 if (!client) {
                     throw new Error("Cliente não encontrado.");
                 }
+                console.log('to aqui')
                 return server.mysql.Client.findById(controller.request.clientId, {
                     include: [{
                         model: server.mysql.ClientPhone,
@@ -256,6 +299,19 @@ module.exports = (server, restify) => {
                             })
                             promises.push(clientsCustomFieldsController.setClientCustomFields(clientCustomFieldControllerObj))
                         }
+
+                        /* save clientGroups if existent */
+                        if (_.has(updateData, "clientGroups") && updateData.clientGroups.length) {
+                            const clientGroupsControllerObj = new Controller({
+                                request: {
+                                    companyId: controller.request.clientId,
+                                    companyId: controller.request.companyId,
+                                    data: updateData.clientGroups
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(clientsGroupController.setClientGroup(clientGroupsControllerObj))
+                        }
                         
 
                         /* return only when all promises are satisfied */
@@ -291,9 +347,37 @@ module.exports = (server, restify) => {
                                             if (esErr) {
                                                 return reject(new Error(esErr))
                                             }
-                                            return resolve({clientId: objES.clientES.id, clientAddressId: objES.clientAddressId, clientPhoneId: objES.clientPhoneId})
+                                            return server.mysql.Client.findById(controller.request.clientId, {
+                                                include: [{
+                                                    model: server.mysql.ClientPhone,
+                                                    as: 'clientPhones'
+                                                }, {
+                                                    model: server.mysql.ClientAddress,
+                                                    as: 'clientAddresses',
+                                                    include: [{
+                                                        model: server.mysql.Address,
+                                                        as: 'address'
+                                                    }]
+                                                }, {
+                                                    model: server.mysql.ClientCustomField,
+                                                    as: 'clientCustomFields',
+                                                    include: [{
+                                                        model: server.mysql.CustomField,
+                                                        as: 'customField'
+                                                    }]
+                                                }],
+                                                transaction: controller.transaction
+                                            }).then((clientReturn) => {
+                                                clientReturn = JSON.parse(JSON.stringify(clientReturn))
+                                                const clientAddressId = (objES.clientAddressId) ? {clientAddressId: objES.clientAddressId} : {}
+                                                const clientPhoneId = (objES.clientPhoneId) ? {clientPhoneId: objES.clientPhoneId} : {}
+                                                
+                                                resolve(_.assign(clientReturn, clientAddressId, clientPhoneId))
+                                            }).catch((err) => {
+                                                console.log('ERRO: NO FIND CLIENT IN CLIENTS FINALE UPDATE: ', err)
+                                            })  
                                         }
-                                    )
+                                    )                                    
                                 }).catch((err) => {
                                     return reject()
                                 })
@@ -302,7 +386,9 @@ module.exports = (server, restify) => {
                             return reject(err)
                     })
                 })
-            });
+            }).catch((err) => {
+                console.log('ERRO: client UPDATE: ', err)
+            }) 
         },
 
         ///////////////////

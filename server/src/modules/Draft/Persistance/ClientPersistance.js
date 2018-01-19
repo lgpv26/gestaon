@@ -59,6 +59,13 @@ module.exports = class RequestPersistance extends Persistance {
             if (!draft) {
                 throw new Error("Draft não encontrado.");
             }
+
+            if(_.has(draft.data, "company")){
+                if(_.has(draft.data.company, "clientGroups")){
+                    _.assign(draft.form.client, {clientGroups: draft.data.company.clientGroups})
+                }
+            }
+
             if(!draft.form.client.isNull){
                 this._draft = draft;
 
@@ -114,7 +121,7 @@ module.exports = class RequestPersistance extends Persistance {
                     else {
                     console.log("Success updating");
                         this.commit().then(() => {
-                            resolve(client.clientId)
+                            resolve(client)
                         })
                     }                
                 }).catch((err) => {
@@ -137,7 +144,7 @@ module.exports = class RequestPersistance extends Persistance {
                     else {
                     console.log("Success creating");
                         this.commit().then(() => {
-                            resolve(client.clientId)
+                            resolve(client)
                         })
                     }
                 }).catch((err) => {
@@ -174,13 +181,23 @@ module.exports = class RequestPersistance extends Persistance {
             this.removeTempIds(form, "clientCustomFields")
         }
 
+        if (_.has(form.client, "clientGroups") && form.client.clientGroups.length) {
+            this.removeTempIds(form, "clientGroups", "client.clientGroupId", "clientGroupId")
+            delete form.client.clientGroup
+        }
+
         return form.client
     }
 
-    removeTempIds(form, key, selectKey = null){
+    removeTempIds(form, key, selectKey = null, deleteKey){
         _.map(form.client[key], (obj) => {
             if (_.has(obj, "id")) {
-                if(selectKey && obj.id === form[selectKey]) obj.selected = true
+                if(selectKey && obj.id === _.get(form, selectKey) ){
+                    obj.selected = true
+                    if(deleteKey){
+                        delete form.client[deleteKey]
+                    }
+                } 
 
                 const checkId = obj.id.toString().split(':')
                 if (_.first(checkId) === 'temp') {

@@ -65,63 +65,114 @@ module.exports = (server, restify) => {
                 if (!request) {
                     throw new Error("Não foi possível encontrar o pedido criado.")
                 }
-                return {id: request.id}
+                return JSON.parse(JSON.stringify(request))
             })
         },
 
-        updateOne: (req, res, next) => {
-            if (!req.body) {
-                return next(
-                    new restify.ResourceNotFoundError("Erro, dados não enviados.")
-                );
+        updateOne: (controller) => {
+            const updateData = _.cloneDeep(controller.request.data)
+            if (!updateData) {
+                throw new Error("Erro, dados não enviados.")
             }
-            const updateData = _.cloneDeep(req.body);
-            server.mysql.Order.update(updateData, {
+            _.assign(updateData, {
+                companyId: controller.request.companyId,
+                userId: controller.request.userId,  
+                clientId: controller.request.clientId,
+                orderId: controller.request.orderId,
+                taskId: controller.request.taskId
+            })
+
+            server.mysql.Request.update(updateData, {
                 where: {
-                    id: req.params.id,
-                    status: 'activated'
+                    id: controller.request.id
+                },
+                transaction: controller.transaction
+            }).then((request) => {
+                if (!request) {
+                    throw new Error("Registro não encontrado Parte 1..")
                 }
-            }).then((order) => {
-                if (!order) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado P)arte 1.")
-                    );
-                }
-                server.mysql.Order.findById(req.params.id, {
-                    where: {
-                        id: req.params.id,
-                        status: 'activated'
-                    },
+                server.mysql.Request.findById(controller.request.id, {
                     include: [{
-                        model: server.mysql.OrderProduct,
-                        as: 'orderProducts',
+                        model: server.mysql.Order,
+                        as: 'order',
+                        include: [{                            
+                            model: server.mysql.OrderProduct,
+                            as: 'orderProducts',
+                            include: [{
+                                model: server.mysql.Product,
+                                as: 'product'
+                            }]
+                        }],
+                        model: server.mysql.Client,
+                        as: 'client',
                         include: [{
-                            model: server.mysql.Product,
-                            as: 'product'
-                        }]
-                    }]
-                }).then((order) => {
-                    if (!order) {
-                        return next(
-                            new restify.ResourceNotFoundError("Registro não encontrado.")
-                        );
+                            model: server.mysql.ClientPhone,
+                            as: 'clientPhones'
+                        }, {
+                            model: server.mysql.ClientAddress,
+                            as: 'clientAddresses',
+                            include: [{
+                                model: server.mysql.Address,
+                                as: 'address'
+                            }]
+                        }, {
+                            model: server.mysql.ClientCustomField,
+                            as: 'clientCustomFields',
+                            include: [{
+                                model: server.mysql.CustomField,
+                                as: 'customField'
+                            }]
+                        }],
+                    }],
+                    transaction: controller.transaction
+                }).then((request) => {
+                    if (!request) {
+                        throw new Error("Registro não encontrado Parte 2..")
                     }
-                    if (_.has(updateData, "orderProducts") && updateData.orderProducts.length > 0) {
-                        req.params['id'] = order.id;
-                        saveProducts(req, res, next).then((order) => {
-                            return res.send(200, {
-                                data: order
-                            });
+
+                    const promises = [];
+
+                    /* save orderProducts if existent */
+                    if(_.has(updateData, "orderProducts")) {
+                        const orderProductsControllerObj = new Controller({
+                            request: {
+                                orderId: controller.request.orderId,
+                                companyId: controller.request.companyId,
+                                data: updateData.orderProducts
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(ordersProductsController.setOrdersProducts(orderProductsControllerObj))
+                    }
+
+                    /* return only when all promises are satisfied */
+                    return Promise.all(promises).then((orderEs) => {
+                        const objES = {}
+                        _.map(orderEs, (value) => {
+                            _.assign(objES, value)
+                        })
+
+                        let productsESPromise = []
+                        if (_.has(objES, "productsES") && objES.productsES) {
+                            objES.productsES.forEach((productES) => {
+                                const productESControllerObj = new Controller({
+                                    request: {
+                                        companyId: controller.request.companyId,
+                                        data: productES
+                                    },
+                                    transaction: controller.transaction
+                                })
+                                productsESPromise.push(productsController.saveProductsInES(productESControllerObj))
+                            })
+                        }
+
+                        return Promise.all(productsESPromise).then(() => {
+                            return resolve(JSON.parse(JSON.stringify(request)))
                         }).catch((err) => {
-                            console.log(err);
-                            next(err);
-                        });
-                    }
-                    else {
-                        return res.send(200, {
-                            data: order
-                        });
-                    }
+                            return reject()
+                        })
+                    })
+                    
                 })
             })
         },

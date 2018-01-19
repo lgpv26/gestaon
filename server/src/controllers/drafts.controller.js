@@ -545,6 +545,52 @@ module.exports = (server) => {
 
         // <-- end CUSTOM FIELD ** in company
 
+        ///////////////////////
+        ///  CLIENT GROUP   ///
+        /// ** in company   ///
+        ///////////////////////
+        //    
+        clientGroupChange(clientGroupChange) {
+            return this.getOne(clientGroupChange.draftId).then((draft) => {
+
+                if (!draft.data.company) {
+                    draft.data.company = { clientGroups: null }
+                }
+
+                const index = _.findIndex(draft.data.company.clientGroups, (clientGroup) => {
+                    return clientGroup.id === (clientGroupChange.clientGroupId) ? clientGroupChange.clientGroupId : null
+                })
+
+                let saveClientGroups = (draft.data.company.clientGroups) ? draft.data.company.clientGroups : []
+                let update = {}
+
+                update.clientGroup = {
+                    id: (clientGroupChange.clientGroupId) ? clientGroupChange.clientGroupId : 'temp:' + shortid.generate(),
+                    name: _.toUpper(clientGroupChange.name),
+                    companyId: (clientGroupChange.user.activeCompanyUserId) ? clientGroupChange.user.activeCompanyUserId : clientGroupChange.user.companies[0],
+                    remove: (clientGroupChange.remove) ? true : false
+                }
+
+                if (index !== -1) {
+                    saveClientGroups[index] = _.assign(saveClientGroups[index], update.clientGroup)
+                    update.clientGroupReturn = _.assign(saveClientGroups[index], update.clientGroup)
+                }
+                else {
+                    saveClientGroups.push(update.clientGroup)
+                    update.clientGroupReturn = update.clientGroup
+                }
+
+                const company = _.assign(draft.data.company, { clientGroups: saveClientGroups })
+                update.data = _.assign(draft.data, { company: company })
+
+                return server.mongodb.Draft.update({ draftId: clientGroupChange.draftId }, { $set: { data: update.data } }).then(() => {
+                    return update
+                })
+            })
+        },
+
+    // <-- end CUSTOM FIELD ** in company
+
 //  <-- end CLIENT
 
         //////////////////////
@@ -588,7 +634,7 @@ module.exports = (server) => {
             })
         },
 
-        selectProductOrderProdut(productSelect) {
+        selectProductOrderProduct(productSelect) {
             return this.getOne(productSelect.draftId).then((draft) => {
 
                 const controller = new Controller({
@@ -609,6 +655,22 @@ module.exports = (server) => {
                     return server.mongodb.Draft.update({ draftId: productSelect.draftId }, { $set: { form: update } }).then(() => {
                         return {product: product, orderProductId: productSelect.orderProductId}
                     })
+                })
+            })
+
+        },
+        
+        resetProductOrderProduct(productReset) {
+            return this.getOne(productReset.draftId).then((draft) => {
+
+                const arrayIndex = _.findIndex(draft.form.order.orderProducts, {id: productReset.orderProductId})
+
+                draft.form.order.orderProducts[arrayIndex] = _.assign(draft.form.order.orderProducts[arrayIndex], {product: {}}, {productId: null})
+                
+                const update = _.assign(draft.form, { order: draft.form.order })
+
+                return server.mongodb.Draft.update({ draftId: productReset.draftId }, { $set: { form: update } }).then(() => {
+                    return {orderProductId: productReset.orderProductId}
                 })
             })
 

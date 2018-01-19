@@ -174,23 +174,41 @@ module.exports = class Request extends Draft {
             })
         // <-- end CLIENT ** custom-field  | setSocketRequestListeners
 
-            ///////////////////////
+             ///////////////////////
             ///  CUSTOM FIELD   ///
             /// ** in company   ///
             ///////////////////////
         //
-            this.socket.on('draft:custom-field-save', (customFieldSave) => {
-                super.saveDraft(customFieldSave.draftId).then(() => {
-                    this.onDraftCustomFieldSave(customFieldSave)
+        this.socket.on('draft:custom-field-save', (customFieldSave) => {
+            super.saveDraft(customFieldSave.draftId).then(() => {
+                this.onDraftCustomFieldSave(customFieldSave)
+            })
+        })
+
+        this.socket.on('draft:custom-field-remove', (customFieldRemove) => {
+            super.saveDraft(customFieldRemove.draftId).then(() => {
+                this.onDraftCustomFieldRemove(customFieldRemove)
+            })
+        })
+    // <-- end CLIENT | setSocketRequestListeners
+
+                ///////////////////////
+                ///  Client Group   ///
+                /// ** in company   ///
+                ///////////////////////
+        //
+            this.socket.on('draft:client-group-save', (clientGroupSave) => {
+                super.saveDraft(clientGroupSave.draftId).then(() => {
+                    this.onDraftClientGroupSave(clientGroupSave)
                 })
             })
 
-            this.socket.on('draft:custom-field-remove', (customFieldRemove) => {
-                super.saveDraft(customFieldRemove.draftId).then(() => {
-                    this.onDraftCustomFieldRemove(customFieldRemove)
+            this.socket.on('draft:client-group-remove', (clientGroupRemove) => {
+                super.saveDraft(clientGroupSave.draftId).then(() => {
+                    this.onDraftClientGroupRemove(clientGroupSave)
                 })
             })
-        // <-- end CLIENT | setSocketRequestListeners
+        // <-- end Client Group | setSocketRequestListeners
 
     // <-- end CLIENT | setSocketRequestListeners
 
@@ -224,6 +242,13 @@ module.exports = class Request extends Draft {
                 this.onOrderProductProductSelect(orderProductSelect)
             })
         })
+
+        this.socket.on('draft:order-product-product-reset', (orderProductReset) => {
+            super.resetTimeout()
+            super.saveDraft(orderProductReset.draftId).then(() => {
+                this.onOrderProductProductReset(orderProductReset)
+            })
+        })
     //<-- end ORDER ** product | setSocketRequestListeners
 
 //<-- end ORDER | setSocketRequestListeners
@@ -255,14 +280,15 @@ module.exports = class Request extends Draft {
             this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'Started saving request')
 
             this._requestPersistance.setTransaction().then((transaction) => {
-                this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the client')
+                //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the client')
                 this._clientPersistance.start(transaction).then((client) => {
-                    this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', (client) ? 'client saved, id: ' + client.clientId : 'client set as Null' )
-
+                    //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', (client) ? 'client saved, id: ' + client.clientId : 'client set as Null' )
                     this._orderPersistance.setDraftId(requestPersist.draftId)
                     this._orderPersistance.setSaveInRequest(true)
 
                     this._orderPersistance.setCompanyId(companyId)
+
+                    console.log(client)
 
                     if(client){              
                         this._orderPersistance.setClient(client) 
@@ -270,9 +296,9 @@ module.exports = class Request extends Draft {
                     else{
                         this._orderPersistance.setClient()
                     }
-                    this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the order')
+                    //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the order')
                     this._orderPersistance.start(transaction).then((order) => {
-                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'order saved, id: ' + order.orderId)
+                        //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'order saved, id: ' + order.orderId)
                         
                         this._requestPersistance.setDraftId(requestPersist.draftId)
                         this._requestPersistance.setCompanyId(companyId)
@@ -285,13 +311,13 @@ module.exports = class Request extends Draft {
                             this._requestPersistance.setClientId()  
                         }
                         if(order){
-                            this._requestPersistance.setOrderId(order.orderId) 
+                            this._requestPersistance.setOrderId(order.id) 
                         }
                         else{
                             this._requestPersistance.setOrderId() 
                         }
 
-                        //const task = null
+                        const task = null
                         if(task){
                             this._requestPersistance.setTaskId(task.taskId) 
                         }
@@ -302,14 +328,20 @@ module.exports = class Request extends Draft {
                         this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the request')
                         this._requestPersistance.start().then((request) => {
                             this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'request saved, id: ' + request.id)
-                        })    
+                        }).catch((err) => {
+                            console.log('ERRO: START DO REQUEST PERSISTANCE: ', err)
+                        })
+                    }).catch((err) => {
+                        console.log('ERRO: START DO ORDER PERSISTANCE: ', err)
                     })                      
                 }).catch((err) => {
                     this._requestPersistance.rollback().then(() => {
                         this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', 'error in saving client')
                     })
                 })
-            })
+            }).catch((err) => {
+                console.log('ERRO: SET TRANSACTION: ', err)
+            })   
         }
     }
 
@@ -380,7 +412,7 @@ module.exports = class Request extends Draft {
             this._clientPersistance.setDraftId(clientPersist.draftId);
             this._clientPersistance.setCompanyId(companyId);
             this._clientPersistance.start().then((draft) => {
-                console.log(draft)
+                
                 this.server.io.in('draft/' + clientPersist.draftId).emit('draftClientPersist', draft)
             }).catch((err) => {
                 console.log("ERROR", err);
@@ -772,7 +804,7 @@ module.exports = class Request extends Draft {
          * @param {object} customFieldRemove - expected: draftId, customFieldId 
          * @return {int} custom field id @property {Socket}
          */
-        onCustomFieldRemove(customFieldRemove) {
+        onDraftCustomFieldRemove(customFieldRemove) {
             customFieldRemove.user = this.socket.user
             customFieldRemove.remove = true
             this.controller.customFieldChange(customFieldRemove).then((removedCustomField) => {
@@ -780,8 +812,44 @@ module.exports = class Request extends Draft {
             })
         }
 
-
     //<-- end CUSTOM FIELD ** in company
+
+        ///////////////////////
+        ///  CLIENT GROUP   ///
+        /// ** in company   ///
+        ///////////////////////
+    // 
+        /** 
+         * Client Group Save
+         * @desc Send to all sockets in Draft/:id the Client Group save (create or update) event
+         * 
+         * @param {object} clientGroupSave - expected: draftId, name 
+         * @return {object} custom field @property {Socket}
+         */
+        onDraftClientGroupSave(clientGroupSave) {
+            customFieldSave.user = this.socket.user
+            this.controller.clientGroupChange(clientGroupSave).then((savedClientGroup) => {
+                this.server.io.in('draft/' + clientGroupSave.draftId).emit('draftClientGroupSave', savedClientGroup.clientGroupReturn)
+            })
+        }
+
+        /** 
+         * Client Group Remove
+         * @desc Send to all sockets in Draft/:id the Client Group remove event
+         * 
+         * @param {object} clientGroupRemove - expected: draftId, clientGroupId 
+         * @return {int} custom field id @property {Socket}
+         */
+        onDraftClientGroupRemove(clientGroupRemove) {
+            clientGroupRemove.user = this.socket.user
+            clientGroupRemove.remove = true
+            this.controller.clientGroupChange(clientGroupRemove).then((removedClientGroup) => {
+                this.server.io.in('draft/' + clientGroupRemove.draftId).emit('draftClientGroupRemove', removedClientGroup.id)
+            })
+        }
+
+
+    //<-- end CLIENT GROUP ** in company
 
 //  <-- end CLIENT
 
@@ -830,10 +898,25 @@ module.exports = class Request extends Draft {
          * @return {object} address @property {Socket}
          */
         onOrderProductProductSelect(orderProductProductSelect) {
-            this.controller.selectProductOrderProdut(orderProductProductSelect).then((product) => {
+            this.controller.selectProductOrderProduct(orderProductProductSelect).then((product) => {
                 this.server.io.in('draft/' + orderProductProductSelect.draftId).emit('draftOrderProductProductSelect', product)
             }).catch((err) => {
                 console.log(err, 'catch do SELECT PRODUCT REQUEST PRODUCT')
+            })
+        }
+
+        /** 
+         * Order Product Reset
+         * @desc Send to all sockets in Draft/:id the reset order product event
+         * 
+         * @param {object} orderProductProductReset - expected: draftId, orderProductId
+         * @return {object} @property {Socket}
+         */
+        onOrderProductProductReset(orderProductProductReset) {
+            this.controller.resetProductOrderProduct(orderProductProductReset).then(() => {
+                this.server.io.in('draft/' + orderProductProductReset.draftId).emit('draftOrderProductProductReset', orderProductProductReset.orderProductId)
+            }).catch(() => {
+                console.log('catch do RESET ORDER PRODUCT - QUE É DENTRO DO ON ORDER PRODUCT RESET')
             })
         }
 //  

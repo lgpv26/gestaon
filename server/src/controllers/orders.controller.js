@@ -73,6 +73,8 @@ module.exports = (server, restify) => {
                     throw new Error("Não foi possível encontrar o order criado.")
                 }
 
+                order = JSON.parse(JSON.stringify(order))
+
                 return new Promise((resolve, reject) => {
                 const promises = [];
 
@@ -112,7 +114,7 @@ module.exports = (server, restify) => {
                         }
 
                         return Promise.all(productsESPromise).then(() => {
-                            return resolve({orderId: order.id})
+                            return resolve(order)
                         }).catch((err) => {
                             return reject()
                         })
