@@ -5,7 +5,6 @@ module.exports = {
         const modelName = 'Section';
 
         const schema = new Schema({
-            sectionId: Number, 
             companyId: Number,
             createdBy: Number,
             name: {
@@ -16,10 +15,7 @@ module.exports = {
                 type: Array,
                 default: []
             },
-            position: {
-                type: Object,
-                default: {}
-            },
+            position: Number,
         }, {
             timestamps: {
                 createdAt: 'createdAt',

@@ -76,6 +76,8 @@
                                         <span>{{itemProps.text }}</span>
                                     </template>
                                 </app-select>
+
+
                                 <app-select class="request-board__filter filter--users-in-charge" :items="requestBoardFilter.usersInCharge" :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Responsável</span>

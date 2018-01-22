@@ -10,7 +10,8 @@
             <icon-header-search></icon-header-search>
         </div>
         <div class="search__search-input">
-            <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :forceNoResults="forceNoResults" :showOnly="showOnly" :query="query" :verticalOffset="19" :horizontalOffset="-20">
+            <app-search ref="search" :items="searchItems" :shouldStayOpen="isInputFocused" :forceNoResults="forceNoResults" :showOnly="showOnly" :query="query" :verticalOffset="19" :horizontalOffset="-20"
+                @itemSelected="onItemSelect($event)">
                 <input type="text" class="input--borderless search-input__field" v-model="inputValue" ref="searchInput" @focus="onSearchInputFocus()" @blur="onSearchInputBlur()"
                 @keydown="onSearchInputKeyDown($event)" />
                 <template slot="item" slot-scope="props">
@@ -94,8 +95,12 @@
         },
         methods: {
             ...mapActions('morph-screen', ['createDraft']),
-            ...mapMutations('morph-screen', ['SHOW_MS', 'SET_MS_SCREEN']),
+            ...mapMutations('morph-screen', ['SET_MS', 'SHOW_MS']),
             ...mapActions('toast', ['showError']),
+            onItemSelect(item){
+                console.log("ASDasd")
+                console.log("Teste", item)
+            },
             onShowOnlyAddressesChanged(){
                 if(this.showOnlyAddresses){
                     this.search();
@@ -111,7 +116,8 @@
                     vm.createDraft(createDraftArgs).then((response) => {
                         vm.SET_MS({
                             active: true,
-                            draft: response.data
+                            draft: response.data,
+                            params: {}
                         });
                         vm.SHOW_MS(true);
                     });
