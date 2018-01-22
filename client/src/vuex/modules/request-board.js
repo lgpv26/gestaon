@@ -22,6 +22,11 @@ const getters = {
 };
 
 const mutations = {
+    SORT_SECTIONS(){
+        state.sections.sort(function(a, b){
+            return a.position - b.position
+        })
+    },
     SET_SECTIONS(state, sections){
         if(Array.isArray(sections)){
             state.sections = sections.map((section) => {
@@ -34,7 +39,7 @@ const mutations = {
     ADD_SECTION(state, sectionObj = {}){
         const section = models.createRequestBoardSectionModel()
         // _.assign(request, {})
-        _.assign(section, sectionObj)
+        _.assign(section, {size: 1}, sectionObj)
         state.sections.push(section)
     },
     REMOVE_SECTION(state, sectionId){

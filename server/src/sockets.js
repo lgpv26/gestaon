@@ -2,7 +2,9 @@ var fs = require('fs')
 
 module.exports = function (server) {
 
-    /* import all sockets files */
+    /**
+     * Draft socket settings
+     */
 
     let socketFiles = [
         "Request"
@@ -24,8 +26,9 @@ module.exports = function (server) {
             drafts: []
         }
     }
-   
-    // clients connected to real-time features
+
+    /* End of draft socket settings */
+
     server.io.on('connection', (socket) => {
         let token = socket.handshake.query.token, user;
         server.mysql.UserAccessToken.findOne({
@@ -46,6 +49,9 @@ module.exports = function (server) {
             ]
         }).then((userAccessToken) => {
             if (userAccessToken && typeof userAccessToken.user !== 'undefined') {
+
+                /* Initial setting when user connects, or reconnects */
+
                 user = userAccessToken.user;
                 socket.user = {id: user.id, name: user.name, email: user.email, activeCompanyUserId: user.activeCompanyUserId, companies: []}
                 user.companies.forEach((company) => {
@@ -61,9 +67,18 @@ module.exports = function (server) {
                         console.log(err);
                     });
                 });
+
+                /* Importing draft events */
+
                 drafts.forEach((s) => {
                     new s(server, channels, socket);
                 });
+
+                /* Importing request board events */
+
+                const RequestBoard = require('./events/RequestBoard')
+                new RequestBoard(server, socket)
+
             }
         });
 

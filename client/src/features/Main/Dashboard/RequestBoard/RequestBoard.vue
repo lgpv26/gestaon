@@ -1,8 +1,8 @@
 <template>
     <div id="request-panel" ref="requestPanel">
         <app-draggable class="board" ref="board" :value="sections" :options="sectionDraggableOptions"
-            @input="onSectionDraggableInput($event)" @start="onSectionDragStart" @end="onSectionDragEnd">
-            <app-request-board-section v-for="section in sections" :key="section.name" :class="{dragging: isDraggingSection}"
+            @input="onSectionDraggableInput($event)" @start="onSectionDragStart" @end="onSectionDragEnd" :move="onSectionMove">
+            <app-request-board-section ref="sections" v-for="section in sections" :key="section.id" :data-id="section.id" :class="{dragging: isDraggingSection}"
                     :scrollables="scrollables" :options="boardOptions" :section="section"
                     @updateScrolls="updateScrolls()">
             </app-request-board-section>
@@ -41,7 +41,11 @@
                     forceFallback: true
                 },
                 scrollables: [],
-                isDraggingSection: false
+                isDraggingSection: false,
+                lastMove: {
+                    from: null,
+                    to: null
+                }
             }
         },
         computed: {
@@ -51,25 +55,87 @@
             ...mapState('request-board', ['sections', 'requests']),
             ...mapGetters('request-board', ['sectionRequests'])
         },
+        sockets: {
+            requestBoardSections({data}){
+                console.log("Received request-board:sections", data)
+                if(data && data.length){
+                    const vm = this
+                    data.forEach((section) => {
+                        vm.ADD_SECTION(section)
+                    })
+                }
+            },
+            requestBoardSectionCreate(response){
+                console.log("Received request-board:section-create", response)
+                this.ADD_SECTION(response.data)
+            },
+            requestBoardSectionMove(response){
+                console.log(response)
+                const section = response.data.section
+                console.log(section.id, section.position)
+                this.SET_SECTION({
+                    sectionId: section.id,
+                    section: {
+                        position: section.position
+                    }
+                })
+                Vue.nextTick(() => {
+                    this.SORT_SECTIONS()
+                })
+            }
+        },
         methods: {
             ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', ['RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
+            ...mapMutations('request-board', ['SORT_SECTIONS','RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
 
             /* Sections */
 
             addSection(){
-                this.ADD_SECTION({
-                    id: _.uniqueId("section#"),
-                    name: 'Nova seção #' + (this.sections.length + 1),
-                    size: 1
-                })
+                console.log("Emitting request-board:section-create")
+                this.$socket.emit('request-board:section-create')
             },
 
             /**
-             * When sections changes its positions, its vuex state should be updated through mutations
+             * When sections changes its positions
              */
             onSectionDraggableInput(sections){
+                // vuex state should be updated through mutations
                 this.SET_SECTIONS(sections)
+                Vue.nextTick(() => {
+                    const prevSection = this.sections[this.lastMove.to - 1]
+                    const currSection = this.sections[this.lastMove.to]
+                    const nextSection = this.sections[this.lastMove.to + 1]
+                    let position
+                    // is in middle
+                    if(nextSection && prevSection){
+                        console.log("middle", (prevSection.position + nextSection.position) / 2)
+                        this.$socket.emit('request-board:section-move', {
+                            sectionId: currSection.id,
+                            location: 'middle',
+                            position: (prevSection.position + nextSection.position) / 2
+                        })
+                    }
+                    // is first
+                    else if(nextSection && !prevSection){
+                        console.log("first")
+                        this.$socket.emit('request-board:section-move', {
+                            sectionId: currSection.id,
+                            location: 'first'
+                        })
+                    }
+                    // is last
+                    else if(!nextSection && prevSection){
+                        console.log("last")
+                        this.$socket.emit('request-board:section-move', {
+                            sectionId: currSection.id,
+                            location: 'last'
+                        })
+                    }
+                })
+            },
+            onSectionMove(ev){
+                this.lastMove.from = ev.draggedContext.index
+                this.lastMove.to = ev.draggedContext.futureIndex
             },
             onSectionDragStart(ev){
                 const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
@@ -97,7 +163,10 @@
         mounted(){
             const vm = this
             this.SET_SECTIONS([])
-            this.ADD_SECTION({
+
+
+
+            /*this.ADD_SECTION({
                 id: _.uniqueId("section#"),
                 name: 'Fila de espera',
                 size: 1
@@ -145,6 +214,7 @@
                     }
                 }
             })
+            */
         }
     }
 </script>

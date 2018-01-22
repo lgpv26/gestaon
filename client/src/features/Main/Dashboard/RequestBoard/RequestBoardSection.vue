@@ -2,7 +2,7 @@
     <div class="board-section" :style="{ width: sectionWidth }">
         <div class="board-section__header" :style="{ height: options.headerHeight + 'px' }">
             <div class="header__section-title">
-                <h3>{{ section.name }}</h3>
+                <h3>{{ section.name + ' ' + section.position }}</h3>
                 <span class="push-both-sides"></span>
                 <ul style="display: flex; flex-direction: row">
                     <li @click="collapseSection(section)" style="width: 21px; height: 16px;">

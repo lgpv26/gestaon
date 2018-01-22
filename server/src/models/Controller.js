@@ -2,11 +2,12 @@ const _ = require('lodash');
 
 module.exports = class Controller {
 
-    constructor(controller) {
+    constructor(controller = {}) {
         this._controller = {
             companyId: null,
             transaction: null,
             request: {
+                queryParser: {},
                 data: null
             }
         }

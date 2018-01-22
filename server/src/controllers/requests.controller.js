@@ -9,27 +9,13 @@ module.exports = (server, restify) => {
     const productsController = require('./../controllers/products.controller')(server, restify);
 
     return {
-        getAll: (req, res, next) => {
-            server.mysql.Request.findAndCountAll(req.queryParser).then((orders) => {
-                if (orders.count === 0) {
-                    return next(
-                        new restify.ResourceNotFoundError("Nenhum registro encontrado.")
-                    );
+        getAll: (controller) => {
+            return server.mysql.Request.findAndCountAll(controller.request.queryParser).then((requests) => {
+                if (!requests.count) {
+                   throw new Error("Nenhum registro encontrado.")
                 }
-                return res.send(200, {
-                    data: orders
-                });
-            }).catch((err) => {
-                return next(
-                    new restify.InternalError({
-                        body: {
-                            "code": err.name,
-                            "message": err.message,
-                            "detailed": err
-                        }
-                    })
-                );
-            });
+                return requests;
+            })
         },
         getOne: (req, res, next) => {
             server.mysql.Request.findOne({
@@ -58,7 +44,6 @@ module.exports = (server, restify) => {
                 orderId: controller.request.orderId,
                 taskId: controller.request.taskId
             })
-
             return server.mysql.Request.create(createData, {
                 transaction: controller.transaction
             }).then((request) => {
