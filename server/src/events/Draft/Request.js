@@ -277,7 +277,7 @@ module.exports = class Request extends Draft {
             this._clientPersistance.setDraftId(requestPersist.draftId)
             this._clientPersistance.setCompanyId(companyId)
 
-            this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'Started saving request')
+            //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'Started saving request')
 
             this._requestPersistance.setTransaction().then((transaction) => {
                 //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the client')
@@ -325,8 +325,9 @@ module.exports = class Request extends Draft {
                             this._requestPersistance.setTaskId()
                         }
 
-                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the request')
+                        //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the request')
                         this._requestPersistance.start().then((request) => {
+                            
                             this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'request saved, id: ' + request.id)
                         }).catch((err) => {
                             console.log('ERRO: START DO REQUEST PERSISTANCE: ', err)

@@ -1,7 +1,7 @@
 const fs = require('fs'),
     _ = require('lodash');
 
-module.exports = function(Sequelize, sequelize){
+module.exports = function(server, Sequelize, sequelize){
 
     let mysqlModels = {};
     let modelFiles = [
@@ -32,7 +32,7 @@ module.exports = function(Sequelize, sequelize){
 
     _.forOwn(mysqlModels, function(model, modelName){
         if(_.hasIn(require('./' + modelName), 'afterPostSettings')){
-            require('./' + modelName).afterPostSettings(mysqlModels);
+            require('./' + modelName).afterPostSettings(mysqlModels, server);
         }
     });
 

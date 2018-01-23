@@ -220,7 +220,7 @@ module.exports = (server, restify) => {
                 if (!client) {
                     throw new Error("Cliente não encontrado.");
                 }
-                console.log('to aqui')
+                
                 return server.mysql.Client.findById(controller.request.clientId, {
                     include: [{
                         model: server.mysql.ClientPhone,

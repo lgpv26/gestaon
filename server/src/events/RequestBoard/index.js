@@ -53,7 +53,7 @@ module.exports = class RequestBoard {
          */
         this.socket.on('request-board:section-create', (section) => {
             vm.server.mongodb.Section.findOne({}, {}, { sort: { position : -1 } }, function(err, lastSection) {
-                let position = this._defaultPosition
+                let position = vm._defaultPosition
                 if(lastSection) position += lastSection.position
                 vm.server.mongodb.Section.create({
                     companyId: 1,
@@ -97,7 +97,7 @@ module.exports = class RequestBoard {
                     break;
                 case "last":
                     vm.server.mongodb.Section.findOne({}, {}, { sort: { position: -1 } }, function(err, lastSection) {
-                        let position = this._defaultPosition
+                        let position = vm._defaultPosition
                         if(lastSection) position += lastSection.position
                         vm.server.mongodb.Section.findOneAndUpdate({
                             _id: evData.sectionId

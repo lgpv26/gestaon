@@ -90,7 +90,7 @@ if(config.redis.active){
 server['mongodb'] = require('./models/mongodb')(mongoose);
 
 // load MySQL/Sequelize models
-server['mysql'] = require('./models/mysql')(Sequelize, sequelize);
+server['mysql'] = require('./models/mysql')(server, Sequelize, sequelize);
 
 // loading all sockets
 log.info("Loading sockets");

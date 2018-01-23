@@ -1,3 +1,5 @@
+const shortid = require('shortid')
+
 module.exports = {
     defineModel: (mongoose) => {
 
@@ -5,16 +7,35 @@ module.exports = {
         const modelName = 'Card';
 
         const schema = new Schema({
-            cardId: Number, 
+            _id: String,
+            name: {
+                type: String,
+                default: null
+            },
             companyId: Number,
             createdBy: Number,
             requestId: Number,
-            position: Number,
+            sectionId: String,
+            position: {
+                type: Number,
+                default: 65535
+            },
         }, {
             timestamps: {
                 createdAt: 'createdAt',
                 updatedAt: 'updatedAt'
             }
+        });
+
+        schema.pre('save', function(next) {
+            if (this.isNew) {
+                const cardId = shortid.generate();
+                this.set({
+                    _id: cardId,
+                    name: 'Card #' + cardId
+                })
+            }
+            next();
         });
 
         schema.set('toJSON', {

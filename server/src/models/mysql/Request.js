@@ -1,3 +1,5 @@
+const Controller = require('./../Controller')
+
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
         const modelName = 'Request';
@@ -63,10 +65,51 @@ module.exports = {
             })
         }
     },
+
     postSettings: ({Request,Company,Client,User,Order}) => {
         Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
         Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
         Request.belongsTo(User, {as: 'user', foreignKey: 'userId'});
         Request.belongsTo(Order, {as: 'order', foreignKey: 'orderId'});
+    },
+
+    afterPostSettings: ({Request}, server) => {
+
+        const cardsController = require('./../../controllers/request-board-cards.controller')(server)
+        const sectionsController = require('./../../controllers/request-board-sections.controller')(server)
+
+        Request.hook('afterCreate', (request, options) => {   
+
+            const consultSection  = new Controller({
+                request: {
+                    companyId: request.companyId
+                }
+            })
+            return sectionsController.consultSection(consultSection).then((section) => {
+
+                const createData = {requestId: request.id,
+                                    position: 70000,
+                                    sectionId: section.id
+                                }
+
+                const createCard  = new Controller({
+                    request: {
+                        section: section,
+                        companyId: request.companyId,
+                        createdBy: request.userId,
+                        data: createData
+                    }
+                })                
+                return cardsController.createOne(createCard).then((card) => {
+
+                    transaction: options.transaction
+
+                    section.cards.push(card)
+                    section.save()
+                })
+            })
+        })
+
     }
+
 }
