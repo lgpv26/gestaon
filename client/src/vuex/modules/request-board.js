@@ -39,6 +39,15 @@ const mutations = {
     ADD_SECTION(state, sectionObj = {}){
         const section = models.createRequestBoardSectionModel()
         // _.assign(request, {})
+
+        if(_.has(sectionObj, 'cards') && sectionObj.cards.length){
+            _.map(sectionObj.cards, (card) => {
+                const tCard = models.createRequestBoardCardModel()
+                utils.assignToExistentKeys(tCard, card)
+                return tCard
+            })
+        }
+
         _.assign(section, {size: 1}, sectionObj)
         state.sections.push(section)
     },
@@ -65,7 +74,6 @@ const mutations = {
     },
     ADD_REQUEST(state, requestObj = {}){
         const request = models.createRequestBoardCardModel()
-        _.assign(request, { active: false })
         _.assign(request, requestObj)
 
         const section = _.find(state.sections, { id: requestObj.sectionId })

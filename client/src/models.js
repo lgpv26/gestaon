@@ -2,14 +2,18 @@ export default {
     createRequestBoardSectionModel(){
         return {
             id: null,
-            name: null,
+            code: null,
             cards: [],
-            size: 1
+            size: 1,
+            position: null,
+            updatedAt: null,
+            createdAt: null
         }
     },
     createRequestBoardCardModel(){
         return {
             id: null,
+            code: null,
             request: {
                 requestAddresses: [
                     {
@@ -49,7 +53,13 @@ export default {
                     // ...
                 }
             },
+            requestId: null,
             sectionId: null,
+            companyId: null,
+            createdBy: null,
+            position: null,
+            updatedAt: null,
+            createdAt: null
             // ...
         }
     },

@@ -20,10 +20,10 @@
         <div class="scrollable-content">
             <app-scrollable ref="scrollable" @updated="onSectionScrollUpdated($event)">
                 <div class="board-section__viewport" :style="{ 'width': sectionWidth, 'height': sectionHeight }">
-                    <app-draggable class="board-section__cards" :value="section.cards" :options="cardDraggableOptions"
+                    <app-draggable class="board-section__cards" :data-section-id="section.id" :value="section.cards" :options="cardDraggableOptions"
                         :style="{'padding-bottom': options.gutterSize + 'px', 'padding-left': options.gutterSize + 'px'}"
-                        :move="onRequestBoardCardMove" @input="onCardDraggableInput($event, section.id)" @start="onCardDragStart" @end="onCardDragEnd" >
-                        <div class="request-card" v-for="card in section.cards" :key="card.request.client.name" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
+                        :move="onRequestBoardCardMove" @input="onCardDraggableInput($event, section.id)" @start="onCardDragStart" @end="onCardDragEnd($event, section.id)" >
+                        <div class="request-card" v-for="card in section.cards" :key="card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
                             <app-request-board-card class="request-card__main" :card="card" :isDragging="isDraggingCard" @click="requestCardClicked(card, $event)"></app-request-board-card>
                         </div>
                     </app-draggable>
@@ -58,6 +58,11 @@
                     forceFallback: false,
                     ghostClass: 'ghost',
                     group: 'cards'
+                },
+                lastCardMove: {
+                    sectionId: null,
+                    from: null,
+                    to: null
                 },
                 isDraggingBoardColumn: false,
                 isDraggingCard: false
@@ -126,7 +131,8 @@
                     }
                 })
             },
-            onCardDragEnd(ev){
+            onCardDragEnd(ev, sectionId){
+                /*console.log(sectionId)*/
                 this.isDraggingCard = false
                 const boardCardContainer = _.first(ev.item.getElementsByClassName('request-board-card__container'));
                 boardCardContainer.style.display = 'flex';
@@ -139,6 +145,10 @@
             },
             onRequestBoardCardMove(ev, originalEv){
                 this.$emit('updateScrolls')
+                this.lastCardMove.fromSection = ev.from.dataset.sectionId
+                this.lastCardMove.from = ev.draggedContext.index
+                this.lastCardMove.toSection = ev.to.dataset.sectionId
+                this.lastCardMove.to = ev.draggedContext.futureIndex
             },
             /**
              * When cards changes its positions, its vuex state should be updated through mutations
@@ -153,6 +163,49 @@
                 this.SET_SECTION_REQUESTS({
                     sectionId,
                     requests: sectionCards
+                })
+                Vue.nextTick(() => {
+                    console.log(this.sections)
+                    const fromSection = _.find(this.sections, {id: this.lastCardMove.fromSection})
+                    const toSection = _.find(this.sections, {id: this.lastCardMove.toSection})
+                    if(toSection && toSection.id) {
+                            const prevCard = toSection.cards[this.lastCardMove.to - 1]
+                            const currCard = toSection.cards[this.lastCardMove.to]
+                            const nextCard = toSection.cards[this.lastCardMove.to + 1]
+                        console.log("To no interno")
+                            let position
+                            // is in middle
+                            if (nextCard && prevCard) {
+                                console.log("middle", (prevCard.position + nextCard.position) / 2)
+                                this.$socket.emit('request-board:card-move', {
+                                    cardId: currCard.id,
+                                    location: 'middle',
+                                    fromSection: fromSection.id,
+                                    toSection: toSection.id,
+                                    position: (prevCard.position + nextCard.position) / 2
+                                })
+                            }
+                            // is first
+                            else if (nextCard && !prevCard) {
+                                console.log("first")
+                                this.$socket.emit('request-board:card-move', {
+                                    cardId: currCard.id,
+                                    fromSection: fromSection.id,
+                                    toSection: toSection.id,
+                                    location: 'first'
+                                })
+                            }
+                            // is last
+                            else if (!nextCard && prevCard) {
+                                console.log("last")
+                                this.$socket.emit('request-board:card-move', {
+                                    cardId: currCard.id,
+                                    fromSection: fromSection.id,
+                                    toSection: toSection.id,
+                                    location: 'last'
+                                })
+                            }
+                    }
                 })
             },
         },

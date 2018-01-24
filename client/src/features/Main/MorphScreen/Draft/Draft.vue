@@ -74,6 +74,7 @@
             draftRequestPersist(draft){
                 console.log("Received draftRequestPersist", draft);
                 this.isPersisting = false;
+                this.$emit('closeDraft')
             }
         },
         computed: {

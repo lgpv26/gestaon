@@ -78,35 +78,51 @@ module.exports = {
         const cardsController = require('./../../controllers/request-board-cards.controller')(server)
         const sectionsController = require('./../../controllers/request-board-sections.controller')(server)
 
-        Request.hook('afterCreate', (request, options) => {   
+        Request.hook('afterCreate', (request, options) => {
 
-            const consultSection  = new Controller({
-                request: {
-                    companyId: request.companyId
-                }
-            })
-            return sectionsController.consultSection(consultSection).then((section) => {
-
-                const createData = {requestId: request.id,
-                                    position: 70000,
-                                    sectionId: section.id
-                                }
-
-                const createCard  = new Controller({
+            return server.mysql.Request.findOne({
+                where: {
+                    id: request.id
+                },
+                include: [{
+                    model: this.server.mysql.Client,
+                    as: 'client'
+                }],
+            }).then((request) => {
+                const consultSection  = new Controller({
                     request: {
-                        section: section,
-                        companyId: request.companyId,
-                        createdBy: request.userId,
-                        data: createData
+                        companyId: request.companyId
                     }
-                })                
-                return cardsController.createOne(createCard).then((card) => {
-
-                    transaction: options.transaction
-
-                    section.cards.push(card)
-                    section.save()
                 })
+                return sectionsController.consultSection(consultSection).then((section) => {
+                    const createData = {
+                        requestId: request.id,
+                        position: 70000,
+                        sectionId: section.id
+                    }
+                    const createCard  = new Controller({
+                        request: {
+                            section: section,
+                            companyId: request.companyId,
+                            createdBy: request.userId,
+                            data: createData
+                        }
+                    })
+                    return cardsController.createOne(createCard).then((card) => {
+                        card.request = request
+                        // transaction: options.transaction
+                        section.cards.push(card._id)
+                        section.save().then((section) => {
+                            server.io.sockets.emit('requestBoardCardCreate', {
+                                data: {
+                                    card,
+                                    section
+                                }
+                            })
+                        })
+                    })
+                })
+
             })
         })
 

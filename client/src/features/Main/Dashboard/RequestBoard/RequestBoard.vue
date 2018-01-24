@@ -57,7 +57,7 @@
         },
         sockets: {
             requestBoardSections({data}){
-                console.log("Received request-board:sections", data)
+                console.log("Received requestBoardSections", data)
                 if(data && data.length){
                     const vm = this
                     data.forEach((section) => {
@@ -66,11 +66,11 @@
                 }
             },
             requestBoardSectionCreate(response){
-                console.log("Received request-board:section-create", response)
+                console.log("Received requestBoardSectionCreate", response)
                 this.ADD_SECTION(response.data)
             },
             requestBoardSectionMove(response){
-                console.log(response)
+                console.log("Received requestBoardSectionMove", response)
                 const section = response.data.section
                 console.log(section.id, section.position)
                 this.SET_SECTION({
@@ -82,6 +82,11 @@
                 Vue.nextTick(() => {
                     this.SORT_SECTIONS()
                 })
+            },
+            requestBoardCardCreate(request){
+                console.log("Received requestBoardCardCreate", request)
+                const card = request.data.card
+                this.ADD_REQUEST(card)
             }
         },
         methods: {

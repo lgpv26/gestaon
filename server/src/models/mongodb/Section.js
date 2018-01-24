@@ -8,7 +8,7 @@ module.exports = {
         const modelName = 'Section';
 
         const schema = new Schema({
-            _id: String,
+            code: String,
             companyId: Number,
             createdBy: Number,
             name: {
@@ -16,7 +16,10 @@ module.exports = {
                 default: null
             },
             cards: {
-                type: Array,
+                type: [{
+                    type: mongoose.Schema.ObjectId,
+                    ref: 'Card'
+                }],
                 default: []
             },
             position: {
@@ -32,10 +35,10 @@ module.exports = {
 
         schema.pre('save', function(next) {
             if (this.isNew) {
-                const sectionId = shortid.generate();
+                const sectionCode = shortid.generate();
                 this.set({
-                    _id: sectionId,
-                    name: 'Seção #' + sectionId
+                    code: sectionCode,
+                    name: 'Seção #' + sectionCode
                 })
             }
             next();
@@ -56,11 +59,6 @@ module.exports = {
 
     },
     postSettings: (mongoose, tModel, models) => {
-        const Card = _.find(models, { name: 'Card' }).schema
-        tModel.schema.set('cards', {
-            type: [Card],
-            default: []
-        })
         return {
             instance: mongoose.model(tModel.name, tModel.schema),
             name: tModel.name

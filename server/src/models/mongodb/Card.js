@@ -7,7 +7,7 @@ module.exports = {
         const modelName = 'Card';
 
         const schema = new Schema({
-            _id: String,
+            code: String,
             name: {
                 type: String,
                 default: null
@@ -29,10 +29,10 @@ module.exports = {
 
         schema.pre('save', function(next) {
             if (this.isNew) {
-                const cardId = shortid.generate();
+                const cardCode = shortid.generate();
                 this.set({
-                    _id: cardId,
-                    name: 'Card #' + cardId
+                    code: cardCode,
+                    name: 'Card #' + cardCode
                 })
             }
             next();
