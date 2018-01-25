@@ -28,7 +28,7 @@ module.exports = {
         }
     },
     postSettings: ({SupplierCompany, Supplier, Company}) => {
-        SupplierCompany.belongsTo(Supplier, {as: 'supplier', foreignKey: 'supplierId'});
-        SupplierCompany.belongsTo(Company, {as: 'company', foreignKey: 'companyId'});
+        SupplierCompany.belongsTo(Supplier, {as: 'supplier', foreignKey: 'supplierId'})
+        SupplierCompany.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
     }
 };

@@ -89,7 +89,7 @@ module.exports = (server, restify) => {
                     if(_.has(createData, "clientPhones")) {
                         const clientPhonesControllerObj = new Controller({
                             request: {
-                                clientId: client.id,
+                                clientId: client.id || null,
                                 data: createData.clientPhones
                             },
                             transaction: controller.transaction
@@ -101,7 +101,7 @@ module.exports = (server, restify) => {
                     if(_.has(createData, "clientAddresses") && createData.clientAddresses.length) {
                         const clientAddressesControllerObj = new Controller({
                             request: {
-                                clientId: client.id,
+                                clientId: client.id || null,
                                 companyId: createData.companyId,
                                 data: createData.clientAddresses
                             },
@@ -191,7 +191,7 @@ module.exports = (server, restify) => {
                                             }],
                                             transaction: controller.transaction
                                         }).then((clientReturn) => {
-                                            clientReturn = JSON.parse(JSON.stringify(clientReturn))
+                                            clientReturn = (clientReturn) ? JSON.parse(JSON.stringify(clientReturn)) : {}
                                             const clientAddressId = (objES.clientAddressId) ? {clientAddressId: objES.clientAddressId} : {}
                                             const clientPhoneId = (objES.clientPhoneId) ? {clientPhoneId: objES.clientPhoneId} : {}
                                             

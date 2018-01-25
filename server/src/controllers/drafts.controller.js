@@ -68,7 +68,7 @@ module.exports = (server) => {
                 req.body.createdBy = req.auth.id
                 req.body.companyId = req.query.companyId
                 req.body.presence = []
-                req.body.form = { activeStep: null, client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId, isNull: true }, order: { orderProducts: [{id: 'temp:' + shortid.generate()}] } }
+                req.body.form = { activeStep: null, client: { id: null, name: null, legalDocument: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId, isNull: true }, order: { orderProducts: [{id: 'temp:' + shortid.generate()}] } }
                 req.body.data = { company: null, client: null }
                 return server.mongodb.Draft.create(req.body).then((draft) => {
 
@@ -228,7 +228,7 @@ module.exports = (server) => {
 
         resetClient(clientReset) {
             return this.getOne(clientReset.draftId).then((draft) => {
-                const update = _.assign(draft.form, { client: { id: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], isNull: true }, clientAddressForm: {}, clientAddressId: null})
+                const update = _.assign(draft.form, { client: { id: null,  name: null, legalDocument: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], isNull: true }, clientAddressForm: {}, clientAddressId: null})
                 return server.mongodb.Draft.update({ draftId: clientReset.draftId }, { $set: { form: update } }).then(() => {
                     return null
                 })
@@ -240,6 +240,16 @@ module.exports = (server) => {
         ///  ** address     ///
         ///////////////////////
     //
+
+        clientAddressEdit(addressEdit) {
+            return this.getOne(addressEdit.draftId).then((draft) => {
+                const update = _.assign(draft.form, { clientAddressForm: {id: addressEdit.clientAddressId} })
+                return server.mongodb.Draft.update({ draftId: addressEdit.draftId }, { $set: { form: update } }).then(() => {
+                    return true
+                })
+            })
+        },
+        
         clientAddressBack(addressBack) {
             return this.getOne(addressBack.draftId).then((draft) => {
                 const update = _.assign(draft.form, { clientAddressForm: {} })
@@ -271,7 +281,7 @@ module.exports = (server) => {
                         update.addressClientReturn = draft.form.clientAddressForm
                     }
 
-                    const client = _.assign(draft.form.client, { clientAddresses: saveClientAddresses, isNull: false })
+                    const client = _.assign(draft.form.client, { clientAddresses: saveClientAddresses })
                     update.form = _.assign(draft.form, { client: client, clientAddressForm: {} })
 
                     resolve(update)
@@ -381,7 +391,7 @@ module.exports = (server) => {
                             update.phoneClientReturn = draft.form.clientPhoneForm
                         }
 
-                        const client = _.assign(draft.form.client, { clientPhones: saveClientPhones, isNull: false })
+                        const client = _.assign(draft.form.client, { clientPhones: saveClientPhones })
                         update.form = _.assign(draft.form, { client: client, clientPhoneForm: {} })
 
                         resolve(update)

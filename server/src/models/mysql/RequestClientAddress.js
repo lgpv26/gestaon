@@ -1,6 +1,6 @@
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
-        const modelName = 'Order';
+        const modelName = 'RequestClientAddress';
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
@@ -9,10 +9,19 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
-                obs: {
+                requestId: {
+                    type: Sequelize.INTEGER
+                },
+                clientAddressId: {
+                    type: Sequelize.INTEGER,
+                    set(val) {
+                        this.setDataValue('clientAddressId', (val == '' | val == null) ? null : val);
+                    }
+                },
+                type: {
                     type: Sequelize.STRING,
                     set(val) {
-                        this.setDataValue('obs', (val == '' | val == null) ? null : val.toUpperCase().trim());
+                        this.setDataValue('type', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
                 },
                 dateUpdated: {
@@ -26,7 +35,7 @@ module.exports = {
                 },
                 status: Sequelize.STRING
             }, {
-                tableName: "order",
+                tableName: "request_client_address",
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -36,9 +45,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Order,OrderProduct,Product}) => {
-        
-        Order.hasMany(OrderProduct, {as: 'orderProducts', foreignKey: 'orderId'});
-        Order.belongsToMany(Product, {through: OrderProduct, as: 'products', foreignKey: 'orderId'});
+    postSettings: ({RequestClientAddress,Request, ClientAddress}) => {
+        RequestClientAddress.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
+        RequestClientAddress.belongsTo(ClientAddress, {as: 'clientAddress', foreignKey: 'clientAddressId'})
     }
 }

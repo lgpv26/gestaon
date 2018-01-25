@@ -288,27 +288,21 @@ module.exports = class Request extends Draft {
 
                     this._orderPersistance.setCompanyId(companyId)
 
-                    console.log(client)
-
-                    if(client){              
-                        this._orderPersistance.setClient(client) 
-                    }
-                    else{
-                        this._orderPersistance.setClient()
-                    }
                     //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the order')
                     this._orderPersistance.start(transaction).then((order) => {
                         //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'order saved, id: ' + order.orderId)
-                        
+
                         this._requestPersistance.setDraftId(requestPersist.draftId)
                         this._requestPersistance.setCompanyId(companyId)
-                        this._requestPersistance.setUserId(this.socket.user.id)
+                        this._requestPersistance.setUserId(this.socket.user.id)                        
 
                         if(client){
-                            this._requestPersistance.setClientId(client.clientId)  
+                            this._requestPersistance.setClient(client)
+                            this._requestPersistance.setClientId(client.id)
                         }
                         else{
-                            this._requestPersistance.setClientId()  
+                            this._requestPersistance.setClient()
+                            this._requestPersistance.setClientId()
                         }
                         if(order){
                             this._requestPersistance.setOrderId(order.id) 
@@ -449,7 +443,9 @@ module.exports = class Request extends Draft {
         onClientAddressEdit(clientAddressEdit) {
             clientAddressEdit.inEdition = { clientAddress: { inEdition: true, clientAddressId: clientAddressEdit.clientAddressId } }
             super.updateDraftRedis(clientAddressEdit, true).then(() => {
-                this.server.io.in('draft/' + clientAddressEdit.draftId).emit('draftClientAddressEdit', clientAddressEdit.clientAddressId)
+                this.controller.clientAddressEdit(clientAddressEdit).then(() => {
+                    this.server.io.in('draft/' + clientAddressEdit.draftId).emit('draftClientAddressEdit', clientAddressEdit.clientAddressId)
+                })
             })
         }
 

@@ -85,68 +85,79 @@ module.exports = (server, restify) => {
         },
 
         setClientPhones(controller) {
-            let setData = _.cloneDeep(controller.request.data)
-            setData = _.map(setData, (clientPhone) => {
-                _.assign(clientPhone, {
-                    clientId: parseInt(controller.request.clientId)
-                })
-                if(_.has(clientPhone, 'dateUpdated')) delete clientPhone.dateUpdated // remove dateUpdated fields so it updates the dateUpdated field
+            return new Promise ((resolve, reject) => {
+                let setData = _.cloneDeep(controller.request.data)
+                setData = _.map(setData, (clientPhone) => {
+                    _.assign(clientPhone, {
+                        clientId: (controller.request.clientId) ? parseInt(controller.request.clientId) : null
+                    })
+                    if(_.has(clientPhone, 'dateUpdated')) delete clientPhone.dateUpdated // remove dateUpdated fields so it updates the dateUpdated field
 
-                clientPhone.status = (clientPhone.selected) ? 'selected' : 'activated'
+                    clientPhone.status = (clientPhone.selected) ? 'selected' : 'activated'
 
-                return clientPhone
-            });
-            return server.mysql.ClientPhone.destroy({
-                where: {
-                    clientId: parseInt(controller.request.clientId)
-                },
-                transaction: controller.transaction
-            }).then(() => {
-                return server.mysql.ClientPhone.bulkCreate(setData, {
-                    updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdated', 'dateRemoved', 'status'],
+                    return clientPhone
+                });
+                return server.mysql.ClientPhone.destroy({
+                    where: {
+                        clientId: (controller.request.clientId) ? parseInt(controller.request.clientId) : 0
+                    },
                     transaction: controller.transaction
                 }).then(() => {
-                    return server.mysql.Client.findOne({
-                        where: {
-                            id: parseInt(controller.request.clientId)
-                        },
-                        include: [{
-                            model: server.mysql.ClientPhone,
-                            as: 'clientPhones'
-                        }],
+                    return server.mysql.ClientPhone.bulkCreate(setData, {
+                        updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdated', 'dateRemoved', 'status'],
                         transaction: controller.transaction
-                    }).then((client) => {
-                        return new Promise((resolve, reject) => {
-                            if (!client) {
-                                return reject(new restify.ResourceNotFoundError("Registro não encontrado."));
-                        }
-                            let clientPhoneIdSelect = null
-                            let clientPhoneStatus = []
-                            client.clientPhones.forEach((checkClientPhoneSelect) => {
-                            
-                                if(checkClientPhoneSelect.status === 'selected'){
-                                    clientPhoneIdSelect = parseInt(checkClientPhoneSelect.id)
-                                    clientPhoneStatus.push({id: parseInt(checkClientPhoneSelect.id), status: 'activated'})
-                                }
-                            })
-                            
-                            const esClientPhones = _.map(client.clientPhones, clientPhone => {
-                                return {
-                                    clientPhoneId: clientPhone.id,
-                                    ddd: clientPhone.ddd,
-                                    number: clientPhone.number
-                                };
-                            })
-
-                            return server.mysql.ClientPhone.bulkCreate(clientPhoneStatus, {
-                                updateOnDuplicate: ['status'],
+                    }).then((bulk) => {
+                        if(controller.request.clientId){
+                            return server.mysql.Client.findOne({
+                                where: {
+                                    id: parseInt(controller.request.clientId)
+                                },
+                                include: [{
+                                    model: server.mysql.ClientPhone,
+                                    as: 'clientPhones'
+                                }],
                                 transaction: controller.transaction
-                            }).then(() => {
-                                resolve({phonesES: esClientPhones, clientPhoneId: clientPhoneIdSelect});
+                            }).then((client) => {
+                                return new Promise((resolve, reject) => {
+                                    if (!client) {
+                                        return reject(new restify.ResourceNotFoundError("Registro não encontrado."));
+                                }
+                                    let clientPhoneIdSelect = null
+                                    let clientPhoneStatus = []
+                                    client.clientPhones.forEach((checkClientPhoneSelect) => {
+                                    
+                                        if(checkClientPhoneSelect.status === 'selected'){
+                                            clientPhoneIdSelect = parseInt(checkClientPhoneSelect.id)
+                                            clientPhoneStatus.push({id: parseInt(checkClientPhoneSelect.id), status: 'activated'})
+                                        }
+                                    })
+                                    
+                                    const esClientPhones = _.map(client.clientPhones, clientPhone => {
+                                        return {
+                                            clientPhoneId: clientPhone.id,
+                                            ddd: clientPhone.ddd,
+                                            number: clientPhone.number
+                                        };
+                                    })
+    
+                                    return server.mysql.ClientPhone.bulkCreate(clientPhoneStatus, {
+                                        updateOnDuplicate: ['status'],
+                                        transaction: controller.transaction
+                                    }).then(() => {
+                                        resolve({phonesES: esClientPhones, clientPhoneId: clientPhoneIdSelect});
+                                    }).catch((err) => {
+                                        reject(err)
+                                    })
+                                }).then((result) => {
+                                    resolve(result)
+                                })
                             }).catch((err) => {
-                                reject(err)
+                                console.log("ERRO NO SET CLIENT PHONES: ", err)
                             })
-                        })
+                        }
+                        else {                            
+                            resolve({clientPhones: JSON.parse(JSON.stringify(bulk))})
+                        }
                     })
                 })
             })

@@ -6,7 +6,13 @@ const Controller = require('../models/Controller')
 module.exports = (server, restify) => {
 
     const ordersProductsController = require('./../controllers/orders-products.controller')(server, restify);
-    const productsController = require('./../controllers/products.controller')(server, restify);
+    const productsController = require('./../controllers/products.controller')(server, restify)
+    const requestsClientsPhone = require('./../controllers/requests-clients-phones.controller')(server, restify)
+    const requestsClientsAddress = require('./../controllers/requests-clients-addresses.controller')(server, restify)
+
+    const addressesController = require('./../controllers/addresses.controller')(server, restify);
+    const clientsAddressesController = require('./../controllers/clients-addresses.controller')(server, restify);
+    const clientsPhonesController = require('./../controllers/clients-phones.controller')(server, restify);
 
     return {
         getAll: (controller) => {
@@ -50,7 +56,54 @@ module.exports = (server, restify) => {
                 if (!request) {
                     throw new Error("Não foi possível encontrar o pedido criado.")
                 }
-                return JSON.parse(JSON.stringify(request))
+
+                let promises = []
+
+                if(controller.request.clientId){
+                    
+                    promises.push(requestsClientsPhone.setClientPhones(clientsPhonesControllerObj))
+                    promises.push(requestsClientsAddress.setClientAddresses(clientsAddressesControllerObj))
+
+                    return Promise.all(promises).then(() => {
+                        return JSON.parse(JSON.stringify(request))
+                    }).catch((err) => {
+                        return reject()
+                    })
+                }
+                else{
+                    /* save clientPhones if existent */
+                    if(_.has(controller.request, "clientPhones") && controller.request.clientPhones.length) {
+                        const clientPhonesControllerObj = new Controller({
+                            request: {
+                                clientId: null,
+                                data: controller.request.clientPhones
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
+                    }
+
+                    /* save clientAddresses if existent */
+                    if(_.has(controller.request, "clientAddresses") && controller.request.clientAddresses.length) {
+                        const clientAddressesControllerObj = new Controller({
+                            request: {
+                                clientId: null,
+                                companyId: controller.request.companyId,
+                                data: controller.request.clientAddresses
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(clientsAddressesController.setClientAddresses(clientAddressesControllerObj))
+                    }
+
+                    return Promise.all(promises).then((result) => {
+                        result.forEach((value) => {
+                            console.log(value)
+                        })
+                    }).catch((err) => {
+                        return reject()
+                    })
+                }
             })
         },
 

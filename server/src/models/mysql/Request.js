@@ -66,11 +66,17 @@ module.exports = {
         }
     },
 
-    postSettings: ({Request,Company,Client,User,Order}) => {
+    postSettings: ({Request,Company,Client,User,Order,RequestClientPhone,ClientPhone,RequestClientAddress,ClientAddress}) => {
         Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
         Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
         Request.belongsTo(User, {as: 'user', foreignKey: 'userId'});
-        Request.belongsTo(Order, {as: 'order', foreignKey: 'orderId'});
+        Request.belongsTo(Order, {as: 'order', foreignKey: 'orderId'})
+
+        Request.hasMany(RequestClientPhone, {as: 'requestClientPhones', foreignKey: 'requestId'});
+        Request.belongsToMany(ClientPhone, { through: RequestClientPhone, as: 'clientPhones', foreignKey: 'requestId' });
+
+        Request.hasMany(RequestClientAddress, {as: 'requestClientAddresses', foreignKey: 'requestId'});
+        Request.belongsToMany(ClientAddress, { through: RequestClientAddress, as: 'clientAddresses', foreignKey: 'requestId' });
     },
 
     afterPostSettings: ({Request}, server) => {
@@ -78,17 +84,17 @@ module.exports = {
         const cardsController = require('./../../controllers/request-board-cards.controller')(server)
         const sectionsController = require('./../../controllers/request-board-sections.controller')(server)
 
-        Request.hook('afterCreate', (request, options) => {
-
+        Request.hook('afterCreate', (instance, options) => {
             return server.mysql.Request.findOne({
                 where: {
-                    id: request.id
+                    id: instance.id
                 },
                 include: [{
-                    model: this.server.mysql.Client,
+                    model: server.mysql.Client,
                     as: 'client'
                 }],
-            }).then((request) => {
+                transaction: options.transaction
+            }).then((request) => {        
                 const consultSection  = new Controller({
                     request: {
                         companyId: request.companyId
@@ -123,6 +129,8 @@ module.exports = {
                     })
                 })
 
+            }).catch((err) => {
+                console.log(err)
             })
         })
 

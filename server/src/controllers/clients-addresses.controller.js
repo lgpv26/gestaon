@@ -53,7 +53,7 @@ module.exports = (server, restify) => {
                 const addressesControllerObj = new Controller({
                     request: {
                         companyId: controller.request.companyId,
-                        clientId: controller.request.clientId,
+                        clientId: (controller.request.clientId) ? parseInt(controller.request.clientId) : null,
                         data: setData
                     },
                     transaction: controller.transaction
@@ -70,7 +70,7 @@ module.exports = (server, restify) => {
                         clientAddressData.push({
                             id: (result.id) ? result.id : null,
                             status: (result.selected) ? 'selected' : 'activated',
-                            clientId: parseInt(controller.request.clientId),
+                            clientId: (controller.request.clientId) ? parseInt(controller.request.clientId) : null,
                             addressId: parseInt(result.address.id),
                             name: (result.name) ? result.name : null,
                             number: (result.number) ? result.number : null,
@@ -84,7 +84,7 @@ module.exports = (server, restify) => {
                     const clientAddressControllerObj = new Controller({
                         request: {
                             companyId: controller.request.companyId,
-                            clientId: controller.request.clientId,
+                            clientId: (controller.request.clientId) ? parseInt(controller.request.clientId) : null,
                             data: clientAddressData
                         },
                         transaction: controller.transaction
@@ -94,19 +94,24 @@ module.exports = (server, restify) => {
                     }))
 
                     return Promise.all(clientAddressesPromisses).then((resultAddressPromises) => {
+
+                        if(controller.request.clientId){
                         
-                        let clientAddressesES = []
-                        _.map(resultAddressPromises, (result) => {
-                            clientAddressesES.push(result.clientAddressesES) 
-                        })
+                            let clientAddressesES = []
+                            _.map(resultAddressPromises, (result) => {
+                                clientAddressesES.push(result.clientAddressesES) 
+                            })
 
-                        let addressesES = []
-                        _.map(resultAddressPromises, (result) => {
-                            addressesES.push(result.addressesES) 
-                        })
+                            let addressesES = []
+                            _.map(resultAddressPromises, (result) => {
+                                addressesES.push(result.addressesES) 
+                            })
 
-                        resolve({clientAddressesES: _.first(clientAddressesES), addressesES: _.first(addressesES), clientAddressId: _.first(resultAddressPromises).clientAddressId})
-
+                            resolve({clientAddressesES: _.first(clientAddressesES), addressesES: _.first(addressesES), clientAddressId: _.first(resultAddressPromises).clientAddressId})
+                        }
+                        else{
+                            resolve({clientAddresses: _.first(resultAddressPromises)})
+                        }
                     }).catch((err) => {
                         //console.log(err)
                         reject(err)
@@ -159,7 +164,7 @@ module.exports = (server, restify) => {
         return new Promise((resolve, reject) => { 
             return server.mysql.ClientAddress.destroy({
                 where: {
-                    clientId: parseInt(controller.request.clientId)
+                    clientId: (controller.request.clientId) ? parseInt(controller.request.clientId) : 0
                 },
                 transaction: controller.transaction
             }).then(() => {
@@ -171,54 +176,59 @@ module.exports = (server, restify) => {
                     if (!response) {
                         reject(new restify.ResourceNotFoundError("Registro não encontrado."));
                     }
-                    return server.mysql.ClientAddress.findAll({
-                        where: {
-                            clientId: parseInt(controller.request.clientId)
-                        },
-                        include: [{
-                            model: server.mysql.Address,
-                            as: 'address'
-                        }],
-                        transaction: controller.transaction
-                    }).then((findClientAddresses) => {
-                        findClientAddresses = JSON.parse(JSON.stringify(findClientAddresses))
-                        
-                        let clientAddressIdSelect = null
-                        let clientAddressStatus = []
-                        findClientAddresses.forEach((checkClientAddressSelect) => {
-                            if(checkClientAddressSelect.status === 'selected'){
-                                clientAddressIdSelect = parseInt(checkClientAddressSelect.id)
-                                clientAddressStatus.push({id: parseInt(checkClientAddressSelect.id), status: 'activated'})
-                            }
-                        })
-
-                        let clientAddressesES = _.map(findClientAddresses, clientAddress => {
-                            return {
-                                clientAddressId: clientAddress.id,
-                                complement: clientAddress.complement,
-                                address: clientAddress.address.name,
-                                number: clientAddress.number,
-                                cep: clientAddress.address.cep,
-                                neighborhood: clientAddress.address.neighborhood
-                            };
-                        })
-
-                        let addressesES = []
-                        controller.request.data.forEach((value) => {
-                            if(_.has(value, 'addressES') && value.addressES){
-                                addressesES.push(value.addressES) 
-                            }
-                        })
-
-                        return server.mysql.ClientAddress.bulkCreate(clientAddressStatus, {
-                            updateOnDuplicate: ['status'],
+                    if(controller.request.clientId){
+                        return server.mysql.ClientAddress.findAll({
+                            where: {
+                                clientId: parseInt(controller.request.clientId)
+                            },
+                            include: [{
+                                model: server.mysql.Address,
+                                as: 'address'
+                            }],
                             transaction: controller.transaction
-                        }).then(() => {
-                            resolve({clientAddressesES: clientAddressesES, addressesES: addressesES, clientAddressId: clientAddressIdSelect});
-                        }).catch((err) => {
-                            reject(err)
+                        }).then((findClientAddresses) => {
+                            findClientAddresses = JSON.parse(JSON.stringify(findClientAddresses))
+                            
+                            let clientAddressIdSelect = null
+                            let clientAddressStatus = []
+                            findClientAddresses.forEach((checkClientAddressSelect) => {
+                                if(checkClientAddressSelect.status === 'selected'){
+                                    clientAddressIdSelect = parseInt(checkClientAddressSelect.id)
+                                    clientAddressStatus.push({id: parseInt(checkClientAddressSelect.id), status: 'activated'})
+                                }
+                            })
+
+                            let clientAddressesES = _.map(findClientAddresses, clientAddress => {
+                                return {
+                                    clientAddressId: clientAddress.id,
+                                    complement: clientAddress.complement,
+                                    address: clientAddress.address.name,
+                                    number: clientAddress.number,
+                                    cep: clientAddress.address.cep,
+                                    neighborhood: clientAddress.address.neighborhood
+                                };
+                            })
+
+                            let addressesES = []
+                            controller.request.data.forEach((value) => {
+                                if(_.has(value, 'addressES') && value.addressES){
+                                    addressesES.push(value.addressES) 
+                                }
+                            })
+
+                            return server.mysql.ClientAddress.bulkCreate(clientAddressStatus, {
+                                updateOnDuplicate: ['status'],
+                                transaction: controller.transaction
+                            }).then(() => {
+                                resolve({clientAddressesES: clientAddressesES, addressesES: addressesES, clientAddressId: clientAddressIdSelect});
+                            }).catch((err) => {
+                                reject(err)
+                            })
                         })
-                    })
+                    }
+                    else {                            
+                        resolve(JSON.parse(JSON.stringify(response)))
+                    }
                 }).catch((error) => {
                     reject(error);
                 })

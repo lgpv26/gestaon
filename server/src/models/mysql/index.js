@@ -12,7 +12,8 @@ module.exports = function(server, Sequelize, sequelize){
         "UserAccessToken.js","UserRefreshToken.js",
         "Request.js","Order.js","OrderProduct.js", "Supplier.js", 
         "SupplierProduct.js", "SupplierCompany.js",
-        "CustomField.js", "ClientCustomField.js", "ClientGroup.js"
+        "CustomField.js", "ClientCustomField.js", "ClientGroup.js",
+        "RequestClientAddress.js", "RequestClientPhone"
     ];
 
     modelFiles.forEach(function(fileName) {

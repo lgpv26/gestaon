@@ -24,7 +24,11 @@ module.exports = class RequestPersistance extends Persistance {
         this._orderId = null
         this._taskId = null
 
+        this._clientAddresses = null
+        this._clientPhones = null
+
         this._draft = null;
+        this._client = null;
         this._transaction = null;
 
         this.requestsController = requestsController(this.server);
@@ -35,7 +39,6 @@ module.exports = class RequestPersistance extends Persistance {
     // execute its saving operations through the use of controllers.
     // finally, respond with success or failure with its respective errors.
 
-    
     setDraftId(draftId = null) {
         if (draftId) this._draftId = draftId;
     }
@@ -52,12 +55,24 @@ module.exports = class RequestPersistance extends Persistance {
         this._clientId = clientId;
     }
 
+    setClient(client = null) {
+        this._client = client;
+    }
+
     setOrderId(orderId = null) {
         this._orderId = orderId;
     }
 
     setTaskId(taskId = null) {
         this._taskId = taskId;
+    }
+
+    setClientAddresses(clientAddresses = null) {
+        if (clientAddresses) this._clientAddresses = clientAddresses;
+    }
+
+    setClientPhones(clientPhones = null) {
+        if (clientPhones) this._clientPhones = clientPhones;
     }
 
     setTransaction() {
@@ -81,8 +96,25 @@ module.exports = class RequestPersistance extends Persistance {
             }
             this._draft = draft
 
-            if (draft.form.id) {
+            if (this._draft.form.id) {
                 this._requestId = parseInt(draft.form.id)
+            }
+
+            if(this._client){
+                if(_.has(this._client, "clientAddresses")) {
+                    this.setClientAddresses(this._client.clientAddresses)
+                }
+                if(_.has(this._client, "clientPhones")) {
+                    this.setClientPhones(this._client.clientPhones)
+                }
+            }
+            else {
+                if(_.has(this._draft.form.client, "clientAddresses")) {
+                    this.setClientAddresses(this.removeTempIds(this._draft.form, "clientAddresses"))
+                }
+                if(_.has(this._draft.form.client, "clientPhones")) {
+                    this.setClientPhones(this.removeTempIds(this._draft.form, "clientPhones"))
+                }
             }
 
             return this.saveRequest()
@@ -99,6 +131,9 @@ module.exports = class RequestPersistance extends Persistance {
                     clientId: this._clientId || null,
                     orderId: this._orderId || null,
                     taskId: this._taskId || null,
+
+                    clientAddresses: this._clientAddresses || null,
+                    clientPhones: this._clientPhones|| null,
 
                     data: this.mapDraftObjToModelObj(this._draft.form)
                 },
@@ -142,10 +177,9 @@ module.exports = class RequestPersistance extends Persistance {
     mapDraftObjToModelObj(form) {        
         return form
     }
-
-    /*
-    removeTempIds(order, key){
-        _.map(order[key], (obj) => {
+    
+    removeTempIds(form, key){
+        _.map(form.client[key], (obj) => {
             if (_.has(obj, "id")) {
                 const checkId = obj.id.toString().split(':')
                 if (_.first(checkId) === 'temp') {
@@ -154,8 +188,9 @@ module.exports = class RequestPersistance extends Persistance {
             }
             return obj
         })
+        return form.client[key]
     }
-    */
+
 
     /**
      * Commit persistence

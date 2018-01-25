@@ -21,6 +21,7 @@ module.exports = class RequestPersistance extends Persistance {
         super(server);
 
         this._clientId = null;
+        this._isNull = null
         this._companyId = null;
         this._draftId = null;
 
@@ -66,11 +67,14 @@ module.exports = class RequestPersistance extends Persistance {
                 }
             }
 
-            if(!draft.form.client.isNull){
+            if(!draft.form.client.isNull && !_.isEmpty(draft.form.client.name) || !_.isEmpty(draft.form.client.legalDocument)){
                 this._draft = draft;
 
                 if (draft.form.client.id) {
                     this._clientId = parseInt(draft.form.client.id)
+                }
+                else{
+                    this._clientId = null
                 }
 
                 if(this._saveInRequest) {
@@ -108,6 +112,7 @@ module.exports = class RequestPersistance extends Persistance {
                 request: {
                     companyId: this._companyId,
                     clientId: this._clientId || null,
+                    isNull: this._isNull || null,
                     data: this.mapDraftObjToModelObj(this._draft.form)
                 },
                 transaction: this._transaction

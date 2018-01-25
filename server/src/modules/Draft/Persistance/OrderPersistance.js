@@ -54,13 +54,6 @@ module.exports = class OrderPersistance extends Persistance {
         this._client = client;
     }
 
-    setClientAddressId(clientAddressId = null) {
-        if (clientAddressId) this._clientAddressId = clientAddressId;
-    }
-
-    setClientPhoneId(clientPhoneId = null) {
-        if (clientPhoneId) this._clientPhoneId = clientPhoneId;
-    }
 
     /**
      * Start order persistence from draft to definitive (MySQL)
@@ -101,25 +94,9 @@ module.exports = class OrderPersistance extends Persistance {
 
     saveOrder(){
         return new Promise((resolve, reject) => {
-            if(this._client){
-                if(_.has(this._client,'clientAddressId')) {
-                    this.setClientAddressId(this._client.clientAddressId)
-                }
-                else{
-                    this.setClientAddressId(_.first(this._client.clientAddresses).id)
-                }
-                if(_.has(this._client,'clientPhoneId')) {
-                    this.setClientPhoneId(this._client.clientPhoneId)
-                }
-                else{
-                    this.setClientPhoneId(_.first(this._client.clientPhones).id)
-                }
-            }
             const controller = new Controller({
                 request: {
                     companyId: this._companyId,
-                    clientAddressId: this._clientAddressId || null,
-                    clientPhoneId: this._clientPhoneId || null,
                     data: this.mapDraftObjToModelObj(this._draft.form)
                 },
                 transaction: this._transaction
