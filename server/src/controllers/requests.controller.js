@@ -60,9 +60,26 @@ module.exports = (server, restify) => {
                 let promises = []
 
                 if(controller.request.clientId){
+
+                    const clientPhonesControllerObj = new Controller({
+                        request: {
+                            requestId: request.id,
+                            data: controller.request.clientPhones
+                        },
+                        transaction: controller.transaction
+                    })
                     
-                    promises.push(requestsClientsPhone.setClientPhones(clientsPhonesControllerObj))
-                    promises.push(requestsClientsAddress.setClientAddresses(clientsAddressesControllerObj))
+                    promises.push(requestsClientsPhone.setClientPhones(clientPhonesControllerObj))
+
+                    const clientAddressesControllerObj = new Controller({
+                        request: {
+                            requestId: request.id,
+                            data: controller.request.clientAddresses
+                        },
+                        transaction: controller.transaction
+                    })
+
+                    promises.push(requestsClientsAddress.setClientAddresses(clientAddressesControllerObj))
 
                     return Promise.all(promises).then(() => {
                         return JSON.parse(JSON.stringify(request))
@@ -97,8 +114,35 @@ module.exports = (server, restify) => {
                     }
 
                     return Promise.all(promises).then((result) => {
-                        result.forEach((value) => {
-                            console.log(value)
+                        let requestClientsPromises = []
+                        result.forEach((value, index) => {
+                            /* save clientPhones if existent */
+                            if(_.has(value, "clientPhones")) {
+                                const clientPhonesControllerObj = new Controller({
+                                    request: {
+                                        requestId: request.id,
+                                        data: value.clientPhones
+                                    },
+                                    transaction: controller.transaction
+                                })
+                                requestClientsPromises.push(requestsClientsPhone.setClientPhones(clientPhonesControllerObj))
+                            }
+
+                            /* save clientPhones if existent */
+                            if(_.has(value, "clientAddresses")) {
+                                const clientAddressesControllerObj = new Controller({
+                                    request: {
+                                        requestId: request.id,
+                                        data: value.clientAddresses
+                                    },
+                                    transaction: controller.transaction
+                                })
+                                requestClientsPromises.push(requestsClientsAddress.setClientAddresses(clientAddressesControllerObj))
+                            }
+                        })
+
+                        return Promise.all(requestClientsPromises).then(() => {
+                            return true
                         })
                     }).catch((err) => {
                         return reject()
