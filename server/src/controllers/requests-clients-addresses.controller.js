@@ -17,15 +17,22 @@ module.exports = (server, restify) => {
                             requestId: parseInt(controller.request.requestId)
                     })
                 })
-    
-            return server.mysql.RequestClientAddress.bulkCreate(setData, {
-                updateOnDuplicate: ['requestId', 'clientAddressId', 'type', 'dateUpdated', 'dateRemoved', 'status'],
+
+            return server.mysql.RequestClientAddress.destroy({
+                where: {
+                    requestId: parseInt(controller.request.requestId)
+                },
                 transaction: controller.transaction
-            }).then((response) => {
-                    resolve(response);
-                }).catch((error) => {
-                    reject(error);
-                });
+            }).then(() => {
+                return server.mysql.RequestClientAddress.bulkCreate(setData, {
+                    updateOnDuplicate: ['requestId', 'clientAddressId', 'type', 'dateUpdated', 'dateRemoved', 'status'],
+                    transaction: controller.transaction
+                }).then((response) => {
+                        resolve(response);
+                    }).catch((error) => {
+                        reject(error);
+                    });
+                })
             })
         }
 

@@ -148,7 +148,7 @@ module.exports = (server, restify) => {
                 }
                 else{
                     /* save clientPhones if existent */
-                    if(_.has(controller.request, "clientPhones") && controller.request.clientPhones.length) {
+                    if(_.has(controller.request, "clientPhones") && controller.request.clientPhones) {
                         const clientPhonesControllerObj = new Controller({
                             request: {
                                 clientId: null,
@@ -160,7 +160,7 @@ module.exports = (server, restify) => {
                     }
 
                     /* save clientAddresses if existent */
-                    if(_.has(controller.request, "clientAddresses") && controller.request.clientAddresses.length) {
+                    if(_.has(controller.request, "clientAddresses") && controller.request.clientAddresses) {
                         const clientAddressesControllerObj = new Controller({
                             request: {
                                 clientId: null,
@@ -223,98 +223,180 @@ module.exports = (server, restify) => {
                 taskId: controller.request.taskId
             })
 
-            server.mysql.Request.update(updateData, {
+            return server.mysql.Request.update(updateData, {
                 where: {
-                    id: controller.request.id
+                    id: controller.request.data.id
                 },
                 transaction: controller.transaction
             }).then((request) => {
                 if (!request) {
                     throw new Error("Registro não encontrado Parte 1..")
                 }
-                server.mysql.Request.findById(controller.request.id, {
+                return server.mysql.Request.findById(controller.request.data.id, {
                     include: [{
-                        model: server.mysql.Order,
-                        as: 'order',
-                        include: [{                            
+                        model: server.mysql.User,
+                        as: "user"
+                    }, {
+                        model: server.mysql.RequestClientPhone,
+                        as: "requestClientPhones",
+                            include: [{
+                                model: server.mysql.ClientPhone,
+                                as: "clientPhone",
+                            }]
+                        }, {
+                        model: server.mysql.RequestClientAddress,
+                        as: "requestClientAddresses",
+                            include: [{
+                                model: server.mysql.ClientAddress,
+                                as: "clientAddress",
+                                include:[{
+                                    model: server.mysql.Address,
+                                    as: "address"
+                                }]
+                            }]
+                        },{
+                        model: server.mysql.Client,
+                        as: "client",
+                            include: [{
+                                model: server.mysql.ClientPhone,
+                                as: 'clientPhones'
+                            }, {
+                                model: server.mysql.ClientAddress,
+                                as: 'clientAddresses',
+                                include: [{
+                                    model: server.mysql.Address,
+                                    as: 'address'
+                                }]
+                            }, {
+                                model: server.mysql.ClientCustomField,
+                                as: 'clientCustomFields',
+                                include: [{
+                                    model: server.mysql.CustomField,
+                                    as: 'customField'
+                                }]
+                            }, {
+                                model: server.mysql.ClientGroup,
+                                as: 'clientGroup'
+                            }]
+                    }, {
+                    model: server.mysql.Order,
+                    as: "order",
+                        include: [{
                             model: server.mysql.OrderProduct,
                             as: 'orderProducts',
                             include: [{
                                 model: server.mysql.Product,
                                 as: 'product'
                             }]
-                        }],
-                        model: server.mysql.Client,
-                        as: 'client',
-                        include: [{
-                            model: server.mysql.ClientPhone,
-                            as: 'clientPhones'
-                        }, {
-                            model: server.mysql.ClientAddress,
-                            as: 'clientAddresses',
-                            include: [{
-                                model: server.mysql.Address,
-                                as: 'address'
-                            }]
-                        }, {
-                            model: server.mysql.ClientCustomField,
-                            as: 'clientCustomFields',
-                            include: [{
-                                model: server.mysql.CustomField,
-                                as: 'customField'
-                            }]
-                        }],
-                    }],
+                        }]
+                    }]
+                    /*, {
+                        model: server.mysql.Task,
+                        as: "task"
+                    }*/,
                     transaction: controller.transaction
                 }).then((request) => {
                     if (!request) {
                         throw new Error("Registro não encontrado Parte 2..")
                     }
 
-                    const promises = [];
+                    let promises = []
 
-                    /* save orderProducts if existent */
-                    if(_.has(updateData, "orderProducts")) {
-                        const orderProductsControllerObj = new Controller({
+                    if(controller.request.clientId){
+
+                        const clientPhonesControllerObj = new Controller({
                             request: {
-                                orderId: controller.request.orderId,
-                                companyId: controller.request.companyId,
-                                data: updateData.orderProducts
+                                requestId: request.id,
+                                data: controller.request.clientPhones
                             },
                             transaction: controller.transaction
                         })
-                        promises.push(ordersProductsController.setOrdersProducts(orderProductsControllerObj))
-                    }
+                        
+                        promises.push(requestsClientsPhone.setClientPhones(clientPhonesControllerObj))
 
-                    /* return only when all promises are satisfied */
-                    return Promise.all(promises).then((orderEs) => {
-                        const objES = {}
-                        _.map(orderEs, (value) => {
-                            _.assign(objES, value)
+                        const clientAddressesControllerObj = new Controller({
+                            request: {
+                                requestId: request.id,
+                                data: controller.request.clientAddresses
+                            },
+                            transaction: controller.transaction
                         })
 
-                        let productsESPromise = []
-                        if (_.has(objES, "productsES") && objES.productsES) {
-                            objES.productsES.forEach((productES) => {
-                                const productESControllerObj = new Controller({
-                                    request: {
-                                        companyId: controller.request.companyId,
-                                        data: productES
-                                    },
-                                    transaction: controller.transaction
-                                })
-                                productsESPromise.push(productsController.saveProductsInES(productESControllerObj))
-                            })
-                        }
+                        promises.push(requestsClientsAddress.setClientAddresses(clientAddressesControllerObj))
 
-                        return Promise.all(productsESPromise).then(() => {
-                            return resolve(JSON.parse(JSON.stringify(request)))
+                        return Promise.all(promises).then(() => {
+                            return JSON.parse(JSON.stringify(request))
                         }).catch((err) => {
                             return reject()
                         })
-                    })
+                    }
+                    else{
+                        /* save clientPhones if existent */
+                        if(_.has(controller.request, "clientPhones") && controller.request.clientPhones) {
+                            const clientPhonesControllerObj = new Controller({
+                                request: {
+                                    clientId: null,
+                                    data: controller.request.clientPhones
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(clientsPhonesController.setClientPhones(clientPhonesControllerObj))
+                        }
+
+                        /* save clientAddresses if existent */
+                        if(_.has(controller.request, "clientAddresses") && controller.request.clientAddresses) {
+                            const clientAddressesControllerObj = new Controller({
+                                request: {
+                                    clientId: null,
+                                    companyId: controller.request.companyId,
+                                    data: controller.request.clientAddresses
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(clientsAddressesController.setClientAddresses(clientAddressesControllerObj))
+                        }
+
+                        return Promise.all(promises).then((result) => {
+                            let requestClientsPromises = []
+                            result.forEach((value, index) => {
+                                /* save clientPhones if existent */
+                                if(_.has(value, "clientPhones")) {
+                                    const clientPhonesControllerObj = new Controller({
+                                        request: {
+                                            requestId: request.id,
+                                            data: value.clientPhones
+                                        },
+                                        transaction: controller.transaction
+                                    })
+                                    requestClientsPromises.push(requestsClientsPhone.setClientPhones(clientPhonesControllerObj))
+                                }
+
+                                /* save clientPhones if existent */
+                                if(_.has(value, "clientAddresses")) {
+                                    const clientAddressesControllerObj = new Controller({
+                                        request: {
+                                            requestId: request.id,
+                                            data: value.clientAddresses
+                                        },
+                                        transaction: controller.transaction
+                                    })
+                                    requestClientsPromises.push(requestsClientsAddress.setClientAddresses(clientAddressesControllerObj))
+                                }
+                            })
+
+                            return Promise.all(requestClientsPromises).then(() => {
+                                return true
+                            })
+                        }).catch((err) => {
+                            return reject()
+                        })
+                    }
                     
+                }).catch((err) => {
+                    console.log("ERRO, CONSULT (APOS UPDATE): ", err)
                 })
+            }).catch((err) => {
+                console.log("ERRO, UPDATE REQUEST: ", err)
             })
         },
 

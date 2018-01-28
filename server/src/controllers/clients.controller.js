@@ -262,7 +262,7 @@ module.exports = (server, restify) => {
                         }))
 
                         /* save clientPhones if existent */
-                        if(_.has(updateData, "clientPhones") && updateData.clientPhones.length) {
+                        if(_.has(updateData, "clientPhones") && updateData.clientPhones) {
                             const clientPhonesControllerObj = new Controller({
                                 request: {
                                     clientId: controller.request.clientId,
@@ -274,7 +274,7 @@ module.exports = (server, restify) => {
                         }
 
                         /* save clientAddresses if existent */
-                        if(_.has(updateData, "clientAddresses") && updateData.clientAddresses.length) {
+                        if(_.has(updateData, "clientAddresses") && updateData.clientAddresses) {
                             const clientAddressesControllerObj = new Controller({
                                 request: {
                                     clientId: controller.request.clientId,
@@ -287,7 +287,7 @@ module.exports = (server, restify) => {
                         }
 
                         /* save clientCustomFields if existent */
-                        if(_.has(updateData, "clientCustomFields") && updateData.clientCustomFields.length) {
+                        if(_.has(updateData, "clientCustomFields") && updateData.clientCustomFields) {
 
                             const clientCustomFieldControllerObj = new Controller({
                                 request: {

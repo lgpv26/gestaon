@@ -123,30 +123,19 @@ module.exports = (server, restify) => {
 
         },
 
-        updateOne: (req, res, next) => {
-            console.log('to no update opss')
-            if (!req.body) {
-                return next(
-                    new restify.ResourceNotFoundError("Erro, dados não enviados.")
-                );
-            }
-            const updateData = _.cloneDeep(req.body);
-            server.mysql.Order.update(updateData, {
+        updateOne: (controller) => {
+     
+            const updateData = _.cloneDeep(controller.request.data)
+            return server.mysql.Order.update(updateData, {
                 where: {
-                    id: req.params.id,
-                    status: 'activated'
-                }
+                    id: controller.request.data.id
+                },
+                transaction: controller.transaction
             }).then((order) => {
                 if (!order) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado P)arte 1.")
-                    );
+                    return new restify.ResourceNotFoundError("Não foi possivel encontrar registro atualizado, parte 1")
                 }
-                server.mysql.Order.findById(req.params.id, {
-                    where: {
-                        id: req.params.id,
-                        status: 'activated'
-                    },
+                return server.mysql.Order.findById(controller.request.data.id, {
                     include: [{
                         model: server.mysql.OrderProduct,
                         as: 'orderProducts',
@@ -154,27 +143,61 @@ module.exports = (server, restify) => {
                             model: server.mysql.Product,
                             as: 'product'
                         }]
-                    }]
+                    }],
+                    transaction: controller.transaction
                 }).then((order) => {
                     if (!order) {
-                        return next(
-                            new restify.ResourceNotFoundError("Registro não encontrado.")
-                        );
+                        return new restify.ResourceNotFoundError("Não foi possivel encontrar registro atualizado, parte 2")
                     }
-                    if (_.has(updateData, "orderProducts") && updateData.orderProducts.length > 0) {
-                        req.params['id'] = order.id;
-                        saveProducts(req, res, next).then((order) => {
-                            return res.send(200, {
-                                data: order
-                            });
+                    order = JSON.parse(JSON.stringify(order))
+
+                    return new Promise((resolve, reject) => {
+                    const promises = [];
+
+                    /* save orderProducts if existent */
+                    if(_.has(updateData, "orderProducts")) {
+                        const orderProductsControllerObj = new Controller({
+                            request: {
+                                orderId: order.id,
+                                companyId: controller.request.companyId,
+                                data: updateData.orderProducts
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(ordersProductsController.setOrdersProducts(orderProductsControllerObj))
+                    }
+
+                        /* return only when all promises are satisfied */
+                        return Promise.all(promises).then((orderEs) => {
+                            const objES = {}
+                            _.map(orderEs, (value) => {
+                                _.assign(objES, value)
+                            })
+
+                            let productsESPromise = []
+                            if (_.has(objES, "productsES") && objES.productsES) {
+                                objES.productsES.forEach((productES) => {
+                                    const productESControllerObj = new Controller({
+                                        request: {
+                                            companyId: controller.request.companyId,
+                                            data: productES
+                                        },
+                                        transaction: controller.transaction
+                                    })
+
+                                    productsESPromise.push(productsController.saveProductsInES(productESControllerObj))
+                                })
+                            }
+
+                            return Promise.all(productsESPromise).then(() => {
+                                return resolve(order)
+                            }).catch((err) => {
+                                return reject()
+                            })
                         }).catch((err) => {
-                            console.log(err);
-                            next(err);
-                        });
-                    }
-                    else {
-                        return {orderId: 1}
-                    }
+                            return reject(err)
+                        })
+                    })
                 })
             })
         },
