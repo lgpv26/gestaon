@@ -57,35 +57,44 @@ module.exports = (server) => {
             })
         },
 
-        createOne(req) {
+        createOne: (controller) => {
             return server.mongodb.Draft.findOne().sort({ _id: -1 }).then((draftIdNext) => {
                 if (draftIdNext) {
                     return draftIdNext.draftId + 1
                 }
                 return 1
             }).then((seq) => {
-                req.body.draftId = seq
-                req.body.createdBy = req.auth.id
-                req.body.companyId = req.query.companyId
-                req.body.presence = []
-                req.body.form = { activeStep: null, client: { id: null, name: null, legalDocument: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: req.query.companyId, isNull: true }, order: { orderProducts: [{id: 'temp:' + shortid.generate()}] } }
-                req.body.data = { company: null, client: null }
-                return server.mongodb.Draft.create(req.body).then((draft) => {
+                let setData = {}
+                setData.draftId = seq
+                setData.createdBy = parseInt(controller.request.createdBy.id),
+                setData.companyId = controller.request.companyId,
+                setData.type = controller.request.type,
+                setData.presence = []
+                if(controller.request.recoverance){
+                    setData.recoverancedBy = parseInt(controller.request.recoverancedBy.id)
+                    setData.form = {id: controller.request.recoverance.id, activeStep: null, client: controller.request.client, order: controller.request.order, task: controller.request.task }
+                }
+                else{
+                    setData.form = {id: null, activeStep: null, client: { id: null, name: null, legalDocument: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], companyId: controller.request.companyId, isNull: true }, order: { orderProducts: [{id: 'temp:' + shortid.generate()}] } }
+                }
+                setData.data = { company: null, client: null }
+
+                return server.mongodb.Draft.create(setData).then((draft) => {
 
                     draft = JSON.parse(JSON.stringify(draft))
-                    draft = _.assignIn(draft, { createdBy: req.auth.name }) // change createdBy to user name for emit to all users
+                    draft = _.assignIn(draft, { createdBy: controller.request.createdBy.name, recoverancedBy: (controller.request.recoverancedBy) ? controller.request.recoverancedBy.name : null }) // change createdBy to user name for emit to all users
 
                     // check socket connections and emit 
                     let ids = Object.keys(server.io.sockets.connected)
                     ids.forEach(function (id) {
                         const socket = server.io.sockets.connected[id]
 
-                        if (_.includes(socket.user.companies, parseInt(req.query.companyId))) {
+                        if (_.includes(socket.user.companies, parseInt(controller.request.companyId))) {
                             socket.join('draft/' + draft.draftId)
                         }
                         const companyActiveId = (socket.user.activeCompanyUserId) ? socket.user.activeCompanyUserId : socket.user.companies[0]
-                        if (parseInt(req.query.companyId) === parseInt(companyActiveId)) {
-                            socket.emit('draftCreated', { data: draft, emittedBy: req.auth.id })
+                        if (parseInt(controller.request.companyId) === parseInt(companyActiveId)) {                                       
+                            socket.emit('draftCreated', { data: draft, emittedBy: (controller.request.recoverancedBy) ? parseInt(controller.request.recoverancedBy.id) : parseInt(controller.request.createdBy.id) })
                         }
                     })
 

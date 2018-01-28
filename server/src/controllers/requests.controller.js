@@ -15,6 +15,7 @@ module.exports = (server, restify) => {
     const clientsPhonesController = require('./../controllers/clients-phones.controller')(server, restify);
 
     return {
+
         getAll: (controller) => {
             return server.mysql.Request.findAndCountAll(controller.request.queryParser).then((requests) => {
                 if (!requests.count) {
@@ -23,21 +24,79 @@ module.exports = (server, restify) => {
                 return requests;
             })
         },
-        getOne: (req, res, next) => {
-            server.mysql.Request.findOne({
+
+        getOne: (controller) => {
+            return server.mysql.Request.findOne({
                 where: {
-                    id: req.params.id,
-                    status: 'activated'
+                    id: parseInt(controller.request.id),
+                    companyId: parseInt(controller.request.companyId)
+                },
+                include: [{
+                    model: server.mysql.User,
+                    as: "user"
+                }, {
+                    model: server.mysql.RequestClientPhone,
+                    as: "requestClientPhones",
+                        include: [{
+                            model: server.mysql.ClientPhone,
+                            as: "clientPhone",
+                        }]
+                    }, {
+                    model: server.mysql.RequestClientAddress,
+                    as: "requestClientAddresses",
+                        include: [{
+                            model: server.mysql.ClientAddress,
+                            as: "clientAddress",
+                            include:[{
+                                model: server.mysql.Address,
+                                as: "address"
+                            }]
+                        }]
+                    },{
+                    model: server.mysql.Client,
+                    as: "client",
+                        include: [{
+                            model: server.mysql.ClientPhone,
+                            as: 'clientPhones'
+                        }, {
+                            model: server.mysql.ClientAddress,
+                            as: 'clientAddresses',
+                            include: [{
+                                model: server.mysql.Address,
+                                as: 'address'
+                            }]
+                        }, {
+                            model: server.mysql.ClientCustomField,
+                            as: 'clientCustomFields',
+                            include: [{
+                                model: server.mysql.CustomField,
+                                as: 'customField'
+                            }]
+                        }, {
+                            model: server.mysql.ClientGroup,
+                            as: 'clientGroup'
+                        }]
+                }, {
+                model: server.mysql.Order,
+                as: "order",
+                    include: [{
+                        model: server.mysql.OrderProduct,
+                        as: 'orderProducts',
+                        include: [{
+                            model: server.mysql.Product,
+                            as: 'product'
+                        }]
+                    }]
+                }]
+                /*, {
+                    model: server.mysql.Task,
+                    as: "task"
+                }*/
+            }).then((request) => {
+                if (!request) {
+                    return new restify.ResourceNotFoundError("Registro não encontrado.")
                 }
-            }).then((order) => {
-                if (!order) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado.")
-                    );
-                }
-                return res.send(200, {
-                    data: order
-                });
+                return request
             });
         },
 

@@ -4,6 +4,7 @@ const _ = require('lodash')
 const RequestPersistance = require('../../modules/Draft/Persistance/RequestPersistance');
 const ClientPersistance = require('../../modules/Draft/Persistance/ClientPersistance');
 const OrderPersistance = require('../../modules/Draft/Persistance/OrderPersistance');
+const RequestRecoverance = require('../../modules/Draft/Recoverance/RequestRecoverance');
 
 module.exports = class Request extends Draft {
 
@@ -14,6 +15,7 @@ module.exports = class Request extends Draft {
         this._requestPersistance = new RequestPersistance(server);
         this._clientPersistance = new ClientPersistance(server);
         this._orderPersistance = new OrderPersistance(server);
+        this._requestRecoverance = new RequestRecoverance(server);        
         // functions
         this.setRequestEventListeners();
     }
@@ -29,6 +31,10 @@ module.exports = class Request extends Draft {
         super.saveDraft(requestPersist.draftId).then(() => {
             this.onRequestPersist(requestPersist)
         })
+    })
+
+    this.socket.on('draft:request-recoverance', (requestRecoverance) => {
+        this.onRequestRecoverance(requestRecoverance)
     })
      
         ///////////////////////
@@ -337,6 +343,28 @@ module.exports = class Request extends Draft {
                 console.log('ERRO: SET TRANSACTION: ', err)
             })   
         }
+    }
+
+    /**
+     * Request Recoverance
+     * @desc Send to all sockets in Draft/:id the recoverance event
+     *
+     * @param {object} requestRecoverance - expected: requestId, companyId
+     * @return {object} *Draft @property {Socket}
+     */
+    onRequestRecoverance(requestRecoverance) {
+
+        this._requestRecoverance.setRequestId(requestRecoverance.requestId)
+        this._requestRecoverance.setCompanyId(requestRecoverance.companyId)
+        this._requestRecoverance.setRecoverancedBy(this.socket.user)
+
+        
+        this._requestRecoverance.start().then((draft) => {
+            this.server.io.in('draft/' + draft.draftId).emit('draftRequestRecoverance', draft)
+        }).catch((err) => {
+            console.log('ERRO: REQUEST RECOVERANCE: ', err)
+        })
+    
     }
 
     ///////////////////////

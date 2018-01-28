@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const basePath = require('./../middlewares/base-path.middleware');
+const Controller = require('./../models/Controller')
 
 module.exports = (server, restify) => {
 
@@ -26,7 +27,16 @@ module.exports = (server, restify) => {
     })
 
     server.post('/drafts', (req, res, next) => {
-        draftsController.createOne(req).then((draft) => {
+ 
+        const controller = new Controller({
+            request: {
+                createdBy: req.auth || null,
+                companyId: req.query.companyId,
+                type: req.params.type || null
+            }
+        })
+
+        draftsController.createOne(controller).then((draft) => {
             return res.send(200, { data: draft })
         }).catch((err) => {
             return next(new restify.InternalServerError({

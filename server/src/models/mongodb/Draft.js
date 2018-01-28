@@ -8,6 +8,10 @@ module.exports = {
             draftId: Number, 
             companyId: Number,
             createdBy: Number,
+            recoverancedBy: {
+                type: Number,
+                default: null
+            },
             type: {
                 type: String,
                 enum: {
