@@ -10,11 +10,10 @@
                 <span class="summary__info">Iniciado às <em>{{ formatedCreatedAt }}</em> por <em>{{ screen.draft.createdBy }}</em></span>
             </div>
             <span class="push-both-sides"></span>
-            <div class="header__tags">
+            <div class="header__tags" v-if="tags.length">
                 <span>Termos da busca: </span>
                 <ul>
-                    <li class="copiable-content" data-clipboard-text="Junho"><span>Junho</span><icon-copy></icon-copy></li>
-                    <li class="copiable-content" data-clipboard-text="(44) 3268-5858"><span>(44) 3268-5858</span><icon-copy></icon-copy></li>
+                    <li class="copiable-content" v-for="tag in tags" :data-clipboard-text="tag"><span>{{ tag }}</span><icon-copy></icon-copy></li>
                 </ul>
             </div>
             <div class="header__actions">
@@ -78,7 +77,7 @@
             }
         },
         computed: {
-            ...mapGetters('morph-screen', ['activeMorphScreen']),
+            ...mapGetters('morph-screen', ['activeMorphScreen','tags']),
             ...mapState('morph-screen', ['screens','isShowing']),
             ...mapState('auth', [
                 'user', 'token', 'company'

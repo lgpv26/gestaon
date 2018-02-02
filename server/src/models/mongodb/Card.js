@@ -15,7 +15,10 @@ module.exports = {
             companyId: Number,
             createdBy: Number,
             requestId: Number,
-            sectionId: String,
+            section: {
+                type: mongoose.Schema.ObjectId,
+                ref: 'Section'
+            },
             position: {
                 type: Number,
                 default: 65535
@@ -40,6 +43,7 @@ module.exports = {
 
         schema.set('toJSON', {
              transform: function (doc, ret, options) {
+                 ret.sectionId = ret.section
                  ret.id = ret._id;
                  delete ret._id;
                  delete ret.__v;

@@ -4,16 +4,30 @@ import models from '@/models'
 
 const state = () => ({
     screens: [],
+    searchData: null,
     isShowing: false
 });
 
 const getters = {
     activeMorphScreen(state, getters){
         return _.find(state.screens, { active: true });
+    },
+    tags(state, getters){
+        if(state.searchData && state.searchData.tags && state.searchData.tags.length){
+            return state.searchData.tags
+        }
+        return []
     }
 };
 
 const mutations = {
+    SET_SEARCH_DATA(state, data){
+        if(_.has(data, 'text')){
+            
+            data.tags = data.text.trim().split(" ")
+        }
+        state.searchData = data
+    },
     RESET(currentState){
         const initialState = state();
         Object.keys(initialState).forEach(k => { currentState[k] = initialState[k] })
@@ -26,7 +40,7 @@ const mutations = {
     SHOW_MS(state, value){
         if(_.isObject(value)) {
             const obj = value;
-            if(obj.show) {
+            if(obj.show){
                 state.isShowing = true;
             }
             else {

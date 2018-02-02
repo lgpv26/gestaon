@@ -80,6 +80,7 @@
         computed: {
             ...mapState('auth', ['company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
+            ...mapState('morph-screen', ['searchData']),
             showOnly(){
                 if(this.showOnlyAddresses === true){
                     return 'address';
@@ -95,11 +96,25 @@
         },
         methods: {
             ...mapActions('morph-screen', ['createDraft']),
-            ...mapMutations('morph-screen', ['SET_MS', 'SHOW_MS']),
+            ...mapMutations('morph-screen', ['SET_MS', 'SHOW_MS', 'SET_SEARCH_DATA']),
             ...mapActions('toast', ['showError']),
+            cleanSearchData(){
+                console.log("Reset search data")
+                this.SET_SEARCH_DATA(null)
+            },
             onItemSelect(item){
-                console.log("ASDasd")
-                console.log("Teste", item)
+                if(_.has(item, 'client')){
+                    this.SET_SEARCH_DATA({
+                        text: this.inputValue,
+                        client: item.client
+                    })
+                }
+                else if(_.has(item, 'address')){
+                    this.SET_SEARCH_DATA({
+                        text: this.inputValue,
+                        address: item.address
+                    })
+                }
             },
             onShowOnlyAddressesChanged(){
                 if(this.showOnlyAddresses){
@@ -114,6 +129,9 @@
                 if(!vm.isShowingMorphScreen){
                     const createDraftArgs = { body: {type: 'request'}, companyId: vm.company.id };
                     vm.createDraft(createDraftArgs).then((response) => {
+                        vm.SET_SEARCH_DATA({
+                            text: vm.inputValue
+                        })
                         vm.SET_MS({
                             active: true,
                             draft: response.data,

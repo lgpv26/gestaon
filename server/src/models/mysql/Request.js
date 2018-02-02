@@ -1,4 +1,5 @@
 const Controller = require('./../Controller')
+const _ = require('lodash')
 
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
@@ -94,17 +95,22 @@ module.exports = {
                     as: 'client'
                 }],
                 transaction: options.transaction
-            }).then((request) => {        
+            }).then((request) => {
                 const consultSection  = new Controller({
                     request: {
                         companyId: request.companyId
                     }
                 })
                 return sectionsController.consultSection(consultSection).then((section) => {
+                    let maxCard = _.maxBy(section.cards, (card) => {
+                        return card.position
+                    })
+                    let maxCardPosition = 65535
+                    if(maxCard) maxCardPosition += maxCard.position
                     const createData = {
                         requestId: request.id,
-                        position: 70000,
-                        sectionId: section.id
+                        position: maxCardPosition,
+                        section: section.id
                     }
                     const createCard  = new Controller({
                         request: {
@@ -114,10 +120,10 @@ module.exports = {
                             data: createData
                         }
                     })
-                    return cardsController.createOne(createCard).then((card) => {
+                    return cardsController.createOne(createCard).then((createdCard) => {
+                        const card = createdCard.toJSON()
                         card.request = request
-                        // transaction: options.transaction
-                        section.cards.push(card._id)
+                        section.cards.push(createdCard)
                         section.save().then((section) => {
                             server.io.sockets.emit('requestBoardCardCreate', {
                                 data: {

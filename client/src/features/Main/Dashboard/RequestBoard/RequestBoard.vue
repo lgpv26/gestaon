@@ -56,8 +56,8 @@
             ...mapGetters('request-board', ['sectionRequests'])
         },
         sockets: {
-            requestBoardSections({data}){
-                console.log("Received requestBoardSections", data)
+            requestBoardLoad({data}){
+                console.log("Received requestBoardLoad", data)
                 if(data && data.length){
                     const vm = this
                     data.forEach((section) => {
@@ -87,7 +87,21 @@
                 console.log("Received requestBoardCardCreate", request)
                 const card = request.data.card
                 this.ADD_REQUEST(card)
-            }
+            },
+            requestBoardCardMove(response){
+                console.log("Received requestBoardCardMove", response)
+
+                /*const section = response.data.section
+                this.SET_SECTION({
+                    sectionId: section.id,
+                    section: {
+                        position: section.position
+                    }
+                })
+                Vue.nextTick(() => {
+                    this.SORT_SECTIONS()
+                })*/
+            },
         },
         methods: {
             ...mapMutations('morph-screen', []),
@@ -168,58 +182,7 @@
         mounted(){
             const vm = this
             this.SET_SECTIONS([])
-
-
-
-            /*this.ADD_SECTION({
-                id: _.uniqueId("section#"),
-                name: 'Fila de espera',
-                size: 1
-            })
-            this.ADD_SECTION({
-                id: _.uniqueId("section#"),
-                name: 'Com o entregador',
-                size: 1
-            })
-            Vue.nextTick(() => {
-                if(vm.sections.length) {
-                    const taskArray = [
-                        {
-                            text: "Rever a instalação do fogão"
-                        },
-                        {
-                            text: "Assistência de regulador"
-                        },
-                        {
-                            text: "Lalalala"
-                        }
-                    ]
-                    for (let i = 1; i <= 5; i++) {
-                        const randomIndex = _.random(vm.sections.length - 1)
-                        const randomSection = vm.sections[randomIndex]
-
-                        let randomTask
-
-                        if(_.random(1) && taskArray.length){
-                            const randomIndex = _.random(taskArray.length - 1)
-                            randomTask = taskArray[randomIndex]
-                            taskArray.splice(randomIndex, 1)
-                        }
-
-                        vm.ADD_REQUEST({
-                            id: _.uniqueId("card#"),
-                            sectionId: randomSection.id,
-                            request: {
-                                client: {
-                                    name: "TESTE CLIENTE " + i
-                                },
-                                task: randomTask
-                            }
-                        })
-                    }
-                }
-            })
-            */
+            this.$socket.emit('request-board:load')
         }
     }
 </script>

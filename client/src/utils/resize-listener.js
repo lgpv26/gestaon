@@ -57,14 +57,16 @@
     };
 
     window.removeResizeListener = function(element, fn){
-        element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1);
+        if(element.__resizeListeners__ && element.__resizeListeners__.length){
+            element.__resizeListeners__.splice(element.__resizeListeners__.indexOf(fn), 1);
+        }
         if (!element.__resizeListeners__.length) {
             if (attachEvent) element.detachEvent('onresize', resizeListener);
             else {
                 if(_.has(element, '__resizeTrigger__.contentDocument.defaultView') && element.__resizeTrigger__.contentDocument.defaultView) {
                     element.__resizeTrigger__.contentDocument.defaultView.removeEventListener('resize', resizeListener);
+                    element.__resizeTrigger__ = !element.removeChild(element.__resizeTrigger__);
                 }
-                element.__resizeTrigger__ = !element.removeChild(element.__resizeTrigger__);
             }
         }
     }

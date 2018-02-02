@@ -13,7 +13,8 @@ module.exports = (server) => {
         //
 
         consultSection: (controller) => {
-            return server.mongodb.Section.findOne({ companyId: controller.request.companyId }).sort({ position: 1 }).then((section) => {
+            return server.mongodb.Section.findOne({ companyId: controller.request.companyId })
+                .sort({ position: 1 }).populate('cards').exec().then((section) => {
                 if(!section) {
                     // criar sessão
                 }
