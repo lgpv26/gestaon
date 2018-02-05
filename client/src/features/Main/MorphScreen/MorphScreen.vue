@@ -94,6 +94,13 @@
                             formatedCreatedAt: moment(draft.createdAt).format('DD/MM HH:mm')
                         }
                         break;
+                    case "expense":
+                        return {
+                            text: "Compras e despesas",
+                            entryComponent: 'expense-form',
+                            formatedCreatedAt: moment(draft.createdAt).format('DD/MM HH:mm')
+                        }
+                        break;
                 }
             },
 

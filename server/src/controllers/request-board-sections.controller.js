@@ -15,8 +15,9 @@ module.exports = (server) => {
         consultSection: (controller) => {
             return server.mongodb.Section.findOne({ companyId: controller.request.companyId })
                 .sort({ position: 1 }).populate('cards').exec().then((section) => {
-                if(!section) {
+                if(!section){
                     // criar sessão
+
                 }
                 else {
                     return section

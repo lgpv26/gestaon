@@ -48,6 +48,7 @@
 
     import ClientForm from "./Client/ClientForm.vue";
     import RequestForm from "./Request/RequestForm.vue";
+    import ExpenseForm from "./Expense/ExpenseForm.vue";
     import AccountsForm from "./Accounts/AccountsForm.vue";
 
     export default {
@@ -55,6 +56,7 @@
             "app-request-form": RequestForm,
             "app-client-form": ClientForm,
             "app-accounts-form": AccountsForm,
+            "app-expense-form": ExpenseForm,
         },
         data(){
             return {

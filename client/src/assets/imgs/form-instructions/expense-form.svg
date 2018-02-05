@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400px" height="204px" viewBox="0 0 400 204" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs></defs>
+    <g id="Expenses-Draft" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g transform="translate(-408.000000, -215.000000)" id="bg-accounts-graphic">
+            <g transform="translate(409.000000, 213.000000)">
+                <path d="M0.604493105,188.821327 C0.604493105,188.821327 56.8601672,167.143363 198.77423,194.649391 C340.688292,222.15542 379.398437,174.449219 379.398437,174.449219" id="Path-2" stroke="#363A43" stroke-width="4" transform="translate(190.001465, 188.821327) scale(-1, 1) translate(-190.001465, -188.821327) "></path>
+                <g id="Group-2" transform="translate(72.000000, 10.000000)" stroke="#3E414C">
+                    <polygon id="Star" fill="#D8D8D8" points="234.5 33.6887155 231.100813 38 233.95 33.2685529 229 31.2016261 234.160081 32.5887155 234.5 27 234.839919 32.5887155 240 31.2016261 235.05 33.2685529 237.899187 38"></polygon>
+                    <polygon id="Star-Copy-5" fill="#D8D8D8" transform="translate(321.500000, 69.000000) rotate(-42.000000) translate(-321.500000, -69.000000) " points="321.5 69.8645204 318.718847 73 321.05 69.5589476 317 68.0557281 321.221885 69.0645204 321.5 65 321.778115 69.0645204 326 68.0557281 321.95 69.5589476 324.281153 73"></polygon>
+                    <polygon id="Star-Copy-6" fill="#D8D8D8" transform="translate(80.500000, 13.000000) rotate(-42.000000) translate(-80.500000, -13.000000) " points="80.5 13.8645204 77.7188471 17 80.05 13.5589476 76 12.0557281 80.2218847 13.0645204 80.5 9 80.7781153 13.0645204 85 12.0557281 80.95 13.5589476 83.2811529 17"></polygon>
+                    <polygon id="Star-Copy-3" fill="#3E414C" transform="translate(11.000000, 25.500000) rotate(-28.000000) translate(-11.000000, -25.500000) " points="11 27.1209757 6.05572809 33 10.2 26.5480267 3 23.7294902 10.5055728 25.6209757 11 18 11.4944272 25.6209757 19 23.7294902 11.8 26.5480267 15.9442719 33"></polygon>
+                    <polygon id="Star-Copy" fill="#3E414C" transform="translate(175.500000, 10.000000) rotate(-28.000000) translate(-175.500000, -10.000000) " points="175.5 11.6640632 170.864745 17 174.603516 11.0248669 168 8.34752416 174.945942 9.99062566 175.5 3 176.054058 9.99062566 183 8.34752416 176.396484 11.0248669 180.135255 17"></polygon>
+                    <polygon id="Star-Copy-2" fill="#3E414C" transform="translate(108.500000, 54.000000) rotate(3.000000) translate(-108.500000, -54.000000) " points="108.5 55.4263399 104.482779 60 107.723047 54.8784574 102 52.5835921 108.019817 53.9919649 108.5 48 108.980183 53.9919649 115 52.5835921 109.276953 54.8784574 112.517221 60"></polygon>
+                </g>
+                <text id="$" transform="translate(238.708764, 61.538692) rotate(-6.000000) translate(-238.708764, -61.538692) " font-family="Montserrat-Light, Montserrat" font-size="14" font-weight="300" fill="#3E414C">
+                    <tspan x="234.208764" y="66.5386916">$</tspan>
+                </text>
+                <text id="$-copy" transform="translate(201.708764, 9.038692) rotate(-4.000000) translate(-201.708764, -9.038692) " font-family="Montserrat-Light, Montserrat" font-size="10" font-weight="300" fill="#3E414C">
+                    <tspan x="198.208764" y="12.5386916">$</tspan>
+                </text>
+                <text id="$-copy-3" transform="translate(124.387038, 51.699065) rotate(-3.000000) translate(-124.387038, -51.699065) " font-family="Montserrat-Light, Montserrat" font-size="12" font-weight="300" fill="#3E414C">
+                    <tspan x="120.387038" y="56.1990653">$</tspan>
+                </text>
+                <text id="$-copy-5" font-family="Montserrat-Light, Montserrat" font-size="12" font-weight="300" fill="#3E414C">
+                    <tspan x="16.3870378" y="87.1990653">$</tspan>
+                </text>
+                <text id="$-copy-4" transform="translate(107.708764, 7.038692) rotate(-6.000000) translate(-107.708764, -7.038692) " font-family="Montserrat-Light, Montserrat" font-size="10" font-weight="300" fill="#3E414C">
+                    <tspan x="104.208764" y="10.5386916">$</tspan>
+                </text>
+                <text id="$-copy-2" transform="translate(361.708764, 48.038692) rotate(8.000000) translate(-361.708764, -48.038692) " font-family="Montserrat-Light, Montserrat" font-size="10" font-weight="300" fill="#3E414C">
+                    <tspan x="358.208764" y="51.5386916">$</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg>

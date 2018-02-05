@@ -10,18 +10,18 @@
             <div class="form__instruction" v-if="!form.activeStep">
                 <div class="instruction__container">
                     <div class="container__area">
-                        <small>O que vamos fazer?</small>
-                        <span>Monte o plano que vai deixar seu "money" sob controle!</span>
+                        <small>Hey. Money pra quê?</small>
+                        <span>Ah! É só para pagar umas continhas...</span>
                     </div>
-                    <img-accounts-form></img-accounts-form>
+                    <img-expense-form></img-expense-form>
                 </div>
             </div>
             <div class="separator" v-if="!form.activeStep"></div>
-            <app-incomes-form :activeStep.sync="form.activeStep" :incomes.sync="form.incomes" @sync="sync($event)"></app-incomes-form>
+            <app-supplier-form :activeStep.sync="form.activeStep" :outcomes.sync="form.outcomes" @sync="sync($event)"></app-supplier-form>
             <div class="separator"></div>
-            <app-outcomes-form :activeStep.sync="form.activeStep" :outcomes.sync="form.outcomes" @sync="sync($event)"></app-outcomes-form>
+            <app-service-expense-form :activeStep.sync="form.activeStep" :serviceExpense.sync="form.serviceExpense" @sync="sync($event)"></app-service-expense-form>
             <div class="separator"></div>
-            <app-transaction-accounts-form :activeStep.sync="form.activeStep" :transactionAccounts.sync="form.transactionAccounts" @sync="sync($event)"></app-transaction-accounts-form>
+            <app-product-expense-form :activeStep.sync="form.activeStep" :productExpense.sync="form.productExpense" @sync="sync($event)"></app-product-expense-form>
         </div>
     </div>
 </template>
@@ -32,34 +32,66 @@
     import _ from 'lodash';
     import Scrollbar from 'smooth-scrollbar';
 
-    import IncomesForm from './Incomes/IncomesForm.vue'
-    import OutcomesForm from './Outcomes/OutcomesForm.vue'
-    import TransactionAccountsForm from './TransactionAccounts/TransactionAccountsForm.vue'
+    import SupplierForm from "./Supplier/SupplierForm.vue";
+    import ServiceExpenseForm from "./ServiceExpense/ServiceExpenseForm.vue";
+    import ProductExpenseForm from "./ProductExpense/ProductExpenseForm.vue";
 
     export default {
         sockets: {
         },
         components: {
-            'app-incomes-form': OutcomesForm,
-            'app-outcomes-form': IncomesForm,
-            'app-transaction-accounts-form': TransactionAccountsForm
+            'app-supplier-form': SupplierForm,
+            'app-service-expense-form': ServiceExpenseForm,
+            'app-product-expense-form': ProductExpenseForm
         },
         data(){
             return {
                 scrollbar: null,
                 presenceUsers: [],
                 lastForm: null,
-                draftId: null, // requestId
-                originalId: null, // se estiver editando um draft originado de um dado já salvo no MySQL
+                draftId: null,
+                originalId: null,
                 type: 'client',
                 createdBy: null,
                 createdAt: null,
                 updatedAt: null,
                 form: {
-                    incomes: [],
-                    outcomes: [],
-                    transactionAccounts: [],
-                    costCenters: []
+                    supplierPhoneId: null,
+                    supplierAddressId: null,
+                    supplier: {
+                        id: null,
+                        name: '',
+                        legalDocument: '',
+                        supplierAddresses: [
+                            {
+                                active: false,
+                                supplierAddressId: null,
+                                name: null,
+                                number: null,
+                                complement: null,
+                                addressId: null,
+                                address: {
+                                    companyId: null,
+                                    id: null,
+                                    name: null,
+                                    neighborhood: null,
+                                    cep: null,
+                                    city: null,
+                                    state: null
+                                }
+                            }
+                        ],
+                        supplierPhones: [
+                            {
+                                ddd: null, // string
+                                number: null, // string
+                                name: null // string
+                            }
+                        ],
+                        supplierCustomFields: []
+                    },
+                    serviceExpense: [],
+                    productExpense: []
                 },
                 saving: false
             }
