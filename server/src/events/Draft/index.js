@@ -312,7 +312,6 @@ module.exports = class Draft {
 
                     if(!_.has(checkEdition, "clientFormEdition") && !_.has(checkEdition, "clientFormUpdate")) {
                         const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
-                        console.log('nao tem')
                         this.setDraftRedis(objSetDraftRedis)                     
                     }
 
@@ -369,7 +368,7 @@ module.exports = class Draft {
                             }
                         }
                         else {
-                            const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
+                            const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true }, type: draft.type }
                             this.setDraftRedis(objSetDraftRedis)
                         }
                     }
@@ -379,8 +378,65 @@ module.exports = class Draft {
                             this.setDraftRedis(objSetDraftRedis, false, true)
                         }
                     }
+                    else if(draft.form.activeStep === 'supplier'){
+                        if (_.has(checkEdition, 'supplierFormEdition')) {
+                            const update = JSON.parse(checkEdition.supplierFormUpdate)
+                            checkEdition = JSON.parse(checkEdition.supplierFormEdition)
+
+                            if (checkEdition.supplierAddress.inEdition) {
+                                if (checkEdition.supplierAddress.supplierAddressId) {
+                                    this.socket.emit('draftClientAddressEdit', checkEdition.supplierAddress.supplierAddressId)
+                                    if (update.supplierAddressForm) {
+                                        this.socket.emit('draftSupplierAddressUpdate', update.supplierAddressForm)
+                                        if (update.supplierAddressForm.address.reset) {
+                                            this.socket.emit('draftSupplierAddressAddressReset')
+                                        }
+                                        else {
+                                            if (update.supplierAddressForm.address.select) {
+                                                this.socket.emit('draftSupplierAddressAddressSelect', update.supplierAddressForm.address)
+                                            }
+                                            else {
+                                                this.socket.emit('draftSupplierAddressAddressReset')
+                                                this.socket.emit('draftSupplierAddressAddressSelect', update.supplierAddressForm.address)
+                                            }
+                                        }
+                                    }
+                                }
+                                else {
+                                    this.socket.emit('draftSupplierAddressAdd')
+                                    if (update.supplierAddressForm) {
+                                        this.socket.emit('draftSupplierAddressUpdate', update.supplierAddressForm)
+                                        if (update.supplierAddressForm.address.reset) {
+                                            this.socket.emit('draftSupplierAddressAddressReset')
+                                        }
+                                        else {
+                                            this.socket.emit('draftSupplierAddressAddressSelect', update.supplierAddressForm.address)
+                                        }
+                                    }
+                                }
+                            }
+                            if(checkEdition.supplierPhone.inEdition) {
+                                if (checkEdition.supplierPhone.inEdition) {
+                                    if (checkEdition.supplierPhone.supplierPhoneId) {
+                                        this.socket.emit('draftSupplierPhoneEdit', checkEdition.supplierPhone.supplierPhoneId)
+                                        this.socket.emit('draftSupplierPhoneUpdate', update.supplierPhoneForm)
+                                    }
+                                    else {
+                                        this.socket.emit('draftSupplierPhoneUpdate', update.supplierPhoneForm)
+                                    }
+                                }
+                                else {
+                                    this.socket.emit('draftSupplierPhoneEditionCancel')
+                                }
+                            }
+                        }
+                        else {
+                            const objSetDraftRedis = { draftId: draftId, supplierAddress: { inEdition: true }, supplierPhone: { inEdition: true }, type: draft.type }
+                            this.setDraftRedis(objSetDraftRedis)
+                        }
+                    }
                     else{
-                        const objSetDraftRedis = {draftId: draftId, isNull: true, companyId: (this.socket.user.activeCompanyUserId) ? this.socket.user.activeCompanyUserId: this.socket.user.companies[0]}
+                        const objSetDraftRedis = {draftId: draftId, isNull: true, type: draft.type, companyId: (this.socket.user.activeCompanyUserId) ? this.socket.user.activeCompanyUserId: this.socket.user.companies[0]}
                         this.setDraftRedis(objSetDraftRedis)
                     }
                 })
@@ -435,7 +491,7 @@ module.exports = class Draft {
                 }) 
             }
             else if(setDraftRedis.isNull){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'companyId', JSON.stringify(setDraftRedis.companyId), (err, res) => {
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'companyId', JSON.stringify(setDraftRedis.companyId), 'type', JSON.stringify(setDraftRedis.type), (err, res) => {
                     if (err) {
                         reject(err)
                     }
@@ -444,8 +500,18 @@ module.exports = class Draft {
                     }
                 })
             }
-            else {
+            else if(setDraftRedis.type == 'request'){
                 return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'clientFormUpdate', JSON.stringify({ clientAddressForm: { address: { select: (selectedAddress) ? true : false } }, clientPhoneForm: {} }), 'clientFormEdition', JSON.stringify({ clientAddress: { inEdition: setDraftRedis.clientAddress.inEdition, clientAddressId: null }, clientPhone: { inEdition: setDraftRedis.clientPhone.inEdition, clientPhoneId: null } }), (err, res) => {
+                    if (err) {
+                        reject()
+                    }
+                    else {
+                        resolve()
+                    }
+                })
+            }
+            else if(setDraftRedis.type == 'expense'){
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'supplierFormUpdate', JSON.stringify({ supplierAddressForm: { address: { select: (selectedAddress) ? true : false } }, supplierPhoneForm: {} }), 'supplierFormEdition', JSON.stringify({ supplierAddress: { inEdition: setDraftRedis.supplierAddress.inEdition, supplierAddressId: null }, supplierPhone: { inEdition: setDraftRedis.supplierPhone.inEdition, supplierPhoneId: null } }), (err, res) => {
                     if (err) {
                         reject()
                     }
@@ -460,41 +526,56 @@ module.exports = class Draft {
     updateDraftRedis(contentDraft, newEdit = false, resetOrSelectAddress = false) {
         return new Promise((resolve, reject) => {
             this.consultRedisDraft(contentDraft.draftId).then((redisConsult) => {
-                const checkUpdate = JSON.parse(redisConsult.clientFormUpdate)
+                let type = {}
 
-                let update = { clientAddressForm: checkUpdate.clientAddressForm,
-                               clientPhoneForm: checkUpdate.clientPhoneForm
+                if(_.has(redisConsult, "type") && redisConsult.type){
+                    const verifyType = JSON.parse(redisConsult.type)
+                    if(verifyType == 'request'){
+                        type.name = 'Client'
+                        type.formUpdate = 'clientFormUpdate'
+                        type.addressForm = 'clientAddressForm'
+                        type.phoneForm = 'clientPhoneForm'
+                        type.formEdition = 'clientFormEdition'
+
+                    }
+                }
+
+                const checkUpdate = JSON.parse(redisConsult[type.formUpdate])
+
+                let update = { [type.addressForm]: checkUpdate[type.addressForm],
+                               [type.phoneForm]: checkUpdate[type.phoneForm],
+                               type: type
                             }
                             
-                update.inEdition = _.merge(JSON.parse(redisConsult.clientFormEdition), contentDraft.inEdition)
+                update.inEdition = _.merge(JSON.parse(redisConsult[type.formEdition]), contentDraft.inEdition)
 
                 if (resetOrSelectAddress) {
                     if (resetOrSelectAddress.reset) {
-                        update.clientAddressForm = _.assign(checkUpdate.clientAddressForm, { address: { reset: true } })
+                        update[type.addressForm] = _.assign(checkUpdate[type.addressForm], { address: { reset: true } })
                     }
                     else {
-                        update.clientAddressForm = _.assign(checkUpdate.clientAddressForm, { address: contentDraft.address, select: true })
+                        update[type.addressForm] = _.assign(checkUpdate[type.addressForm], { address: contentDraft.address, select: true })
                     }
                 }
                 else {
-                    if (_.has(contentDraft, "clientAddressForm") && (contentDraft.clientAddressForm)) {
+                    if (_.has(contentDraft, type.addressForm) && (contentDraft[type.addressForm])) {
                         if (!newEdit) {
-                            delete checkUpdate.clientAddressForm.address.reset
-                            const address = _.assign(checkUpdate.clientAddressForm.address, contentDraft.form.clientAddressForm.address)
-                            const updateClientAddress = _.assign(checkUpdate.clientAddressForm, contentDraft.form.clientAddressForm)
-                            update.clientAddressForm = _.assign(updateClientAddress, { address: address })
+                            delete checkUpdate[type.addressForm].address.reset
+                            const address = _.assign(checkUpdate[type.addressForm].address, contentDraft.form[type.addressForm].address)
+                            const updateAgentAddress = _.assign(checkUpdate[type.addressForm], contentDraft.form[type.addressForm])
+                            update[type.addressForm] = _.assign(updateAgentAddress, { address: address })
                         }
                         else {
-                            update.clientAddressForm = { address: { select: true } }
+                            update[type.addressForm] = { address: { select: true } }
                         }
 
                     }
-                    if (_.has(contentDraft, "clientPhoneForm") && (contentDraft.clientPhoneForm)) {
-                        if (contentDraft.clientPhoneForm.reset) {
-                            update.clientPhoneForm = {}
+                    if (_.has(contentDraft, [type.phoneForm]) && (contentDraft[type.phoneForm])) {
+                        if (contentDraft[type.phoneForm].reset) {
+                            update[type.phoneForm] = {}
                         }
                         else {
-                            update.clientPhoneForm = _.assign(checkUpdate.clientPhoneForm, contentDraft.form.clientPhoneForm)
+                            update[type.phoneForm] = _.assign(checkUpdate[type.phoneForm], contentDraft.form[type.phoneForm])
                         }
                     }
                 }
@@ -508,10 +589,12 @@ module.exports = class Draft {
                 return false
             }
             else {
+                const type = update.type
                 const inEdition = update.inEdition
 
                 delete update.inEdition
-                return this.server.redisClient.HMSET("draft:" + contentDraft.draftId, 'clientFormUpdate', JSON.stringify(update), 'clientFormEdition', JSON.stringify(inEdition), (err, res) => {
+                delete update.type
+                return this.server.redisClient.HMSET("draft:" + contentDraft.draftId, type.formUpdate, JSON.stringify(update), type.formEdition, JSON.stringify(inEdition), (err, res) => {
                     if (err) {
                         console.log(err)
                     }
