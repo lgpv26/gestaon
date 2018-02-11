@@ -69,10 +69,10 @@ module.exports = (server, restify) => {
             )
         },
 
-        getOne(req) {
+        getOne: (controller) => {
             return server.mysql.Address.findOne({
                 where: {
-                    id: req.params.id,
+                    id: controller.request.id,
                     status: 'activated'
                 }
             }).then((address) => {

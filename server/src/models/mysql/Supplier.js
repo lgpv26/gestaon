@@ -95,11 +95,19 @@ module.exports = {
                 })
         }
     },
-    postSettings: ({ Supplier, Company, SupplierCompany, SupplierProduct, Product }) => {
+    postSettings: ({ Supplier, Company, SupplierCompany, SupplierProduct, Product, Address, SupplierAddress, SupplierPhone, SupplierCustomField, CustomField }) => {
         Supplier.hasMany(SupplierCompany, {as: 'supplierCompanies', foreignKey: 'supplierId'});
         Supplier.belongsToMany(Company, { through: SupplierCompany, as: 'companies', foreignKey: 'supplierId' });
 
         Supplier.hasMany(SupplierProduct, {as: 'supplierProducts', foreignKey: 'supplierId'});
         Supplier.belongsToMany(Product, { through: SupplierProduct, as: 'products', foreignKey: 'supplierId' });
+
+        Supplier.hasMany(SupplierAddress, {as: 'supplierAddresses', foreignKey: 'supplierId'});
+        Supplier.belongsToMany(Address, {through: SupplierAddress, as: 'addresses', foreignKey: 'supplierId'});
+
+        Supplier.hasMany(SupplierPhone, {as: 'supplierPhones', foreignKey: 'supplierId'});
+
+        Supplier.hasMany(SupplierCustomField, {as: 'supplierCustomFields', foreignKey: 'supplierId'});
+        Supplier.belongsToMany(CustomField, { through: SupplierCustomField, as: 'customFields', foreignKey: 'supplierId' });
     }
 }

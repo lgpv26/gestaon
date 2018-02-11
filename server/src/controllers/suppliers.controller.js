@@ -1,9 +1,12 @@
-const _ = require('lodash');
+const _ = require('lodash')
+const utils = require('../utils')
+const Op = require('sequelize').Op
+const Controller = require('./../models/Controller')
 
 module.exports = (server, restify) => {
     return {
         getAll: (req, res, next) => {
-            server.mysql.Supplier.findAndCountAll(req.queryParser).then((suppliers) => {
+            return server.mysql.Supplier.findAndCountAll(req.queryParser).then((suppliers) => {
                 if (suppliers.count === 0) {
                     return next(
                         new restify.ResourceNotFoundError("Nenhum registro encontrado.")
@@ -24,10 +27,10 @@ module.exports = (server, restify) => {
                 );
             });
         },
-        getOne: (req, res, next) => {
-            server.mysql.Supplier.findOne({
+        getOne: (controller) => {
+            return server.mysql.Supplier.findOne({
                 where: {
-                    id: req.params.id,
+                    id: controller.request.id,
                     status: 'activated'
                 },
                 include: [{
@@ -36,7 +39,25 @@ module.exports = (server, restify) => {
                     include: [{
                         model: server.mysql.Product,
                         as: 'product'
-                    }],
+                    }] 
+                    }, {
+                        model: server.mysql.SupplierPhone,
+                        as: 'supplierPhones'
+                    }, {
+                        model: server.mysql.SupplierAddress,
+                        as: 'supplierAddresses',
+                        include: [{
+                            model: server.mysql.Address,
+                            as: 'address'
+                        }]
+                    }, {
+                        model: server.mysql.SupplierCustomField,
+                        as: 'supplierCustomFields',
+                        include: [{
+                            model: server.mysql.CustomField,
+                            as: 'customField'
+                        }]
+                    }, {
                     model: server.mysql.SupplierCompany,
                     as: 'companies',
                     include: [{
@@ -46,13 +67,9 @@ module.exports = (server, restify) => {
                 }]
             }).then((supplier) => {
                 if (!supplier) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado.")
-                    );
+                    throw new Error("Registro não encontrado.")
                 }
-                return res.send(200, {
-                    data: supplier
-                });
+                return JSON.parse(JSON.stringify(supplier))
             });
         },
 

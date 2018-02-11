@@ -21,13 +21,13 @@ module.exports = (server, restify) => {
             });
         },
 
-        getOne(req) {
+        getOne: (controller) => {
             return server.mysql.CustomField.findOne({
                 where: {
                     companyId: {
-                        [Op.in]: [0, parseInt(req.params.companyId)]
+                        [Op.in]: [0, parseInt(controller.request.companyId)]
                     },
-                    id: req.params.customFieldId
+                    id: controller.request.customFieldId
                 }
             }).then((customField) => {
                 return customField

@@ -1,18 +1,18 @@
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
-        const modelName = 'Address';
+        const modelName = 'SupplierAddress';
         return {
             name: modelName,
-            instance: sequelize.define(modelName, {
+            instance: sequelize.define('supplierAddress', {
                 id: {
                     type: Sequelize.INTEGER,
                     primaryKey: true,
                     autoIncrement: true
                 },
-                companyId: {
+                supplierId: {
                     type: Sequelize.INTEGER
                 },
-                originId: {
+                addressId: {
                     type: Sequelize.INTEGER
                 },
                 name: {
@@ -21,26 +21,14 @@ module.exports = {
                         this.setDataValue('name', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
                 },
-                neighborhood: {
+                number: {
+                    type: Sequelize.INTEGER
+                },
+                complement: {
                     type: Sequelize.STRING,
                     set(val) {
-                        this.setDataValue('neighborhood', (val == '' | val == null) ? null : val.toUpperCase().trim());
+                        this.setDataValue('complement', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
-                },
-                city: {
-                    type: Sequelize.STRING,
-                    set(val) {
-                        this.setDataValue('city', (val == '' | val == null) ? null : val.toUpperCase().trim());
-                    }
-                },
-                state: {
-                    type: Sequelize.STRING,
-                    set(val) {
-                        this.setDataValue('state', (val == '' | val == null) ? null : val.toUpperCase().trim());
-                    }
-                },
-                cep: {
-                    type: Sequelize.STRING
                 },
                 dateUpdated: {
                     type: Sequelize.DATE
@@ -51,11 +39,9 @@ module.exports = {
                 dateRemoved: {
                     type: Sequelize.DATE
                 },
-                status: {
-                    type: Sequelize.STRING
-                }
+                status: Sequelize.STRING
             }, {
-                tableName: "address",
+                tableName: 'supplier_address',
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -65,8 +51,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Address, Client, ClientAddress, Supplier, SupplierAddress}) => {
-        Address.belongsToMany(Client, {through: ClientAddress, as: 'addressClients', foreignKey: 'addressId'});
-        Address.belongsToMany(Supplier, {through: SupplierAddress, as: 'addressSuppliers', foreignKey: 'addressId'})
+    postSettings: ({SupplierAddress, Supplier, Address}) => {
+        SupplierAddress.belongsTo(Address, {as: 'address', foreignKey: 'addressId'});
+        SupplierAddress.belongsTo(Supplier, {as: 'supplier', foreignKey: 'supplierId'});
     }
-};
+}
