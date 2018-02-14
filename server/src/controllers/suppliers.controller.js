@@ -4,6 +4,12 @@ const Op = require('sequelize').Op
 const Controller = require('./../models/Controller')
 
 module.exports = (server, restify) => {
+
+    const addressesController = require('./../controllers/addresses.controller')(server, restify);
+    const suppliersAddressesController = require('./../controllers/suppliers-addresses.controller')(server, restify);
+    const suppliersPhonesController = require('./../controllers/suppliers-phones.controller')(server, restify);
+    const suppliersCustomFieldsController = require('./../controllers/suppliers-custom-fields.controller')(server, restify);
+
     return {
         getAll: (req, res, next) => {
             return server.mysql.Supplier.findAndCountAll(req.queryParser).then((suppliers) => {
@@ -73,154 +79,355 @@ module.exports = (server, restify) => {
             });
         },
 
-        createOne: (req, res, next) => {
-            if (!req.body) {
-                return next(
-                    new restify.ResourceNotFoundError("Erro, dados não enviados.")
-                );
-            }
-            const createData = _.cloneDeep(req.body);
-            server.mysql.Supplier.create(createData, {
-                include: [{
-                    model: server.mysql.SupplierProduct,
-                    as: 'supplierProducts',
-                    include: [{
-                        model: server.mysql.Product,
-                        as: 'product'
-                    }],
-                    model: server.mysql.SupplierCompany,
-                    as: 'supplierCompanies',
-                    include: [{
-                        model: server.mysql.Company,
-                        as: 'company'
-                    }]
-                }]
+        createOne: (controller) => {
+            const createData = _.cloneDeep(controller.request.data)
+            _.assign(createData, {
+                companyId: controller.request.companyId
+            })
+
+            return server.mysql.Supplier.create(createData, {
+                transaction: controller.transaction
             }).then((supplier) => {
                 if (!supplier) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado.")
-                    );
+                    throw new Error("Não foi possível encontrar o supplier criado.")
                 }
-                server.elasticSearch.index({
-                    index: 'main',
-                    type: 'supplier',
-                    id: supplier.id,
-                    body: {
-                        companyId: supplier.companyId,
-                        name: supplier.name,
-                        obs: supplier.obs
-                    }
-                }, function (esErr, esRes, esStatus) {
-                    if (esErr) {
-                        return next(
-                            new restify.ResourceNotFoundError(esErr)
-                        );
-                    }
-                    if ((_.has(createData, "supplierProducts") && createData.supplierProducts.length > 0) ||
-                        (_.has(createData, "supplierCompanies") && createData.supplierCompanies.length > 0)) {
-                        if ((_.has(createData, "supplierProducts") && createData.supplierProducts.length > 0)) {
-                            req.params['id'] = supplier.id;
-                            saveProducts(req, res, next).then((supplier) => {
-                                return res.send(200, {
-                                    data: supplier
-                                });
-                            }).catch((err) => {
-                                next(err);
-                            });
+
+                return new Promise((resolve, reject) => {
+
+                    const promises = [];
+
+                    promises.push(new Promise((resolve, reject) => {
+                        const esSupplier = {
+                            id: supplier.id,
+                            body: {
+                                companyId: supplier.companyId,
+                                name: supplier.name,
+                                obs: supplier.obs
+                            }
                         }
-                        else if ((_.has(createData, "supplierCompanies") && createData.supplierCompanies.length > 0)) {
-                            req.params['id'] = supplier.id;
-                            saveCompanies(req, res, next).then((supplier) => {
-                                return res.send(200, {
-                                    data: supplier
-                                });
+                        resolve({supplierES: esSupplier})
+                    }))
+
+                 /* save supplierPhones if existent */
+                    if(_.has(createData, "supplierPhones")) {
+                        const supplierPhonesControllerObj = new Controller({
+                            request: {
+                                supplierId: supplier.id || null,
+                                data: createData.supplierPhones
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(suppliersPhonesController.setSupplierPhones(supplierPhonesControllerObj))
+                    }
+
+                    /* save supplierAddresses if existent */
+                    if(_.has(createData, "supplierAddresses") && createData.supplierAddresses.length) {
+                        const supplierAddressesControllerObj = new Controller({
+                            request: {
+                                supplierId: supplier.id || null,
+                                companyId: createData.companyId,
+                                data: createData.supplierAddresses
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(suppliersAddressesController.setSupplierAddresses(supplierAddressesControllerObj))
+                    }
+        
+                    /* save supplierCustomFields if existent */
+                    if(_.has(createData, "supplierCustomFields") && createData.supplierCustomFields.length) {
+
+                        const supplierCustomFieldControllerObj = new Controller({
+                            request: {
+                                supplierId: supplier.id,
+                                companyId: createData.companyId,
+                                data: createData.supplierCustomFields
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(suppliersCustomFieldsController.setSupplierCustomFields(supplierCustomFieldControllerObj))
+                    }
+
+                    /* return only when all promises are satisfied */
+                    return Promise.all(promises).then((supplierEs) => {
+                        const objES = {}
+                        _.map(supplierEs, (value) => {
+                            _.assign(objES, value)
+                        })
+
+                        let addressesESPromise = []
+                            if(_.has(objES, "addressesES") && objES.addressesES){
+                                objES.addressesES.forEach((addressEs) => {  
+                                    const addressESControllerObj = new Controller({
+                                        request: {
+                                            data: addressEs
+                                        },
+                                        transaction: controller.transaction
+                                    })
+                                    addressesESPromise.push(addressesController.saveAddressesInES(addressESControllerObj))
+                                })
+                            }
+
+                            return Promise.all(addressesESPromise).then(() => {
+                                const body = _.assign({}, objES.supplierES.body, {addresses: objES.supplierAddressesES}, {customFields: objES.customFieldsES}, {phones: objES.phonesES})
+
+                                return server.elasticSearch.index({
+                                        index: 'main',
+                                        type: 'supplier',
+                                        id: objES.supplierES.id,
+                                        body: body
+                                    }, function (esErr, esRes, esStatus) {
+                                        if (esErr) {
+                                            return reject(new Error(esErr))
+                                        }
+
+                                        return server.mysql.Supplier.findById(objES.supplierES.id, {
+                                            include: [{
+                                                model: server.mysql.SupplierProduct,
+                                                as: 'products',
+                                                include: [{
+                                                    model: server.mysql.Product,
+                                                    as: 'product'
+                                                }] 
+                                                }, {
+                                                    model: server.mysql.SupplierPhone,
+                                                    as: 'supplierPhones'
+                                                }, {
+                                                    model: server.mysql.SupplierAddress,
+                                                    as: 'supplierAddresses',
+                                                    include: [{
+                                                        model: server.mysql.Address,
+                                                        as: 'address'
+                                                    }]
+                                                }, {
+                                                    model: server.mysql.SupplierCustomField,
+                                                    as: 'supplierCustomFields',
+                                                    include: [{
+                                                        model: server.mysql.CustomField,
+                                                        as: 'customField'
+                                                    }]
+                                                }, {
+                                                model: server.mysql.SupplierCompany,
+                                                as: 'companies',
+                                                include: [{
+                                                    model: server.mysql.Company,
+                                                    as: 'company'
+                                                }]
+                                            }],
+                                            transaction: controller.transaction
+                                        }).then((supplierReturn) => {
+                                            supplierReturn = (supplierReturn) ? JSON.parse(JSON.stringify(supplierReturn)) : {}
+                                            const supplierAddressId = (objES.supplierAddressId) ? {supplierAddressId: objES.supplierAddressId} : {}
+                                            const supplierPhoneId = (objES.supplierPhoneId) ? {supplierPhoneId: objES.supplierPhoneId} : {}
+                                            
+                                            resolve(_.assign(supplierReturn, supplierAddressId, supplierPhoneId))
+                                        })
+                                    }
+                                )
                             }).catch((err) => {
-                                next(err);
-                            });
-                        }
-                    }
-                    else {
-                        return res.send(200, {
-                            data: supplier
-                        });
-                    }
-                });
+                                return reject()
+                            })
+                    }).catch((err) => {
+                        return reject(err)
+                    })
+                })
             })
         },
 
-        updateOne: (req, res, next) => {
-            if (!req.body) {
-                return next(
-                    new restify.ResourceNotFoundError("Erro, dados não enviados.")
-                );
-            }
-            const updateData = _.cloneDeep(req.body);
-            server.mysql.Supplier.update(updateData, {
+        updateOne: (controller) => {
+
+            const updateData = _.cloneDeep(controller.request.data)
+            return server.mysql.Supplier.update(updateData, {
                 where: {
-                    id: req.params.id,
-                    status: 'activated'
-                }
+                    id: controller.request.supplierId
+                },
+                transaction: controller.transaction
             }).then((supplier) => {
                 if (!supplier) {
-                    return next(
-                        new restify.ResourceNotFoundError("Registro não encontrado Parte 1.")
-                    );
+                    throw new Error("Supplier não encontrado.");
                 }
-                server.mysql.Supplier.findById(req.params.id, {
-                    where: {
-                        id: req.params.id,
-                        status: 'activated'
-                    },
+
+                return server.mysql.Client.findById(controller.request.supplierId, {
                     include: [{
                         model: server.mysql.SupplierProduct,
-                        as: 'supplierProducts',
+                        as: 'products',
                         include: [{
                             model: server.mysql.Product,
                             as: 'product'
-                        }],
+                        }] 
+                        }, {
+                            model: server.mysql.SupplierPhone,
+                            as: 'supplierPhones'
+                        }, {
+                            model: server.mysql.SupplierAddress,
+                            as: 'supplierAddresses',
+                            include: [{
+                                model: server.mysql.Address,
+                                as: 'address'
+                            }]
+                        }, {
+                            model: server.mysql.SupplierCustomField,
+                            as: 'supplierCustomFields',
+                            include: [{
+                                model: server.mysql.CustomField,
+                                as: 'customField'
+                            }]
+                        }, {
                         model: server.mysql.SupplierCompany,
-                        as: 'supplierCompanies',
+                        as: 'companies',
                         include: [{
                             model: server.mysql.Company,
                             as: 'company'
                         }]
-                    }]
+                    }],
+                    transaction: controller.transaction
                 }).then((supplier) => {
-                    if (!supplier) {
-                        return next(
-                            new restify.ResourceNotFoundError("Registro não encontrado.")
-                        );
-                    }
-                    if ((_.has(updateData, "supplierProducts") && updateData.supplierProducts.length > 0) ||
-                        (_.has(updateData, "supplierCompanies") && updateData.supplierCompanies.length > 0)) {
-                        if ((_.has(updateData, "supplierProducts") && updateData.supplierProducts.length > 0)) {
-                            req.params['id'] = supplier.id;
-                            saveProducts(req, res, next).then((supplier) => {
-                                return res.send(200, {
-                                    data: supplier
-                                });
-                            }).catch((err) => {
-                                next(err);
-                            });
+                    if (!supplier) throw new Error("Supplier não encontrado.");
+
+                    return new Promise((resolve, reject) => {
+
+                        const promises = [];
+
+                        promises.push(new Promise((resolve, reject) => {
+                            const esSupplier = {
+                                id: supplier.id,
+                                body: {
+                                    companyId: supplier.companyId,
+                                    name: supplier.name,
+                                    obs: supplier.obs,
+                                    legalDocument: supplier.legalDocument
+                                }
+                            }
+                            resolve({supplierES: esSupplier})
+                        }))
+
+                        /* save supplierPhones if existent */
+                        if(_.has(updateData, "supplierPhones") && updateData.supplierPhones) {
+                            const supplierPhonesControllerObj = new Controller({
+                                request: {
+                                    supplierId: controller.request.supplierId,
+                                    data: updateData.supplierPhones
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(suppliersPhonesController.setSupplierPhones(supplierPhonesControllerObj))
                         }
-                        else if ((_.has(updateData, "supplierCompanies") && updateData.supplierCompanies.length > 0)) {
-                            req.params['id'] = supplier.id;
-                            saveCompanies(req, res, next).then((supplier) => {
-                                return res.send(200, {
-                                    data: supplier
-                                });
-                            }).catch((err) => {
-                                next(err);
-                            });
+
+                        /* save supplierAddresses if existent */
+                        if(_.has(updateData, "supplierAddresses") && updateData.supplierAddresses) {
+                            const supplierAddressesControllerObj = new Controller({
+                                request: {
+                                    supplierId: controller.request.supplierId,
+                                    companyId: controller.request.companyId,
+                                    data: updateData.supplierAddresses
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(suppliersAddressesController.setSupplierAddresses(supplierAddressesControllerObj))
                         }
-                    }
-                    else {
-                        return res.send(200, {
-                            data: supplier
-                        });
-                    }
+
+                        /* save supplierCustomFields if existent */
+                        if(_.has(updateData, "supplierCustomFields") && updateData.supplierCustomFields) {
+
+                            const supplierCustomFieldControllerObj = new Controller({
+                                request: {
+                                    supplierId: controller.request.supplierId,
+                                    companyId: controller.request.companyId,
+                                    data: updateData.supplierCustomFields
+                                },
+                                transaction: controller.transaction
+                            })
+                            promises.push(suppliersCustomFieldsController.setSupplierCustomFields(supplierCustomFieldControllerObj))
+                        }                        
+
+                        /* return only when all promises are satisfied */
+                        return Promise.all(promises).then((supplierEs) => {
+                            const objES = {}
+                            _.map(supplierEs, (value) => {
+                                _.assign(objES, value)
+                            })
+
+                            //obs ES rollback check
+                            let addressesESPromise = []
+                                if(_.has(objES, "addressesES") && objES.addressesES){
+                                    objES.addressesES.forEach((addressEs) => {  
+                                        const addressESControllerObj = new Controller({
+                                            request: {
+                                                data: addressEs
+                                            },
+                                            transaction: controller.transaction
+                                        })
+                                        addressesESPromise.push(addressesController.saveAddressesInES(addressESControllerObj))
+                                    })
+                                }
+
+                                return Promise.all(addressesESPromise).then(() => {
+                                    const body = _.assign({}, objES.supplierES.body, {addresses: objES.supplierAddressesES}, {customFields: objES.customFieldsES}, {phones: objES.phonesES})
+
+                                    return server.elasticSearch.index({
+                                            index: 'main',
+                                            type: 'supplier',
+                                            id: objES.supplierES.id,
+                                            body: body
+                                        }, function (esErr, esRes, esStatus) {
+                                            if (esErr) {
+                                                return reject(new Error(esErr))
+                                            }
+                                            return server.mysql.Supplier.findById(controller.request.supplierId, {
+                                                include: [{
+                                                    model: server.mysql.SupplierProduct,
+                                                    as: 'products',
+                                                    include: [{
+                                                        model: server.mysql.Product,
+                                                        as: 'product'
+                                                    }] 
+                                                    }, {
+                                                        model: server.mysql.SupplierPhone,
+                                                        as: 'supplierPhones'
+                                                    }, {
+                                                        model: server.mysql.SupplierAddress,
+                                                        as: 'supplierAddresses',
+                                                        include: [{
+                                                            model: server.mysql.Address,
+                                                            as: 'address'
+                                                        }]
+                                                    }, {
+                                                        model: server.mysql.SupplierCustomField,
+                                                        as: 'supplierCustomFields',
+                                                        include: [{
+                                                            model: server.mysql.CustomField,
+                                                            as: 'customField'
+                                                        }]
+                                                    }, {
+                                                    model: server.mysql.SupplierCompany,
+                                                    as: 'companies',
+                                                    include: [{
+                                                        model: server.mysql.Company,
+                                                        as: 'company'
+                                                    }]
+                                                }],
+                                                transaction: controller.transaction
+                                            }).then((supplierReturn) => {
+                                                supplierReturn = JSON.parse(JSON.stringify(supplierReturn))
+                                                const supplierAddressId = (objES.supplierAddressId) ? {supplierAddressId: objES.supplierAddressId} : {}
+                                                const supplierPhoneId = (objES.supplierPhoneId) ? {supplierPhoneId: objES.supplierPhoneId} : {}
+                                                
+                                                resolve(_.assign(supplierReturn, supplierAddressId, supplierPhoneId))
+                                            }).catch((err) => {
+                                                console.log('ERRO: NO FIND SUPPLIER IN SUPPLIERS FINALE UPDATE: ', err)
+                                            })  
+                                        }
+                                    )                                    
+                                }).catch((err) => {
+                                    return reject()
+                                })
+                            })
+                        }).catch((err) => {
+                            return reject(err)
+                    })
                 })
-            })
+            }).catch((err) => {
+                console.log('ERRO: client UPDATE: ', err)
+            }) 
         },
 
         removeOne: (req, res, next) => {
