@@ -7,8 +7,9 @@ module.exports = class Controller {
             companyId: null,
             transaction: null,
             request: {
-                queryParser: {},
-                data: null
+                params: {}, // path/:id
+                queryParser: {}, // ?key=value&key2=value2
+                data: null // body
             }
         }
         this.setController(controller);

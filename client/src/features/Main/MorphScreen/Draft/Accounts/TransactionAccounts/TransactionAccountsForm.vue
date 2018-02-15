@@ -29,7 +29,18 @@
                     </div>
                 </div>
                 <div class="transaction-accounts-column__footer">
-                    <input type="text" /> <icon-check></icon-check>
+                    <div>
+                        <div class="dot-at-right" style="width: 40%;">
+                            <input type="text" placeholder="Ex: 0 30 ou 6x" />
+                            <div class="dot"></div>
+                        </div>
+                        <div style="width: 40%;">
+                            <input type="text" placeholder="Ex: 3% ou -2,00" />
+                        </div>
+                        <div style="width: 20%; text-align: center;">
+                            <icon-check></icon-check>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="transaction-accounts-column payment-methods">
@@ -48,15 +59,15 @@
                     </div>
                 </div>
                 <div class="transaction-accounts-column__body">
-                    <div>
+                    <div v-for="paymentMethod in form.paymentMethods">
                         <div style="width: 50%;">
-                            A VISTA
+                            {{ paymentMethod.name }}
                         </div>
                         <div style="width: 24%;">
                             0 dias
                         </div>
                         <div style="width: 13%;">
-                            0,0%
+                            {{ paymentMethod.tax }} %
                         </div>
                         <div style="width: 13%; text-align: center;">
                             <icon-check></icon-check>
@@ -64,7 +75,22 @@
                     </div>
                 </div>
                 <div class="transaction-accounts-column__footer">
-                    <input type="text" /> <icon-check></icon-check>
+                    <div>
+                        <div class="dot-at-right" style="width: 50%;">
+                            <input type="text" v-model="transactionAccounts.paymentMethodForm.name" placeholder="ADICIONAR NOVO" />
+                            <div class="dot"></div>
+                        </div>
+                        <div class="dot-at-right" style="width: 24%;">
+                            <input type="text" v-model="transactionAccounts.paymentMethodForm.deadline" placeholder="Ex: 0 30 ou 6x" />
+                            <div class="dot"></div>
+                        </div>
+                        <div style="width: 13%;">
+                            <input type="text" v-model="transactionAccounts.paymentMethodForm.tax" placeholder="Ex: 3% ou -2,00" />
+                        </div>
+                        <div style="cursor: pointer; width: 13%; text-align: center;" @click="createPaymentMethod()">
+                            <icon-add></icon-add>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="transaction-accounts-column">
@@ -103,23 +129,54 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
+    import utils from '@/utils'
+
+    import PaymentMethodsAPI from '@/api/payment-methods'
 
     export default {
         components: {
         },
-        props: ['task','activeStep'],
+        props: ['task','activeStep','transactionAccounts'],
         data(){
             return {
                 form: {
+                    accounts: [],
+                    paymentMethods: [],
+                    costCenters: []
                 }
             }
         },
+        watch: {
+            paymentMethods: {
+                handler: function(paymentMethods) {
+                    this.form.paymentMethods = utils.removeReactivity(paymentMethods)
+                },
+                deep: true
+            }
+        },
         computed: {
+            ...mapState('auth',['company']),
+            ...mapState('data/payment-methods', ['paymentMethods']),
             isCurrentStepActive(){
                 return this.activeStep === 'transaction-accounts';
             }
         },
         methods: {
+
+            createPaymentMethod(){
+                PaymentMethodsAPI.createOne(utils.removeReactivity(this.transactionAccounts.paymentMethodForm), {
+                    companyId: this.company.id
+                }).then((result) => {
+                    console.log("Result", result)
+                })
+            },
+
+            resetPaymentMethodForm(){
+
+            },
+
+            /* real time */
+
             onCurrentStepChanged(value){
                 (this.activeStep === 'transaction-accounts') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'transaction-accounts');
                 this.commitSocketChanges('activeStep');
@@ -129,6 +186,7 @@
             }
         },
         mounted(){
+            this.form.paymentMethods = utils.removeReactivity(this.paymentMethods)
         }
     }
 </script>
@@ -203,4 +261,25 @@
     .transaction-accounts-column .transaction-accounts-column__footer input {
         margin-right: 10px;
     }
+
+    .transaction-accounts-column .transaction-accounts-column__footer > div {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .transaction-accounts-column .transaction-accounts-column__footer > div > div.dot-at-right {
+        margin-right: 20px;
+        position: relative;
+    }
+
+    .transaction-accounts-column .transaction-accounts-column__footer > div > div.dot-at-right .dot {
+        position: absolute;
+        right: -12px;
+        top: 10px;
+        width: 4px;
+        height: 4px;
+        background-color: var(--font-color--secondary);
+        border-radius: 100%;
+    }
+
 </style>

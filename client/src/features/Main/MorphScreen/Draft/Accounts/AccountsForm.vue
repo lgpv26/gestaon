@@ -58,7 +58,21 @@
                 form: {
                     incomes: [],
                     outcomes: [],
-                    transactionAccounts: [],
+                    transactionAccounts: {
+                        accounts: [],
+                        accountForm: {},
+                        paymentMethods: [],
+                        paymentMethodForm: {
+                            id: null,
+                            name: null,
+                            deadline: null,
+                            tax: null,
+                            taxUnit: 'percentage',
+                            autoPay: false
+                        },
+                        costCenters: [],
+                        costCenterForm: {}
+                    },
                     costCenters: []
                 },
                 saving: false

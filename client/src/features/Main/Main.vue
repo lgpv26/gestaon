@@ -264,6 +264,9 @@
             ...mapActions('toast', [
                 'showToast', 'showError'
             ]),
+            ...mapActions('data/payment-methods', {
+                loadAllPayments: 'loadAll'
+            }),
             logout(){
                 const vm = this;
                 clearInterval(vm.accessTokenExpirationTimer);
@@ -456,6 +459,7 @@
                     });
                 });
             }).then(() => {
+                vm.loadAllPayments({ companyId: vm.company.id })
                 return vm.loadMorphScreenData(vm.company.id).catch((err) => {
                     console.log("The current user doesn't have any drafts created.");
                 });

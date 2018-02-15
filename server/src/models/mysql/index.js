@@ -14,7 +14,9 @@ module.exports = function(server, Sequelize, sequelize){
         "SupplierProduct.js", "SupplierCompany.js", "SupplierCustomField.js",
         "SupplierAddress.js", "SupplierPhone.js",
         "CustomField.js", "ClientCustomField.js", "ClientGroup.js",
-        "RequestClientAddress.js", "RequestClientPhone"
+        "RequestClientAddress.js", "RequestClientPhone.js",
+        "RevenueGroup.js", "RevenueItem.js", "ExpenseGroup.js", "ExpenseItem.js",
+        "PaymentMethod.js"
     ];
 
     modelFiles.forEach(function(fileName) {

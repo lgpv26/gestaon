@@ -16,9 +16,9 @@
             </div>
         </div>
         <div class="form__header">
-            <span v-if="!isCurrentStepActive">Categorize <span style="color: var(--terciary-color)">despesas</span> no plano de contas</span>
+            <span v-if="!isCurrentStepActive">Lançar compra de <span style="color: var(--primary-color)">produtos</span></span>
             <span class="push-both-sides"></span>
-            <h3 :class="{active: isCurrentStepActive}"><></h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
+            <h3 :class="{active: isCurrentStepActive}">Compra de produtos</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
         </div>
     </form>
 </template>

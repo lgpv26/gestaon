@@ -78,8 +78,8 @@
                             </div>
                         </div>
                         <div class="form-group__content">
-                            <app-supplier-address-form ref="supplierAddressForm" :supplierId="supplier.id" :supplierAddress.sync="supplierAddressForm" :isSaving.sync="isSavingClientAddress"
-                            @save="onClientAddressSave($event)"></app-supplier-address-form>
+                            <!--<app-supplier-address-form ref="supplierAddressForm" :supplierId="supplier.id" :supplierAddress.sync="supplierAddressForm" :isSaving.sync="isSavingClientAddress"
+                            @save="onClientAddressSave($event)"></app-supplier-address-form>-->
                         </div>
                     </div>
                     <div class="form-group" v-else>
@@ -208,7 +208,7 @@
             </div>
         </div>
         <div class="form__header" v-else>
-            <span v-if="!isCurrentStepActive">Incluir um <span style="color: var(--primary-color)">suppliere</span> neste atendimento</span>
+            <span v-if="!isCurrentStepActive">Incluir um <span style="color: var(--primary-color)">fornecedor</span> neste atendimento</span>
             <span class="push-both-sides"></span>
             <h3 :class="{active: isCurrentStepActive}">Cliente</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
         </div>

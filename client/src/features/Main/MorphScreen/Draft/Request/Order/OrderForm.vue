@@ -719,8 +719,8 @@
         margin-bottom: 10px;
     }
     .content__separator {
-        margin-bottom: 15px;
-        padding-bottom: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
         border-bottom: 2px solid var(--bg-color--8);
     }
 

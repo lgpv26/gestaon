@@ -17,7 +17,7 @@
                 </div>
             </div>
             <div class="separator" v-if="!form.activeStep"></div>
-            <app-supplier-form :activeStep.sync="form.activeStep" :outcomes.sync="form.outcomes" @sync="sync($event)"></app-supplier-form>
+            <app-supplier-form :activeStep.sync="form.activeStep" :supplier.sync="form.supplier" @sync="sync($event)"></app-supplier-form>
             <div class="separator"></div>
             <app-service-expense-form :activeStep.sync="form.activeStep" :serviceExpense.sync="form.serviceExpense" @sync="sync($event)"></app-service-expense-form>
             <div class="separator"></div>
@@ -56,6 +56,7 @@
                 createdAt: null,
                 updatedAt: null,
                 form: {
+                    activeStep: null,
                     supplierPhoneId: null,
                     supplierAddressId: null,
                     supplier: {
@@ -377,7 +378,7 @@
         flex-direction: column;
         top: 88px;
         left: 40px;
-        width: 210px;
+        width: 164px;
     }
     div.ms-form .form__instruction .instruction__container > .container__area > small{
         font-size: 14px;
