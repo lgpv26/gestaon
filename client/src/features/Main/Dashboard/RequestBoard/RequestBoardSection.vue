@@ -318,7 +318,7 @@
         cursor: grab;
         padding: 10px 10px 8px;
         height: 50px;
-        background: var(--bg-color);
+        background: var(--bg-color--2);
     }
     .board-section > .board-section__header {
         display: flex;

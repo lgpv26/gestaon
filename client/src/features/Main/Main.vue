@@ -76,8 +76,6 @@
                                         <span>{{itemProps.text }}</span>
                                     </template>
                                 </app-select>
-
-
                                 <app-select class="request-board__filter filter--users-in-charge" :items="requestBoardFilter.usersInCharge" :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Responsável</span>
@@ -546,7 +544,7 @@
     }
 
     .left-column, .left-column header, .main-column header {
-        background-color: var(--bg-color--5);
+        background-color: var(--bg-color--2);
     }
 
     .left-column {

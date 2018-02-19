@@ -15,7 +15,7 @@ module.exports = {
             type: {
                 type: String,
                 enum: {
-                    values: ['request'],
+                    values: ['request','expense','accounts'],
                     message: 'Tipo de raschunho não reconhecido.'
                 }
             },

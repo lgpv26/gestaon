@@ -38,6 +38,23 @@
 
     export default {
         sockets: {
+            draftPresence(data){
+                this.presenceUsers = data;
+            },
+            draftSave(){
+                this.saving = false;
+            },
+            draftUpdate({draftId, form}){
+                if(draftId === this.activeMorphScreen.draft.draftId) {
+                    console.log("Received draft:update", { draftId, form });
+                    this.form = _.merge(this.form, form);
+                    this.$bus.$emit('draft:update', {
+                        draftId: draftId,
+                        form: this.form
+                    });
+                    this.stopLoading();
+                }
+            }
         },
         components: {
             'app-incomes-form': OutcomesForm,
@@ -115,12 +132,8 @@
                 alwaysShowTracks: true
             });
             const emitData = { draftId: this.activeMorphScreen.draft.draftId, userId: this.user.id};
-            console.log("Emitting draft:presence", emitData);
-            this.$socket.emit('draft:presence', emitData);
-
-            setTimeout(() => {
-                this.stopLoading();
-            }, 100)
+            console.log("Emitting draft:presence", emitData)
+            this.$socket.emit('draft:presence', emitData)
         },
         updated(){
             this.scrollbar.update();

@@ -138,7 +138,7 @@
 <style>
     .request-board-card {
         display: flex;
-        background: var(--bg-color);
+        background: var(--bg-color--2);
         box-shadow: var(--card-shadow);
     }
 

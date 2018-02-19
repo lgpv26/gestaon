@@ -520,6 +520,16 @@ module.exports = class Draft {
                     }
                 })
             }
+            else if(setDraftRedis.type == 'accounts'){
+                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'supplierFormUpdate', JSON.stringify({ supplierAddressForm: { address: { select: (selectedAddress) ? true : false } }, supplierPhoneForm: {} }), 'supplierFormEdition', JSON.stringify({ supplierAddress: { inEdition: setDraftRedis.supplierAddress.inEdition, supplierAddressId: null }, supplierPhone: { inEdition: setDraftRedis.supplierPhone.inEdition, supplierPhoneId: null } }), (err, res) => {
+                    if (err) {
+                        reject()
+                    }
+                    else {
+                        resolve()
+                    }
+                })
+            }
         })
     }
 

@@ -87,21 +87,24 @@ if(config.redis.active){
 }
 
 // load MongoDB/Mongoose models
-server['mongodb'] = require('./models/mongodb')(mongoose);
+server['mongodb'] = require('./models/mongodb')(mongoose)
 
 // load MySQL/Sequelize models
-server['mysql'] = require('./models/mysql')(server, Sequelize, sequelize);
+server['mysql'] = require('./models/mysql')(server, Sequelize, sequelize)
+
+// load Draft form models
+server['draftFormModels'] = require('./models/draft-form')(mongoose)
 
 // loading all sockets
 log.info("Loading sockets");
 require('./sockets')(server);
 
 // OAuth server
-server['oAuth2'] = require('./modules/OAuth2/index')(server);
+server['oAuth2'] = require('./modules/OAuth2/index')(server)
 
 // loading all api routes
 log.info("Loading routes");
-require('./routes')(server, restify, sequelize);
+require('./routes')(server, restify, sequelize)
 
 // verify if ElasticSearch is running
 elasticSearch.ping({

@@ -102,7 +102,7 @@ const actions = {
 
             // temp
 
-            context.commit('ADD_DRAFT', {
+            /*context.commit('ADD_DRAFT', {
                 companyId: 1,
                 createdAt: "2017-12-19T20:24:18.668Z",
                 createdBy: "THIAGO ROCHA",
@@ -134,6 +134,8 @@ const actions = {
                 type: "expense",
                 updatedAt: "2018-01-10T18:36:26.870Z"
             })
+
+            */
 
             return response;
         });

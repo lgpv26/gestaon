@@ -1,189 +1,177 @@
 const Draft = require('.')
 const basePath = require('../../middlewares/base-path.middleware')
 const _ = require('lodash')
-const RequestPersistance = require('../../modules/Draft/Persistance/RequestPersistance');
-const ClientPersistance = require('../../modules/Draft/Persistance/ClientPersistance');
-const OrderPersistance = require('../../modules/Draft/Persistance/OrderPersistance');
-const RequestRecoverance = require('../../modules/Draft/Recoverance/RequestRecoverance');
+//const RequestPersistance = require('../../modules/Draft/Persistance/RequestPersistance')
+//const ClientPersistance = require('../../modules/Draft/Persistance/ClientPersistance')
 
-module.exports = class Request extends Draft {
+module.exports = class Accounts extends Draft {
 
     constructor(server, channels, socket) {
         // extends
         super(server, channels, socket);
         // private
-        this._requestPersistance = new RequestPersistance(server);
-        this._clientPersistance = new ClientPersistance(server);
-        this._orderPersistance = new OrderPersistance(server);
-        this._requestRecoverance = new RequestRecoverance(server);        
+        // this._requestPersistance = new RequestPersistance(server);
         // functions
-        this.setRequestEventListeners();
+        this.setAccountsEventListeners();
     }
 
     /**
-     * Events on Request Listeners
-     * 
+     * Accounts Listeners
+     *
      */
-    setRequestEventListeners() {
+    setAccountsEventListeners() {
 
-    this.socket.on('draft:request-persist', (requestPersist) => {
-        super.resetTimeout()
-        super.saveDraft(requestPersist.draftId).then(() => {
-            this.onRequestPersist(requestPersist)
+        this.socket.on('draft:accounts-persist', (accountsPersist) => {
+            super.resetTimeout()
+            super.saveDraft(accountsPersist.draftId).then(() => {
+                this.onAccountsPersist(accountsPersist)
+            })
         })
-    })
 
-    this.socket.on('draft:request-recoverance', (requestRecoverance) => {
-        this.onRequestRecoverance(requestRecoverance)
-    })
-     
+        this.socket.on('draft:accounts-recoverance', (accountsRecoverance) => {
+            this.onAccountsRecoverance(accountsRecoverance)
+        })
+
+        ///////////////////////
+        ///     SUPPLIER    ///
+        ///////////////////////
+        //
+        this.socket.on('draft:supplier-select', (supplierSelect) => {
+            super.resetTimeout()
+            super.saveDraft(supplierSelect.draftId).then(() => {
+                this.onSupplierSelect(supplierSelect)
+            })
+        })
+
+        this.socket.on('draft:supplier-reset', (supplierReset) => {
+            super.resetTimeout()
+            super.saveDraft(supplierReset.draftId).then(() => {
+                this.onSupplierReset(supplierReset)
+            })
+        })
+
+        ///////////////////////
+        ///    SUPPLIER     ///
+        ///  ** address     ///
+        ///////////////////////
+        //
+        this.socket.on('draft:supplier-address-add', (supplierAddressAdd) => {
+            super.resetTimeout()
+            super.saveDraft(supplierAddressAdd.draftId).then(() => {
+                this.onSupplierAddressAdd(supplierAddressAdd)
+            })
+        })
+
+        this.socket.on('draft:supplier-address-edit', (supplierAddressEdit) => {
+            super.resetTimeout()
+            super.saveDraft(supplierAddressEdit.draftId).then(() => {
+                this.onSupplierAddressEdit(supplierAddressEdit)
+            })
+        })
+
+        this.socket.on('draft:supplier-address-back', (supplierAddressBack) => {
+            super.resetTimeout()
+            super.saveDraft(supplierAddressBack.draftId).then(() => {
+                this.onSupplierAddressBack(supplierAddressBack)
+            })
+        })
+
+        this.socket.on('draft:supplier-address-update', (supplierAddressUpdate) => {
+            super.resetTimeout()
+            this.onSupplierAddressUpdate(supplierAddressUpdate)
+        })
+
+        this.socket.on('draft:supplier-address-save', (supplierAddressSave) => {
+            super.resetTimeout()
+            super.saveDraft(supplierAddressSave.draftId).then(() => {
+                this.onSupplierAddressSave(supplierAddressSave)
+            })
+        })
+
+        this.socket.on('draft:supplier-address-remove', (supplierAddressRemove) => {
+            this.onSupplierAddressRemove(supplierAddressRemove)
+        })
+
+        ///////////////////////////////
+        //SUPPLIER ADDRESS => ADDRESS  //
+        ///////////////////////////////
+        //
+        this.socket.on('draft:supplier-address-address-select', (supllierAddressAddressSelect) => {
+            super.resetTimeout()
+            super.saveDraft(supllierAddressAddressSelect.draftId).then(() => {
+                this.onSupplierAddressAddressSelect(supllierAddressAddressSelect)
+            })
+        })
+
+        this.socket.on('draft:supplier-address-address-reset', (supplierAddressAddressReset) => {
+            super.resetTimeout()
+            super.saveDraft(supplierAddressAddressReset.draftId).then(() => {
+                this.onSupplierAddressAddressReset(supplierAddressAddressReset)
+            })
+        })
+        //
+        // <-- end SUPPLIER ** address | setSocketRequestListeners
+
+        //////////////////////
+        ///   SUPPLIER     ///
+        ///  ** phone      ///
+        //////////////////////
+        //
+        this.socket.on('draft:supplier-phone-edit', (supplierPhoneEdit) => {
+            this.onSupplierPhoneEdit(supplierPhoneEdit)
+        })
+
+        this.socket.on('draft:supplier-phone-edition-cancel', (supplierPhoneEditionCancel) => {
+            super.resetTimeout()
+            super.saveDraft(supplierPhoneEditionCancel.draftId).then(() => {
+                this.onSupplierPhoneEditionCancel(supplierPhoneEditionCancel)
+            })
+        })
+
+        this.socket.on('draft:supplier-phone-save', (supplierPhoneSave) => {
+            super.resetTimeout()
+            super.saveDraft(supplierPhoneSave.draftId).then(() => {
+                this.onSupplierPhoneSave(supplierPhoneSave)
+            })
+        })
+
+        this.socket.on('draft:supplier-phone-update', (supplierPhoneUpdate) => {
+            super.resetTimeout()
+            this.onSupplierPhoneUpdate(supplierPhoneUpdate)
+        })
+
+        this.socket.on('draft:supplier-phone-remove', (supplierPhoneRemove) => {
+            this.onSupplierPhoneRemove(supplierPhoneRemove)
+        })
+        // <-- end SUPPLIER ** phone | setSocketRequestListeners
+
         /////////////////////////
-        ///     ACCOUNTS      ///
+        ///    SUPPLIER       ///
+        /// ** custom-field   ///
         /////////////////////////
-    //
-        this.socket.on('draft:client-select', (clientSelect) => {
-            super.resetTimeout()
-            super.saveDraft(clientSelect.draftId).then(() => {
-                this.onClientSelect(clientSelect)
+        //
+        this.socket.on('draft:supplier-custom-field-add', (supplierCustomFieldAdd) => {
+            super.saveDraft(supplierCustomFieldAdd.draftId).then(() => {
+                this.onSupplierCustomFieldAdd(supplierCustomFieldAdd)
             })
         })
 
-        this.socket.on('draft:client-reset', (clientReset) => {
+        this.socket.on('draft:supplier-custom-field-update', (supplierCustomFieldUpdate) => {
             super.resetTimeout()
-            super.saveDraft(clientReset.draftId).then(() => {
-                this.onClientReset(clientReset)
-            })
+            this.onSupplierCustomFieldUpdate(supplierCustomFieldUpdate)
         })
 
-        this.socket.on('draft:client-persist', (clientPersist) => {
-            super.resetTimeout()
-            super.saveDraft(clientPersist.draftId).then(() => {
-                this.onClientPersist(clientPersist)
+        this.socket.on('draft:supplier-custom-field-remove', (supplierCustomFieldRemove) => {
+            super.saveDraft(supplierCustomFieldRemove.draftId).then(() => {
+                this.onSupplierCustomFieldRemove(supplierCustomFieldRemove)
             })
         })
+        // <-- end SUPPLIER ** custom-field  | setSocketRequestListeners
 
-            ///////////////////////
-            ///     CLIENT      ///
-            ///  ** address     ///
-            ///////////////////////
-        //
-            this.socket.on('draft:client-address-add', (clientAddressAdd) => {
-                super.resetTimeout()
-                super.saveDraft(clientAddressAdd.draftId).then(() => {
-                    this.onClientAddressAdd(clientAddressAdd)
-                })
-            })
-
-            this.socket.on('draft:client-address-edit', (clientAddressEdit) => {
-                super.resetTimeout()
-                super.saveDraft(clientAddressEdit.draftId).then(() => {
-                    this.onClientAddressEdit(clientAddressEdit)
-                })
-            })
-
-            this.socket.on('draft:client-address-back', (clientAddressBack) => {
-                super.resetTimeout()
-                super.saveDraft(clientAddressBack.draftId).then(() => {
-                    this.onClientAddressBack(clientAddressBack)
-                })
-            })
-
-            this.socket.on('draft:client-address-update', (clientAddressUpdate) => {
-                super.resetTimeout()
-                this.onClientAddressUpdate(clientAddressUpdate)
-            })
-
-            this.socket.on('draft:client-address-save', (clientAddressSave) => {
-                super.resetTimeout()
-                super.saveDraft(clientAddressSave.draftId).then(() => {
-                    this.onClientAddressSave(clientAddressSave)
-                })
-            })
-
-            this.socket.on('draft:client-address-remove', (clientAddressRemove) => {
-                this.onClientAddressRemove(clientAddressRemove)
-            })
-
-                ///////////////////////////////
-                //CLIENT ADDRESS => ADDRESS  //
-                ///////////////////////////////
-            //
-                this.socket.on('draft:client-address-address-select', (clientAddressAddressSelect) => {
-                    super.resetTimeout()
-                    super.saveDraft(clientAddressAddressSelect.draftId).then(() => {
-                        this.onClientAddressAddressSelect(clientAddressAddressSelect)
-                    })
-                })
-
-                this.socket.on('draft:client-address-address-reset', (clientAddressAddressReset) => {
-                    super.resetTimeout()
-                    super.saveDraft(clientAddressAddressReset.draftId).then(() => {
-                        this.onClientAddressAddressReset(clientAddressAddressReset)
-                    })
-                })
-            //
-        // <-- end CLIENT ** address | setSocketRequestListeners
-
-            //////////////////////
-            ///     CLIENT     ///
-            ///  ** phone      ///
-            //////////////////////
-        //
-            this.socket.on('draft:client-phone-edit', (clientPhoneEdit) => {
-                this.onClientPhoneEdit(clientPhoneEdit)
-            })
-
-            this.socket.on('draft:client-phone-edition-cancel', (clientPhoneEditionCancel) => {
-                super.resetTimeout()
-                super.saveDraft(clientPhoneEditionCancel.draftId).then(() => {
-                    this.onClientPhoneEditionCancel(clientPhoneEditionCancel)
-                })
-            })
-
-            this.socket.on('draft:client-phone-save', (clientPhoneSave) => {
-                super.resetTimeout()
-                super.saveDraft(clientPhoneSave.draftId).then(() => {
-                    this.onClientPhoneSave(clientPhoneSave)
-                })
-            })
-
-            this.socket.on('draft:client-phone-update', (clientPhoneUpdate) => {
-                super.resetTimeout()
-                this.onClientPhoneUpdate(clientPhoneUpdate)
-            })
-
-            this.socket.on('draft:client-phone-remove', (clientPhoneRemove) => {
-                this.onClientPhoneRemove(clientPhoneRemove)
-            })
-        // <-- end CLIENT ** phone | setSocketRequestListeners
-
-            /////////////////////////
-            ///     CLIENT        ///
-            /// ** custom-field   ///
-            /////////////////////////
-        //
-            this.socket.on('draft:client-custom-field-add', (clientCustomFieldAdd) => {
-                super.saveDraft(clientCustomFieldAdd.draftId).then(() => {
-                    this.onClientCustomFieldAdd(clientCustomFieldAdd)
-                })
-            })
-
-            this.socket.on('draft:client-custom-field-update', (clientCustomFieldUpdate) => {
-                super.resetTimeout()
-                this.onClientCustomFieldUpdate(clientCustomFieldUpdate)
-            })
-
-            this.socket.on('draft:client-custom-field-remove', (clientCustomFieldRemove) => {
-                super.saveDraft(clientCustomFieldRemove.draftId).then(() => {
-                    this.onClientCustomFieldRemove(clientCustomFieldRemove)
-                })
-            })
-        // <-- end CLIENT ** custom-field  | setSocketRequestListeners
-
-             ///////////////////////
-            ///  CUSTOM FIELD   ///
-            /// ** in company   ///
-            ///////////////////////
+        ///////////////////////
+        ///  CUSTOM FIELD   ///
+        /// ** in company   ///
+        ///////////////////////
         //
         this.socket.on('draft:custom-field-save', (customFieldSave) => {
             super.saveDraft(customFieldSave.draftId).then(() => {
@@ -196,80 +184,19 @@ module.exports = class Request extends Draft {
                 this.onDraftCustomFieldRemove(customFieldRemove)
             })
         })
-    // <-- end CLIENT | setSocketRequestListeners
 
-                ///////////////////////
-                ///  Client Group   ///
-                /// ** in company   ///
-                ///////////////////////
-        //
-            this.socket.on('draft:client-group-save', (clientGroupSave) => {
-                super.saveDraft(clientGroupSave.draftId).then(() => {
-                    this.onDraftClientGroupSave(clientGroupSave)
-                })
-            })
-
-            this.socket.on('draft:client-group-remove', (clientGroupRemove) => {
-                super.saveDraft(clientGroupSave.draftId).then(() => {
-                    this.onDraftClientGroupRemove(clientGroupSave)
-                })
-            })
-        // <-- end Client Group | setSocketRequestListeners
-
-    // <-- end CLIENT | setSocketRequestListeners
-
-        ///////////////////////
-        ///     ORDER       ///
-        ///////////////////////
-//
-
-            ///////////////////////
-            ///     ORDER      ///
-            ///  ** product     ///
-            ///////////////////////
-    //
-        this.socket.on('draft:order-product-add', (orderProductAdd) => {
-            super.resetTimeout()
-            super.saveDraft(orderProductAdd.draftId).then(() => {
-                this.onOrderProductAdd(orderProductAdd)
-            })
-        })
-
-        this.socket.on('draft:order-product-remove', (orderProductRemove) => {
-            super.resetTimeout()
-            super.saveDraft(orderProductRemove.draftId).then(() => {
-                this.onOrderProductRemove(orderProductRemove)
-            })
-        })
-
-        this.socket.on('draft:order-product-product-select', (orderProductSelect) => {
-            super.resetTimeout()
-            super.saveDraft(orderProductSelect.draftId).then(() => {
-                this.onOrderProductProductSelect(orderProductSelect)
-            })
-        })
-
-        this.socket.on('draft:order-product-product-reset', (orderProductReset) => {
-            super.resetTimeout()
-            super.saveDraft(orderProductReset.draftId).then(() => {
-                this.onOrderProductProductReset(orderProductReset)
-            })
-        })
-    //<-- end ORDER ** product | setSocketRequestListeners
-
-//<-- end ORDER | setSocketRequestListeners
-
-    } // <-- end setSocketRequestListeners
+    }
+    // <-- end SUPPLIER | setSocketAccountsListeners
 
 
     /**
-     * Request Persist
-     * @desc Send to all sockets in Draft/:id the persist client event
+     * Accounts Persist
+     * @desc Send to all sockets in Draft/:id the persist accounts event
      *
-     * @param {object} requestPersist - expected: draftId
+     * @param {object} accountsPersist - expected: draftId
      * @return {} @property {Socket}
      */
-    onRequestPersist(requestPersist) {
+    onAccountsPersist(accountsPersist) {
         let companyId;
         if(this.socket.user.activeCompanyUserId){
             companyId = parseInt(this.socket.user.activeCompanyUserId);
@@ -278,671 +205,467 @@ module.exports = class Request extends Draft {
             if(this.socket.user.companies.length) companyId = _.first(this.socket.user.companies)
         }
         if(companyId){
-            this._clientPersistance.setSaveInRequest(true)
 
-            this._clientPersistance.setDraftId(requestPersist.draftId)
-            this._clientPersistance.setCompanyId(companyId)
-
-            //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'Started saving request')
-
-            this._requestPersistance.setTransaction().then((transaction) => {
-                //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the client')
-                this._clientPersistance.start(transaction).then((client) => {
-                    //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', (client) ? 'client saved, id: ' + client.clientId : 'client set as Null' )
-                    this._orderPersistance.setDraftId(requestPersist.draftId)
-                    this._orderPersistance.setSaveInRequest(true)
-
-                    this._orderPersistance.setCompanyId(companyId)
-
-                    //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the order')
-                    this._orderPersistance.start(transaction).then((order) => {
-                        //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'order saved, id: ' + order.orderId)
-
-                        this._requestPersistance.setDraftId(requestPersist.draftId)
-                        this._requestPersistance.setCompanyId(companyId)
-                        this._requestPersistance.setUserId(this.socket.user.id)                        
-
-                        if(client){
-                            this._requestPersistance.setClient(client)
-                            this._requestPersistance.setClientId(client.id)
-                        }
-                        else{
-                            this._requestPersistance.setClient()
-                            this._requestPersistance.setClientId()
-                        }
-                        if(order){
-                            this._requestPersistance.setOrderId(order.id) 
-                        }
-                        else{
-                            this._requestPersistance.setOrderId() 
-                        }
-
-                        const task = null
-                        if(task){
-                            this._requestPersistance.setTaskId(task.taskId) 
-                        }
-                        else{
-                            this._requestPersistance.setTaskId()
-                        }
-
-                        //this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'saving the request')
-                        this._requestPersistance.start().then((request) => {
-                            this.server.io.in('draft/' + requestPersist.draftId).emit('draftRequestPersist', 'request saved, id: ' + request.id)
-                        }).catch((err) => {
-                            console.log('ERRO: START DO REQUEST PERSISTANCE: ', err)
-                        })
-                    }).catch((err) => {
-                        console.log('ERRO: START DO ORDER PERSISTANCE: ', err)
-                    })                      
-                }).catch((err) => {
-                    this._requestPersistance.rollback().then(() => {
-                        this.server.io.in('draft/' + requestPersist.draftId).emit('draftClientPersist', 'error in saving client')
-                    })
-                })
-            }).catch((err) => {
-                console.log('ERRO: SET TRANSACTION: ', err)
-            })   
         }
     }
 
     /**
-     * Request Recoverance
+     * Accounts Recoverance
      * @desc Send to all sockets in Draft/:id the recoverance event
      *
-     * @param {object} requestRecoverance - expected: requestId, companyId
+     * @param {object} accountsRecoverance - expected: accountsId, companyId
      * @return {object} *Draft @property {Socket}
      */
-    onRequestRecoverance(requestRecoverance) {
+    onAccountsRecoverance(accountsRecoverance) {
 
-        this._requestRecoverance.setRequestId(requestRecoverance.requestId)
-        this._requestRecoverance.setCompanyId(requestRecoverance.companyId)
-        this._requestRecoverance.setRecoverancedBy(this.socket.user)
+    }
 
-        
-        this._requestRecoverance.start().then((draft) => {
-            this.server.io.in('draft/' + draft.draftId).emit('draftRequestRecoverance', draft)
-        }).catch((err) => {
-            console.log('ERRO: REQUEST RECOVERANCE: ', err)
+    ///////////////////////
+    ///     SUPPLIER    ///
+    ///////////////////////
+//
+    /**
+     * Supplier Select
+     * @desc Send to all sockets in Draft/:id the select supplier event
+     *
+     * @param {object} supplierSelect - expected: draftId, supplierId
+     * @return {object} Supplier @property {Socket}
+     */
+    onSupplierSelect(supplierSelect) {
+        supplierSelect.supplierAddress = { inEdition: false }
+        supplierSelect.supplierPhone = { inEdition: false }
+
+        super.setDraftRedis(supplierSelect, true).then(() => {
+            this.controller.selectSupplier(supplierSelect).then((supplier) => {
+                this.server.io.in('draft/' + supplierSelect.draftId).emit('draftSupplierAddressBack')
+                this.server.io.in('draft/' + supplierSelect.draftId).emit('draftSupplierSelect', supplier)
+            }).catch(() => {
+                console.log('catch do SELECT SUPPLIER - QUE É DENTRO DO ON SUPPLIER SELECT')
+            })
         })
-    
+    }
+
+    /**
+     * Supplier Reset
+     * @desc Send to all sockets in Draft/:id the reset supplier event
+     *
+     * @param {object} supplierReset - expected: draftId
+     * @return {} @property {Socket}
+     */
+    onSupplierReset(supplierReset) {
+        supplierReset.supplierAddress = { inEdition: true, supplierAddressId: null }
+        supplierReset.supplierPhone = { inEdition: true, supplierPhoneId: null }
+
+        super.setDraftRedis(supplierReset).then(() => {
+            this.controller.resetSupplier(supplierReset).then(() => {
+                this.server.io.in('draft/' + supplierReset.draftId).emit('draftSupplierAddressAdd')
+                //this.server.io.in('draft/' + supplierReset.draftId).emit('draftSupplierAddressAddressReset')
+                this.server.io.in('draft/' + supplierReset.draftId).emit('draftSupplierPhoneEditionCancel')
+                this.server.io.in('draft/' + supplierReset.draftId).emit('draftSupplierReset')
+            }).catch(() => {
+                console.log('catch do RESET SUPPLIER - QUE É DENTRO DO ON SUPPLIER RESET')
+            })
+        })
     }
 
     ///////////////////////
     ///     CLIENT      ///
+    ///  ** address     ///
     ///////////////////////
-//
-    /** 
-     * Client Select
-     * @desc Send to all sockets in Draft/:id the select client event
-     * 
-     * @param {object} clientSelect - expected: draftId, clientId
-     * @return {object} Client @property {Socket}
+    //
+    /**
+     * Supplier Address Add
+     * @desc Send to all sockets in Draft/:id the add form event
+     *
+     * @param {object} supplierAddressAdd - expected: draftId
+     * @return {} @property {Socket}
      */
-    onClientSelect(clientSelect) {
-        clientSelect.clientAddress = { inEdition: false }
-        clientSelect.clientPhone = { inEdition: false }
-
-        super.setDraftRedis(clientSelect, true).then(() => {
-            this.controller.selectClient(clientSelect).then((client) => {
-                this.server.io.in('draft/' + clientSelect.draftId).emit('draftClientAddressBack')
-                this.server.io.in('draft/' + clientSelect.draftId).emit('draftClientSelect', client)
-            }).catch(() => {
-                console.log('catch do SELECT CLIENT - QUE É DENTRO DO ON CLIENT SELECT')
-            })
+    onSupplierAddressAdd(supplierAddressAdd) {
+        supplierAddressAdd.inEdition = { supplierAddress: { inEdition: true, supplierAddressId: null } }
+        super.updateDraftRedis(supplierAddressAdd, true).then(() => {
+            this.server.io.in('draft/' + supplierAddressAdd.draftId).emit('draftSupplierAddressAdd')
         })
     }
 
-    /** 
-     * Client Reset
-     * @desc Send to all sockets in Draft/:id the reset client event
-     * 
-     * @param {object} clientReset - expected: draftId
-     * @return {} @property {Socket}
+    /**
+     * Supplier Address Edit
+     * @desc Send to all sockets in Draft/:id the edit form event
+     *
+     * @param {object} supplierAddressEdit - expected: draftId, supplierAddressId
+     * @return {int} SupplierAddress @property {Socket}
      */
-    onClientReset(clientReset) {
-        clientReset.clientAddress = { inEdition: true, clientAddressId: null }
-        clientReset.clientPhone = { inEdition: true, clientPhoneId: null }
-        
-        super.setDraftRedis(clientReset).then(() => {
-            this.controller.resetClient(clientReset).then(() => {
-                this.server.io.in('draft/' + clientReset.draftId).emit('draftClientAddressAdd')
-                //this.server.io.in('draft/' + clientReset.draftId).emit('draftClientAddressAddressReset')
-                this.server.io.in('draft/' + clientReset.draftId).emit('draftClientPhoneEditionCancel')
-                this.server.io.in('draft/' + clientReset.draftId).emit('draftClientReset')
-            }).catch(() => {
-                console.log('catch do RESET CLIENT - QUE É DENTRO DO ON CLIENT RESET')
+    onSupplierAddressEdit(supplierAddressEdit) {
+        supplierAddressEdit.inEdition = { supplierAddress: { inEdition: true, supplierAddressId: supplierAddressEdit.supplierAddressId } }
+        super.updateDraftRedis(supplierAddressEdit, true).then(() => {
+            this.controller.supplierAddressEdit(supplierAddressEdit).then(() => {
+                this.server.io.in('draft/' + supplierAddressEdit.draftId).emit('draftSupplierAddressEdit', supplierAddressEdit.supplierAddressId)
             })
         })
     }
 
     /**
-     * Client Persist
-     * @desc Send to all sockets in Draft/:id the persist client event
+     * Supplier Address Back
+     * @desc Send to all sockets in Draft/:id the back 'main' form event
      *
-     * @param {object} clientPersist - expected: draftId
+     * @param {object} supplierAddressBack - expected: draftId, supplierAddressId
      * @return {} @property {Socket}
      */
-    onClientPersist(clientPersist) {
-        let companyId;
-        if(this.socket.user.activeCompanyUserId){
-            companyId = parseInt(this.socket.user.activeCompanyUserId);
-        }
-        else {
-            if(this.socket.user.companies.length) companyId = _.first(this.socket.user.companies)
-        }
-        if(companyId){
-            this._clientPersistance.setDraftId(clientPersist.draftId);
-            this._clientPersistance.setCompanyId(companyId);
-            this._clientPersistance.start().then((draft) => {
-                
-                this.server.io.in('draft/' + clientPersist.draftId).emit('draftClientPersist', draft)
-            }).catch((err) => {
-                console.log("ERROR", err);
-            });
-        }
+    onSupplierAddressBack(supplierAddressBack) {
+        supplierAddressBack.supplierAddressForm = true
+        supplierAddressBack.inEdition = { supplierAddress: { inEdition: false, supplierAddressId: null } }
+        super.updateDraftRedis(supplierAddressBack, true).then(() => {
+            delete supplierAddressBack.supplierAddressForm
+            this.controller.supplierAddressBack(supplierAddressBack).then(() => {
+                this.server.io.in('draft/' + supplierAddressBack.draftId).emit('draftSupplierAddressBack')
+            })
+        })
     }
 
-        ///////////////////////
-        ///     CLIENT      ///
-        ///  ** address     ///
-        ///////////////////////
+    /**
+     * Supplier Address Update
+     * @desc Send to all sockets in Draft/:id the updating data in supplier address form
+     *
+     * @param {object} supplierAddressUpdate - expected: draftId, supplierAddressForm, ? supplierAddressId
+     * @return {} @property {Socket}
+     */
+    onSupplierAddressUpdate(supplierAddressUpdate) {
+        this.socket.broadcast.in('draft/' + supplierAddressUpdate.draftId).emit('draftSupplierAddressUpdate', supplierAddressUpdate.supplierAddressForm)
+
+        supplierAddressUpdate.form = { supplierAddressForm: supplierAddressUpdate.supplierAddressForm }
+        supplierAddressUpdate.form.supplierAddressForm.id = (supplierAddressUpdate.supplierAddressId) ? supplierAddressUpdate.supplierAddressId : null
+        delete supplierAddressUpdate.supplierAddressId
+
+        //supplierAddressUpdate.supplierAddressForm = true
+        super.updateDraftRedis(supplierAddressUpdate).then(() => {
+            delete supplierAddressUpdate.supplierAddressForm
+            super.setArrayDraft(supplierAddressUpdate).then(() => {
+                this.server.io.in('draft/' + supplierAddressUpdate.draftId).emit('draftSupplierAddressSaveable')
+                super.timerSocketUpdate(supplierAddressUpdate.draftId)
+            })
+        }).catch(() => {
+            console.log('catch do SET ARRAY DENTRO DO onSupplierAddressUpdate - chamado pelo SUPER')
+        })
+    }
+
+    /**
+     * Supplier Address Save
+     * @desc Send to all sockets in Draft/:id the supplier address saved
+     *
+     * @param {object} addressSave - expected: draftId
+     * @return {object} supplier address @property {Socket}
+     */
+    onSupplierAddressSave(supplierAddressSave) {
+        this.controller.saveSupplierAddress(supplierAddressSave).then((savedSupplierAddress) => {
+
+            supplierAddressSave.supplierAddressForm = false
+            supplierAddressSave.supplierPhoneForm = false
+            supplierAddressSave.inEdition = { supplierAddress: { inEdition: false, supplierAddressId: null } }
+            super.updateDraftRedis(supplierAddressSave).then(() => {
+                this.server.io.in('draft/' + supplierAddressSave.draftId).emit('draftSupplierAddressSave', savedSupplierAddress)
+            })
+        }).catch((err) => {
+            console.log(err, 'catch do SAVE ADDRESS CLIENT - QUE É DENTRO DO ON CLIENT ADDRESS ADDRESS SAVE')
+        })
+    }
+
+    /**
+     * Supplier Address Remove
+     * @desc Send to all sockets in Draft/:id the address saved
+     *
+     * @param {object} supplierAddressRemove - expected: draftId, supplierAddressId
+     * @return {int} supplier address Id  @property {Socket}
+     */
+    onSupplierAddressRemove(supplierAddressRemove) {
+        this.controller.removeSupplierAddress(supplierAddressRemove).then((removedSupplierAddress) => {
+            if (removedSupplierAddress.form.supplier.supplierAddresses.length < 1) {
+                supplierAddressRemove.inEdition = { supplierAddress: { inEdition: true, supplierAddressId: null } }
+                super.updateDraftRedis(supplierAddressRemove).then(() => {
+                    this.server.io.in('draft/' + supplierAddressRemove.draftId).emit('draftSupplierAddressAdd')
+                })
+            }
+            this.server.io.in('draft/' + supplierAddressRemove.draftId).emit('draftSupplierAddressRemove', removedSupplierAddress.supplierAddressId)
+        }).catch(() => {
+            console.log('catch do REMOVE CLIENT ADDRESS - QUE É DENTRO DO ON SupplierAddressRemove')
+        })
+    }
+
+    ///////////////////////////////
+    //CLIENT ADDRESS => ADDRESS  //
+    ///////////////////////////////
     //
-        /**
-         * Client Address Add
-         * @desc Send to all sockets in Draft/:id the add form event
-         * 
-         * @param {object} clientAddressAdd - expected: draftId
-         * @return {} @property {Socket}
-         */
-        onClientAddressAdd(clientAddressAdd) {
-            clientAddressAdd.inEdition = { clientAddress: { inEdition: true, clientAddressId: null } }
-            super.updateDraftRedis(clientAddressAdd, true).then(() => {
-                this.server.io.in('draft/' + clientAddressAdd.draftId).emit('draftClientAddressAdd')
+    /**
+     * Address Select
+     * @desc Send to all sockets in Draft/:id that an address has been selected
+     *
+     * @param {object} addressSelect - expected: draftId, addressId
+     * @return {object} address @property {Socket}
+     */
+    onSupplierAddressAddressSelect(addressSelect) {
+        this.controller.selectAddressSupplierAddress(addressSelect).then((address) => {
+            addressSelect.address = address
+            addressSelect.inEdition = { supplierAddress: { inEdition: true, supplierAddressId: (addressSelect.supplierAddressId) ? addressSelect.supplierAddressId : null } }
+            super.updateDraftRedis(addressSelect, false, true).then(() => {
+                this.server.io.in('draft/' + addressSelect.draftId).emit('draftSupplierAddressAddressSelect', address)
             })
-        }
+        }).catch(() => {
+            console.log('catch do SELECT ADDRESS CLIENT - QUE É DENTRO DO ON CLIENT ADDRESS ADDDRESS SELECT')
+        })
+    }
 
-        /**
-         * Client Address Edit
-         * @desc Send to all sockets in Draft/:id the edit form event
-         * 
-         * @param {object} clientAddressEdit - expected: draftId, clientAddressId
-         * @return {int} ClientAddress @property {Socket}
-         */
-        onClientAddressEdit(clientAddressEdit) {
-            clientAddressEdit.inEdition = { clientAddress: { inEdition: true, clientAddressId: clientAddressEdit.clientAddressId } }
-            super.updateDraftRedis(clientAddressEdit, true).then(() => {
-                this.controller.clientAddressEdit(clientAddressEdit).then(() => {
-                    this.server.io.in('draft/' + clientAddressEdit.draftId).emit('draftClientAddressEdit', clientAddressEdit.clientAddressId)
-                })
+    /**
+     * Address Reset
+     * @desc Send to all sockets in Draft/:id that an address has been reset
+     *
+     * @param {object} addressReset - expected: draftId
+     * @return {} @property {Socket}
+     */
+    onSupplierAddressAddressReset(addressReset) {
+        super.updateDraftRedis(addressReset, false, { reset: true }).then(() => {
+            this.controller.resetAddressSupplierAddress(addressReset).then(() => {
+                this.server.io.in('draft/' + addressReset.draftId).emit('draftSupplierAddressAddressReset')
             })
-        }
-
-        /**
-         * Client Address Back
-         * @desc Send to all sockets in Draft/:id the back 'main' form event
-         * 
-         * @param {object} clientAddressBack - expected: draftId, clientAddressId
-         * @return {} @property {Socket}
-         */
-        onClientAddressBack(clientAddressBack) {
-            clientAddressBack.clientAddressForm = true
-            clientAddressBack.inEdition = { clientAddress: { inEdition: false, clientAddressId: null } }
-            super.updateDraftRedis(clientAddressBack, true).then(() => {
-                delete clientAddressBack.clientAddressForm
-                this.controller.clientAddressBack(clientAddressBack).then(() => {
-                    this.server.io.in('draft/' + clientAddressBack.draftId).emit('draftClientAddressBack')
-                })
-            })
-        }
-
-        /**
-         * Client Address Update
-         * @desc Send to all sockets in Draft/:id the updating data in client address form
-         * 
-         * @param {object} clientAddressUpdate - expected: draftId, clientAddressForm, ? clientAddressId
-         * @return {} @property {Socket}
-         */
-        onClientAddressUpdate(clientAddressUpdate) {
-            this.socket.broadcast.in('draft/' + clientAddressUpdate.draftId).emit('draftClientAddressUpdate', clientAddressUpdate.clientAddressForm)
-
-            clientAddressUpdate.form = { clientAddressForm: clientAddressUpdate.clientAddressForm }
-            clientAddressUpdate.form.clientAddressForm.id = (clientAddressUpdate.clientAddressId) ? clientAddressUpdate.clientAddressId : null
-            delete clientAddressUpdate.clientAddressId
-
-            //clientAddressUpdate.clientAddressForm = true
-            super.updateDraftRedis(clientAddressUpdate).then(() => {
-                delete clientAddressUpdate.clientAddressForm
-                super.setArrayDraft(clientAddressUpdate).then(() => {
-                    this.server.io.in('draft/' + clientAddressUpdate.draftId).emit('draftClientAddressSaveable')
-                    super.timerSocketUpdate(clientAddressUpdate.draftId)
-                })
-            }).catch(() => {
-                console.log('catch do SET ARRAY DENTRO DO onClientAddressUpdate - chamado pelo SUPER')
-            })
-        }
-
-        /**
-         * Client Address Save
-         * @desc Send to all sockets in Draft/:id the client address saved
-         * 
-         * @param {object} addressSave - expected: draftId
-         * @return {object} client address @property {Socket}
-         */
-        onClientAddressSave(clientAddressSave) {
-            this.controller.saveClientAddress(clientAddressSave).then((savedClientAddress) => {
-
-                clientAddressSave.clientAddressForm = false
-                clientAddressSave.clientPhoneForm = false
-                clientAddressSave.inEdition = { clientAddress: { inEdition: false, clientAddressId: null } }
-                super.updateDraftRedis(clientAddressSave).then(() => {
-                    this.server.io.in('draft/' + clientAddressSave.draftId).emit('draftClientAddressSave', savedClientAddress)
-                })
-            }).catch((err) => {
-                console.log(err, 'catch do SAVE ADDRESS CLIENT - QUE É DENTRO DO ON CLIENT ADDRESS ADDRESS SAVE')
-            })
-        }
-
-        /**
-         * Client Address Remove
-         * @desc Send to all sockets in Draft/:id the address saved
-         * 
-         * @param {object} clientAddressRemove - expected: draftId, clientAddressId
-         * @return {int} client address Id  @property {Socket}
-         */
-        onClientAddressRemove(clientAddressRemove) {
-            this.controller.removeClientAddress(clientAddressRemove).then((removedClientAddress) => {
-                if (removedClientAddress.form.client.clientAddresses.length < 1) {
-                    clientAddressRemove.inEdition = { clientAddress: { inEdition: true, clientAddressId: null } }
-                    super.updateDraftRedis(clientAddressRemove).then(() => {
-                        this.server.io.in('draft/' + clientAddressRemove.draftId).emit('draftClientAddressAdd')
-                    })
-                }
-                this.server.io.in('draft/' + clientAddressRemove.draftId).emit('draftClientAddressRemove', removedClientAddress.clientAddressId)
-            }).catch(() => {
-                console.log('catch do REMOVE CLIENT ADDRESS - QUE É DENTRO DO ON ClientAddressRemove')
-            })
-        }
-
-        ///////////////////////////////
-        //CLIENT ADDRESS => ADDRESS  //
-        ///////////////////////////////
-        //
-            /**
-             * Address Select
-             * @desc Send to all sockets in Draft/:id that an address has been selected
-             * 
-             * @param {object} addressSelect - expected: draftId, addressId
-             * @return {object} address @property {Socket}
-             */
-            onClientAddressAddressSelect(addressSelect) {
-                this.controller.selectAddressClientAddress(addressSelect).then((address) => {
-                    addressSelect.address = address
-                    addressSelect.inEdition = { clientAddress: { inEdition: true, clientAddressId: (addressSelect.clientAddressId) ? addressSelect.clientAddressId : null } }
-                    super.updateDraftRedis(addressSelect, false, true).then(() => {
-                        this.server.io.in('draft/' + addressSelect.draftId).emit('draftClientAddressAddressSelect', address)
-                    })
-                }).catch(() => {
-                    console.log('catch do SELECT ADDRESS CLIENT - QUE É DENTRO DO ON CLIENT ADDRESS ADDDRESS SELECT')
-                })
-            }
-
-            /**
-             * Address Reset
-             * @desc Send to all sockets in Draft/:id that an address has been reset
-             * 
-             * @param {object} addressReset - expected: draftId
-             * @return {} @property {Socket}
-             */
-            onClientAddressAddressReset(addressReset) {
-                super.updateDraftRedis(addressReset, false, { reset: true }).then(() => {
-                    this.controller.resetAddressClientAddress(addressReset).then(() => {
-                        this.server.io.in('draft/' + addressReset.draftId).emit('draftClientAddressAddressReset')
-                    })
-                }).catch(() => {
-                    console.log('catch do RESET ADDRESS CLIENT - QUE É DENTRO DO ON CLIENT ADDRESS ADDRESS RESET')
-                })
-            }
-        //
+        }).catch(() => {
+            console.log('catch do RESET ADDRESS CLIENT - QUE É DENTRO DO ON CLIENT ADDRESS ADDRESS RESET')
+        })
+    }
+    //
     // <-- end CLIENT ** address
-        ///////////////////////
-        ///     CLIENT      ///
-        ///  ** phone       ///
-        ///////////////////////
-    //    
-        /** 
-         * Client Phone Edit
-         * @desc Send to all sockets in Draft/:id the client phone edit event
-         * 
-         * @param {object} clientPhoneEdit - expected: draftId, clientPhoneId
-         * @return {int} client phone id @property {Socket}
-         */
-        onClientPhoneEdit(clientPhoneEdit) {
-            clientPhoneEdit.inEdition = { clientPhone: { inEdition: true, clientPhoneId: clientPhoneEdit.clientPhoneId } }
-            clientPhoneEdit.clientPhoneForm = { reset: true }
+    ///////////////////////
+    ///     CLIENT      ///
+    ///  ** phone       ///
+    ///////////////////////
+    //
+    /**
+     * Supplier Phone Edit
+     * @desc Send to all sockets in Draft/:id the supplier phone edit event
+     *
+     * @param {object} supplierPhoneEdit - expected: draftId, supplierPhoneId
+     * @return {int} supplier phone id @property {Socket}
+     */
+    onSupplierPhoneEdit(supplierPhoneEdit) {
+        supplierPhoneEdit.inEdition = { supplierPhone: { inEdition: true, supplierPhoneId: supplierPhoneEdit.supplierPhoneId } }
+        supplierPhoneEdit.supplierPhoneForm = { reset: true }
 
-            super.updateDraftRedis(clientPhoneEdit, true).then(() => {
-                this.server.io.in('draft/' + clientPhoneEdit.draftId).emit('draftClientPhoneEdit', clientPhoneEdit.clientPhoneId)
+        super.updateDraftRedis(supplierPhoneEdit, true).then(() => {
+            this.server.io.in('draft/' + supplierPhoneEdit.draftId).emit('draftSupplierPhoneEdit', supplierPhoneEdit.supplierPhoneId)
+        })
+    }
+
+    /**
+     * Supplier Phone Edition Cancel
+     * @desc Send to all sockets in Draft/:id the supplier phone cancel event
+     *
+     * @param {object} supplierPhoneEditionCancel - expected: draftId
+     * @return {} @property {Socket}
+     */
+    onSupplierPhoneEditionCancel(supplierPhoneEditionCancel) {
+        supplierPhoneEditionCancel.inEdition = { supplierPhone: { inEdition: false, supplierPhoneId: null } }
+        supplierPhoneEditionCancel.supplierPhoneForm = { reset: true }
+        super.updateDraftRedis(supplierPhoneEditionCancel).then(() => {
+            this.controller.phoneEditionCancel(supplierPhoneEditionCancel).then(() => {
+                this.server.io.in('draft/' + supplierPhoneEditionCancel.draftId).emit('draftSupplierPhoneEditionCancel')
             })
-        }
+        })
+    }
 
-        /** 
-         * Client Phone Edition Cancel
-         * @desc Send to all sockets in Draft/:id the client phone cancel event
-         * 
-         * @param {object} clientPhoneEditionCancel - expected: draftId
-         * @return {} @property {Socket}
-         */
-        onClientPhoneEditionCancel(clientPhoneEditionCancel) {
-            clientPhoneEditionCancel.inEdition = { clientPhone: { inEdition: false, clientPhoneId: null } }
-            clientPhoneEditionCancel.clientPhoneForm = { reset: true }
-            super.updateDraftRedis(clientPhoneEditionCancel).then(() => {
-                this.controller.phoneEditionCancel(clientPhoneEditionCancel).then(() => {
-                    this.server.io.in('draft/' + clientPhoneEditionCancel.draftId).emit('draftClientPhoneEditionCancel')
-                })
+    /**
+     * Supplier Phone Save
+     * @desc Send to all sockets in Draft/:id the supplier phone save event
+     *
+     * @param {object} supplierPhoneSave - expected: draftId, supplierPhoneId
+     * @return {object} supplier phone  @property {Socket}
+     */
+    onSupplierPhoneSave(supplierPhoneSave) {
+        supplierPhoneSave.inEdition = { supplierPhone: { inEdition: false, supplierPhoneId: null } }
+        supplierPhoneSave.supplierPhoneForm = { reset: true }
+        super.updateDraftRedis(supplierPhoneSave).then(() => {
+            this.controller.saveSupplierPhone(supplierPhoneSave).then((savedSupplierPhone) => {
+                this.server.io.in('draft/' + supplierPhoneSave.draftId).emit('draftSupplierPhoneSave', savedSupplierPhone)
+            }).catch((err) => {
+                console.log(err, 'catch do SAVE PHONE CLIENT - QUE É DENTRO DO ON CLIENT PHONE ADDRESS SAVE')
             })
-        }
+        })
+    }
 
-        /** 
-         * Client Phone Save
-         * @desc Send to all sockets in Draft/:id the client phone save event
-         * 
-         * @param {object} clientPhoneSave - expected: draftId, clientPhoneId
-         * @return {object} client phone  @property {Socket}
-         */
-        onClientPhoneSave(clientPhoneSave) {
-            clientPhoneSave.inEdition = { clientPhone: { inEdition: false, clientPhoneId: null } }
-            clientPhoneSave.clientPhoneForm = { reset: true }
-            super.updateDraftRedis(clientPhoneSave).then(() => {
-                this.controller.saveClientPhone(clientPhoneSave).then((savedClientPhone) => {
-                    this.server.io.in('draft/' + clientPhoneSave.draftId).emit('draftClientPhoneSave', savedClientPhone)
-                }).catch((err) => {
-                    console.log(err, 'catch do SAVE PHONE CLIENT - QUE É DENTRO DO ON CLIENT PHONE ADDRESS SAVE')
-                })
+    /**
+     * Supplier Phone Update
+     * @desc Send to all sockets in Draft/:id the supplier phone updating event
+     *
+     * @param {object} supplierPhoneUpdate - expected: draftId, supplierPhoneId, supplierPhoneForm
+     * @return {} @property {Socket}
+     */
+    onSupplierPhoneUpdate(supplierPhoneUpdate) {
+        this.socket.broadcast.in('draft/' + supplierPhoneUpdate.draftId).emit('draftSupplierPhoneUpdate', supplierPhoneUpdate.supplierPhoneForm)
+
+        supplierPhoneUpdate.form = { supplierPhoneForm: supplierPhoneUpdate.supplierPhoneForm }
+        supplierPhoneUpdate.form.supplierPhoneForm.id = (supplierPhoneUpdate.supplierPhoneId) ? supplierPhoneUpdate.supplierPhoneId : null
+
+        supplierPhoneUpdate.inEdition = { supplierPhone: { inEdition: true, supplierPhoneId: (supplierPhoneUpdate.supplierPhoneId) ? supplierPhoneUpdate.supplierPhoneId : null } }
+
+        delete supplierPhoneUpdate.supplierPhoneId
+
+        super.updateDraftRedis(supplierPhoneUpdate).then(() => {
+            delete supplierPhoneUpdate.supplierPhoneForm
+            super.setArrayDraft(supplierPhoneUpdate).then(() => {
+                this.server.io.in('draft/' + supplierPhoneUpdate.draftId).emit('draftSupplierPhoneSaveable')
+                super.timerSocketUpdate(supplierPhoneUpdate.draftId)
+            }).catch(() => {
+                console.log('catch do SET ARRAY DENTRO DO onSupplierPhoneUpdate - chamado pelo SUPER')
             })
-        }
+        })
+    }
 
-        /** 
-         * Client Phone Update
-         * @desc Send to all sockets in Draft/:id the client phone updating event
-         * 
-         * @param {object} clientPhoneUpdate - expected: draftId, clientPhoneId, clientPhoneForm
-         * @return {} @property {Socket}
-         */
-        onClientPhoneUpdate(clientPhoneUpdate) {
-            this.socket.broadcast.in('draft/' + clientPhoneUpdate.draftId).emit('draftClientPhoneUpdate', clientPhoneUpdate.clientPhoneForm)
+    /**
+     * Supplier Phone Remove
+     * @desc Send to all sockets in Draft/:id the supplier phone remove event
+     *
+     * @param {object} supplierPhoneRemove - expected: draftId, supplierPhoneId
+     * @return {int} supplier phone id @property {Socket}
+     */
+    onSupplierPhoneRemove(supplierPhoneRemove) {
+        super.consultRedisDraft(supplierPhoneRemove.draftId).then((consultRedisDraft) => {
+            consultRedisDraft = JSON.parse(consultRedisDraft.supplierFormEdition)
 
-            clientPhoneUpdate.form = { clientPhoneForm: clientPhoneUpdate.clientPhoneForm }
-            clientPhoneUpdate.form.clientPhoneForm.id = (clientPhoneUpdate.clientPhoneId) ? clientPhoneUpdate.clientPhoneId : null
+            let addTabPhone = {}
+            if (consultRedisDraft.supplierPhone.inEdition && consultRedisDraft.supplierPhone.supplierPhoneId === supplierPhoneRemove.supplierPhoneId) {
+                supplierPhoneRemove.inEdition = { supplierPhone: { inEdition: false, supplierPhoneId: null } }
+                supplierPhoneRemove.supplierPhoneForm = { reset: true }
+                addTabPhone.active = true
+            }
 
-            clientPhoneUpdate.inEdition = { clientPhone: { inEdition: true, clientPhoneId: (clientPhoneUpdate.clientPhoneId) ? clientPhoneUpdate.clientPhoneId : null } }
-
-            delete clientPhoneUpdate.clientPhoneId
-
-            super.updateDraftRedis(clientPhoneUpdate).then(() => {
-                delete clientPhoneUpdate.clientPhoneForm
-                super.setArrayDraft(clientPhoneUpdate).then(() => {
-                    this.server.io.in('draft/' + clientPhoneUpdate.draftId).emit('draftClientPhoneSaveable')
-                    super.timerSocketUpdate(clientPhoneUpdate.draftId)
+            super.updateDraftRedis(supplierPhoneRemove).then(() => {
+                this.controller.removeSupplierPhone(supplierPhoneRemove).then((removedSupplierPhone) => {
+                    this.server.io.in('draft/' + supplierPhoneRemove.draftId).emit('draftSupplierPhoneRemove', removedSupplierPhone)
+                    if (addTabPhone.active) this.server.io.in('draft/' + supplierPhoneRemove.draftId).emit('draftSupplierPhoneEditionCancel')
                 }).catch(() => {
-                    console.log('catch do SET ARRAY DENTRO DO onClientPhoneUpdate - chamado pelo SUPER')
+                    console.log('catch do REMOVE CLIENT ADDRESS - QUE É DENTRO DO ON SupplierPhoneRemove')
                 })
             })
-        }
-
-        /** 
-         * Client Phone Remove
-         * @desc Send to all sockets in Draft/:id the client phone remove event
-         * 
-         * @param {object} clientPhoneRemove - expected: draftId, clientPhoneId
-         * @return {int} client phone id @property {Socket}
-         */
-        onClientPhoneRemove(clientPhoneRemove) {
-            super.consultRedisDraft(clientPhoneRemove.draftId).then((consultRedisDraft) => {
-                consultRedisDraft = JSON.parse(consultRedisDraft.clientFormEdition)
-
-                let addTabPhone = {}
-                if (consultRedisDraft.clientPhone.inEdition && consultRedisDraft.clientPhone.clientPhoneId === clientPhoneRemove.clientPhoneId) {
-                    clientPhoneRemove.inEdition = { clientPhone: { inEdition: false, clientPhoneId: null } }
-                    clientPhoneRemove.clientPhoneForm = { reset: true }
-                    addTabPhone.active = true
-                }
-
-                super.updateDraftRedis(clientPhoneRemove).then(() => {
-                    this.controller.removeClientPhone(clientPhoneRemove).then((removedClientPhone) => {
-                        this.server.io.in('draft/' + clientPhoneRemove.draftId).emit('draftClientPhoneRemove', removedClientPhone)
-                        if (addTabPhone.active) this.server.io.in('draft/' + clientPhoneRemove.draftId).emit('draftClientPhoneEditionCancel')
-                    }).catch(() => {
-                        console.log('catch do REMOVE CLIENT ADDRESS - QUE É DENTRO DO ON ClientPhoneRemove')
-                    })
-                })
-            })
-        }
+        })
+    }
     // <-- end CLIENT ** phone
 
-        ///////////////////////
-        ///     CLIENT      ///
-        /// ** customField  ///
-        ///////////////////////
-    // 
-        /** 
-         * Client Custom Field Add
-         * @desc Send to all sockets in Draft/:id the client custom field add event
-         * 
-         * @param {object} customFieldAdd - expected: draftId, customFieldId, ? clientId 
-         * @return {int} client custom id @property {Socket}
-         */
-        onClientCustomFieldAdd(customFieldAdd) {
-            customFieldAdd.user = this.socket.user
-            this.controller.clientCustomFieldAdd(customFieldAdd).then((addedCustomField) => {
-                this.server.io.in('draft/' + customFieldAdd.draftId).emit('draftClientCustomFieldAdd', addedCustomField.clientCustomField)
+    ///////////////////////
+    ///     CLIENT      ///
+    /// ** customField  ///
+    ///////////////////////
+    //
+    /**
+     * Supplier Custom Field Add
+     * @desc Send to all sockets in Draft/:id the supplier custom field add event
+     *
+     * @param {object} customFieldAdd - expected: draftId, customFieldId, ? supplierId
+     * @return {int} supplier custom id @property {Socket}
+     */
+    onSupplierCustomFieldAdd(customFieldAdd) {
+        customFieldAdd.user = this.socket.user
+        this.controller.supplierCustomFieldAdd(customFieldAdd).then((addedCustomField) => {
+            this.server.io.in('draft/' + customFieldAdd.draftId).emit('draftSupplierCustomFieldAdd', addedCustomField.supplierCustomField)
+        })
+    }
+
+    /**
+     * Supplier Custom Field Update
+     * @desc Send to all sockets in Draft/:id the supplier custom field update event
+     *
+     * @param {object} customFieldUpdate - expected: draftId, customFieldId, supplierCustomFieldForm
+     * @return {} @property {Socket}
+     */
+    onSupplierCustomFieldUpdate(customFieldUpdate) {
+        this.setArrayDraftSupplierCustomField(customFieldUpdate).then((supplierCustomField) => {
+            /* super.updateDraftRedis(customFieldUpdate, true).then(() => { */
+            this.socket.broadcast.in('draft/' + customFieldUpdate.draftId).emit('draftSupplierCustomFieldUpdate', supplierCustomField)
+            super.timerSocketUpdate(customFieldUpdate.draftId)
+            /* })*/
+        })
+    }
+
+    /**
+     * Supplier Custom Field Remove
+     * @desc Send to all sockets in Draft/:id the supplier custom field remove event
+     *
+     * @param {object} supplierCustomFieldRemove - expected: draftId, customFieldId
+     * @return {int} supplier custom field id @property {Socket}
+     */
+    onSupplierCustomFieldRemove(supplierCustomFieldRemove) {
+        this.controller.supplierCustomFieldRemove(supplierCustomFieldRemove).then((customFieldReturn) => {
+            this.server.io.in('draft/' + supplierCustomFieldRemove.draftId).emit('draftSupplierCustomFieldRemove', customFieldReturn.supplierCustomFieldId)
+        })
+    }
+
+    ////////////////////////////////////
+    //CUSTOM FIELD => SET PERSISTENCE //
+    ////////////////////////////////////
+    //
+    /**
+     * Set Array Draft Supplier Custom Field
+     * @desc Prepares the custom field update to persist in server memory
+     *
+     * @param {object} supplierCustomField - expected: draftId, customFieldId, supplierCustomFieldForm
+     * @return {object} supplierCustomFieldId, supplierCustomFieldForm @property {Promise}
+     */
+    setArrayDraftSupplierCustomField(supplierCustomField) {
+        return new Promise((resolve, reject) => {
+            return this.controller.getOne(supplierCustomField.draftId).then((draft) => {
+                const draftUpdateMemory = _.find(this.channels.updates.drafts, { draftId: supplierCustomField.draftId })
+
+                const indexSupplierCustomField = _.findIndex(draft.form.supplier.supplierCustomFields, (customField) => { return customField.id === supplierCustomField.supplierCustomFieldId })
+                draft.form.supplier.supplierCustomFields[indexSupplierCustomField] = _.assign(draft.form.supplier.supplierCustomFields[indexSupplierCustomField], { value: _.toUpper(supplierCustomField.supplierCustomFieldForm.value) })
+
+                if (draftUpdateMemory) {
+                    const draftUpdateIndex = this.channels.updates.drafts.indexOf(draftUpdateMemory)
+                    this.channels.updates.drafts[draftUpdateIndex] = _.assign(this.channels.updates.drafts[draftUpdateIndex], draft)
+                    resolve({ supplierCustomFieldId: supplierCustomField.supplierCustomFieldId, supplierCustomFieldForm: supplierCustomField.supplierCustomFieldForm })
+                }
+                else {
+                    this.channels.updates.drafts.push(draft)
+                    resolve({ supplierCustomFieldId: supplierCustomField.supplierCustomFieldId, supplierCustomFieldForm: supplierCustomField.supplierCustomFieldForm })
+                }
             })
-        }
-
-        /** 
-         * Client Custom Field Update
-         * @desc Send to all sockets in Draft/:id the client custom field update event
-         * 
-         * @param {object} customFieldUpdate - expected: draftId, customFieldId, clientCustomFieldForm
-         * @return {} @property {Socket}
-         */
-        onClientCustomFieldUpdate(customFieldUpdate) {
-            this.setArrayDraftClientCustomField(customFieldUpdate).then((clientCustomField) => {
-                /* super.updateDraftRedis(customFieldUpdate, true).then(() => { */
-                this.socket.broadcast.in('draft/' + customFieldUpdate.draftId).emit('draftClientCustomFieldUpdate', clientCustomField)
-                    super.timerSocketUpdate(customFieldUpdate.draftId)
-                /* })*/
-            })
-        }
-
-        /** 
-         * Client Custom Field Remove
-         * @desc Send to all sockets in Draft/:id the client custom field remove event
-         * 
-         * @param {object} clientCustomFieldRemove - expected: draftId, customFieldId
-         * @return {int} client custom field id @property {Socket}
-         */
-        onClientCustomFieldRemove(clientCustomFieldRemove) {
-            this.controller.clientCustomFieldRemove(clientCustomFieldRemove).then((customFieldReturn) => {
-                this.server.io.in('draft/' + clientCustomFieldRemove.draftId).emit('draftClientCustomFieldRemove', customFieldReturn.clientCustomFieldId)
-            })
-        }
-    
-        ////////////////////////////////////
-        //CUSTOM FIELD => SET PERSISTENCE //
-        ////////////////////////////////////
-        //
-            /** 
-             * Set Array Draft Client Custom Field
-             * @desc Prepares the custom field update to persist in server memory
-             * 
-             * @param {object} clientCustomField - expected: draftId, customFieldId, clientCustomFieldForm
-             * @return {object} clientCustomFieldId, clientCustomFieldForm @property {Promise}
-             */
-            setArrayDraftClientCustomField(clientCustomField) {
-                return new Promise((resolve, reject) => {
-                    return this.controller.getOne(clientCustomField.draftId).then((draft) => {
-                        const draftUpdateMemory = _.find(this.channels.updates.drafts, { draftId: clientCustomField.draftId })
-
-                        const indexClientCustomField = _.findIndex(draft.form.client.clientCustomFields, (customField) => { return customField.id === clientCustomField.clientCustomFieldId })
-                        draft.form.client.clientCustomFields[indexClientCustomField] = _.assign(draft.form.client.clientCustomFields[indexClientCustomField], { value: _.toUpper(clientCustomField.clientCustomFieldForm.value) })
-
-                        if (draftUpdateMemory) {
-                            const draftUpdateIndex = this.channels.updates.drafts.indexOf(draftUpdateMemory)
-                            this.channels.updates.drafts[draftUpdateIndex] = _.assign(this.channels.updates.drafts[draftUpdateIndex], draft)
-                            resolve({ clientCustomFieldId: clientCustomField.clientCustomFieldId, clientCustomFieldForm: clientCustomField.clientCustomFieldForm })
-                        }
-                        else {
-                            this.channels.updates.drafts.push(draft)
-                            resolve({ clientCustomFieldId: clientCustomField.clientCustomFieldId, clientCustomFieldForm: clientCustomField.clientCustomFieldForm })
-                        }
-                    })
-                })
-            }
-        // <-- end CUSTOM FIELD => SET PERSISTENCE
+        })
+    }
+    // <-- end CUSTOM FIELD => SET PERSISTENCE
 
     // <-- end CLIENT ** customField
 
-        ///////////////////////
-        ///  CUSTOM FIELD   ///
-        /// ** in company   ///
-        ///////////////////////
-    // 
-        /** 
-         * Custom Field Save
-         * @desc Send to all sockets in Draft/:id the custom field save (create or update) event
-         * 
-         * @param {object} customFieldSave - expected: draftId, name, ? customFieldId 
-         * @return {object} custom field @property {Socket}
-         */
-        onDraftCustomFieldSave(customFieldSave) {
-            customFieldSave.user = this.socket.user
-            this.controller.customFieldChange(customFieldSave).then((savedCustomField) => {
-                this.server.io.in('draft/' + customFieldSave.draftId).emit('draftCustomFieldSave', savedCustomField.customFieldReturn)
-            })
-        }
+    ///////////////////////
+    ///  CUSTOM FIELD   ///
+    /// ** in company   ///
+    ///////////////////////
+    //
+    /**
+     * Custom Field Save
+     * @desc Send to all sockets in Draft/:id the custom field save (create or update) event
+     *
+     * @param {object} customFieldSave - expected: draftId, name, ? customFieldId
+     * @return {object} custom field @property {Socket}
+     */
+    onDraftCustomFieldSave(customFieldSave) {
+        customFieldSave.user = this.socket.user
+        this.controller.customFieldChange(customFieldSave).then((savedCustomField) => {
+            this.server.io.in('draft/' + customFieldSave.draftId).emit('draftCustomFieldSave', savedCustomField.customFieldReturn)
+        })
+    }
 
-        /** 
-         * Custom Field Remove
-         * @desc Send to all sockets in Draft/:id the custom field remove event
-         * 
-         * @param {object} customFieldRemove - expected: draftId, customFieldId 
-         * @return {int} custom field id @property {Socket}
-         */
-        onDraftCustomFieldRemove(customFieldRemove) {
-            customFieldRemove.user = this.socket.user
-            customFieldRemove.remove = true
-            this.controller.customFieldChange(customFieldRemove).then((removedCustomField) => {
-                this.server.io.in('draft/' + customFieldRemove.draftId).emit('draftCustomFieldRemove', removedCustomField.customField.id)
-            })
-        }
+    /**
+     * Custom Field Remove
+     * @desc Send to all sockets in Draft/:id the custom field remove event
+     *
+     * @param {object} customFieldRemove - expected: draftId, customFieldId
+     * @return {int} custom field id @property {Socket}
+     */
+    onDraftCustomFieldRemove(customFieldRemove) {
+        customFieldRemove.user = this.socket.user
+        customFieldRemove.remove = true
+        this.controller.customFieldChange(customFieldRemove).then((removedCustomField) => {
+            this.server.io.in('draft/' + customFieldRemove.draftId).emit('draftCustomFieldRemove', removedCustomField.customField.id)
+        })
+    }
 
     //<-- end CUSTOM FIELD ** in company
 
-        ///////////////////////
-        ///  CLIENT GROUP   ///
-        /// ** in company   ///
-        ///////////////////////
-    // 
-        /** 
-         * Client Group Save
-         * @desc Send to all sockets in Draft/:id the Client Group save (create or update) event
-         * 
-         * @param {object} clientGroupSave - expected: draftId, name 
-         * @return {object} custom field @property {Socket}
-         */
-        onDraftClientGroupSave(clientGroupSave) {
-            customFieldSave.user = this.socket.user
-            this.controller.clientGroupChange(clientGroupSave).then((savedClientGroup) => {
-                this.server.io.in('draft/' + clientGroupSave.draftId).emit('draftClientGroupSave', savedClientGroup.clientGroupReturn)
-            })
-        }
 
-        /** 
-         * Client Group Remove
-         * @desc Send to all sockets in Draft/:id the Client Group remove event
-         * 
-         * @param {object} clientGroupRemove - expected: draftId, clientGroupId 
-         * @return {int} custom field id @property {Socket}
-         */
-        onDraftClientGroupRemove(clientGroupRemove) {
-            clientGroupRemove.user = this.socket.user
-            clientGroupRemove.remove = true
-            this.controller.clientGroupChange(clientGroupRemove).then((removedClientGroup) => {
-                this.server.io.in('draft/' + clientGroupRemove.draftId).emit('draftClientGroupRemove', removedClientGroup.id)
-            })
-        }
+//  <-- end Supplier
 
-
-    //<-- end CLIENT GROUP ** in company
-
-//  <-- end CLIENT
-
-    ///////////////////////
-    ///     ORDEN       ///
-    ///////////////////////
-//
-
-
-        //////////////////////
-        ///     ORDEN      ///
-        ///  ** product    ///
-        //////////////////////
-    //
-        /**
-         * Order Product Add
-         * @desc Send to all sockets in Draft/:id the add form product event
-         * 
-         * @param {object} orderProductAdd - expected: draftId
-         * @return {int} order Product Id @property {Socket}
-         */
-        onOrderProductAdd(orderProductAdd) {
-            this.controller.orderProductAdd(orderProductAdd).then((orderProduct) => {
-                this.server.io.in('draft/' + orderProductAdd.draftId).emit('draftOrderProductAdd', orderProduct.id)
-            })
-        }
-
-        /**
-         * Order Product Remove
-         * @desc Send to all sockets in Draft/:id the remove form product event
-         * 
-         * @param {object} orderProductRemove - expected: draftId, OrderProductId
-         * @return {int} order Product Id (removed) @property {Socket}
-         */
-        onOrderProductRemove(orderProductRemove) {
-            this.controller.orderProductRemove(orderProductRemove).then(() => {
-                this.server.io.in('draft/' + orderProductRemove.draftId).emit('draftOrderProductRemove', orderProductRemove.id)
-            })
-        }
-
-        /**
-         * Order Product Select
-         * @desc Send to all sockets in Draft/:id that an product has been selected
-         * 
-         * @param {object} orderProductProductSelect - expected: draftId, productId, orderProductId
-         * @return {object} address @property {Socket}
-         */
-        onOrderProductProductSelect(orderProductProductSelect) {
-            this.controller.selectProductOrderProduct(orderProductProductSelect).then((product) => {
-                this.server.io.in('draft/' + orderProductProductSelect.draftId).emit('draftOrderProductProductSelect', product)
-            }).catch((err) => {
-                console.log(err, 'catch do SELECT PRODUCT REQUEST PRODUCT')
-            })
-        }
-
-        /** 
-         * Order Product Reset
-         * @desc Send to all sockets in Draft/:id the reset order product event
-         * 
-         * @param {object} orderProductProductReset - expected: draftId, orderProductId
-         * @return {object} @property {Socket}
-         */
-        onOrderProductProductReset(orderProductProductReset) {
-            this.controller.resetProductOrderProduct(orderProductProductReset).then(() => {
-                this.server.io.in('draft/' + orderProductProductReset.draftId).emit('draftOrderProductProductReset', orderProductProductReset.orderProductId)
-            }).catch(() => {
-                console.log('catch do RESET ORDER PRODUCT - QUE É DENTRO DO ON ORDER PRODUCT RESET')
-            })
-        }
-//  
 
 }

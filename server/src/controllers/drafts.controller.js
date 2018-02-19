@@ -16,7 +16,6 @@ module.exports = (server) => {
     const customFieldsController = require('./../controllers/custom-fields.controller')(server)
     const productsController = require('./../controllers/products.controller')(server)
     const suppliersController = require('./../controllers/suppliers.controller')(server)
-    
 
     //  <-- end CONTORLLERS
 
@@ -73,27 +72,28 @@ module.exports = (server) => {
                 setData.type = controller.request.type,
                 setData.presence = []
 
-                let type = {}
-
-                if(setData.type == 'request'){
-                    type.name = 'client'
-                    type.Addresses = 'clientAddresses'
-                    type.Phones = 'clientPhones'
-                    type.CustomFields = 'clientCustomFields'
-                }
-                else if(setData.type == 'expense'){
-                    type.name = 'supplier'
-                    type.Addresses = 'supplierAddresses'
-                    type.Phones = 'supplierPhones'
-                    type.CustomFields = 'supplierCustomFields'
-                }
-
                 if(controller.request.recoverance){
+                    // temporary until generic file is created
+                    let type = {}
+                    if(setData.type === 'request'){
+                        type.name = 'client'
+                        type.Addresses = 'clientAddresses'
+                        type.Phones = 'clientPhones'
+                        type.CustomFields = 'clientCustomFields'
+                    }
+                    else if(setData.type === 'expense'){
+                        type.name = 'supplier'
+                        type.Addresses = 'supplierAddresses'
+                        type.Phones = 'supplierPhones'
+                        type.CustomFields = 'supplierCustomFields'
+                    }
                     setData.recoverancedBy = parseInt(controller.request.recoverancedBy.id)
                     setData.form = {id: controller.request.recoverance.id, activeStep: null, [type.name]: controller.request[type.name], order: controller.request.order, task: controller.request.task }
                 }
                 else{
-                    setData.form = {id: null, activeStep: null, [type.name]: { id: null, name: null, legalDocument: null, [type.Addresses]: [], [type.Phones]: [], [type.CustomFields]: [], companyId: controller.request.companyId, isNull: true }, order: { orderProducts: [{id: 'temp:' + shortid.generate()}] } }
+                    const draftFormModel = new server.draftFormModels[_.upperFirst(_.camelCase(setData.type))]()
+                    draftFormModel.setCompanyId(controller.request.companyId)
+                    setData.form = draftFormModel.getObject()
                 }
 
                 setData.data = { company: null, client: null }
@@ -101,7 +101,10 @@ module.exports = (server) => {
                 return server.mongodb.Draft.create(setData).then((draft) => {
 
                     draft = JSON.parse(JSON.stringify(draft))
-                    draft = _.assignIn(draft, { createdBy: controller.request.createdBy.name, recoverancedBy: (controller.request.recoverancedBy) ? controller.request.recoverancedBy.name : null }) // change createdBy to user name for emit to all users
+
+                    console.log("Created draft", draft)
+                    draft = _.assignIn(draft, { createdBy: controller.request.createdBy.name, recoverancedBy: (controller.request.recoverancedBy) ? controller.request.recoverancedBy.name : null })
+                    // change createdBy to user name for emit to all users
 
                     // check socket connections and emit 
                     let ids = Object.keys(server.io.sockets.connected)
@@ -119,6 +122,7 @@ module.exports = (server) => {
 
                     return draft
                 }).catch((err) => {
+                    console.log("Error", err)
                     return err
                 });
             })

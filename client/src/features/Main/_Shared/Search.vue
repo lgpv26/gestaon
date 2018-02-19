@@ -38,14 +38,12 @@
                 </template>
             </app-search>
         </div>
-        <div class="search__dropdown-menu">
-            <span>NOVO ATENDIMENTO</span>
-        </div>
-        <div class="search__separator">
-            <div class="separator--line"></div>
-        </div>
-        <div class="search__action-button" ref="actionButton" @click="addRequestClicked($event)">
-            <icon-header-add></icon-header-add>
+        <div class="search__action-button" ref="actionButton" >
+            <app-dropdown-menu :menuList="menuList" placement="bottom-start" :verticalOffset="15">
+                <div style="width: 40px; height: 20px; display: flex; align-items: center; justify-content: center;">
+                    <icon-header-add></icon-header-add>
+                </div>
+            </app-dropdown-menu>
         </div>
     </div>
 </template>
@@ -54,13 +52,15 @@
     import DraftsAPI from '../../../api/drafts';
     import ServiceAPI from '../../../api/service';
     import SearchComponent from '../../../components/Inputs/Search.vue';
+    import DropdownMenuComponent from "@/components/Utilities/DropdownMenu.vue";
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
     import markjs from 'mark.js';
 
     export default {
         components: {
-            'app-search': SearchComponent
+            'app-search': SearchComponent,
+            "app-dropdown-menu": DropdownMenuComponent
         },
         data(){
             return {
@@ -74,7 +74,12 @@
                 markJs: null,
                 searchItems: [],
                 forceNoResults: false,
-                showOnlyAddresses: false
+                showOnlyAddresses: false,
+                menuList: [
+                    {text: 'Atendimento', type: 'system', action: this.addRequestDraft},
+                    {text: 'Plano de contas', type: 'system', action: this.addAccountsDraft},
+                    {text: 'Compra/Despesa', type: 'system', action: this.addExpenseDraft}
+                ]
             }
         },
         computed: {
@@ -124,10 +129,48 @@
                     this.forceNoResults = false;
                 }
             },
-            addRequestClicked(ev){
+            addAccountsDraft(){
+                const vm = this;
+                if(!vm.isShowingMorphScreen){
+                    const createDraftArgs = { body: {type: 'accounts'}, companyId: vm.company.id };
+                    vm.createDraft(createDraftArgs).then((response) => {
+                        vm.SET_SEARCH_DATA({
+                            text: vm.inputValue
+                        })
+                        vm.SET_MS({
+                            active: true,
+                            draft: response.data,
+                            params: {}
+                        });
+                        vm.SHOW_MS(true);
+                    });
+                } else {
+                    this.SHOW_MS(false);
+                }
+            },
+            addRequestDraft(){
                 const vm = this;
                 if(!vm.isShowingMorphScreen){
                     const createDraftArgs = { body: {type: 'request'}, companyId: vm.company.id };
+                    vm.createDraft(createDraftArgs).then((response) => {
+                        vm.SET_SEARCH_DATA({
+                            text: vm.inputValue
+                        })
+                        vm.SET_MS({
+                            active: true,
+                            draft: response.data,
+                            params: {}
+                        });
+                        vm.SHOW_MS(true);
+                    });
+                } else {
+                    this.SHOW_MS(false);
+                }
+            },
+            addExpenseDraft(){
+                const vm = this;
+                if(!vm.isShowingMorphScreen){
+                    const createDraftArgs = { body: {type: 'expense'}, companyId: vm.company.id };
                     vm.createDraft(createDraftArgs).then((response) => {
                         vm.SET_SEARCH_DATA({
                             text: vm.inputValue

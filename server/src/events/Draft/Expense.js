@@ -10,7 +10,7 @@ module.exports = class Expense extends Draft {
         // extends
         super(server, channels, socket);
         // private
-        this._requestPersistance = new RequestPersistance(server);      
+        // this._requestPersistance = new RequestPersistance(server);
         // functions
         this.setExpenseEventListeners();
     }
