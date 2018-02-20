@@ -17,9 +17,9 @@
                 </div>
             </div>
             <div class="separator" v-if="!form.activeStep"></div>
-            <app-incomes-form :activeStep.sync="form.activeStep" :incomes.sync="form.incomes" @sync="sync($event)"></app-incomes-form>
+            <app-revenues-form :activeStep.sync="form.activeStep" :revenues.sync="form.revenues" @sync="sync($event)"></app-revenues-form>
             <div class="separator"></div>
-            <app-outcomes-form :activeStep.sync="form.activeStep" :outcomes.sync="form.outcomes" @sync="sync($event)"></app-outcomes-form>
+            <app-expenses-form :activeStep.sync="form.activeStep" :expenses.sync="form.expenses" @sync="sync($event)"></app-expenses-form>
             <div class="separator"></div>
             <app-transaction-accounts-form :activeStep.sync="form.activeStep" :transactionAccounts.sync="form.transactionAccounts" @sync="sync($event)"></app-transaction-accounts-form>
         </div>
@@ -32,8 +32,8 @@
     import _ from 'lodash';
     import Scrollbar from 'smooth-scrollbar';
 
-    import IncomesForm from './Incomes/IncomesForm.vue'
-    import OutcomesForm from './Outcomes/OutcomesForm.vue'
+    import RevenuesForm from './Revenues/RevenuesForm.vue'
+    import ExpensesForm from './Expenses/ExpensesForm.vue'
     import TransactionAccountsForm from './TransactionAccounts/TransactionAccountsForm.vue'
 
     export default {
@@ -57,8 +57,8 @@
             }
         },
         components: {
-            'app-incomes-form': OutcomesForm,
-            'app-outcomes-form': IncomesForm,
+            'app-revenues-form': RevenuesForm,
+            'app-expenses-form': ExpensesForm,
             'app-transaction-accounts-form': TransactionAccountsForm
         },
         data(){
@@ -73,8 +73,26 @@
                 createdAt: null,
                 updatedAt: null,
                 form: {
-                    incomes: [],
-                    outcomes: [],
+                    revenues: {
+                        revenueGroups: [
+                            /*{
+                                revenueGroupForm: {
+
+                                }
+                            }*/
+                        ],
+                        revenueItems: [],
+                    },
+                    expenses: {
+                        expenseGroups: [
+                            /*{
+                                expenseGroupForm: {
+
+                                }
+                            }*/
+                        ],
+                        expenseItems: []
+                    },
                     transactionAccounts: {
                         accounts: [],
                         accountForm: {},
@@ -89,8 +107,7 @@
                         },
                         costCenters: [],
                         costCenterForm: {}
-                    },
-                    costCenters: []
+                    }
                 },
                 saving: false
             }

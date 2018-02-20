@@ -33,20 +33,55 @@ module.exports = class Accounts extends Draft {
         })
 
         ///////////////////////
-        ///     SUPPLIER    ///
+        ///     EXPENSES    ///
+        ///  ** payments    ///
         ///////////////////////
         //
-        this.socket.on('draft:supplier-select', (supplierSelect) => {
+        this.socket.on('draft:expenses:expense-group-add', (data) => {
+            console.log("draft:expenses:expense-group-add")
             super.resetTimeout()
-            super.saveDraft(supplierSelect.draftId).then(() => {
-                this.onSupplierSelect(supplierSelect)
+            super.saveDraft(data.draftId).then(() => {
+                // this.onTransactionAccountsPaymentMethodAdd(data)
+            })
+        })
+        this.socket.on('draft:expenses:expense-item-add', (data) => {
+            console.log("draft:expenses:expense-item-add")
+            super.resetTimeout()
+            super.saveDraft(data.draftId).then(() => {
+                // this.onTransactionAccountsPaymentMethodAdd(data)
             })
         })
 
-        this.socket.on('draft:supplier-reset', (supplierReset) => {
+        ///////////////////////
+        ///     REVENUES    ///
+        ///  ** payments    ///
+        ///////////////////////
+        //
+        this.socket.on('draft:revenues:revenue-group-add', (data) => {
+            console.log("draft:revenues:revenue-group-add")
             super.resetTimeout()
-            super.saveDraft(supplierReset.draftId).then(() => {
-                this.onSupplierReset(supplierReset)
+            super.saveDraft(data.draftId).then(() => {
+                // this.onTransactionAccountsPaymentMethodAdd(data)
+            })
+        })
+        this.socket.on('draft:revenues:revenue-item-add', (data) => {
+            console.log("draft:revenues:revenue-item-add")
+            super.resetTimeout()
+            super.saveDraft(data.draftId).then(() => {
+                // this.onTransactionAccountsPaymentMethodAdd(data)
+            })
+        })
+
+        ///////////////////////////////////
+        ///     TRANSACTION ACCOUNTS    ///
+        ///  ** payments                ///
+        ///////////////////////////////////
+        //
+        this.socket.on('draft:transaction-accounts:payment-method-add', (data) => {
+            console.log("draft:transaction-accounts:payment-method-add")
+            super.resetTimeout()
+            super.saveDraft(data.draftId).then(() => {
+                this.onTransactionAccountsPaymentMethodAdd(data)
             })
         })
 
@@ -218,6 +253,16 @@ module.exports = class Accounts extends Draft {
      */
     onAccountsRecoverance(accountsRecoverance) {
 
+    }
+
+    onTransactionAccountsPaymentMethodAdd(data) {
+        /*
+        supplierAddressAdd.inEdition = { transactionAccountsPaymentMethod supplierAddress: { inEdition: true, supplierAddressId: null } }
+
+        super.updateDraftRedis(supplierAddressAdd, true).then(() => {
+            this.server.io.in('draft/' + supplierAddressAdd.draftId).emit('draftSupplierAddressAdd')
+        })
+        */
     }
 
     ///////////////////////

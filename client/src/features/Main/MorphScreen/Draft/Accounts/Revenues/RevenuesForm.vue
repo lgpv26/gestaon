@@ -46,11 +46,14 @@
                     </ul>
                 </div>
                 <div class="income-column__footer">
-                    <input type="text" /> <icon-check></icon-check>
+                    <input type="text" />
+                    <a href="javascript:void(0)" @click="addRevenueItem()">
+                        <icon-check></icon-check>
+                    </a>
                 </div>
             </div>
             <div class="income-column add">
-                <div class="add__button">
+                <div class="add__button" @click="addRevenueGroup()">
                     <icon-big-add></icon-big-add>
                     <span>GRUPO DE ENTRADAS</span>
                     <span style="color: var(--font-color--primary)">ENTRADAS</span>
@@ -72,7 +75,7 @@
     export default {
         components: {
         },
-        props: ['task','activeStep'],
+        props: ['task','revenues','activeStep'],
         data(){
             return {
                 form: {
@@ -80,13 +83,27 @@
             }
         },
         computed: {
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
             isCurrentStepActive(){
-                return this.activeStep === 'incomes';
+                return this.activeStep === 'revenues';
             }
         },
         methods: {
+            addRevenueGroup(){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                }
+                console.log("Emitting draft:accounts:revenues:add-revenue-group", emitData)
+            },
+            addRevenueItem(){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                }
+                console.log("Emitting draft:accounts:expenses:add-revenue-item", emitData)
+            },
+
             onCurrentStepChanged(value){
-                (this.activeStep === 'incomes') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'incomes');
+                (this.activeStep === 'revenues') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'revenues');
                 this.commitSocketChanges('activeStep');
             },
             commitSocketChanges(mapping){

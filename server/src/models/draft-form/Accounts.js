@@ -6,30 +6,36 @@ module.exports = class Accounts {
         this._model = {
             id: null,
             activeStep: null,
-            accounts: {
-                id: null,
-                name: null,
-                legalDocument: null,
-                clientAddresses: [],
-                clientPhones: [],
-                clientCustomFields: [],
-                companyId: null,
-                isNull: true
+            transactionAccounts: {
+                paymentMethodForm: {},
+                paymentMethods: []
             },
-            order: {
-                orderProducts: [
-                    {
-                        id: 'temp:' + shortid.generate()
-                    }
-                ]
+            expenses: {
+                expenseGroups: [
+                    /*{
+                        expenseGroupForm: {
+                        }
+                    }*/
+                ],
+                expenseItems: []
+            },
+            revenues: {
+                revenueGroups: [
+                    /*{
+                        revenueGroupForm: {
+                        }
+                    }*/
+                ],
+                revenueItems: []
             }
         }
         _.assign(this._model, draft)
     }
     setCompanyId(companyId){
-        this._model.accounts.companyId = companyId
     }
     getObject(){
         return this._model
     }
 }
+
+// draft:expenses:expense-group

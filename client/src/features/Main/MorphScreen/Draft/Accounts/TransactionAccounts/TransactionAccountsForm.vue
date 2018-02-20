@@ -87,7 +87,7 @@
                         <div style="width: 13%;">
                             <input type="text" v-model="transactionAccounts.paymentMethodForm.tax" placeholder="Ex: 3% ou -2,00" />
                         </div>
-                        <div style="cursor: pointer; width: 13%; text-align: center;" @click="createPaymentMethod()">
+                        <div style="cursor: pointer; width: 13%; text-align: center;" @click="addPaymentMethod()">
                             <icon-add></icon-add>
                         </div>
                     </div>
@@ -156,19 +156,26 @@
         },
         computed: {
             ...mapState('auth',['company']),
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('data/payment-methods', ['paymentMethods']),
             isCurrentStepActive(){
-                return this.activeStep === 'transaction-accounts';
+                return this.activeStep === 'transaction-accounts'
             }
         },
         methods: {
-
-            createPaymentMethod(){
+            addPaymentMethod(){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                }
+                console.log('Emitting draft:accounts:transaction-accounts:payment-method-add', emitData)
+                this.$socket.emit('draft:accounts:transaction-accounts:payment-method-add', emitData)
+                /*
                 PaymentMethodsAPI.createOne(utils.removeReactivity(this.transactionAccounts.paymentMethodForm), {
                     companyId: this.company.id
                 }).then((result) => {
                     console.log("Result", result)
                 })
+                */
             },
 
             resetPaymentMethodForm(){
