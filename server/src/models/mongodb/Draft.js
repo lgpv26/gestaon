@@ -19,6 +19,10 @@ module.exports = {
                     message: 'Tipo de raschunho não reconhecido.'
                 }
             },
+            isSingle: {
+                type: Boolean,
+                default: false
+            },
             form: {
                 type: Object,
                 default: {}

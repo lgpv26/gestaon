@@ -7,7 +7,7 @@ const sequelize = require('sequelize')
 
 const draftsController = require('../../../controllers/drafts.controller')
 
-module.exports = class Draft {
+module.exports = class Persistance {
 
     constructor(server) {
         this.server = server;

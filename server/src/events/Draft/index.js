@@ -310,11 +310,6 @@ module.exports = class Draft {
                 this.server.redisClient.hgetall('draft:' + draftId, (err, checkEdition) => {
                     if (err) console.log(err)
 
-                    if(!_.has(checkEdition, "clientFormEdition") && !_.has(checkEdition, "clientFormUpdate")) {
-                        const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true } }
-                        this.setDraftRedis(objSetDraftRedis)                     
-                    }
-
                     if(draft.form.activeStep === 'client'){
                         if (_.has(checkEdition, 'clientFormEdition')) {
                             const update = JSON.parse(checkEdition.clientFormUpdate)
@@ -440,8 +435,8 @@ module.exports = class Draft {
                         this.setDraftRedis(objSetDraftRedis)
                     }
                 })
-            }).catch(() => {
-                console.log('catch do CONSULTDRAFT')
+            }).catch((err) => {
+                console.log('catch do CONSULTDRAFT', err)
             })
         }
 
@@ -479,57 +474,59 @@ module.exports = class Draft {
             /////////////
 //
     setDraftRedis(setDraftRedis, selectedAddress = false, orderProduct = false) {
-        return new Promise((resolve, reject) => {
-            if(orderProduct){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProducts', JSON.stringify({"orderProducts": [{id: setDraftRedis.id}]}), (err, res) => {
-                    if (err) {
-                        reject()
-                    }
-                    else {
-                        resolve()
-                    }
-                }) 
-            }
-            else if(setDraftRedis.isNull){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'companyId', JSON.stringify(setDraftRedis.companyId), 'type', JSON.stringify(setDraftRedis.type), (err, res) => {
-                    if (err) {
-                        reject(err)
-                    }
-                    else {
-                        resolve()
-                    }
-                })
-            }
-            else if(setDraftRedis.type == 'request'){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'clientFormUpdate', JSON.stringify({ clientAddressForm: { address: { select: (selectedAddress) ? true : false } }, clientPhoneForm: {} }), 'clientFormEdition', JSON.stringify({ clientAddress: { inEdition: setDraftRedis.clientAddress.inEdition, clientAddressId: null }, clientPhone: { inEdition: setDraftRedis.clientPhone.inEdition, clientPhoneId: null } }), (err, res) => {
-                    if (err) {
-                        reject()
-                    }
-                    else {
-                        resolve()
-                    }
-                })
-            }
-            else if(setDraftRedis.type == 'expense'){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'supplierFormUpdate', JSON.stringify({ supplierAddressForm: { address: { select: (selectedAddress) ? true : false } }, supplierPhoneForm: {} }), 'supplierFormEdition', JSON.stringify({ supplierAddress: { inEdition: setDraftRedis.supplierAddress.inEdition, supplierAddressId: null }, supplierPhone: { inEdition: setDraftRedis.supplierPhone.inEdition, supplierPhoneId: null } }), (err, res) => {
-                    if (err) {
-                        reject()
-                    }
-                    else {
-                        resolve()
-                    }
-                })
-            }
-            else if(setDraftRedis.type == 'accounts'){
-                return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'supplierFormUpdate', JSON.stringify({ supplierAddressForm: { address: { select: (selectedAddress) ? true : false } }, supplierPhoneForm: {} }), 'supplierFormEdition', JSON.stringify({ supplierAddress: { inEdition: setDraftRedis.supplierAddress.inEdition, supplierAddressId: null }, supplierPhone: { inEdition: setDraftRedis.supplierPhone.inEdition, supplierPhoneId: null } }), (err, res) => {
-                    if (err) {
-                        reject()
-                    }
-                    else {
-                        resolve()
-                    }
-                })
-            }
+        return this.consultRedisDraft(setDraftRedis.draftId).then((redisConsult) => {
+            return new Promise((resolve, reject) => {
+                if(orderProduct){
+                    return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProducts', JSON.stringify({"orderProducts": [{id: setDraftRedis.id}]}), (err, res) => {
+                        if (err) {
+                            reject()
+                        }
+                        else {
+                            resolve()
+                        }
+                    }) 
+                }
+                else if(setDraftRedis.isNull){
+                    return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'companyId', JSON.stringify(setDraftRedis.companyId), 'type', setDraftRedis.type, (err, res) => {
+                        if (err) {
+                            reject(err)
+                        }
+                        else {
+                            resolve()
+                        }
+                    })
+                }
+                else if(redisConsult.type == 'request'){
+                    return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'clientFormUpdate', JSON.stringify({ clientAddressForm: { address: { select: (selectedAddress) ? true : false } }, clientPhoneForm: {} }), 'clientFormEdition', JSON.stringify({ clientAddress: { inEdition: setDraftRedis.clientAddress.inEdition, clientAddressId: null }, clientPhone: { inEdition: setDraftRedis.clientPhone.inEdition, clientPhoneId: null } }), (err, res) => {
+                        if (err) {
+                            reject()
+                        }
+                        else {
+                            resolve()
+                        }
+                    })
+                }
+                else if(redisConsult.type == 'expense'){
+                    return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'supplierFormUpdate', JSON.stringify({ supplierAddressForm: { address: { select: (selectedAddress) ? true : false } }, supplierPhoneForm: {} }), 'supplierFormEdition', JSON.stringify({ supplierAddress: { inEdition: setDraftRedis.supplierAddress.inEdition, supplierAddressId: null }, supplierPhone: { inEdition: setDraftRedis.supplierPhone.inEdition, supplierPhoneId: null } }), (err, res) => {
+                        if (err) {
+                            reject()
+                        }
+                        else {
+                            resolve()
+                        }
+                    })
+                }
+                else if(redisConsult.type == 'accounts'){
+                    return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'supplierFormUpdate', JSON.stringify({ supplierAddressForm: { address: { select: (selectedAddress) ? true : false } }, supplierPhoneForm: {} }), 'supplierFormEdition', JSON.stringify({ supplierAddress: { inEdition: setDraftRedis.supplierAddress.inEdition, supplierAddressId: null }, supplierPhone: { inEdition: setDraftRedis.supplierPhone.inEdition, supplierPhoneId: null } }), (err, res) => {
+                        if (err) {
+                            reject()
+                        }
+                        else {
+                            resolve()
+                        }
+                    })
+                }
+            })
         })
     }
 
@@ -539,7 +536,7 @@ module.exports = class Draft {
                 let type = {}
 
                 if(_.has(redisConsult, "type") && redisConsult.type){
-                    const verifyType = JSON.parse(redisConsult.type)
+                    const verifyType = redisConsult.type
                     if(verifyType == 'request'){
                         type.name = 'Client'
                         type.formUpdate = 'clientFormUpdate'
