@@ -90,6 +90,7 @@
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
                 }
+                this.$socket.emit('draft:accounts:expenses:add-expense-group', emitData)
                 console.log("Emitting draft:accounts:expenses:add-expense-group", emitData)
             },
             addExpenseItem(){

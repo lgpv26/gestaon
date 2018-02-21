@@ -36,6 +36,9 @@ module.exports = class Accounts {
     getObject(){
         return this._model
     }
+    isSingle(){
+        return true
+    }
 }
 
 // draft:expenses:expense-group

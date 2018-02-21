@@ -32,4 +32,7 @@ module.exports = class Request {
     getObject(){
         return this._model
     }
+    isSingle(){
+        return false
+    }
 }

@@ -7,7 +7,7 @@ module.exports = function (server) {
      */
 
     let socketFiles = [
-        "Request"
+        "Request", "Accounts"
     ];
 
     let drafts = [];

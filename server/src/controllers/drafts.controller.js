@@ -94,6 +94,7 @@ module.exports = (server) => {
                     const draftFormModel = new server.draftFormModels[_.upperFirst(_.camelCase(setData.type))]()
                     draftFormModel.setCompanyId(controller.request.companyId)
                     setData.form = draftFormModel.getObject()
+                    setData.isSingle = draftFormModel.isSingle()
                 }
 
                 setData.data = { company: null, client: null }
@@ -247,10 +248,13 @@ module.exports = (server) => {
 //
         selectClient(clientSelect) {
             return this.getOne(clientSelect.draftId).then((draft) => {
-                const req = { params: { id: clientSelect.clientId } }
-
-
-                return clientsController.getOne(req).then((client) => {
+                 const controller = new Controller({
+                    request: {
+                        id: clientSelect.clientId
+                    }
+                })
+                
+                return clientsController.getOne(controller).then((client) => {
                     client = JSON.parse(JSON.stringify(client))
                     const update = _.assign(draft.form, { client: client, clientAddressForm: {}, clientAddressId: null })
                     return server.mongodb.Draft.update({ draftId: clientSelect.draftId }, { $set: { form: update } }).then(() => {
@@ -771,87 +775,88 @@ module.exports = (server) => {
     ///////////////////////
     //
 
-    supplierAddressEdit(addressEdit) {
-        return this.getOne(addressEdit.draftId).then((draft) => {
-            const update = _.assign(draft.form, { supplierAddressForm: {id: addressEdit.supplierAddressId} })
-            return server.mongodb.Draft.update({ draftId: addressEdit.draftId }, { $set: { form: update } }).then(() => {
-                return true
-            })
-        })
-    },
-
-    supplierAddressBack(addressBack) {
-        return this.getOne(addressBack.draftId).then((draft) => {
-            const update = _.assign(draft.form, { supplierAddressForm: {} })
-            return server.mongodb.Draft.update({ draftId: addressBack.draftId }, { $set: { form: update } }).then(() => {
-                return null
-            })
-        })
-    },
-
-    saveSupplierAddress(supplierAddressSave) {
-        return new Promise((resolve, reject) => {
-            return server.mongodb.Draft.findOne({ draftId: supplierAddressSave.draftId }).then((draft) => {
-                draft = JSON.parse(JSON.stringify(draft))
-
-                const index = _.findIndex(draft.form.supplier.supplierAddresses, (supplierAddress) => {
-                    return supplierAddress.id === draft.form.supplierAddressForm.id
+        supplierAddressEdit(addressEdit) {
+            return this.getOne(addressEdit.draftId).then((draft) => {
+                const update = _.assign(draft.form, { supplierAddressForm: {id: addressEdit.supplierAddressId} })
+                return server.mongodb.Draft.update({ draftId: addressEdit.draftId }, { $set: { form: update } }).then(() => {
+                    return true
                 })
-                let saveSupplierAddresses = draft.form.supplier.supplierAddresses
-                let update = {}
-
-                if (index !== -1) {
-                    const address = _.assign(saveSupplierAddresses[index].address, draft.form.supplierAddressForm.address)
-                    const supplierAddressForm = _.assign(draft.form.supplierAddressForm, { address: address })
-                    saveSupplierAddresses[index] = _.assign(saveSupplierAddresses[index], supplierAddressForm)
-                    update.addressSupplierReturn = _.assign(saveSupplierAddresses[index], supplierAddressForm)
-                }
-                else {
-                    saveSupplierAddresses.push(_.assign(draft.form.supplierAddressForm, { id: (draft.form.supplierAddressForm.id) ? draft.form.supplierAddressForm.id : 'temp:' + shortid.generate() }))
-                    update.addressSupplierReturn = draft.form.supplierAddressForm
-                }
-
-                const supplier = _.assign(draft.form.supplier, { supplierAddresses: saveSupplierAddresses })
-                update.form = _.assign(draft.form, { supplier: supplier, supplierAddressForm: {} })
-
-                resolve(update)
             })
-        }).then((save) => {
-            return server.mongodb.Draft.update({ draftId: supplierAddressSave.draftId }, { $set: { form: save.form } }).then(() => {
-                return save.addressSupplierReturn
-            })
-        })
-    },
+        },
 
-    removeSupplierAddress(supplierAddressRemove) {
-        return new Promise((resolve, reject) => {
-            return server.mongodb.Draft.findOne({ draftId: supplierAddressRemove.draftId }).then((draft) => {
-                draft = JSON.parse(JSON.stringify(draft))
-                let update = {}
-                update.saveSupplierAddresses = _.filter(draft.form.supplier.supplierAddresses, (supplierAddress) => {
-                    return supplierAddress.id !== supplierAddressRemove.supplierAddressId
+        supplierAddressBack(addressBack) {
+            return this.getOne(addressBack.draftId).then((draft) => {
+                const update = _.assign(draft.form, { supplierAddressForm: {} })
+                return server.mongodb.Draft.update({ draftId: addressBack.draftId }, { $set: { form: update } }).then(() => {
+                    return null
                 })
+            })
+        },
 
-                let isNull = false
-                if(!update.saveSupplierAddresses.length){
-                    if(!draft.form.supplier.supplierPhones.length && !draft.form.supplier.supplierCustomFields.length && _.isEmpty(draft.form.supplier.name) && _.isEmpty(draft.form.supplier.legalDocument)){
-                        isNull = true
+        saveSupplierAddress(supplierAddressSave) {
+            return new Promise((resolve, reject) => {
+                return server.mongodb.Draft.findOne({ draftId: supplierAddressSave.draftId }).then((draft) => {
+                    draft = JSON.parse(JSON.stringify(draft))
+
+                    const index = _.findIndex(draft.form.supplier.supplierAddresses, (supplierAddress) => {
+                        return supplierAddress.id === draft.form.supplierAddressForm.id
+                    })
+                    let saveSupplierAddresses = draft.form.supplier.supplierAddresses
+                    let update = {}
+
+                    if (index !== -1) {
+                        const address = _.assign(saveSupplierAddresses[index].address, draft.form.supplierAddressForm.address)
+                        const supplierAddressForm = _.assign(draft.form.supplierAddressForm, { address: address })
+                        saveSupplierAddresses[index] = _.assign(saveSupplierAddresses[index], supplierAddressForm)
+                        update.addressSupplierReturn = _.assign(saveSupplierAddresses[index], supplierAddressForm)
                     }
-                }
+                    else {
+                        saveSupplierAddresses.push(_.assign(draft.form.supplierAddressForm, { id: (draft.form.supplierAddressForm.id) ? draft.form.supplierAddressForm.id : 'temp:' + shortid.generate() }))
+                        update.addressSupplierReturn = draft.form.supplierAddressForm
+                    }
 
-                update.supplierAddressId = supplierAddressRemove.supplierAddressId
-                const selectedSupplierAddressId = (draft.form.supplierAddressId === supplierAddressRemove.supplierAddressId) ? null : draft.form.supplierAddressId
-                const supplier = _.assign(draft.form.supplier, { supplierAddresses: update.saveSupplierAddresses, isNull})
-                update.form = _.assign(draft.form, { supplier: supplier, supplierAddressForm: {}, supplierAddressId: selectedSupplierAddressId })
+                    const supplier = _.assign(draft.form.supplier, { supplierAddresses: saveSupplierAddresses })
+                    update.form = _.assign(draft.form, { supplier: supplier, supplierAddressForm: {} })
 
-                resolve(update)
+                    resolve(update)
+                })
+            }).then((save) => {
+                return server.mongodb.Draft.update({ draftId: supplierAddressSave.draftId }, { $set: { form: save.form } }).then(() => {
+                    return save.addressSupplierReturn
+                })
             })
-        }).then((save) => {
-            return server.mongodb.Draft.update({ draftId: supplierAddressRemove.draftId }, { $set: { form: save.form } }).then(() => {
-                return save
+        },
+
+        removeSupplierAddress(supplierAddressRemove) {
+            return new Promise((resolve, reject) => {
+                return server.mongodb.Draft.findOne({ draftId: supplierAddressRemove.draftId }).then((draft) => {
+                    draft = JSON.parse(JSON.stringify(draft))
+                    let update = {}
+                    update.saveSupplierAddresses = _.filter(draft.form.supplier.supplierAddresses, (supplierAddress) => {
+                        return supplierAddress.id !== supplierAddressRemove.supplierAddressId
+                    })
+
+                    let isNull = false
+                    if(!update.saveSupplierAddresses.length){
+                        if(!draft.form.supplier.supplierPhones.length && !draft.form.supplier.supplierCustomFields.length && _.isEmpty(draft.form.supplier.name) && _.isEmpty(draft.form.supplier.legalDocument)){
+                            isNull = true
+                        }
+                    }
+
+                    update.supplierAddressId = supplierAddressRemove.supplierAddressId
+                    const selectedSupplierAddressId = (draft.form.supplierAddressId === supplierAddressRemove.supplierAddressId) ? null : draft.form.supplierAddressId
+                    const supplier = _.assign(draft.form.supplier, { supplierAddresses: update.saveSupplierAddresses, isNull})
+                    update.form = _.assign(draft.form, { supplier: supplier, supplierAddressForm: {}, supplierAddressId: selectedSupplierAddressId })
+
+                    resolve(update)
+                })
+            }).then((save) => {
+                return server.mongodb.Draft.update({ draftId: supplierAddressRemove.draftId }, { $set: { form: save.form } }).then(() => {
+                    return save
+                })
             })
-        })
-    },
+        },
+    //
 
     /////////////////////////////////
     // SUPPLIER ADDRESS => ADDRESS //
@@ -1052,6 +1057,267 @@ module.exports = (server) => {
     //  <--- end SUPPLIER ** customField
 
 //  <-- end SUPPLIER
+
+                                        ////////////////////////////////////
+                                        ///                              ///
+                                        ///           ACCOUNTS           ///
+                                        ///                              ///
+                                        ////////////////////////////////////
+
+       
+       
+//       
+        ///////////////////////
+        ///     REVENUES    ///
+        ///  ** payments    ///
+        ///////////////////////
+    //
+
+            ///////////////////////
+            ///     REVENUES    ///
+            ///     ** Groups   ///
+            ///////////////////////
+        //
+            addRevenueGroup(data) {
+                return new Promise((resolve, reject) => {
+                    return this.getOne(data.draftId).then((draft) => {
+
+                        let saveRevenueGroups = draft.form.revenues.revenueGroups
+                        let update = {}
+                        
+                        update.revenueGroupsReturn = {id: 'temp:' + shortid.generate()}
+                        saveRevenueGroups.push(update.revenueGroupsReturn)
+
+                        const revenues = _.assign(draft.form.revenues, { revenueGroups: saveRevenueGroups })
+                        update.form = _.assign(draft.form, { revenues: revenues })
+
+                        resolve(update)
+                    })
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save.revenueGroupsReturn
+                    })
+                })
+                
+            },
+
+            removeRevenueGroup(data) {
+                return new Promise((resolve, reject) => {
+                    return this.getOne(data.draftId).then((draft) => {
+
+                        const check = _.findIndex(draft.form.revenues.revenueItems, (revenueItem) => {
+                            return revenueItem.revenueGroupId === data.revenueGroupId
+                        })
+                        
+                        let update = {}
+
+                        if (check !== -1) {
+                            update.check = true
+                            resolve(update)
+                        }
+                        else {
+                            update.saveRevenueGroup = _.filter(draft.form.revenues.revenueGroups, (revenueGroup) => {
+                                return revenueGroup.id !== data.revenueGroupId
+                            })
+        
+                            const revenues = _.assign(draft.form.revenues, { revenueGroups: update.saveRevenueGroup })
+                            update.form = _.assign(draft.form, { revenues: revenues })
+        
+                            resolve(update)
+                        }                   
+                    })
+                }).then((save) => {
+                    if(save.check){
+                        return "Não é possivel excluir com itens"
+                    }
+                    else{
+                        return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                            return save
+                        })
+                    }
+                })
+            },
+
+        //
+
+            ///////////////////////
+            ///     REVENUES    ///
+            ///     ** Itens    ///
+            ///////////////////////
+        //
+            addRevenueItem(data) {
+                return new Promise((resolve, reject) => {
+                    return this.getOne(data.draftId).then((draft) => {
+
+                        let saveRevenueItems = draft.form.revenues.revenueItems
+                        let update = {}
+                        
+                        update.revenueItemsReturn = {id: 'temp:' + shortid.generate(), revenueGroupId: data.revenueGroupId}
+                        saveRevenueItems.push(update.revenueItemsReturn)
+
+                        const revenues = _.assign(draft.form.revenues, { revenueItems: saveRevenueItems })
+                        update.form = _.assign(draft.form, { revenues: revenues })
+
+                        resolve(update)
+                    })
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save.saveRevenueItems
+                    })
+                })
+            },
+
+            removeRevenueItem(data) {
+                return new Promise((resolve, reject) => {
+                    return this.getOne(data.draftId).then((draft) => {
+
+                        update.saveRevenueItems = _.filter(draft.form.revenues.revenueItems, (revenueItem) => {
+                            return revenueItem.id !== data.revenueItemId
+                        })
+    
+                        const revenues = _.assign(draft.form.revenues, { revenueItems: update.saveRevenueItems })
+                        update.form = _.assign(draft.form, { revenues: revenues })
+    
+                        resolve(update)                 
+                    })
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save
+                    })
+                })
+            },
+
+        //
+        
+        
+    // <-- end REVENUES
+
+        ///////////////////////
+        ///     EXPENSES    ///
+        ///  ** payments    ///
+        ///////////////////////
+    //
+
+            ///////////////////////
+            ///     EXPENSES    ///
+            ///     ** Groups   ///
+            ///////////////////////
+        //
+            addExpenseGroup(data) {
+                return new Promise((resolve, reject) => {
+                    return this.getOne(data.draftId).then((draft) => {
+
+                        let saveExpenseGroups = draft.form.expenses.expenseGroups
+                        let update = {}
+                        
+                        update.expenseGroupsReturn = {id: 'temp:' + shortid.generate()}
+                        saveExpenseGroups.push(update.expenseGroupsReturn)
+
+                        const expenses = _.assign(draft.form.expenses, { expenseGroups: saveExpenseGroups })
+                        update.form = _.assign(draft.form, { expenses: expenses })
+
+                        resolve(update)
+                    })
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save.expensesGroupsReturn
+                    })
+                })
+                
+            },
+
+            removeExpenseGroup(data) {
+                return new Promise((resolve, reject) => {
+                    return this.getOne(data.draftId).then((draft) => {
+
+                        const check = _.findIndex(draft.form.expenses.expenseItems, (expenseItem) => {
+                            return expenseItem.expenseGroupId === data.expenseGroupId
+                        })
+                        
+                        let update = {}
+
+                        if (check !== -1) {
+                            update.check = true
+                            resolve(update)
+                        }
+                        else {
+                            update.saveExpenseGroup = _.filter(draft.form.expenses.expenseGroups, (expenseGroup) => {
+                                return expenseGroup.id !== data.expenseGroupId
+                            })
+        
+                            const expenses = _.assign(draft.form.expenses, { expenseGroups: update.saveExpenseGroup })
+                            update.form = _.assign(draft.form, { expenses: expenses })
+        
+                            resolve(update)
+                        }                   
+                    })
+                }).then((save) => {
+                    if(save.check){
+                        return "Não é possivel excluir com itens"
+                    }
+                    else{
+                        return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                            return save
+                        })
+                    }
+                })
+            },
+
+        // <-- end expenses GROUPS
+
+            ///////////////////////
+            ///     EXPENSES    ///
+            ///     ** Itens    ///
+            ///////////////////////
+        //
+            addExpenseItem(data) {
+                return new Promise((resolve, reject) => {
+                    return this.getOne(data.draftId).then((draft) => {
+
+                        let saveExpenseItems = draft.form.expenses.expenseItems
+                        let update = {}
+                        
+                        update.expenseItemsReturn = {id: 'temp:' + shortid.generate(), expenseGroupId: data.expenseGroupId}
+                        saveExpenseItems.push(update.expenseItemsReturn)
+
+                        const expenses = _.assign(draft.form.expenses, { expenseItems: saveExpenseItems })
+                        update.form = _.assign(draft.form, { expenses: expenses })
+
+                        resolve(update)
+                    })
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save.saveExpenseItems
+                    })
+                })
+            },
+
+            removeExpenseItem(data) {
+                return new Promise((resolve, reject) => {
+                    return this.getOne(data.draftId).then((draft) => {
+
+                        update.saveExpenseItems = _.filter(draft.form.expenses.expenseItems, (expenseItem) => {
+                            return expenseItem.id !== data.expenseItemId
+                        })
+
+                        const expenses = _.assign(draft.form.expenses, { expenseItems: update.saveExpenseItems })
+                        update.form = _.assign(draft.form, { expenses: expenses })
+
+                        resolve(update)                 
+                    })
+                }).then((save) => {
+                    return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                        return save
+                    })
+                })
+            }
+
+        // <-- end expenses ITEMS
+    
+    
+    // <-- end expenses
+
+// <-- end ACCOUNTS
 
     } // <-- end RETURN
 

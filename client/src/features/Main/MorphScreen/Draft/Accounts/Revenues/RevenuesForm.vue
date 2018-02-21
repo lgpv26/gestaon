@@ -93,13 +93,16 @@
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
                 }
+                this.$socket.emit('draft:accounts:revenues:add-revenue-group', emitData)
                 console.log("Emitting draft:accounts:revenues:add-revenue-group", emitData)
             },
             addRevenueItem(){
                 const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    revenueGroupId: 'temp:BJjUEH5wz'
                 }
-                console.log("Emitting draft:accounts:expenses:add-revenue-item", emitData)
+                this.$socket.emit('draft:accounts:revenues:add-revenue-item', emitData)
+                console.log("Emitting draft:accounts:revenues:add-revenue-item", emitData)
             },
 
             onCurrentStepChanged(value){

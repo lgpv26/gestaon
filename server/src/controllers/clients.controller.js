@@ -25,10 +25,10 @@ module.exports = (server, restify) => {
             });
         },
 
-        getOne(req) {
+        getOne: (controller) => {
            return server.mysql.Client.findOne({
                 where: {
-                    id: req.params.id,
+                    id: controller.request.id,
                     status: 'activated'
                 },
                 include: [{

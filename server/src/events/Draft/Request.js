@@ -196,7 +196,7 @@ module.exports = class Request extends Draft {
                 this.onDraftCustomFieldRemove(customFieldRemove)
             })
         })
-    // <-- end CLIENT | setSocketRequestListeners
+    
 
                 ///////////////////////
                 ///  Client Group   ///
@@ -381,7 +381,6 @@ module.exports = class Request extends Draft {
     onClientSelect(clientSelect) {
         clientSelect.clientAddress = { inEdition: false }
         clientSelect.clientPhone = { inEdition: false }
-
         super.setDraftRedis(clientSelect, true).then(() => {
             this.controller.selectClient(clientSelect).then((client) => {
                 this.server.io.in('draft/' + clientSelect.draftId).emit('draftClientAddressBack')
@@ -389,6 +388,8 @@ module.exports = class Request extends Draft {
             }).catch(() => {
                 console.log('catch do SELECT CLIENT - QUE É DENTRO DO ON CLIENT SELECT')
             })
+        }).catch((err) => {
+            console.log('catch do SET DRAFT REDIS - QUE É DENTRO DO ON CLIENT SELECT', err)
         })
     }
 
@@ -412,6 +413,8 @@ module.exports = class Request extends Draft {
             }).catch(() => {
                 console.log('catch do RESET CLIENT - QUE É DENTRO DO ON CLIENT RESET')
             })
+        }).catch((err) => {
+            console.log('catch do SET DRAFT REDIS - QUE É DENTRO DO ON CLIENT RESET', err)
         })
     }
 
@@ -944,5 +947,11 @@ module.exports = class Request extends Draft {
             })
         }
 //  
+
+    ////////////////////////////////
+    // HELPERS FUNCTIONS => DRAFT //
+    ////////////////////////////////
+
+    
 
 }
