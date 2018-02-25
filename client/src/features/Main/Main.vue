@@ -76,7 +76,7 @@
                                         <span>{{itemProps.text }}</span>
                                     </template>
                                 </app-select>
-                                <app-select class="request-board__filter filter--users-in-charge" :items="requestBoardFilter.usersInCharge" :verticalOffset="15">
+                                <app-select class="request-board__filter filter--users-in-charge" v-model="requestBoardFilter.form.usersInCharge" @select="onFilter('usersInCharge')" :multiple="true" :items="requestBoardFilter.users" :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Responsável</span>
                                         <div class="target__amount">
@@ -150,6 +150,8 @@
     import MapContextMenu from './Dashboard/Tracker/MapContextMenu.vue';
     import Howler from 'howler';
 
+    import utils from '@/utils'
+
     const alarmSound = require('../../assets/sounds/alarm.mp3');
 
     export default {
@@ -169,11 +171,7 @@
                 accessTokenExpirationTimer: null,
                 showSettings: false,
                 requestBoardFilter: {
-                    usersInCharge: [
-                        { text: "Thiago Yoithi" },
-                        { text: "Acimar Rocha" },
-                        { text: "Mailon Ruan" }
-                    ],
+                    users: [],
                     filter: [
                         {
                             text: "Status",
@@ -210,7 +208,10 @@
                                 { text: "Orçamento" }
                             ]
                         },
-                    ]
+                    ],
+                    form: {
+                        usersInCharge: []
+                    }
                 },
                 menuList: [
                     {text: 'Add. empresa', type: 'system', action: this.addCompany, onlyAdmin: true},
@@ -219,9 +220,20 @@
                 ]
             }
         },
+        watch: {
+            users(newData){
+                this.requestBoardFilter.users = _.map(utils.removeReactivity(newData), (user) => {
+                    return {
+                        text: user.name,
+                        value: user.id
+                    }
+                })
+            }
+        },
         computed: {
             ...mapState(['app']),
             ...mapState('auth', ['user','token','company']),
+            ...mapState('data/users', ['users']),
             ...mapState('morph-screen', ['screens']),
             shortCompanyName(){
                 if(_.has(this.company, 'name')){
@@ -250,6 +262,9 @@
                 refreshToken: 'refreshToken',
                 changeCompanyAction: 'changeCompany'
             }),
+            ...mapActions('data/users', {
+                loadAllUsers: 'loadAll'
+            }),
             ...mapActions('loading', [
                 'setLoadingText','startLoading', 'stopLoading'
             ]),
@@ -265,20 +280,27 @@
             ...mapActions('data/payment-methods', {
                 loadAllPayments: 'loadAll'
             }),
+            onFilter(type){
+                switch(type){
+                    case 'usersInCharge':
+                        console.log("Apply usersInCharge")
+                        break;
+                }
+            },
             logout(){
                 const vm = this;
                 clearInterval(vm.accessTokenExpirationTimer);
-                vm.logoutAction().then((authenticated)=>{
+                vm.logoutAction().then((authenticated) => {
                     if(!authenticated){
-                        vm.$router.replace("/login");
+                        vm.$router.replace("/login")
                     }
                 });
             },
             showMorphScreen(){
                 this.SET_ALL_MS_SCREENS({
                     active: false
-                });
-                this.SHOW_MS(true);
+                })
+                this.SHOW_MS(true)
             },
             changeCompany(userCompany){
                 const vm = this;
@@ -458,6 +480,7 @@
                 });
             }).then(() => {
                 vm.loadAllPayments({ companyId: vm.company.id })
+                vm.loadAllUsers({ companyId: vm.company.id })
                 return vm.loadMorphScreenData(vm.company.id).catch((err) => {
                     console.log("The current user doesn't have any drafts created.");
                 });
@@ -687,6 +710,8 @@
 
     .main-column__header .container__request-board .request-board__filter h3 {
         color: var(--secondary-color--d);
+        margin-bottom: 8px;
+        text-transform: uppercase;
     }
 
     .main-column__header .header__draft-menu {

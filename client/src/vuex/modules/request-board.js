@@ -5,7 +5,8 @@ import utils from '@/utils'
 
 const state = {
     sections: [],
-    requests: []
+    requests: [],
+    filters: {}
 };
 
 const getters = {
@@ -22,7 +23,10 @@ const getters = {
 };
 
 const mutations = {
-    SORT_SECTIONS(){
+    SET_FILTER(state, {type}){
+
+    },
+    SORT_SECTIONS(state){
         state.sections.sort(function(a, b){
             return a.position - b.position
         })

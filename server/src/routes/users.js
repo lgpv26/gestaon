@@ -1,5 +1,5 @@
-const basePath = require('./../middlewares/base-path.middleware');
-const queryParserMiddleware = require('./../middlewares/query-parser.middleware');
+const basePath = require('./../middlewares/base-path.middleware')
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
 
@@ -29,7 +29,33 @@ module.exports = (server, restify) => {
 
     /* Users CRUD */
 
-    server.get('/users', queryParserMiddleware, usersController.getAll);
+    server.get('/users', (req, res, next) => {
+        const controller = new Controller({
+            companyId: (req.query.companyId) ? req.query.companyId : null,
+            request: {
+                queryParser: {
+                    companyId: (req.query.companyId) ? req.query.companyId : null
+                }
+            }
+        })
+        return usersController.getAll(controller).then((users) => {
+            if(!users){
+                return new restify.ResourceNotFoundError("Nenhum dado encontrado.")
+            }
+            return res.send(200, { data: users })
+        }).catch((err) => {
+            return next(
+                new restify.InternalServerError({
+                    body: {
+                        "code": err.name,
+                        "message": err.message,
+                        "detailed": err
+                    }
+                })
+            )
+        })
+    })
+
     server.post('/users', usersController.createOne);
     server.get('/users/:id', usersController.getOne);
     server.patch('/users/:id', usersController.updateOne);

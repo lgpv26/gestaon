@@ -29,18 +29,23 @@
                 <div class="income-column__header">
                     <h3>Receitas com produtos</h3><span class="push-both-sides"></span><icon-cog></icon-cog>
                 </div>
-                <div class="income-column__body">
+                <div class="income-column__body" ref="incomeColumnBody" @mouseleave="showHoverOverlayMenu = false">
+                    <div class="hover-overlay-menu" v-show="showHoverOverlayMenu" ref="hoverOverlayMenu">
+                        <a href="#"><icon-caret-up></icon-caret-up></a>
+                        <a href="#"><icon-caret-down></icon-caret-down></a>
+                        <a href="#"><icon-remove></icon-remove></a>
+                    </div>
                     <ul>
-                        <li>
+                        <li @mouseover="onRevenueItemHover($event)">
                             Venda de GLP
                         </li>
-                        <li>
+                        <li @mouseover="onRevenueItemHover($event)">
                             Venda de Água Mineral
                         </li>
-                        <li>
+                        <li @mouseover="onRevenueItemHover($event)">
                             Acessórios para GLP
                         </li>
-                        <li>
+                        <li @mouseover="onRevenueItemHover($event)">
                             Venda de Conveniência
                         </li>
                     </ul>
@@ -78,6 +83,7 @@
         props: ['task','revenues','activeStep'],
         data(){
             return {
+                showHoverOverlayMenu: false,
                 form: {
                 }
             }
@@ -89,6 +95,11 @@
             }
         },
         methods: {
+            onRevenueItemHover(ev){
+                this.showHoverOverlayMenu = true
+                const offsetY = this.getElPositionInScreen(ev.target).y - (this.getElPositionInScreen(this.$refs.incomeColumnBody).y + 7)
+                this.$refs.hoverOverlayMenu.style.top = offsetY + 'px'
+            },
             addRevenueGroup(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
@@ -111,6 +122,23 @@
             },
             commitSocketChanges(mapping){
                 this.$emit('sync', mapping);
+            },
+
+            getElPositionInScreen(el){
+                let xPos = 0, yPos = 0;
+                while (el) {
+                    if (el.tagName.toLowerCase() === "body") {
+                        let xScroll = el.scrollLeft || document.documentElement.scrollLeft;
+                        let yScroll = el.scrollTop || document.documentElement.scrollTop;
+                        xPos += (el.offsetLeft - xScroll + el.clientLeft);
+                        yPos += (el.offsetTop - yScroll + el.clientTop);
+                    } else {
+                        xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
+                        yPos += (el.offsetTop - el.scrollTop + el.clientTop);
+                    }
+                    el = el.offsetParent;
+                }
+                return { x: xPos, y: yPos };
             }
         },
         mounted(){
@@ -186,6 +214,28 @@
         padding: 0 10px;
         margin-top: 7px;
         flex-grow: 1;
+        position: relative;
+    }
+
+    .income-column .income-column__body .hover-overlay-menu {
+        position: absolute;
+        top: 0;
+        height: 24px;
+        margin: 3px 0;
+        display: flex;
+        flex-direction: row;
+        /* The old syntax, deprecated, but still needed, prefixed, for WebKit-based and old browsers */
+        background: -prefix-linear-gradient(left, rgba(30, 30, 30, .3), rgba(30, 30, 30, 1) 65%));
+        /* The new syntax needed by standard-compliant browsers (Opera 12.1, IE 10, Fx 16 onwards), without prefix */
+        background: linear-gradient(to right, rgba(30, 30, 30, .3), rgba(30, 30, 30, 1) 65%);
+        align-items: center;
+        justify-content: flex-end;
+        left: -1px;
+        right: -1px;
+    }
+
+    .income-column .income-column__body .hover-overlay-menu a {
+        margin-right: 10px;
     }
 
     .income-column .income-column__body ul li {

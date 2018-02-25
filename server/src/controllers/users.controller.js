@@ -113,30 +113,19 @@ module.exports = (server, restify) => {
                 });
             });
         },
-        getAll: (req, res, next) => {
-
-
-
-            server.mysql.User.scope(req.query.includedScopes).findAll().then((users) => {
-                if (!users) {
-                    return next(
-                        new restify.ResourceNotFoundError("Nenhum dado encontrado.")
-                    );
-                }
-                return res.send(200, {
-                    data: users
-                });
-            }).catch((err) => {
-                return next(
-                    new restify.InternalServerError({
-                        body: {
-                            "code": err.name,
-                            "message": err.message,
-                            "detailed": err
-                        }
-                    })
-                );
-            });
+        getAll: (controller) => {
+            return server.mysql.User.findAll({
+                include: [{
+                    model: server.mysql.CompanyUser,
+                    as: 'userCompanies',
+                    attributes: ['companyId'],
+                    where: {
+                        companyId: controller.request.queryParser.companyId
+                    }
+                }]
+            }).then((users) => {
+                return users;
+            })
         },
         getOne: (req, res, next) => {
             server.mysql.User.findOne({
