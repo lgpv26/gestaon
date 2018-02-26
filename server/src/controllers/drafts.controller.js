@@ -1276,8 +1276,14 @@ module.exports = (server) => {
 
                         let saveExpenseItems = draft.form.expenses.expenseItems
                         let update = {}
+
+                        let positionCheck = _.filter(draft.form.expenses.expenseItems, (expenseItem) => {
+                            return expenseItem.expenseGroupId === data.expenseGroupId
+                        })
+
+                        const position = (positionCheck.length) ? (positionCheck.length + 1) : 1
                         
-                        update.expenseItemsReturn = {id: 'temp:' + shortid.generate(), expenseGroupId: data.expenseGroupId}
+                        update.expenseItemsReturn = {id: 'temp:' + shortid.generate(), expenseGroupId: data.expenseGroupId, position: position}
                         saveExpenseItems.push(update.expenseItemsReturn)
 
                         const expenses = _.assign(draft.form.expenses, { expenseItems: saveExpenseItems })
@@ -1310,12 +1316,75 @@ module.exports = (server) => {
                         return save
                     })
                 })
-            }
-
+            },
         // <-- end expenses ITEMS
-    
-    
+
     // <-- end expenses
+
+            ///////////////////////
+            ///     ITEMS       ///
+            ///     ** move     ///
+            ///////////////////////
+
+    //
+        moveUpItem(data) {
+            return new Promise((resolve, reject) => {
+                return this.getOne(data.draftId).then((draft) => {
+                                
+                    const itemMoveUp = _.find(draft.form[data.type][data.items], { id: data.itemId })
+                    const itemMoveUpIndex = draft.form[data.type][data.items].indexOf(itemMoveUp)
+    
+                    const itemMoveDown = _.find(draft.form[data.type][data.items], { position: (itemMoveUp.position - 1) })
+                    const itemMoveDownIndex = draft.form[data.type][data.items].indexOf(itemMoveDown)
+    
+                    draft.form[data.type][data.items][itemMoveUpIndex] = _.assign(itemMoveUp, {position: (itemMoveUp.position - 1)})
+                    draft.form[data.type][data.items][itemMoveDownIndex] = _.assign(itemMoveDown, {position: (itemMoveDown.position + 1)})
+    
+                    let update = {}
+    
+                    update.itemsReturn = draft.form[data.type][data.items]
+    
+                    const items = _.assign(draft.form[data.type], { [data.items]: update.itemsReturn })
+                    update.form = _.assign(draft.form, { [data.type]: items })
+    
+                    resolve(update)                 
+                })
+            }).then((save) => {
+                return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                    return save.itemsReturn
+                })
+            })
+        },
+
+        moveDownItem(data) {
+            return new Promise((resolve, reject) => {
+                return this.getOne(data.draftId).then((draft) => {
+
+                    const itemMoveDown = _.find(draft.form[data.type][data.items], { id: data.itemId })
+                    const itemMoveDownIndex = draft.form[data.type][data.items].indexOf(itemMoveDown)
+                                
+                    const itemMoveUp = _.find(draft.form[data.type][data.items], { position: (itemMoveDown.position + 1) })
+                    const itemMoveUpIndex = draft.form[data.type][data.items].indexOf(itemMoveUp)
+
+                    draft.form[data.type][data.items][itemMoveDownIndex] = _.assign(itemMoveDown, {position: (itemMoveDown.position + 1)})        
+                    draft.form[data.type][data.items][itemMoveUpIndex] = _.assign(itemMoveUp, {position: (itemMoveUp.position - 1)})
+    
+                    let update = {}
+    
+                    update.itemsReturn = draft.form[data.type][data.items]
+    
+                    const items = _.assign(draft.form[data.type], { [data.items]: update.itemsReturn })
+                    update.form = _.assign(draft.form, { [data.type]: items })
+    
+                    resolve(update)                 
+                })
+            }).then((save) => {
+                return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
+                    return save.itemsReturn
+                })
+            })
+        },
+    //
 
 // <-- end ACCOUNTS
 

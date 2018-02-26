@@ -9,3 +9,5 @@ client/package\.json
 client/package-lock\.json
 
 server/package\.json
+
+package\.json

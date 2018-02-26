@@ -42,19 +42,19 @@ module.exports = class Accounts extends Draft {
         ///     REVENUES    ///
         ///     ** Groups   ///
         ///////////////////////
-        this.socket.on('draft:accounts:revenues:add-revenue-group', (data) => {
-            console.log("draft:accounts:revenues:add-revenue-group")
+        this.socket.on('draft:accounts:revenues:revenue-group-add', (data) => {
+            console.log("draft:accounts:revenues:revenue-group-add")
             super.resetTimeout()
             super.saveDraft(data.draftId).then(() => {
-                this.onAccountsRevenuesAddRevenueGroup(data)
+                this.onAccountsRevenuesRevenueGroupAdd(data)
             })
         })
 
-        this.socket.on('draft:accounts:revenues:remove-revenue-group', (data) => {
-            console.log("draft:accounts:revenues:remove-revenue-group")
+        this.socket.on('draft:accounts:revenues:revenue-group-remove', (data) => {
+            console.log("draft:accounts:revenues:revenue-group-remove")
             super.resetTimeout()
             super.saveDraft(data.draftId).then(() => {
-                this.onAccountsRevenuesRemoveRevenueGroup(data)
+                this.onAccountsRevenuesRevenueGroupRemove(data)
             })
         })
 
@@ -62,19 +62,19 @@ module.exports = class Accounts extends Draft {
         ///     REVENUES    ///
         ///     ** items    ///
         /////////////////////// 
-        this.socket.on('draft:accounts:revenues:add-revenue-item', (data) => {
-            console.log("draft:accounts:revenues:add-revenue-item")
+        this.socket.on('draft:accounts:revenues:revenue-item-add', (data) => {
+            console.log("draft:accounts:revenues:revenue-item-add")
             super.resetTimeout()
             super.saveDraft(data.draftId).then(() => {
-                this.onAccountsRevenuesAddRevenueItem(data)
+                this.onAccountsRevenuesRevenueItemAdd(data)
             })
         })
 
-        this.socket.on('draft:accounts:revenues:remove-revenue-item', (data) => {
-            console.log("draft:accounts:revenues:remove-revenue-item")
+        this.socket.on('draft:accounts:revenues:revenue-item-remove', (data) => {
+            console.log("draft:accounts:revenues:revenue-item-remove")
             super.resetTimeout()
             super.saveDraft(data.draftId).then(() => {
-                this.onAccountsRevenuesRemoveRevenueItem(data)
+                this.onAccountsRevenuesRevenueItemRemove(data)
             })
         })
 
@@ -91,19 +91,19 @@ module.exports = class Accounts extends Draft {
         ///     EXPENSES    ///
         ///     ** Groups   ///
         ///////////////////////
-        this.socket.on('draft:accounts:expenses:add-expense-group', (data) => {
-            console.log("draft:accounts:expenses:add-expense-group")
+        this.socket.on('draft:accounts:expenses:expense-group-add', (data) => {
+            console.log("draft:accounts:expenses:expense-group-add")
             super.resetTimeout()
             super.saveDraft(data.draftId).then(() => {
-                this.onAccountsExpensesAddExpenseGroup(data)
+                this.onAccountsExpensesExpenseGroupAdd(data)
             })
         })
 
-        this.socket.on('draft:accounts:expenses:remove-expense-group', (data) => {
-            console.log("draft:accounts:expenses:remove-expense-group")
+        this.socket.on('draft:accounts:expenses:expense-group-remove', (data) => {
+            console.log("draft:accounts:expenses:expense-group-remove")
             super.resetTimeout()
             super.saveDraft(data.draftId).then(() => {
-                this.onAccountsExpensesRemoveExpenseGroup(data)
+                this.onAccountsExpensesExpenseGroupRemove(data)
             })
         })
 
@@ -111,19 +111,35 @@ module.exports = class Accounts extends Draft {
         ///     EXPENSES    ///
         ///     ** items    ///
         /////////////////////// 
-        this.socket.on('draft:accounts:expenses:add-expenses-item', (data) => {
-            console.log("draft:accounts:expenses:add-expense-item")
+        this.socket.on('draft:accounts:expenses:expense-item-add', (data) => {
+            console.log("draft:accounts:expenses:expense-item-add")
             super.resetTimeout()
             super.saveDraft(data.draftId).then(() => {
-                this.onAccountsExpensesAddExpenseItem(data)
+                this.onAccountsExpensesExpenseItemAdd(data)
             })
         })
 
-        this.socket.on('draft:accounts:expenses:remove-expense-item', (data) => {
-            console.log("draft:accounts:expenses:remove-expense-item")
+        this.socket.on('draft:accounts:expenses:expense-item-remove', (data) => {
+            console.log("draft:accounts:expenses:expense-item-remove")
             super.resetTimeout()
             super.saveDraft(data.draftId).then(() => {
-                this.onAccountsExpensesRemoveExpenseItem(data)
+                this.onAccountsExpensesExpenseItemRemove(data)
+            })
+        })
+
+        this.socket.on('draft:accounts:expenses:expense-item-move-up', (data) => {
+            console.log("draft:accounts:expenses:expense-item-move-up")
+            super.resetTimeout()
+            super.saveDraft(data.draftId).then(() => {
+                this.onAccountsExpensesExpenseItemMoveUp(data)
+            })
+        })
+
+        this.socket.on('draft:accounts:expenses:expense-item-move-down', (data) => {
+            console.log("draft:accounts:expenses:expense-item-move-down")
+            super.resetTimeout()
+            super.saveDraft(data.draftId).then(() => {
+                this.onAccountsExpensesExpenseItemMoveDown(data)
             })
         })
 
@@ -189,17 +205,17 @@ module.exports = class Accounts extends Draft {
             ///     ** Groups   ///
             ///////////////////////
         //
-            onAccountsRevenuesAddRevenueGroup(data) {
+            onAccountsRevenuesRevenueGroupAdd(data) {
                 this.controller.addRevenueGroup(data).then((revenueGroupData) => {
-                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesAddRevenueGroup', revenueGroupData)
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesRevenueGroupAdd', revenueGroupData)
                 }).catch((err) => {
                     console.log(err, 'catch do ADD REVENUE GROUP - QUE É DENTRO DO ON ACCOUNTS REVENUES ADD REVENUE GROUP')
                 })
             }
 
-            onAccountsRevenuesRemoveRevenueGroup(data) {
+            onAccountsRevenuesRevenueGroupRemove(data) {
                 this.controller.removeRevenueGroup(data).then((removeRevenueGroupData) => {
-                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesRemoveRevenueGroup', removeRevenueGroupData)
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesRevenueGroupRemove', removeRevenueGroupData)
                 }).catch((err) => {
                     console.log(err, 'catch do REMOVE REVENUE GROUP - QUE É DENTRO DO ON ACCOUNTS REVENUES REMOVE REVENUE GROUP')
                 })
@@ -211,19 +227,47 @@ module.exports = class Accounts extends Draft {
             ///     ** Itens    ///
             ///////////////////////
         //
-            onAccountsRevenuesAddRevenueItem(data) {
+            onAccountsRevenuesRevenueItemAdd(data) {
                 this.controller.addRevenueItem(data).then((revenueItemData) => {
-                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesAddRevenueItem', revenueItemData)
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesRevenueItemAdd', revenueItemData)
                 }).catch((err) => {
                     console.log(err, 'catch do ADD REVENUE ITEM - QUE É DENTRO DO ON ACCOUNTS REVENUES ADD REVENUE ITEM')
                 })
             }
 
-            onAccountsRevenuesRemoveRevenueItem(data) {
+            onAccountsRevenuesRevenueItemRemove(data) {
                 this.controller.removeRevenueItem(data).then((removeRevenueItemData) => {
-                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesAddRevenueItem', removeRevenueItemData)
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesRevenueItemRemove', removeRevenueItemData)
                 }).catch((err) => {
                     console.log(err, 'catch do REMOVE REVENUE ITEM - QUE É DENTRO DO ON ACCOUNTS REVENUES REMOVE REVENUE ITEM')
+                })
+            }
+
+            onAccountsRevenuesRevenueItemMoveUp(data) {
+                data.type = 'revenues'
+                data.items = 'revenuesItems'
+
+                data.itemId = data.revenuesItemId
+                delete data.revenuesItemId
+
+                this.controller.moveUpItem(data).then((moveUpRevenueItemData) => {
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesExpenseItemMoveUp', moveUpRevenueItemData)
+                }).catch((err) => {
+                    console.log(err, 'catch do MOVE UP EXPENSE ITEM - QUE É DENTRO DO ON ACCOUNTS EXPENSES MOVE UP EXPENSE ITEM')
+                })
+            }
+
+            onAccountsRevenuesRevenueItemMoveDown(data) {
+                data.type = 'revenues'
+                data.items = 'revenuesItems'
+
+                data.itemId = data.revenuesItemId
+                delete data.revenuesItemId
+                
+                this.controller.moveDownItem(data).then((moveDownRevenueItemData) => {
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesExpenseItemMoveDown', moveDownRevenueItemData)
+                }).catch((err) => {
+                    console.log(err, 'catch do MOVE DOWN EXPENSE ITEM - QUE É DENTRO DO ON ACCOUNTS EXPENSES MOVE DOWN EXPENSE ITEM')
                 })
             }
 
@@ -242,17 +286,17 @@ module.exports = class Accounts extends Draft {
                 ///     ** Groups   ///
                 ///////////////////////
         //
-            onAccountsExpensesAddExpenseGroup(data) {
+            onAccountsExpensesExpenseGroupAdd(data) {
                 this.controller.addExpenseGroup(data).then((expenseGroupData) => {
-                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesAddExpenseGroup', expenseGroupData)
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesExpenseGroupAdd', expenseGroupData)
                 }).catch((err) => {
                     console.log(err, 'catch do ADD EXPENSES GROUP - QUE É DENTRO DO ON ACCOUNTS EXPENSES ADD EXPENSES GROUP')
                 })
             }
 
-            onAccountsExpensesRemoveExpenseGroup(data) {
+            onAccountsExpensesExpenseGroupRemove(data) {
                 this.controller.removeExpenseGroup(data).then((removeExpenseGroupData) => {
-                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesRemoveExpenseGroup', removeExpenseGroupData)
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesExpenseGroupRemove', removeExpenseGroupData)
                 }).catch((err) => {
                     console.log(err, 'catch do REMOVE EXPENSE GROUP - QUE É DENTRO DO ON ACCOUNTS EXPENSES REMOVE EXPENSE GROUP')
                 })
@@ -264,19 +308,47 @@ module.exports = class Accounts extends Draft {
             ///     ** Itens    ///
             ///////////////////////
         //
-            onAccountsExpensesAddExpenseItem(data) {
+            onAccountsExpensesExpenseItemAdd(data) {
                 this.controller.addExpenseItem(data).then((expenseItemData) => {
-                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesAddExpenseItem', expenseItemData)
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesExpenseItemAdd', expenseItemData)
                 }).catch((err) => {
                     console.log(err, 'catch do ADD EXPENSE ITEM - QUE É DENTRO DO ON ACCOUNTS EXPENSES ADD EXPENSE ITEM')
                 })
             }
 
-            onAccountsExpensesRemoveExpenseItem(data) {
+            onAccountsExpensesExpenseItemRemove(data) {
                 this.controller.removeExpenseItem(data).then((removeExpenseItemData) => {
-                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesAddExpenseItem', removeExpenseItemData)
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesExpenseItemRemove', removeExpenseItemData)
                 }).catch((err) => {
                     console.log(err, 'catch do REMOVE EXPENSE ITEM - QUE É DENTRO DO ON ACCOUNTS EXPENSES REMOVE EXPENSE ITEM')
+                })
+            }
+
+            onAccountsExpensesExpenseItemMoveUp(data) {
+                data.type = 'expenses'
+                data.items = 'expenseItems'
+
+                data.itemId = data.expenseItemId
+                delete data.expenseItemId
+
+                this.controller.moveUpItem(data).then((moveUpExpenseItemData) => {
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesExpenseItemMoveUp', moveUpExpenseItemData)
+                }).catch((err) => {
+                    console.log(err, 'catch do MOVE UP EXPENSE ITEM - QUE É DENTRO DO ON ACCOUNTS EXPENSES MOVE UP EXPENSE ITEM')
+                })
+            }
+
+            onAccountsExpensesExpenseItemMoveDown(data) {
+                data.type = 'expenses'
+                data.items = 'expenseItems'
+
+                data.itemId = data.expenseItemId
+                delete data.expenseItemId
+                
+                this.controller.moveDownItem(data).then((moveDownExpenseItemData) => {
+                    this.server.io.in('draft/' + data.draftId).emit('draftAccountsExpensesExpenseItemMoveDown', moveDownExpenseItemData)
+                }).catch((err) => {
+                    console.log(err, 'catch do MOVE DOWN EXPENSE ITEM - QUE É DENTRO DO ON ACCOUNTS EXPENSES MOVE DOWN EXPENSE ITEM')
                 })
             }
 
