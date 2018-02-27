@@ -657,6 +657,23 @@ module.exports = (server) => {
         ///     ORDER      ///
         //////////////////////
 
+        orderUserIncharge(orderUserInCharge) {
+            return this.getOne(orderUserInCharge.draftId).then((draft) => {
+
+                const userInCharge = {
+                    "userId" : orderUserInCharge.userId,
+                    "triggeredBy" : orderUserInCharge.triggeredBy.id
+                }
+
+                const order = _.assign(draft.form.order, {requestUserInCharge: userInCharge })
+                const update = _.assign(draft.form, { order: order })
+
+                return server.mongodb.Draft.update({ draftId: orderUserInCharge.draftId }, { $set: { form: update } }).then(() => {
+                    return orderUserInCharge
+                })
+            })
+        },
+
 //
             //////////////////////
             ///     ORDER      ///

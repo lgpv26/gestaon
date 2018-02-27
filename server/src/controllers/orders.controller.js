@@ -86,7 +86,7 @@ module.exports = (server, restify) => {
                     })
                     promises.push(ordersProductsController.setOrdersProducts(orderProductsControllerObj))
                 }
-
+                
                     /* return only when all promises are satisfied */
                     return Promise.all(promises).then((orderEs) => {
                         const objES = {}

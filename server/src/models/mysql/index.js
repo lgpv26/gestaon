@@ -14,7 +14,7 @@ module.exports = function(server, Sequelize, sequelize){
         "SupplierProduct.js", "SupplierCompany.js", "SupplierCustomField.js",
         "SupplierAddress.js", "SupplierPhone.js",
         "CustomField.js", "ClientCustomField.js", "ClientGroup.js",
-        "RequestClientAddress.js", "RequestClientPhone.js",
+        "RequestClientAddress.js", "RequestClientPhone.js", "RequestUserInCharge.js",
         "RevenueGroup.js", "RevenueItem.js", "ExpenseGroup.js", "ExpenseItem.js",
         "PaymentMethod.js"
     ];

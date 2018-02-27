@@ -9,6 +9,7 @@ module.exports = (server, restify) => {
     const productsController = require('./../controllers/products.controller')(server, restify)
     const requestsClientsPhone = require('./../controllers/requests-clients-phones.controller')(server, restify)
     const requestsClientsAddress = require('./../controllers/requests-clients-addresses.controller')(server, restify)
+    const requestUserInChargeController = require('./../controllers/requests-user-in-charge.controller')(server, restify)
 
     const addressesController = require('./../controllers/addresses.controller')(server, restify);
     const clientsAddressesController = require('./../controllers/clients-addresses.controller')(server, restify);
@@ -117,6 +118,18 @@ module.exports = (server, restify) => {
                 }
 
                 let promises = []
+
+                /* save requestUserInCharge if existent */
+                if(_.has(controller.request.data.order, "requestUserInCharge")) {
+                    const requestUserInChargeControllerObj = new Controller({
+                        request: {
+                            requestId: request.id,
+                            data: controller.request.data.order.requestUserInCharge
+                        },
+                        transaction: controller.transaction
+                    })
+                    promises.push(requestUserInChargeController.saveUserInCharge(requestUserInChargeControllerObj))
+                }                
 
                 if(controller.request.clientId){
 
@@ -301,6 +314,18 @@ module.exports = (server, restify) => {
                     }
 
                     let promises = []
+
+                    /* save requestUserInCharge if existent */
+                    if(_.has(controller.request.data.order, "requestUserInCharge")) {
+                        const requestUserInChargeControllerObj = new Controller({
+                            request: {
+                                requestId: request.id,
+                                data: controller.request.data.order.requestUserInCharge
+                            },
+                            transaction: controller.transaction
+                        })
+                        promises.push(requestUserInChargeController.saveUserInCharge(requestUserInChargeControllerObj))
+                    }    
 
                     if(controller.request.clientId){
 

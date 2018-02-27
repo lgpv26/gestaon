@@ -17,7 +17,6 @@ module.exports = class Persistance {
     }
 
     getTransaction(){
-        console.log('aqui: ', this.transaction)
         return this.transaction
     }
 
