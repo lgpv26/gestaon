@@ -458,6 +458,9 @@ module.exports = class Draft {
                         })
                     }
                     else {
+                        if (userEntry) {
+                            this.consultDraft(draftId)
+                        }
                         resolve()
                     }
                 }).catch(() => {

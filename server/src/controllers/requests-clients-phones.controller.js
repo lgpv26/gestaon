@@ -23,7 +23,7 @@ module.exports = (server, restify) => {
                     requestId: parseInt(controller.request.requestId)
                 },
                 transaction: controller.transaction
-            }).then((teste) => {
+            }).then(() => {
                 return server.mysql.RequestClientPhone.bulkCreate(setData, {
                     updateOnDuplicate: ['requestId', 'clientPhoneId', 'type', 'dateUpdated', 'dateRemoved', 'status'],
                     transaction: controller.transaction

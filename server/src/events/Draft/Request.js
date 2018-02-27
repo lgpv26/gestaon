@@ -223,6 +223,14 @@ module.exports = class Request extends Draft {
         ///////////////////////
 //
 
+
+    this.socket.on('draft:order-user-in-charge', (orderUserInCharge) => {
+        super.resetTimeout()
+        super.saveDraft(orderUserInCharge.draftId).then(() => {
+            this.onOrderUserInCharge(orderUserInCharge)
+        })
+    })
+
             ///////////////////////
             ///     ORDER      ///
             ///  ** product     ///
@@ -255,6 +263,7 @@ module.exports = class Request extends Draft {
                 this.onOrderProductProductReset(orderProductReset)
             })
         })
+
     //<-- end ORDER ** product | setSocketRequestListeners
 
 //<-- end ORDER | setSocketRequestListeners
@@ -885,7 +894,22 @@ module.exports = class Request extends Draft {
     ///////////////////////
 //
 
-
+        /** 
+         * Order User In Charge
+         * @desc Send to all sockets in Draft/:id the user in charge event
+         * 
+         * @param {object} orderUserInCharge - expected: draftId, userId (atendent)
+         * @return {object} @property {Socket}
+         */
+        onOrderUserInCharge(orderUserInCharge) {
+            orderUserInCharge.triggeredBy = super.socket.user
+            this.controller.orderUserIncharge(orderUserInCharge).then(() => {
+                this.server.io.in('draft/' + orderUserInCharge.draftId).emit('draftOrderUserInCharge', orderUserInCharge.userId)
+            }).catch(() => {
+                console.log('catch do USER IN CHARGE - QUE É DENTRO DO ON ORDER USER IN CHARGE')
+            })
+        }
+        
         //////////////////////
         ///     ORDEN      ///
         ///  ** product    ///
@@ -946,6 +970,8 @@ module.exports = class Request extends Draft {
                 console.log('catch do RESET ORDER PRODUCT - QUE É DENTRO DO ON ORDER PRODUCT RESET')
             })
         }
+    //
+
 //  
 
     ////////////////////////////////
