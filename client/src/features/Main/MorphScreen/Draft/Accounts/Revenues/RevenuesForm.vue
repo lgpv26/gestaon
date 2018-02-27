@@ -1,31 +1,7 @@
 <template>
     <form :class="{'active': isCurrentStepActive}">
         <div class="form__content" v-show="isCurrentStepActive">
-            <div class="income-column">
-                <div class="income-column__header">
-                    <h3>Receitas com produtos</h3><span class="push-both-sides"></span><icon-cog></icon-cog>
-                </div>
-                <div class="income-column__body">
-                    <ul>
-                        <li>
-                            Venda de GLP
-                        </li>
-                        <li>
-                            Venda de Água Mineral
-                        </li>
-                        <li>
-                            Acessórios para GLP
-                        </li>
-                        <li>
-                            Venda de Conveniência
-                        </li>
-                    </ul>
-                </div>
-                <div class="income-column__footer">
-                    <input type="text" /> <icon-check></icon-check>
-                </div>
-            </div>
-            <div class="income-column">
+            <div class="income-column" v-for="revenueGroup in computedRevenueGroups">
                 <div class="income-column__header">
                     <h3>Receitas com produtos</h3><span class="push-both-sides"></span><icon-cog></icon-cog>
                 </div>
@@ -92,6 +68,15 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             isCurrentStepActive(){
                 return this.activeStep === 'revenues';
+            },
+            computedRevenueGroups(){
+                const vm = this
+                return vm.revenues.revenueGroups.map((revenueGroup) => {
+                    revenueGroup.items = vm.revenues.revenueItems.filter((revenueItem) => {
+                        return revenueGroup.id === revenueItem.revenueGroupId
+                    })
+                    return revenueGroup
+                })
             }
         },
         methods: {

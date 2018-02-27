@@ -1,31 +1,7 @@
 <template>
     <form :class="{'active': isCurrentStepActive}">
         <div class="form__content" v-show="isCurrentStepActive">
-            <div class="outcome-column">
-                <div class="outcome-column__header">
-                    <h3>Custo com produtos</h3><span class="push-both-sides"></span><icon-cog></icon-cog>
-                </div>
-                <div class="outcome-column__body">
-                    <ul>
-                        <li>
-                            Compra de GLP
-                        </li>
-                        <li>
-                            Compra de Água Mineral
-                        </li>
-                        <li>
-                            Acessórios para GLP
-                        </li>
-                        <li>
-                            Compra de Conveniência
-                        </li>
-                    </ul>
-                </div>
-                <div class="outcome-column__footer">
-                    <input type="text" /> <icon-check></icon-check>
-                </div>
-            </div>
-            <div class="outcome-column">
+            <div class="outcome-column" v-for="expenseGroup in computedExpenseGroups">
                 <div class="outcome-column__header">
                     <h3>Custos com serviços</h3><span class="push-both-sides"></span><icon-cog></icon-cog>
                 </div>
@@ -72,7 +48,7 @@
     export default {
         components: {
         },
-        props: ['task','expenses','activeStep'],
+        props: ['expenses','activeStep'],
         data(){
             return {
                 form: {
@@ -83,6 +59,15 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             isCurrentStepActive(){
                 return this.activeStep === 'expenses';
+            },
+            computedExpenseGroups(){
+                const vm = this
+                return vm.expenses.expenseGroups.map((expenseGroup) => {
+                    expenseGroup.items = vm.expenses.expenseItems.filter((expenseItem) => {
+                        return expenseGroup.id === expenseItem.expenseGroupId
+                    })
+                    return expenseGroup
+                })
             }
         },
         methods: {

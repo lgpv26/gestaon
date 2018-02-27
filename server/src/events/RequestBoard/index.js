@@ -161,6 +161,7 @@ module.exports = class RequestBoard {
          */
         this.socket.on('request-board:card-move', (evData) => {
             console.log("Card moved", evData)
+
             switch(evData.location){
                 case "first":
                     vm.server.mongodb.Card.findOne({ section: evData.toSection}, {}, { sort: { position: 1 } }, function(err, firstCard) {
@@ -191,14 +192,17 @@ module.exports = class RequestBoard {
                     })
                     break;
                 case "middle":
-                    console.log("evData",evData)
-                    vm.saveCard(evData.cardId, evData.toSection, evData.position).then(() => {
-                        vm.server.io.sockets.emit('requestBoardCardMove', {
-                            data: { location: 'middle' }
+                    vm.server.mongodb.Card.find({ section: evData.toSection, _id: { $in: [evData.prevCard, evData.nextCard] } }, function(err, prevAndNextCard) {
+                        prevAndNextCard.sort(function(a, b){return b.position - a.position})
+                        const position = ( prevAndNextCard[0].position + prevAndNextCard[1].position ) / 2
+                        vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
+                            vm.server.io.sockets.emit('requestBoardCardMove', {
+                                data: { location: 'middle' }
+                            })
+                        }).catch((err) => {
+                            console.log(err)
+                            vm.server.io.sockets.emit('requestBoardCardMove', new Error(err))
                         })
-                    }).catch((err) => {
-                        console.log(err)
-                        vm.server.io.sockets.emit('requestBoardCardMove', new Error(err))
                     })
                     break;
                 case "last-and-only":

@@ -22,9 +22,9 @@
                 <div class="board-section__viewport" :style="{ 'width': sectionWidth, 'height': sectionHeight }">
                     <app-draggable class="board-section__cards" :data-section-id="section.id" :value="section.cards" :options="cardDraggableOptions"
                         :style="{'padding-bottom': options.gutterSize + 'px', 'padding-left': options.gutterSize + 'px'}"
-                        :move="onRequestBoardCardMove" @input="onCardDraggableInput($event, section)" @start="onCardDragStart($event, section)" @end="onCardDragEnd($event, section)"
+                        @input="onCardDraggableInput($event, section)" @start="onCardDragStart($event, section)" @end="onCardDragEnd($event, section)"
                         @change="onCardPositionChange($event, section)">
-                        <div class="request-card" v-for="card in section.cards" @mousedown="onMouseDown(section)" :key="card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
+                        <div class="request-card" v-for="card in section.cards" v-show="card.state.showCard" @mousedown="onMouseDown(section)" :key="card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
                             <app-request-board-card class="request-card__main" :card="card" :isDragging="isDraggingCard" @click="requestCardClicked(card, $event)"></app-request-board-card>
                         </div>
                     </app-draggable>
@@ -74,8 +74,8 @@
             ...mapState(['mainContentArea']),
             ...mapState('auth', ['user', 'token', 'company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
-            ...mapState('request-board', ['sections', 'requests']),
-            ...mapGetters('request-board', ['sectionRequests']),
+            ...mapState('request-board', ['sections']),
+            ...mapGetters('request-board', []),
             sectionWidth(){
                 return this.options.gutterSize + ((this.section.size * this.options.columnWidth) + ((this.section.size + 1) * this.options.gutterSize)) + 'px'
             },
@@ -83,14 +83,18 @@
                 return this.mainContentArea.height - this.options.headerHeight - (this.options.gutterSize * 2) + 'px'
             },
             dragSpaceHiderHeight(){
-                let baseHeight = this.options.gutterSize + (Math.floor((this.section.cards.length / this.section.size)) * (this.options.cardHeight + this.options.gutterSize))
+                const numberOfVisibleSectionCards = _.sumBy(this.section.cards, (card) => {
+                    if(card.state.showCard) return 1
+                    else return 0
+                })
+                let baseHeight = this.options.gutterSize + (Math.floor((numberOfVisibleSectionCards / this.section.size)) * (this.options.cardHeight + this.options.gutterSize))
                 if(this.isDraggingCard) baseHeight -= (this.options.cardHeight + this.options.gutterSize)
                 return baseHeight + 'px'
             }
         },
         methods: {
             ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', ['RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
+            ...mapMutations('request-board', ['REAPLY_FILTERS','RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
 
             /* Sections */
 
@@ -150,99 +154,30 @@
                     }
                 })
             },
-            onRequestBoardCardMove(ev, originalEv){
-                this.$emit('updateScrolls')
-                /*
-                console.log("Aham", ev.relatedContext.element)
-                this.lastCardMove.fromSection = _.find(this.sections, {sectionId: ev.from.dataset.sectionId})
-                this.lastCardMove.from = ev.draggedContext.index
-                this.lastCardMove.toSection = _.find(this.sections, {sectionId: ev.to.dataset.sectionId})
-                this.lastCardMove.to = ev.draggedContext.futureIndex
-                */
-            },
             /**
              * When cards changes its positions, its vuex state should be updated through mutations
              */
             onCardDraggableInput(sectionCards, section){
-                /*
-                console.log("INPUT",section)
-                sectionCards = utils.removeReactivity(sectionCards)
-                _.map(sectionCards, (sectionCard) => {
-                    return _.assign(sectionCard, {
-                        sectionId: section.id
-                    })
-                })
-                */
                 this.SET_SECTION_REQUESTS({
                     sectionId: section.id,
                     requests: sectionCards
                 })
-                /*
-                Vue.nextTick(() => {
-                    console.log(this.sections)
-                    const fromSection = _.find(this.sections, {id: this.lastCardMove.fromSection})
-                    const toSection = _.find(this.sections, {id: this.lastCardMove.toSection})
-                    if(toSection && toSection.id) {
-                            const prevCard = toSection.cards[this.lastCardMove.to - 1]
-                            const currCard = toSection.cards[this.lastCardMove.to]
-                            const nextCard = toSection.cards[this.lastCardMove.to + 1]
-                            console.log("To no interno")
-                            let position
-                            // is in middle
-                            if (nextCard && prevCard) {
-                                console.log("middle", (prevCard.position + nextCard.position) / 2)
-                                this.$socket.emit('request-board:card-move', {
-                                    cardId: currCard.id,
-                                    location: 'middle',
-                                    fromSection: fromSection.id,
-                                    toSection: toSection.id,
-                                    position: (prevCard.position + nextCard.position) / 2
-                                })
-                            }
-                            // is first
-                            else if (nextCard && !prevCard) {
-                                console.log("first")
-                                this.$socket.emit('request-board:card-move', {
-                                    cardId: currCard.id,
-                                    fromSection: fromSection.id,
-                                    toSection: toSection.id,
-                                    location: 'first'
-                                })
-                            }
-                            // is last
-                            else if (!nextCard && prevCard) {
-                                console.log("last")
-                                this.$socket.emit('request-board:card-move', {
-                                    cardId: currCard.id,
-                                    fromSection: fromSection.id,
-                                    toSection: toSection.id,
-                                    location: 'last'
-                                })
-                            }
-                    }
-                })
-                */
             },
             onCardPositionChange(ev, section){
                 const vm = this
-                    let card, fromIndex, toIndex
-                    if(_.has(ev,'moved')){ // when moved to same section
-                        fromIndex = ev.moved.oldIndex
-                        toIndex = ev.moved.newIndex
-                        card = ev.moved.element
-                        console.log("addedCard", card)
-                        console.log("addedSection", section)
-
-                        this.emitCardPositionChange(section, card, toIndex, fromIndex)
-                    }
-                    else if(_.has(ev,'added')){ // when moved to a different section
-                        toIndex = ev.added.newIndex
-                        card = ev.added.element
-                        console.log("addedCard", card)
-                        console.log("addedSection", section)
-
-                        this.emitCardPositionChange(section, card, toIndex, null)
-                    }
+                let card, fromIndex, toIndex
+                if(_.has(ev,'moved')){ // when moved to same section
+                    fromIndex = ev.moved.oldIndex
+                    toIndex = ev.moved.newIndex
+                    card = ev.moved.element
+                    this.emitCardPositionChange(section, card, toIndex, fromIndex)
+                }
+                else if(_.has(ev,'added')){ // when moved to a different section
+                    toIndex = ev.added.newIndex
+                    card = ev.added.element
+                    this.emitCardPositionChange(section, card, toIndex, null)
+                }
+                this.REAPLY_FILTERS()
             },
             emitCardPositionChange(toSection, card, toIndex, fromIndex = null){
                 const prevCard = toSection.cards[toIndex - 1]
@@ -252,12 +187,13 @@
                 let position
 
                 if (nextCard && prevCard) {
-                    console.log("middle", (prevCard.position + nextCard.position) / 2)
+                    console.log("middle", nextCard)
                     this.$socket.emit('request-board:card-move', {
                         cardId: card.id,
                         location: 'middle',
                         toSection: toSection.id,
-                        position: (prevCard.position + nextCard.position) / 2
+                        prevCard: prevCard.id,
+                        nextCard: nextCard.id
                     })
                 }
                 // is first
@@ -266,6 +202,8 @@
                     this.$socket.emit('request-board:card-move', {
                         cardId: currCard.id,
                         toSection: toSection.id,
+                        prevCard: null,
+                        nextCard: nextCard.id,
                         location: 'first'
                     })
                 }
@@ -275,6 +213,8 @@
                     this.$socket.emit('request-board:card-move', {
                         cardId: currCard.id,
                         toSection: toSection.id,
+                        prevCard: prevCard.id,
+                        nextCard: null,
                         location: 'last'
                     })
                 }
@@ -283,6 +223,8 @@
                     this.$socket.emit('request-board:card-move', {
                         cardId: currCard.id,
                         toSection: toSection.id,
+                        prevCard: null,
+                        nextCard: null,
                         location: 'last-and-only'
                     })
                 }

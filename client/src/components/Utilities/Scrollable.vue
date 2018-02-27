@@ -11,7 +11,8 @@
     </div>
 </template>
 <script>
-    import { mapState } from 'vuex';
+    import { mapState } from 'vuex'
+    import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 
     export default {
         props: {
@@ -29,119 +30,114 @@
         },
         methods: {
             setElements(){
-                this.viewportEl = this.$refs.scrollable.firstElementChild;
-                this.contentEl = this.viewportEl.firstElementChild;
-                this.trackEl = this.$refs.track;
-                this.scrollEl = _.first(this.trackEl.getElementsByClassName('track__scroll'));
+                this.viewportEl = this.$refs.scrollable.firstElementChild
+                this.contentEl = this.viewportEl.firstElementChild
+                this.trackEl = this.$refs.track
+                this.scrollEl = _.first(this.trackEl.getElementsByClassName('track__scroll'))
             },
             scrolled(ev){
                 if(!this.scrollEl.style.top){
-                    this.scrollEl.style.top = 0 + 'px';
+                    this.scrollEl.style.top = 0 + 'px'
                 }
-                const amountToScroll = 20;
+                const amountToScroll = 20
                 if(ev.deltaY > 0){ // scroll down
                     if(this.scrollDistanceToBottom() >= 0){ // if before bottom limit
                         if(this.scrollDistanceToBottom() >= amountToScroll){ // scroll only if the available space is bigger than the amount
-                            this.scrollEl.style.top = Math.abs(parseFloat(this.scrollEl.style.top)) + amountToScroll + 'px';
+                            this.scrollEl.style.top = Math.abs(parseFloat(this.scrollEl.style.top)) + amountToScroll + 'px'
                         }
                         else { // fit to bottom if the available space is lesser than the amount
-                            this.scrollEl.style.top = this.trackEl.offsetHeight - this.scrollEl.offsetHeight + 'px';
+                            this.scrollEl.style.top = this.trackEl.offsetHeight - this.scrollEl.offsetHeight + 'px'
                         }
                     }
                     else { // if over bottom limit, fit to bottom
-                        this.scrollEl.style.top = this.trackEl.offsetHeight - this.scrollEl.offsetHeight + 'px';
+                        this.scrollEl.style.top = this.trackEl.offsetHeight - this.scrollEl.offsetHeight + 'px'
                     }
                 }
                 else if(ev.deltaY < 0) { // scroll up
                     if(this.scrollDistanceToTop() >= 0){ // if before top limit
                         if(this.scrollDistanceToTop() >= amountToScroll){ // scroll only if the available space is bigger than the amount
-                            this.scrollEl.style.top = Math.abs(parseFloat(this.scrollEl.style.top)) - amountToScroll + 'px';
+                            this.scrollEl.style.top = Math.abs(parseFloat(this.scrollEl.style.top)) - amountToScroll + 'px'
                         }
                         else { // fit to top if the available space is lesser than the amount
-                            this.scrollEl.style.top = 0 + 'px';
+                            this.scrollEl.style.top = 0 + 'px'
                         }
                     }
                     else { // if over top limit, fit to top
-                        this.scrollEl.style.top = 0 + 'px';
+                        this.scrollEl.style.top = 0 + 'px'
                     }
                 }
-                this.contentEl.style.top = - (this.scrollDistanceToTop() / (this.trackEl.offsetHeight - this.scrollEl.offsetHeight) * (this.contentEl.offsetHeight - this.viewportEl.offsetHeight)) + 'px';
-                this.emitUpdatedEvent();
+                this.contentEl.style.top = - (this.scrollDistanceToTop() / (this.trackEl.offsetHeight - this.scrollEl.offsetHeight) * (this.contentEl.offsetHeight - this.viewportEl.offsetHeight)) + 'px'
+                this.emitUpdatedEvent()
             },
             scrollMouseDown(ev){
-                const vm = this;
-
+                const vm = this
                 const viewportPositionOnScreen = {
                     x: vm.getElPositionInScreen(vm.viewportEl).x,
                     y: vm.getElPositionInScreen(vm.viewportEl).y
-                };
-
+                }
                 const mouseMoveEventListener = (mouseMoveEv) => {
                     const status = new function(){
                         this.body = {
                             cursorY: mouseMoveEv.clientY
-                        };
+                        }
                         this.scroll = {
                             height: vm.scrollEl.offsetHeight,
                             cursorY: ev.offsetY
-                        };
+                        }
                         this.viewport ={
                             height: vm.viewportEl.offsetHeight,
                             divY: viewportPositionOnScreen.y,
                             divX: viewportPositionOnScreen.x,
-                        };
+                        }
                         this.content ={
                             height: vm.contentEl.offsetHeight
-                        };
-                    };
-                    let scrollOffsetToTop = 0;
+                        }
+                    }
+                    let scrollOffsetToTop = 0
                     if((status.body.cursorY - status.scroll.cursorY) < status.viewport.divY){
-                        ev.target.style.top = '0px';
+                        ev.target.style.top = '0px'
                     }
                     else if((status.body.cursorY - status.scroll.cursorY) - status.viewport.divY > vm.viewportEl.clientHeight - status.scroll.height){
-                        scrollOffsetToTop = vm.viewportEl.clientHeight - status.scroll.height;
-                        ev.target.style.top = scrollOffsetToTop + 'px';
+                        scrollOffsetToTop = vm.viewportEl.clientHeight - status.scroll.height
+                        ev.target.style.top = scrollOffsetToTop + 'px'
                     }
                     else { // if scroll moved
-                        scrollOffsetToTop = (status.body.cursorY - status.scroll.cursorY - status.viewport.divY);
-                        ev.target.style.top = scrollOffsetToTop + 'px';
+                        scrollOffsetToTop = (status.body.cursorY - status.scroll.cursorY - status.viewport.divY)
+                        ev.target.style.top = scrollOffsetToTop + 'px'
                     }
-                    vm.contentEl.style.top = - (scrollOffsetToTop / (status.viewport.height - status.scroll.height)) * (vm.contentEl.offsetHeight - vm.viewportEl.offsetHeight) + 'px';
-                    vm.emitUpdatedEvent();
-                };
+                    vm.contentEl.style.top = - (scrollOffsetToTop / (status.viewport.height - status.scroll.height)) * (vm.contentEl.offsetHeight - vm.viewportEl.offsetHeight) + 'px'
+                    vm.emitUpdatedEvent()
+                }
                 const mouseUpEventListener = () => {
-                    document.removeEventListener('mousemove', mouseMoveEventListener);
-                    document.removeEventListener('mouseup', mouseUpEventListener);
-                };
-                document.addEventListener('mousemove', mouseMoveEventListener);
-                document.addEventListener('mouseup', mouseUpEventListener);
+                    document.removeEventListener('mousemove', mouseMoveEventListener)
+                    document.removeEventListener('mouseup', mouseUpEventListener)
+                }
+                document.addEventListener('mousemove', mouseMoveEventListener)
+                document.addEventListener('mouseup', mouseUpEventListener)
             },
             updateScroll(){
-                const vm = this;
-
-                const contentAndViewportHeightDifference = Math.round(vm.viewportEl.offsetHeight / vm.contentEl.offsetHeight * 100) / 100;
-
+                const vm = this
+                const contentAndViewportHeightDifference = Math.round(vm.viewportEl.offsetHeight / vm.contentEl.offsetHeight * 100) / 100
                 if(!parseFloat(vm.contentEl.style.top)){ // set top 0 if no top is set
-                    vm.contentEl.style.top = 0 + 'px';
+                    vm.contentEl.style.top = 0 + 'px'
                 }
                 if(vm.contentEl.offsetHeight > vm.viewportEl.offsetHeight && Math.abs(parseFloat(vm.contentEl.style.top)) + vm.viewportEl.offsetHeight >= vm.contentEl.offsetHeight){
-                    vm.contentEl.style.top = - (vm.contentEl.offsetHeight - vm.viewportEl.offsetHeight) + 'px';
+                    vm.contentEl.style.top = - (vm.contentEl.offsetHeight - vm.viewportEl.offsetHeight) + 'px'
                 }
-
                 if(contentAndViewportHeightDifference >= 1 || contentAndViewportHeightDifference <= 0){
-                    vm.trackEl.classList.add('disabled');
-                    vm.contentEl.style.top = 0 + 'px';
-                    vm.scrollEl.style.height = vm.trackEl.offsetHeight + 'px';
+                    vm.trackEl.classList.add('disabled')
+                    vm.contentEl.style.top = 0 + 'px'
+                    vm.scrollEl.style.height = vm.trackEl.offsetHeight + 'px'
                 }
                 else {
-                    vm.trackEl.classList.remove('disabled');
-                    vm.scrollEl.style.top = (Math.abs(parseFloat(vm.contentEl.style.top)) / vm.contentEl.offsetHeight) * vm.trackEl.offsetHeight + 'px';
+                    vm.trackEl.classList.remove('disabled')
+                    vm.scrollEl.style.top = (Math.abs(parseFloat(vm.contentEl.style.top)) / vm.contentEl.offsetHeight) * vm.trackEl.offsetHeight + 'px'
                     vm.scrollEl.style.height = contentAndViewportHeightDifference * vm.viewportEl.offsetHeight + 'px'
                 }
-                vm.emitUpdatedEvent();
+                vm.emitUpdatedEvent()
             },
             emitUpdatedEvent(){
-                const vm = this;
+                const vm = this
                 vm.$emit('updated', {
                     scrollElement: vm.scrollEl,
                     trackElement: vm.trackEl,
@@ -150,39 +146,44 @@
                 });
             },
             scrollDistanceToTop(){
-                return this.scrollEl.offsetTop;
+                return this.scrollEl.offsetTop
             },
             scrollDistanceToBottom(){
-                const distanceToBeReversed = (this.scrollEl.offsetTop + this.scrollEl.offsetHeight) - this.trackEl.offsetHeight;
-                return distanceToBeReversed - (distanceToBeReversed * 2);
+                const distanceToBeReversed = (this.scrollEl.offsetTop + this.scrollEl.offsetHeight) - this.trackEl.offsetHeight
+                return distanceToBeReversed - (distanceToBeReversed * 2)
             },
             getElPositionInScreen(el){
-                let xPos = 0, yPos = 0;
+                let xPos = 0, yPos = 0
                 while (el) {
                     if (el.tagName.toLowerCase() === "body") {
-                        let xScroll = el.scrollLeft || document.documentElement.scrollLeft;
-                        let yScroll = el.scrollTop || document.documentElement.scrollTop;
-                        xPos += (el.offsetLeft - xScroll + el.clientLeft);
-                        yPos += (el.offsetTop - yScroll + el.clientTop);
+                        let xScroll = el.scrollLeft || document.documentElement.scrollLeft
+                        let yScroll = el.scrollTop || document.documentElement.scrollTop
+                        xPos += (el.offsetLeft - xScroll + el.clientLeft)
+                        yPos += (el.offsetTop - yScroll + el.clientTop)
                     } else {
-                        xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
-                        yPos += (el.offsetTop - el.scrollTop + el.clientTop);
+                        xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft)
+                        yPos += (el.offsetTop - el.scrollTop + el.clientTop)
                     }
-                    el = el.offsetParent;
+                    el = el.offsetParent
                 }
-                return { x: xPos, y: yPos };
+                return { x: xPos, y: yPos }
+            },
+            updateResizeListeners(){
+                const vm = this
+                setImmediate(() => {
+                    if(this.resizeSensor) this.resizeSensor.detach()
+                    this.resizeSensor = new ResizeSensor(vm.viewportEl, () => {
+                        vm.updateScroll()
+                    })
+                })
             }
         },
         mounted(){
-            const vm = this;
-            vm.setElements(); // attr elements
-            setImmediate(() => {
-                vm.updateScroll();
-                addResizeListener(vm.contentEl, this.updateScroll);
-            });
+            this.setElements()
+            this.updateResizeListeners()
         },
         beforeDestroy(){
-            removeResizeListener(this.contentEl, this.updateScroll);
+            this.resizeSensor.detach()
         }
     }
 </script>

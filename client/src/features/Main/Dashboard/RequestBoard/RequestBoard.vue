@@ -52,8 +52,16 @@
             ...mapState(['mainContentArea']),
             ...mapState('auth', ['user', 'token', 'company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
-            ...mapState('request-board', ['sections', 'requests']),
-            ...mapGetters('request-board', ['sectionRequests'])
+            ...mapState('request-board', ['sections']),
+            ...mapGetters('request-board', [])
+        },
+        watch: {
+            sections: {
+                handler(){
+                    this.updateScrolls()
+                },
+                deep: true
+            }
         },
         sockets: {
             requestBoardLoad({data}){
@@ -164,6 +172,11 @@
                 draggingElementViewport.style.display = 'none';
             },
             onSectionDragEnd(ev){
+                setImmediate(() => {
+                    this.scrollables.forEach(({ scrollable }) => {
+                        scrollable.updateResizeListeners()
+                    })
+                });
                 const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
                 viewport.style.display = 'initial';
             },
@@ -171,7 +184,6 @@
             /* In-component utilities */
 
             updateScrolls(){
-
                 setImmediate(() => {
                     this.scrollables.forEach(({ scrollable }) => {
                         scrollable.updateScroll()

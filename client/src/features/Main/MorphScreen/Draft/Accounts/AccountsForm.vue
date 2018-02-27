@@ -39,20 +39,20 @@
     export default {
         sockets: {
             draftPresence(data){
-                this.presenceUsers = data;
+                this.presenceUsers = data
             },
             draftSave(){
-                this.saving = false;
+                this.saving = false
             },
             draftUpdate({draftId, form}){
                 if(draftId === this.activeMorphScreen.draft.draftId) {
-                    console.log("Received draft:update", { draftId, form });
-                    this.form = _.merge(this.form, form);
+                    console.log("Received draft:update", { draftId, form })
+                    this.form = utils.removeReactivity(_.merge(this.form, form))
                     this.$bus.$emit('draft:update', {
                         draftId: draftId,
                         form: this.form
-                    });
-                    this.stopLoading();
+                    })
+                    this.stopLoading()
                 }
             }
         },

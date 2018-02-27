@@ -1,6 +1,5 @@
 <template>
     <div class="body">
-        <app-active-request-card></app-active-request-card>
         <app-morph-screen></app-morph-screen>
         <app-modals></app-modals>
         <app-device-details-window></app-device-details-window>
@@ -76,7 +75,8 @@
                                         <span>{{itemProps.text }}</span>
                                     </template>
                                 </app-select>
-                                <app-select class="request-board__filter filter--users-in-charge" v-model="requestBoardFilter.form.usersInCharge" @select="onFilter('usersInCharge')" :multiple="true" :items="requestBoardFilter.users" :verticalOffset="15">
+                                <app-select class="request-board__filter filter--users-in-charge" v-model="requestBoardFilter.form.usersInCharge"
+                                    @unselect="onFilter('usersInCharge')" @select="onFilter('usersInCharge')" :multiple="true" :items="requestBoardFilter.users" :verticalOffset="15">
                                     <div class="filter-item__target">
                                         <span class="target__title">Responsável</span>
                                         <div class="target__amount">
@@ -157,7 +157,6 @@
     export default {
         name: 'app-main',
         components: {
-            "app-active-request-card": ActiveRequestCard,
             "app-modals": Modals,
             "app-morph-screen": MorphScreen,
             "app-settings": SettingsComponent,
@@ -255,6 +254,7 @@
         },
         methods: {
             ...mapMutations(['setApp','setSystemInitialized']),
+            ...mapMutations('request-board', ['SET_FILTER']),
             ...mapMutations('morph-screen', ['SHOW_MS', 'SET_ALL_MS_SCREENS']),
             ...mapActions('auth', {
                 logoutAction: 'logout',
@@ -283,7 +283,10 @@
             onFilter(type){
                 switch(type){
                     case 'usersInCharge':
-                        console.log("Apply usersInCharge")
+                        this.SET_FILTER({
+                            type: 'usersInCharge',
+                            data: this.requestBoardFilter.form.usersInCharge
+                        })
                         break;
                 }
             },
