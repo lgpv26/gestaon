@@ -67,7 +67,7 @@ module.exports = {
         }
     },
 
-    postSettings: ({Request,Company,Client,User,Order,RequestClientPhone,RequestClientAddress,RequestUserInCharge,
+    postSettings: ({Request,Company,Client,User,Order,RequestClientPhone,RequestClientAddress,RequestTimeline,
         ClientPhone,ClientAddress}) => {
 
         Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
@@ -75,7 +75,7 @@ module.exports = {
         Request.belongsTo(User, {as: 'user', foreignKey: 'userId'});
         Request.belongsTo(Order, {as: 'order', foreignKey: 'orderId'})
 
-        Request.hasMany(RequestUserInCharge, {as: 'requestUserInCharges', foreignKey: 'requestId'});
+        Request.hasMany(RequestTimeline, {as: 'requestTimeline', foreignKey: 'requestId'});
 
         Request.hasMany(RequestClientPhone, {as: 'requestClientPhones', foreignKey: 'requestId'});
         Request.belongsToMany(ClientPhone, { through: RequestClientPhone, as: 'clientPhones', foreignKey: 'requestId' });

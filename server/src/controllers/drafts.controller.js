@@ -1120,6 +1120,8 @@ module.exports = (server) => {
                             return revenueGroup.id !== data.revenueGroupId
                         })
 
+                        update.id = data.revenueGroupId
+
                         const revenues = _.assign(draft.form.revenues, { revenueGroups: update.saveRevenueGroup })
                         update.form = _.assign(draft.form, { revenues: revenues })
 
@@ -1128,11 +1130,21 @@ module.exports = (server) => {
                 })
             }).then((save) => {
                 if(save.check){
-                    return "Não é possivel excluir com itens"
+                    return {
+                        success: false,
+                        message: "Não é possivel excluir com itens!",
+                        errorCode: "ERROR"
+                    }
                 }
                 else{
                     return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
-                        return save
+                        return {
+                            success: true,
+                            data: {
+                                id: save.id,
+                                revenueGroupId: save.id
+                            }
+                        }
                     })
                 }
             })
@@ -1152,7 +1164,13 @@ module.exports = (server) => {
                     let saveRevenueItems = draft.form.revenues.revenueItems
                     let update = {}
 
-                    update.revenueItemsReturn = {id: 'temp:' + shortid.generate(), revenueGroupId: data.revenueGroupId}
+                    let positionCheck = _.filter(draft.form.revenues.revenueItems, (revenueItem) => {
+                        return revenueItem.revenueGroupId === data.form.revenueGroupId
+                    })
+
+                    const position = (positionCheck.length) ? (_.last(positionCheck).position + 1) : 1
+
+                    update.revenueItemsReturn = _.assign({id: 'temp:' + shortid.generate()}, data.form, {position: position})
                     saveRevenueItems.push(update.revenueItemsReturn)
 
                     const revenues = _.assign(draft.form.revenues, { revenueItems: saveRevenueItems })
@@ -1162,7 +1180,7 @@ module.exports = (server) => {
                 })
             }).then((save) => {
                 return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
-                    return save.saveRevenueItems
+                    return save.revenueItemsReturn
                 })
             })
         },
@@ -1172,9 +1190,11 @@ module.exports = (server) => {
                 return this.getOne(data.draftId).then((draft) => {
 
                     update.saveRevenueItems = _.filter(draft.form.revenues.revenueItems, (revenueItem) => {
-                        return revenueItem.id !== data.revenueItemId
+                        return revenueItem.id !== data.form.revenueItemId
                     })
 
+                    // const draft = _.find(this.channels.updates.drafts, { draftId: contentDraft.draftId })
+                    
                     const revenues = _.assign(draft.form.revenues, { revenueItems: update.saveRevenueItems })
                     update.form = _.assign(draft.form, { revenues: revenues })
 
@@ -1278,12 +1298,12 @@ module.exports = (server) => {
                     let update = {}
 
                     let positionCheck = _.filter(draft.form.expenses.expenseItems, (expenseItem) => {
-                        return expenseItem.expenseGroupId === data.expenseGroupId
+                        return expenseItem.expenseGroupId === data.form.expenseGroupId
                     })
 
                     const position = (positionCheck.length) ? (positionCheck.length + 1) : 1
-
-                    update.expenseItemsReturn = {id: 'temp:' + shortid.generate(), expenseGroupId: data.expenseGroupId, position: position}
+                    
+                    update.expenseItemsReturn = _.assign({id: 'temp:' + shortid.generate()}, data.form, {position: position})
                     saveExpenseItems.push(update.expenseItemsReturn)
 
                     const expenses = _.assign(draft.form.expenses, { expenseItems: saveExpenseItems })
@@ -1334,24 +1354,34 @@ module.exports = (server) => {
                     const itemMoveUp = _.find(draft.form[data.type][data.items], { id: data.itemId })
                     const itemMoveUpIndex = draft.form[data.type][data.items].indexOf(itemMoveUp)
 
-                    const itemMoveDown = _.find(draft.form[data.type][data.items], { position: (itemMoveUp.position - 1) })
-                    const itemMoveDownIndex = draft.form[data.type][data.items].indexOf(itemMoveDown)
+                    let arrayGroup = _.filter(draft.form[data.type][data.items], (item) => {
+                        return item[data.group] === draft.form[data.type][data.items][itemMoveUpIndex][data.group]
+                    })
 
-                    draft.form[data.type][data.items][itemMoveUpIndex] = _.assign(itemMoveUp, {position: (itemMoveUp.position - 1)})
-                    draft.form[data.type][data.items][itemMoveDownIndex] = _.assign(itemMoveDown, {position: (itemMoveDown.position + 1)})
+                    const itemMoveDown = ( _.findIndex(_.sortBy(arrayGroup, 'position'), { id: data.itemId }) - 1 )
+                    const itemMoveDownIndex = draft.form[data.type][data.items].indexOf(arrayGroup[itemMoveDown])
+
+                    const positionDown = itemMoveUp.position
+                    const positionUp = draft.form[data.type][data.items][itemMoveDownIndex].position
+
+                    draft.form[data.type][data.items][itemMoveDownIndex] = _.assign(arrayGroup[itemMoveDown], {position: positionDown})
+                    draft.form[data.type][data.items][itemMoveUpIndex] = _.assign(itemMoveUp, {position: positionUp})    
 
                     let update = {}
 
-                    update.itemsReturn = draft.form[data.type][data.items]
+                    update.itemsReturn = _.sortBy(draft.form[data.type][data.items], 'position')
 
-                    const items = _.assign(draft.form[data.type], { [data.items]: update.itemsReturn })
+                    const items = _.assign(draft.form[data.type], { [data.items]: draft.form[data.type][data.items] })
                     update.form = _.assign(draft.form, { [data.type]: items })
 
                     resolve(update)
                 })
             }).then((save) => {
                 return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
-                    return save.itemsReturn
+                    return {
+                        success: true,
+                        data: save.itemsReturn
+                    }
                 })
             })
         },
@@ -1363,24 +1393,34 @@ module.exports = (server) => {
                     const itemMoveDown = _.find(draft.form[data.type][data.items], { id: data.itemId })
                     const itemMoveDownIndex = draft.form[data.type][data.items].indexOf(itemMoveDown)
 
-                    const itemMoveUp = _.find(draft.form[data.type][data.items], { position: (itemMoveDown.position + 1) })
-                    const itemMoveUpIndex = draft.form[data.type][data.items].indexOf(itemMoveUp)
+                    let arrayGroup = _.filter(draft.form[data.type][data.items], (item) => {
+                        return item[data.group] === draft.form[data.type][data.items][itemMoveUpIndex][data.group]
+                    })
 
-                    draft.form[data.type][data.items][itemMoveDownIndex] = _.assign(itemMoveDown, {position: (itemMoveDown.position + 1)})
-                    draft.form[data.type][data.items][itemMoveUpIndex] = _.assign(itemMoveUp, {position: (itemMoveUp.position - 1)})
+                    const itemMoveUp = ( _.findIndex(_.sortBy(arrayGroup, 'position'), { id: data.itemId }) + 1 )
+                    const itemMoveUpIndex = draft.form[data.type][data.items].indexOf(arrayGroup[itemMoveDown])
+
+                    const positionDown = draft.form[data.type][data.items][itemMoveUpIndex].position
+                    const positionUp = itemMoveDown.position
+
+                    draft.form[data.type][data.items][itemMoveDownIndex] = _.assign(arrayGroup[itemMoveDown], {position: positionDown})
+                    draft.form[data.type][data.items][itemMoveUpIndex] = _.assign(itemMoveUp, {position: positionUp}) 
 
                     let update = {}
 
-                    update.itemsReturn = draft.form[data.type][data.items]
+                    update.itemsReturn = _.sortBy(draft.form[data.type][data.items], 'position')
 
-                    const items = _.assign(draft.form[data.type], { [data.items]: update.itemsReturn })
+                    const items = _.assign(draft.form[data.type], { [data.items]: draft.form[data.type][data.items] })
                     update.form = _.assign(draft.form, { [data.type]: items })
 
                     resolve(update)
                 })
             }).then((save) => {
                 return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
-                    return save.itemsReturn
+                    return {
+                        success: true,
+                        data: save.itemsReturn
+                    } 
                 })
             })
         },

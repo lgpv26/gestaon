@@ -38,15 +38,14 @@ module.exports = class RequestBoard {
                         cardsRequestsIds.push(parseInt(card.requestId))
                     })
                 })
-                vm.server.mysql.Request.findAll({
-                    where: {
-                        id: cardsRequestsIds
-                    },
-                    include: [{
-                        model: vm.server.mysql.Client,
-                        as: 'client'
-                    }],
-                }).then((requests) => {
+                const getAll = new Controller({
+                    request: {
+                        id: cardsRequestsIds,
+                        companyId: 1
+                    }
+                })
+
+                this.requestsController.getAll(getAll).then((requests) => {
                     sections = JSON.parse(JSON.stringify(sections))
                     sections = _.map(sections, (section) => {
                         _.map(section.cards, (card) => {

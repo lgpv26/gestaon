@@ -78,6 +78,14 @@ module.exports = class Accounts extends Draft {
             })
         })
 
+        this.socket.on('draft:accounts:revenues:revenue-item-move-up', (data) => {
+            console.log("draft:accounts:revenues:revenue-item-move-up")
+            super.resetTimeout()
+            super.saveDraft(data.draftId).then(() => {
+                this.onAccountsRevenuesRevenueItemMoveUp(data)
+            })
+        })
+
         // <--- end REVENUES
 
 
@@ -245,10 +253,11 @@ module.exports = class Accounts extends Draft {
 
     onAccountsRevenuesRevenueItemMoveUp(data) {
         data.type = 'revenues'
-        data.items = 'revenuesItems'
+        data.items = 'revenueItems'
+        data.group = 'revenueGroupId'
 
-        data.itemId = data.revenuesItemId
-        delete data.revenuesItemId
+        data.itemId = data.revenueItemId
+        delete data.revenueItemId
 
         this.controller.moveUpItem(data).then((moveUpRevenueItemData) => {
             this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesExpenseItemMoveUp', moveUpRevenueItemData)
@@ -259,10 +268,11 @@ module.exports = class Accounts extends Draft {
 
     onAccountsRevenuesRevenueItemMoveDown(data) {
         data.type = 'revenues'
-        data.items = 'revenuesItems'
+        data.items = 'revenueItems'
+        data.group = 'revenueGroupId'
 
-        data.itemId = data.revenuesItemId
-        delete data.revenuesItemId
+        data.itemId = data.revenueItemId
+        delete data.revenueItemId
 
         this.controller.moveDownItem(data).then((moveDownRevenueItemData) => {
             this.server.io.in('draft/' + data.draftId).emit('draftAccountsRevenuesExpenseItemMoveDown', moveDownRevenueItemData)
@@ -327,6 +337,7 @@ module.exports = class Accounts extends Draft {
     onAccountsExpensesExpenseItemMoveUp(data) {
         data.type = 'expenses'
         data.items = 'expenseItems'
+        data.group = 'expenseGroupId'
 
         data.itemId = data.expenseItemId
         delete data.expenseItemId
@@ -341,6 +352,7 @@ module.exports = class Accounts extends Draft {
     onAccountsExpensesExpenseItemMoveDown(data) {
         data.type = 'expenses'
         data.items = 'expenseItems'
+        data.group = 'expenseGroupId'
 
         data.itemId = data.expenseItemId
         delete data.expenseItemId

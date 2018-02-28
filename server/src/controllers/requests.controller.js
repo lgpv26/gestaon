@@ -9,7 +9,7 @@ module.exports = (server, restify) => {
     const productsController = require('./../controllers/products.controller')(server, restify)
     const requestsClientsPhone = require('./../controllers/requests-clients-phones.controller')(server, restify)
     const requestsClientsAddress = require('./../controllers/requests-clients-addresses.controller')(server, restify)
-    const requestUserInChargeController = require('./../controllers/requests-user-in-charge.controller')(server, restify)
+    const requestTimelineController = require('./../controllers/requests-timeline.controller')(server, restify)
 
     const addressesController = require('./../controllers/addresses.controller')(server, restify);
     const clientsAddressesController = require('./../controllers/clients-addresses.controller')(server, restify);
@@ -18,11 +18,92 @@ module.exports = (server, restify) => {
     return {
 
         getAll: (controller) => {
-            return server.mysql.Request.findAndCountAll(controller.request.queryParser).then((requests) => {
-                if (!requests.count) {
+            return server.mysql.Request.findAll({
+                    where: {
+                        id: {
+                            [Op.in]: controller.request.id
+                        },
+                        companyId: parseInt(controller.request.companyId)
+                    },
+                    include: [{
+                        model: server.mysql.User,
+                        as: "user"
+                    }, 
+                    {
+                        model: server.mysql.RequestTimeline,
+                        as: "requestTimeline",
+                        include: [{
+                            model: server.mysql.User,
+                            as: "user",
+                        },{
+                            model: server.mysql.User,
+                            as: "triggered",
+                        }]
+                    },
+                    {
+                        model: server.mysql.RequestClientPhone,
+                        as: "requestClientPhones",
+                            include: [{
+                                model: server.mysql.ClientPhone,
+                                as: "clientPhone",
+                            }]
+                        }, {
+                        model: server.mysql.RequestClientAddress,
+                        as: "requestClientAddresses",
+                            include: [{
+                                model: server.mysql.ClientAddress,
+                                as: "clientAddress",
+                                include:[{
+                                    model: server.mysql.Address,
+                                    as: "address"
+                                }]
+                            }]
+                        },{
+                        model: server.mysql.Client,
+                        as: "client",
+                            include: [{
+                                model: server.mysql.ClientPhone,
+                                as: 'clientPhones'
+                            }, {
+                                model: server.mysql.ClientAddress,
+                                as: 'clientAddresses',
+                                include: [{
+                                    model: server.mysql.Address,
+                                    as: 'address'
+                                }]
+                            }, {
+                                model: server.mysql.ClientCustomField,
+                                as: 'clientCustomFields',
+                                include: [{
+                                    model: server.mysql.CustomField,
+                                    as: 'customField'
+                                }]
+                            }, {
+                                model: server.mysql.ClientGroup,
+                                as: 'clientGroup'
+                            }]
+                    }, {
+                    model: server.mysql.Order,
+                    as: "order",
+                        include: [{
+                            model: server.mysql.OrderProduct,
+                            as: 'orderProducts',
+                            include: [{
+                                model: server.mysql.Product,
+                                as: 'product'
+                            }]
+                        }]
+                    }]
+                    /*, {
+                        model: server.mysql.Task,
+                        as: "task"
+                    }*/
+            }).then((requests) => {
+                if (!requests) {
                    throw new Error("Nenhum registro encontrado.")
                 }
-                return requests;
+                return requests
+                
             })
         },
 
@@ -35,7 +116,19 @@ module.exports = (server, restify) => {
                 include: [{
                     model: server.mysql.User,
                     as: "user"
-                }, {
+                }, 
+                {
+                    model: server.mysql.RequestTimeline,
+                    as: "requestTimeline",
+                    include: [{
+                        model: server.mysql.User,
+                        as: "user",
+                    },{
+                        model: server.mysql.User,
+                        as: "triggered",
+                    }]
+                },
+                {
                     model: server.mysql.RequestClientPhone,
                     as: "requestClientPhones",
                         include: [{
@@ -119,16 +212,16 @@ module.exports = (server, restify) => {
 
                 let promises = []
 
-                /* save requestUserInCharge if existent */
-                if(_.has(controller.request.data.order, "requestUserInCharge")) {
-                    const requestUserInChargeControllerObj = new Controller({
+                /* save requestTimeline if existent */
+                if(_.has(controller.request.data.order, "requestTimeline") && !controller.request.data.order.requestTimeline.id) {
+                    const requestTimelineControllerObj = new Controller({
                         request: {
                             requestId: request.id,
-                            data: controller.request.data.order.requestUserInCharge
+                            data: controller.request.data.order.requestTimeline
                         },
                         transaction: controller.transaction
                     })
-                    promises.push(requestUserInChargeController.saveUserInCharge(requestUserInChargeControllerObj))
+                    promises.push(requestTimelineController.saveRequestTimeline(requestTimelineControllerObj))
                 }                
 
                 if(controller.request.clientId){
@@ -245,87 +338,32 @@ module.exports = (server, restify) => {
                 if (!request) {
                     throw new Error("Registro não encontrado Parte 1..")
                 }
-                return server.mysql.Request.findById(controller.request.data.id, {
-                    include: [{
-                        model: server.mysql.User,
-                        as: "user"
-                    }, {
-                        model: server.mysql.RequestClientPhone,
-                        as: "requestClientPhones",
-                            include: [{
-                                model: server.mysql.ClientPhone,
-                                as: "clientPhone",
-                            }]
-                        }, {
-                        model: server.mysql.RequestClientAddress,
-                        as: "requestClientAddresses",
-                            include: [{
-                                model: server.mysql.ClientAddress,
-                                as: "clientAddress",
-                                include:[{
-                                    model: server.mysql.Address,
-                                    as: "address"
-                                }]
-                            }]
-                        },{
-                        model: server.mysql.Client,
-                        as: "client",
-                            include: [{
-                                model: server.mysql.ClientPhone,
-                                as: 'clientPhones'
-                            }, {
-                                model: server.mysql.ClientAddress,
-                                as: 'clientAddresses',
-                                include: [{
-                                    model: server.mysql.Address,
-                                    as: 'address'
-                                }]
-                            }, {
-                                model: server.mysql.ClientCustomField,
-                                as: 'clientCustomFields',
-                                include: [{
-                                    model: server.mysql.CustomField,
-                                    as: 'customField'
-                                }]
-                            }, {
-                                model: server.mysql.ClientGroup,
-                                as: 'clientGroup'
-                            }]
-                    }, {
-                    model: server.mysql.Order,
-                    as: "order",
-                        include: [{
-                            model: server.mysql.OrderProduct,
-                            as: 'orderProducts',
-                            include: [{
-                                model: server.mysql.Product,
-                                as: 'product'
-                            }]
-                        }]
-                    }]
-                    /*, {
-                        model: server.mysql.Task,
-                        as: "task"
-                    }*/,
+                const consultRequest = new Controller({
+                    request: {
+                        id: request.id,
+                        companyId: controller.request.companyId
+                    },
                     transaction: controller.transaction
-                }).then((request) => {
+                })
+
+                return this.getOne(consultRequest).then((request) => {
                     if (!request) {
                         throw new Error("Registro não encontrado Parte 2..")
                     }
 
                     let promises = []
 
-                    /* save requestUserInCharge if existent */
-                    if(_.has(controller.request.data.order, "requestUserInCharge")) {
-                        const requestUserInChargeControllerObj = new Controller({
+                    /* save requestTimeline if existent */
+                    if(_.has(controller.request.data.order, "requestTimeline") && !controller.request.data.order.requestTimeline.id) {
+                        const requestTimelineControllerObj = new Controller({
                             request: {
                                 requestId: request.id,
-                                data: controller.request.data.order.requestUserInCharge
+                                data: controller.request.data.order.requestTimeline
                             },
                             transaction: controller.transaction
                         })
-                        promises.push(requestUserInChargeController.saveUserInCharge(requestUserInChargeControllerObj))
-                    }    
+                        promises.push(requestTimelineController.saveRequestTimeline(requestTimelineControllerObj))
+                    }       
 
                     if(controller.request.clientId){
 

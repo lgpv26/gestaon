@@ -90,6 +90,12 @@ module.exports = class RequestRecoverance extends Recoverance {
         this._order = order;
     }
 
+    setRequestTimeline(requestTimeline = null) {
+        this._order = _.assign(this._order, {
+            requestTimeline: _.last(requestTimeline)
+        })
+    }
+
     setTaskId(taskId = null) {
         this._taskId = taskId;
     }
@@ -143,9 +149,15 @@ module.exports = class RequestRecoverance extends Recoverance {
 
             if (_.has(this._request, "order")) {
                 this.setOrder(this._request.order)
+                if(_.has(this._request, "requestTimeline")){
+                    this.setRequestTimeline(this._request.requestTimeline)
+                }
             }
             else{
                 this.setOrder({orderProducts: [{id: 'temp:' + shortid.generate()}] })
+                if(_.has(this._request, "requestTimeline")){
+                    this.setRequestTimeline(this._request.requestTimeline)
+                }
             }
 
             if (_.has(this._request, "task")) {

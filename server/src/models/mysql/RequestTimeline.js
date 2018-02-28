@@ -1,6 +1,6 @@
 module.exports = {
     defineModel: (Sequelize, sequelize) => {
-        const modelName = 'RequestUserInCharge';
+        const modelName = 'RequestTimeline';
         return {
             name: modelName,
             instance: sequelize.define(modelName, {
@@ -21,6 +21,10 @@ module.exports = {
                         this.setDataValue('triggeredBy', (val == '' | val == null) ? null : val);
                     }
                 },
+                status: {
+                    type: Sequelize.STRING,
+                    default: null
+                },
                 dateUpdated: {
                     type: Sequelize.DATE
                 },
@@ -31,7 +35,7 @@ module.exports = {
                     type: Sequelize.DATE
                 }
             }, {
-                tableName: "request_user_in_charge",
+                tableName: "request_timeline",
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -41,8 +45,9 @@ module.exports = {
             })
         }
     },
-    postSettings: ({RequestUserInCharge,Request, User}) => {
-        RequestUserInCharge.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
-        RequestUserInCharge.belongsTo(User, {as: 'user', foreignKey: 'userId'})
+    postSettings: ({RequestTimeline,Request,User}) => {
+        RequestTimeline.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
+        RequestTimeline.belongsTo(User, {as: 'user', foreignKey: 'userId'})
+        RequestTimeline.belongsTo(User, {as: 'triggered', foreignKey: 'triggeredBy'})
     }
 }

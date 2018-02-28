@@ -9,11 +9,30 @@ module.exports = (server, restify) => {
     const requestsController = require('./../controllers/requests.controller')(server, restify);
 
     server.use(basePath(
-        '/orders', authGuard
+        '/requests', authGuard
     ));
     
 
     /* CRUD */
+
+    
+    server.get('/requests', (req, res, next) => {
+        const controller = new Controller({
+            request: {
+                id: (req.params.id) ? req.params.id : null,
+                companyId: (req.query.companyId) ? req.query.companyId : null
+            }
+        })
+
+        return requestsController.getAll(controller).then((request) => {
+            if(!request){
+                return new restify.ResourceNotFoundError("Nenhum dado encontrado.")
+            }
+            return res.send(200, { data: request })
+        }).catch((err) => {
+            console.log('catch da rota do requests all', err)
+        })
+    })
 
     server.get('/requests/:id', (req, res, next) => {
         const controller = new Controller({
