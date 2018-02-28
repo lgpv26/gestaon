@@ -16,10 +16,11 @@ module.exports = {
                     type: Sequelize.INTEGER,
                 },
                 triggeredBy: {
-                    type: Sequelize.STRING,
+                    type: Sequelize.INTEGER,
                     set(val) {
-                        this.setDataValue('triggeredBy', (val == '' | val == null) ? null : val);
-                    }
+                        this.setDataValue('triggeredBy', (val == '' | val == null) ? null : val)
+                    },
+                    default: null
                 },
                 status: {
                     type: Sequelize.STRING,
