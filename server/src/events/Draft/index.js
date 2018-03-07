@@ -363,7 +363,7 @@ module.exports = class Draft {
                             }
                         }
                         else {
-                            const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true }, type: draft.type }
+                            const objSetDraftRedis = { draftId: draftId, clientAddress: { inEdition: true }, clientPhone: { inEdition: true }, type: draft.type, companyId: (this.socket.user.activeCompanyUserId) ? this.socket.user.activeCompanyUserId: this.socket.user.companies[0] }
                             this.setDraftRedis(objSetDraftRedis)
                         }
                     }
@@ -490,7 +490,7 @@ module.exports = class Draft {
                         }
                     }) 
                 }
-                else if(setDraftRedis.isNull){
+                else {
                     return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'companyId', JSON.stringify(setDraftRedis.companyId), 'type', setDraftRedis.type, (err, res) => {
                         if (err) {
                             reject(err)
@@ -502,11 +502,6 @@ module.exports = class Draft {
                             })                            
                         }
                     })
-                }
-                else{
-                    return this.returnType(setDraftRedis).then(() => {
-                        resolve()
-                    })     
                 }
             })
         })
