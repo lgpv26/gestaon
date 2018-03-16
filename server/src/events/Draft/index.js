@@ -480,17 +480,33 @@ module.exports = class Draft {
     setDraftRedis(setDraftRedis, selectedAddress = false, orderProduct = false) {
         return this.consultRedisDraft(setDraftRedis.draftId).then((redisConsult) => {
             return new Promise((resolve, reject) => {
-                if(orderProduct){
-                    return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProducts', JSON.stringify({"orderProducts": [{id: setDraftRedis.id}]}), (err, res) => {
-                        if (err) {
-                            reject()
-                        }
-                        else {
-                            resolve()
-                        }
-                    }) 
+                if(redisConsult){
+                    if(orderProduct){
+                        return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'orderProducts', JSON.stringify({"orderProducts": [{id: setDraftRedis.id}]}), (err, res) => {
+                            if (err) {
+                                reject()
+                            }
+                            else {
+                                resolve()
+                            }
+                        }) 
+                    }
+                    else {
+                        return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'companyId', JSON.stringify(parseInt(redisConsult.companyId)), 'type', redisConsult.type, (err, res) => {
+                            if (err) {
+                                reject(err)
+                            }
+                            else {
+                                setDraftRedis.type = redisConsult.type
+                                setDraftRedis.selectedAddress = selectedAddress
+                                return this.returnType(setDraftRedis).then(() => {
+                                    resolve()
+                                })                            
+                            }
+                        })
+                    }
                 }
-                else {
+                else{
                     return this.server.redisClient.HMSET("draft:" + setDraftRedis.draftId, 'companyId', JSON.stringify(setDraftRedis.companyId), 'type', setDraftRedis.type, (err, res) => {
                         if (err) {
                             reject(err)

@@ -1161,26 +1161,35 @@ module.exports = (server) => {
             return new Promise((resolve, reject) => {
                 return this.getOne(data.draftId).then((draft) => {
 
+                    const revenueData = JSON.parse(JSON.stringify(data))
+                    delete revenueData.draftId
+
                     let saveRevenueItems = draft.form.revenues.revenueItems
                     let update = {}
 
                     let positionCheck = _.filter(draft.form.revenues.revenueItems, (revenueItem) => {
-                        return revenueItem.revenueGroupId === data.form.revenueGroupId
+                        return revenueItem.revenueGroupId === data.revenueGroupId
                     })
 
                     const position = (positionCheck.length) ? (_.last(positionCheck).position + 1) : 1
 
-                    update.revenueItemsReturn = _.assign({id: 'temp:' + shortid.generate()}, data.form, {position: position})
+                    update.revenueItemsReturn = _.assign({id: 'temp:' + shortid.generate()}, revenueData, {position: position})
+                    
                     saveRevenueItems.push(update.revenueItemsReturn)
+
+                    
 
                     const revenues = _.assign(draft.form.revenues, { revenueItems: saveRevenueItems })
                     update.form = _.assign(draft.form, { revenues: revenues })
-
                     resolve(update)
                 })
             }).then((save) => {
+                console.log(data)
                 return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
-                    return save.revenueItemsReturn
+                    return {
+                        success: true,
+                        data:  save.revenueItemsReturn
+                    }
                 })
             })
         },
@@ -1189,11 +1198,13 @@ module.exports = (server) => {
             return new Promise((resolve, reject) => {
                 return this.getOne(data.draftId).then((draft) => {
 
+                    let update = {}
+
                     update.saveRevenueItems = _.filter(draft.form.revenues.revenueItems, (revenueItem) => {
                         return revenueItem.id !== data.form.revenueItemId
                     })
 
-                    // const draft = _.find(this.channels.updates.drafts, { draftId: contentDraft.draftId })
+                    update.return = data.form.revenueItemId
                     
                     const revenues = _.assign(draft.form.revenues, { revenueItems: update.saveRevenueItems })
                     update.form = _.assign(draft.form, { revenues: revenues })
@@ -1202,7 +1213,12 @@ module.exports = (server) => {
                 })
             }).then((save) => {
                 return server.mongodb.Draft.update({ draftId: data.draftId }, { $set: { form: save.form } }).then(() => {
-                    return save
+                    return {
+                        success: true,
+                        data: {
+                            id: save.return
+                        }
+                    }
                 })
             })
         },
