@@ -37,7 +37,7 @@ module.exports = (server, restify) => {
                             as: "user",
                         },{
                             model: server.mysql.User,
-                            as: "triggered",
+                            as: "triggeredByUser",
                         }]
                     },
                     {
@@ -125,7 +125,7 @@ module.exports = (server, restify) => {
                         as: "user",
                     },{
                         model: server.mysql.User,
-                        as: "triggered",
+                        as: "triggeredByUser",
                     }]
                 },
                 {

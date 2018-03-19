@@ -88,6 +88,36 @@ module.exports = class RequestBoard {
         })
 
         /**
+         * On section remove
+         */
+        this.socket.on('request-board:section-remove', (evData) => {
+            vm.server.mongodb.Card.count({
+                section: evData.sectionId
+            }, function(err, count) {
+                if(count > 0){
+                    vm.server.io.sockets.emit('requestBoardSectionRemove', {
+                        success: false,
+                        message: "Você não pode remover uma seção que possui pedido(s)."
+                    })
+                }
+                else {
+                    vm.server.mongodb.Section.remove({
+                        _id: evData.sectionId
+                    }, function(){
+                        vm.server.io.sockets.emit('requestBoardSectionRemove', {
+                            success: true,
+                            data: {
+                                section: {
+                                    id: evData.sectionId
+                                }
+                            }
+                        })
+                    })
+                }
+            })
+        })
+
+        /**
          * On section move
          */
         this.socket.on('request-board:section-move', (evData) => {

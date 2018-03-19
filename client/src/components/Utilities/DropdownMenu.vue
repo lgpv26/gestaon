@@ -7,7 +7,7 @@
             <div class="dropdown-menu" v-if="isOpen" ref="popover"
                  :style="{'margin-top': (verticalOffset) ? verticalOffset + 'px' : '0px', 'margin-left': (horizontalOffset) ? horizontalOffset + 'px' : '0px'}">
                 <ul>
-                    <li v-for="menuItem in menuList" @click="menuItem.action(menuItem.param)">{{ menuItem.text }}</li>
+                    <li v-for="menuItem in menuList" @click="onMenuItemClick(menuItem)">{{ menuItem.text }}</li>
                 </ul>
             </div>
         </transition>
@@ -26,8 +26,14 @@
                 closeTimeout: null
             }
         },
-        props: ['menuList', 'placement', 'verticalOffset', 'horizontalOffset'],
+        props: ['params', 'closeOnSelect', 'menuList', 'placement', 'verticalOffset', 'horizontalOffset'],
         methods: {
+            onMenuItemClick(menuItem){
+                menuItem.action(this.params)
+                if(this.closeOnSelect){
+                    this.closeSelect()
+                }
+            },
             onMouseOver(ev){
                 if(this.closeTimeout){
                     clearTimeout(this.closeTimeout);

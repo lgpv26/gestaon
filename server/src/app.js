@@ -187,6 +187,9 @@ connectToRedis.then(() => {
                     });
                 });
             });
+        }).catch((err) => {
+            log.error(err.message + " (" + err.name + ")")
+            console.log(err)
         });
     })
 });

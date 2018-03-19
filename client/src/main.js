@@ -94,6 +94,8 @@ import PanelLoadingComponent from './components/Utilities/PanelLoading.vue';
 Vue.component("app-panel-loading", PanelLoadingComponent);
 import SelectComponent from './components/Inputs/Select.vue';
 Vue.component("app-select", SelectComponent);
+import DropdownMenuComponent from './components/Utilities/DropdownMenu.vue';
+Vue.component("app-dropdown-menu", DropdownMenuComponent);
 import SwitchComponent from './components/Forms/Switch.vue';
 Vue.component("app-switch", SwitchComponent);
 import PermissionComponent from './components/Utilities/Permission.vue';

@@ -1,38 +1,9 @@
 <template>
     <form :class="{'active': isCurrentStepActive}">
         <div class="form__content" v-show="isCurrentStepActive">
-            <div class="income-column" v-for="revenueGroup in computedRevenueGroups">
-                <div class="income-column__header">
-                    <h3>Receitas com produtos</h3><span class="push-both-sides"></span><icon-cog></icon-cog>
-                </div>
-                <div class="income-column__body" ref="incomeColumnBody" @mouseleave="showHoverOverlayMenu = false">
-                    <div class="hover-overlay-menu" v-show="showHoverOverlayMenu" ref="hoverOverlayMenu">
-                        <a href="#"><icon-caret-up></icon-caret-up></a>
-                        <a href="#"><icon-caret-down></icon-caret-down></a>
-                        <a href="#"><icon-remove></icon-remove></a>
-                    </div>
-                    <ul>
-                        <li @mouseover="onRevenueItemHover($event)">
-                            Venda de GLP
-                        </li>
-                        <li @mouseover="onRevenueItemHover($event)">
-                            Venda de Água Mineral
-                        </li>
-                        <li @mouseover="onRevenueItemHover($event)">
-                            Acessórios para GLP
-                        </li>
-                        <li @mouseover="onRevenueItemHover($event)">
-                            Venda de Conveniência
-                        </li>
-                    </ul>
-                </div>
-                <div class="income-column__footer">
-                    <input type="text" />
-                    <a href="javascript:void(0)" @click="addRevenueItem()">
-                        <icon-check></icon-check>
-                    </a>
-                </div>
-            </div>
+            <app-revenue-group v-for="(index, revenueGroup) in revenues.revenueGroups" :key="revenueGroup.id"
+                :revenueGroupIndex="index" :revenueGroup="revenueGroup" :revenueItems="revenues.revenueItems">
+            </app-revenue-group>
             <div class="income-column add">
                 <div class="add__button" @click="addRevenueGroup()">
                     <icon-big-add></icon-big-add>
@@ -52,63 +23,120 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
+    import utils from '@/utils'
+    import Vue from 'vue'
+    import RevenueGroup from './RevenueGroup.vue'
 
     export default {
         components: {
+            'app-revenue-group': RevenueGroup
         },
-        props: ['task','revenues','activeStep'],
+        props: ['revenues','activeStep'],
         data(){
             return {
                 showHoverOverlayMenu: false,
+                revenueGroups: {
+
+                },
                 form: {
+                },
+                revenueGroupMenuParams: {
+                    lastHoveredGroupId: null
                 }
+            }
+        },
+        sockets: {
+            draftAccountsRevenuesRevenueGroupAdd(data){
+                console.log("Received draftAccountsRevenuesRevenueGroupAdd", data)
+                const revenues = utils.removeReactivity(this.revenues)
+                revenues.revenueGroups.push(data)
+                this.$emit('update:revenues', revenues)
+            },
+            draftAccountsRevenuesRevenueGroupRemove(response){
+                /* socket response example
+                const successResponseEx = {
+                    success: true,
+                    data: {
+                        revenueGroupId: 0,
+                        id: 0
+                        // ...
+                    }
+                }
+                const errorResponseEx = {
+                    success: false,
+                    message: "xD",
+                    errorCode: "ERROR"
+                }
+                */
+                console.log("Received draftAccountsRevenuesRevenueGroupRemove", response)
+                if(response.success){
+                    const revenueGroupIndex = this.revenues.revenueGroups.findIndex((t) => t.id === response.data.revenueGroupId)
+                    if(revenueGroupIndex !== -1) this.revenues.revenueGroups.splice(revenueGroupIndex, 1)
+                    return
+                }
+                console.log("Erro", response.message)
+            },
+            draftAccountsRevenuesRevenueItemAdd(data){
+                console.log("Received draftAccountsRevenuesRevenueItemAdd", data)
+                const revenues = utils.removeReactivity(this.revenues)
+                revenues.revenueItems.push(data)
+                this.$emit('update:revenues', revenues)
+            },
+            draftAccountsRevenuesRevenueItemRemove(data){
+                console.log("Received draftAccountsRevenuesRevenueItemRemove", data)
+                if(response.success){
+                    const revenueItemIndex = this.revenues.revenueItems.findIndex((t) => t.id === response.data.id)
+                    if(revenueItemIndex !== -1) this.revenues.revenueItems.splice(revenueItemIndex, 1)
+                    return
+                }
+                console.log("Erro", response.message)
+            }
+        },
+        watch: {
+            lastHoveredGroupIp(after){
+                console.log("after", after)
+            },
+            revenues(){
+                const vm = this
+                /*
+                vm.groups = utils.removeReactivity(vm.revenues.revenueGroups)
+                vm.groups.map((revenueGroup) => {
+                    revenueGroup.isRenaming = false
+                    revenueGroup.items = vm.revenues.revenueItems.filter((revenueItem) => {
+                        return revenueGroup.id === revenueItem.revenueGroupId
+                    })
+                    revenueGroup.form = {
+                        rename: null,
+                        name: null,
+                        revenueGroupId: revenueGroup.id
+                    }
+                    return revenueGroup
+                })
+                */
             }
         },
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             isCurrentStepActive(){
                 return this.activeStep === 'revenues';
-            },
-            computedRevenueGroups(){
-                const vm = this
-                return vm.revenues.revenueGroups.map((revenueGroup) => {
-                    revenueGroup.items = vm.revenues.revenueItems.filter((revenueItem) => {
-                        return revenueGroup.id === revenueItem.revenueGroupId
-                    })
-                    return revenueGroup
-                })
             }
         },
         methods: {
-            onRevenueItemHover(ev){
-                this.showHoverOverlayMenu = true
-                const offsetY = this.getElPositionInScreen(ev.target).y - (this.getElPositionInScreen(this.$refs.incomeColumnBody).y + 7)
-                this.$refs.hoverOverlayMenu.style.top = offsetY + 'px'
-            },
             addRevenueGroup(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
                 }
-                this.$socket.emit('draft:accounts:revenues:add-revenue-group', emitData)
-                console.log("Emitting draft:accounts:revenues:add-revenue-group", emitData)
-            },
-            addRevenueItem(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    revenueGroupId: 'temp:BJjUEH5wz'
-                }
-                this.$socket.emit('draft:accounts:revenues:add-revenue-item', emitData)
-                console.log("Emitting draft:accounts:revenues:add-revenue-item", emitData)
+                this.$socket.emit('draft:accounts:revenues:revenue-group-add', emitData)
+                console.log("Emitting draft:accounts:revenues:revenue-group-add", emitData)
             },
 
             onCurrentStepChanged(value){
-                (this.activeStep === 'revenues') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'revenues');
-                this.commitSocketChanges('activeStep');
+                (this.activeStep === 'revenues') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'revenues')
+                this.commitSocketChanges('activeStep')
             },
             commitSocketChanges(mapping){
                 this.$emit('sync', mapping);
             },
-
             getElPositionInScreen(el){
                 let xPos = 0, yPos = 0;
                 while (el) {

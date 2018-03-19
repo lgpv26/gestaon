@@ -11,8 +11,12 @@
                     <li @click="expandSection(section)" style="width: 21px; height: 16px;">
                         <icon-section-expand></icon-section-expand>
                     </li>
-                    <li @click="addRequest(index)" class="section-title__settings-button" style="width: 15px; height: 16px;">
-                        <icon-section-settings></icon-section-settings>
+                    <li @mouseover="setLastHoveredSection(section)" class="section-title__settings-button" style="width: 15px; height: 16px;">
+                        <app-dropdown-menu :menuList="sectionMenuList" :params="sectionMenuParams" :closeOnSelect="true">
+                            <a href="javascript:void(0)" style="display: flex; height: 16px;">
+                                <icon-section-settings></icon-section-settings>
+                            </a>
+                        </app-dropdown-menu>
                     </li>
                 </ul>
             </div>
@@ -60,12 +64,22 @@
                     ghostClass: 'ghost',
                     group: 'cards'
                 },
+                lastHoveredSection: null,
                 lastSectionMove: null,
                 lastCardMove: {
                     sectionId: null,
                     from: null,
                     to: null
                 },
+                sectionMenuParams: {},
+                sectionMenuList: [
+                    {
+                        text: 'Remover seção',
+                        type: 'system',
+                        param: {},
+                        action: this.removeSection
+                    }
+                ],
                 isDraggingBoardColumn: false,
                 isDraggingCard: false
             }
@@ -94,10 +108,18 @@
         },
         methods: {
             ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', ['REAPLY_FILTERS','RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
+            ...mapMutations('request-board', ['REAPLY_FILTERS','RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','REMOVE_SECTION','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
 
             /* Sections */
 
+            setLastHoveredSection(section){
+                this.sectionMenuParams.lastHoveredSection = section
+            },
+            removeSection(params){
+                this.$socket.emit('request-board:section-remove', {
+                    sectionId: params.lastHoveredSection.id
+                })
+            },
             expandSection(section){
                 if(section.size < 3){
                     this.SET_SECTION({
@@ -278,7 +300,7 @@
         flex-grow: 1;
         font-size: 14px;
     }
-    .board-section > .board-section__header > .header__section-title ul li {
+    .board-section > .board-section__header > .header__section-title > ul > li {
         cursor: pointer;
         margin-right: 5px;
     }

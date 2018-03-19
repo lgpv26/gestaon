@@ -102,8 +102,8 @@
                 if(this.addressInputTimeout) clearTimeout(this.addressInputTimeout);
                 this.addressInputTimeout = setTimeout(() => {
                     this.addressQuery = this.address.name;
-                    this.searchAddresses();
-                }, 300);
+                    this.searchAddresses()
+                }, 300)
             },
             addressSearchItemSelected(item){
                 if(this.clientAddress){

@@ -77,6 +77,15 @@
                 console.log("Received requestBoardSectionCreate", response)
                 this.ADD_SECTION(response.data)
             },
+            requestBoardSectionRemove(response){
+                console.log("Received requestBoardSectionRemove", response)
+                if(response.success){
+                    this.REMOVE_SECTION(response.data.section.id)
+                }
+                else {
+                    console.log("Erro: ", response.message)
+                }
+            },
             requestBoardSectionMove(response){
                 console.log("Received requestBoardSectionMove", response)
                 const section = response.data.section
@@ -113,7 +122,7 @@
         },
         methods: {
             ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', ['SORT_SECTIONS','RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
+            ...mapMutations('request-board', ['SORT_SECTIONS','RESET_REQUESTS','REMOVE_SECTION','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
 
             /* Sections */
 
