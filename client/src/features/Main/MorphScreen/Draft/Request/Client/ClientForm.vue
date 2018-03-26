@@ -91,6 +91,7 @@
                         </div>
                         <div class="form-group__content">
                             <ul class="content__list">
+
                                 <li class="list__item" v-for="clientAddress in form.clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
                                     <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
                                         {{ clientAddress.address.name }},

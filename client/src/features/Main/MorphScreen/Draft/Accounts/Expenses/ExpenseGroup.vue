@@ -1,38 +1,38 @@
 <template>
-    <div class="income-column">
-        <div class="income-column__header">
-            <h3 v-if="!isRenaming">{{ revenueGroup.name || "..." }}</h3>
+    <div class="outcome-column">
+        <div class="outcome-column__header">
+            <h3 v-if="!isRenaming">{{ expenseGroup.name || "..." }}</h3>
             <div v-else style="display: flex; flex-direction: row;">
                 <input class="input--borderless" v-model="form.rename" type="text" placeholder="NOME" />
-                <a href="javascript:void(0)" style="margin-left: 3px; display: flex; align-items: center; justify-content: center" @click="saveRevenueGroupName()">
+                <a href="javascript:void(0)" style="margin-left: 3px; display: flex; align-items: center; justify-content: center" @click="saveExpenseGroupName()">
                     <icon-check></icon-check>
                 </a>
-                <a href="javascript:void(0)" style="margin-left: 5px; display: flex; align-items: center; justify-content: center" @click="cancelRevenueGroupRename()">
+                <a href="javascript:void(0)" style="margin-left: 5px; display: flex; align-items: center; justify-content: center" @click="cancelExpenseGroupRename()">
                     <icon-remove></icon-remove>
                 </a>
             </div>
             <span class="push-both-sides"></span>
-            <app-dropdown-menu v-if="!isRenaming" :menuList="revenueGroupMenuList" :params="revenueGroupMenuParams" :closeOnSelect="true">
+            <app-dropdown-menu v-if="!isRenaming" :menuList="expenseGroupMenuList" :params="expenseGroupMenuParams" :closeOnSelect="true">
                 <a href="javascript:void(0)" @mouseover="setLastHoveredGroup()" style="display: flex;">
                     <icon-cog @mouseover="setLastHoveredGroup()"></icon-cog>
                 </a>
             </app-dropdown-menu>
         </div>
-        <div class="income-column__body" ref="incomeColumnBody" @mouseleave="hideHoverOverlayMenu()">
+        <div class="outcome-column__body" ref="outcomeColumnBody" @mouseleave="hideHoverOverlayMenu()">
             <div class="hover-overlay-menu" v-show="showHoverOverlayMenu" ref="hoverOverlayMenu">
-                <a href="#" @click="moveRevenueItemUp()"><icon-caret-up></icon-caret-up></a>
+                <a href="#" @click="moveExpenseItemUp()"><icon-caret-up></icon-caret-up></a>
                 <a href="#"><icon-caret-down></icon-caret-down></a>
-                <a href="#" @click="removeRevenueItem()"><icon-remove></icon-remove></a>
+                <a href="#" @click="removeExpenseItem()"><icon-remove></icon-remove></a>
             </div>
             <ul>
-                <li v-for="revenueGroupItem in revenueGroupItems" @mouseover="onRevenueItemHover(revenueGroupItem, $event)">
-                    {{ revenueGroupItem.name }}
+                <li v-for="expenseGroupItem in expenseGroupItems" @mouseover="onExpenseItemHover(expenseGroupItem, $event)">
+                    {{ expenseGroupItem.name }}
                 </li>
             </ul>
         </div>
-        <div class="income-column__footer">
+        <div class="outcome-column__footer">
             <input type="text" v-model="form.name" />
-            <a href="javascript:void(0)" @click="addRevenueItem()">
+            <a href="javascript:void(0)" @click="addExpenseItem()">
                 <icon-check></icon-check>
             </a>
         </div>
@@ -48,30 +48,30 @@
     export default {
         components: {
         },
-        props: ['revenueGroupIndex','revenueGroup','revenueItems'],
+        props: ['expenseGroupIndex','expenseGroup','expenseItems'],
         data(){
             return {
-                revenueGroupMenuParams: {
+                expenseGroupMenuParams: {
                     lastHoveredGroupId: null
                 },
-                revenueGroupMenuList: [
+                expenseGroupMenuList: [
                     {
                         text: 'Renomear grupo',
                         type: 'system',
                         param: {},
-                        action: this.renameRevenueGroup
+                        action: this.renameExpenseGroup
                     },
                     {
                         text: 'Remover grupo',
                         type: 'system',
                         param: {},
-                        action: this.removeRevenueGroup
+                        action: this.removeExpenseGroup
                     }
                 ],
                 lastHoveredItemId: null,
                 showHoverOverlayMenu: false,
                 isRenaming: false,
-                revenueGroupItems: [],
+                expenseGroupItems: [],
                 form: {
                     name: null,
                     rename: null
@@ -81,12 +81,12 @@
         sockets: {
         },
         watch: {
-            revenueItems(after){
+            expenseItems(after){
                 const vm = this
-                vm.revenueGroupItems = []
+                vm.expenseGroupItems = []
                 after.forEach((a) => {
-                    if(a.revenueGroupId === vm.revenueGroup.id){
-                        vm.revenueGroupItems.push(a)
+                    if(a.expenseGroupId === vm.expenseGroup.id){
+                        vm.expenseGroupItems.push(a)
                     }
                 })
                 this.form.name = null
@@ -100,84 +100,84 @@
                 this.showHoverOverlayMenu = false
             },
             setLastHoveredGroup(){
-                this.revenueGroupMenuParams.lastHoveredGroupId = this.revenueGroup.id
+                this.expenseGroupMenuParams.lastHoveredGroupId = this.expenseGroup.id
             },
-            saveRevenueGroupName(){
+            saveExpenseGroupName(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    revenueGroupId: this.revenueGroup.id,
+                    expenseGroupId: this.expenseGroup.id,
                     form: {
-                        revenueGroupId: this.revenueGroup.id,
+                        expenseGroupId: this.expenseGroup.id,
                         name: renameValue
                     }
                 }
-                this.revenueGroup.name = utils.removeReactivity(this.form.rename)
-                this.$emit('update:revenueGroup', this.revenueGroup)
-                this.$emit('saveRevenueGroup')
-                this.commitSocketChanges('revenues.revenueGroups[' + this.revenueGroupIndex + ']')
-                console.log("Emitting draft:accounts:revenues:revenue-group-rename", emitData)
+                this.expenseGroup.name = utils.removeReactivity(this.form.rename)
+                this.$emit('update:expenseGroup', this.expenseGroup)
+                this.$emit('saveExpenseGroup')
+                this.commitSocketChanges('expenses.expenseGroups[' + this.expenseGroupIndex + ']')
+                console.log("Emitting draft:accounts:expenses:expense-group-rename", emitData)
                 this.isRenaming = false
                 this.form.rename = null
             },
-            cancelRevenueGroupRename(){
+            cancelExpenseGroupRename(){
                 this.isRenaming = false
                 this.form.rename = null
             },
-            renameRevenueGroup(){
+            renameExpenseGroup(){
                 this.form.rename = null
                 this.isRenaming = true
             },
-            removeRevenueGroup(){
+            removeExpenseGroup(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    revenueGroupId: this.revenueGroup.id,
+                    expenseGroupId: this.expenseGroup.id,
                     form: {
-                        revenueGroupId: this.revenueGroup.id
+                        expenseGroupId: this.expenseGroup.id
                     }
                 }
-                this.$socket.emit('draft:accounts:revenues:revenue-group-remove', emitData)
-                console.log("Emitting draft:accounts:revenues:revenue-group-remove", emitData)
+                this.$socket.emit('draft:accounts:expenses:expense-group-remove', emitData)
+                console.log("Emitting draft:accounts:expenses:expense-group-remove", emitData)
             },
-            onRevenueItemHover(revenueGroupItem, ev){
+            onExpenseItemHover(expenseGroupItem, ev){
                 const vm = this
                 vm.showHoverOverlayMenu = true
-                vm.$refs.hoverOverlayMenu.style.top = (utils.getElPositionInScreen(ev.target).y - (utils.getElPositionInScreen(vm.$refs.incomeColumnBody).y + 7)) + 'px'
-                this.lastHoveredItemId = revenueGroupItem.id
+                vm.$refs.hoverOverlayMenu.style.top = (utils.getElPositionInScreen(ev.target).y - (utils.getElPositionInScreen(vm.$refs.outcomeColumnBody).y + 7)) + 'px'
+                this.lastHoveredItemId = expenseGroupItem.id
             },
 
             /* items */
 
-            addRevenueItem(){
+            addExpenseItem(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    revenueGroupId: this.revenueGroup.id,
+                    expenseGroupId: this.expenseGroup.id,
                     name: this.form.name
                 }
-                this.$socket.emit('draft:accounts:revenues:revenue-item-add', emitData)
-                console.log("Emitting draft:accounts:revenues:revenue-item-add", emitData)
+                this.$socket.emit('draft:accounts:expenses:expense-item-add', emitData)
+                console.log("Emitting draft:accounts:expenses:expense-item-add", emitData)
             },
-            removeRevenueItem(){
+            removeExpenseItem(){
                 this.showHoverOverlayMenu = false
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    revenueItemId: this.lastHoveredItemId,
+                    expenseItemId: this.lastHoveredItemId,
                     form: {
-                        revenueItemId: this.lastHoveredItemId
+                        expenseItemId: this.lastHoveredItemId
                     }
                 }
-                this.$socket.emit('draft:accounts:revenues:revenue-item-remove', emitData)
-                console.log("Emitting draft:accounts:revenues:revenue-item-remove", emitData)
+                this.$socket.emit('draft:accounts:expenses:expense-item-remove', emitData)
+                console.log("Emitting draft:accounts:expenses:expense-item-remove", emitData)
             },
-            moveRevenueItemUp(){
+            moveExpenseItemUp(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    revenueItemId: this.lastHoveredItemId,
+                    expenseItemId: this.lastHoveredItemId,
                     form: {
-                        revenueItemId: this.lastHoveredItemId
+                        expenseItemId: this.lastHoveredItemId
                     }
                 }
-                this.$socket.emit('draft:accounts:revenues:revenue-item-move-up', emitData)
-                console.log("Emitting draft:accounts:revenues:revenue-item-move-up", emitData)
+                this.$socket.emit('draft:accounts:expenses:expense-item-move-up', emitData)
+                console.log("Emitting draft:accounts:expenses:expense-item-move-up", emitData)
             },
 
             /* common */
@@ -192,7 +192,7 @@
 </script>
 
 <style>
-    .income-column .income-column__header {
+    .outcome-column .outcome-column__header {
         margin: 0 10px;
         border-bottom: 2px solid var(--bg-color--9);
         display: flex;
@@ -200,17 +200,17 @@
         height: 50px;
         align-items: center;
     }
-    .income-column .income-column__header h3 {
+    .outcome-column .outcome-column__header h3 {
         font-size: 14px;
         color: var(--font-color--primary)
     }
-    .income-column .income-column__body {
+    .outcome-column .outcome-column__body {
         padding: 0 10px;
         margin-top: 7px;
         flex-grow: 1;
         position: relative;
     }
-    .income-column .income-column__body .hover-overlay-menu {
+    .outcome-column .outcome-column__body .hover-overlay-menu {
         position: absolute;
         top: 0;
         height: 24px;
@@ -226,22 +226,26 @@
         left: -1px;
         right: -1px;
     }
-    .income-column .income-column__body .hover-overlay-menu a {
+
+    .outcome-column .outcome-column__body .hover-overlay-menu a {
         margin-right: 10px;
     }
-    .income-column .income-column__body ul li {
+
+    .outcome-column .outcome-column__body ul li {
         margin: 8px 0;
         color: var(--font-color--9);
         font-size: 12px;
     }
-    .income-column .income-column__footer {
+
+    .outcome-column .outcome-column__footer {
         display: flex;
         flex-direction: row;
         margin: 0 10px;
         padding: 15px 0;
         align-items: center;
     }
-    .income-column .income-column__footer input {
+    .outcome-column .outcome-column__footer input {
         margin-right: 10px;
     }
+
 </style>

@@ -1,7 +1,7 @@
 <template>
     <form :class="{'active': isCurrentStepActive}">
         <div class="form__content" v-show="isCurrentStepActive">
-            <app-revenue-group v-for="(index, revenueGroup) in revenues.revenueGroups" :key="revenueGroup.id"
+            <app-revenue-group v-for="(revenueGroup, index) in revenues.revenueGroups" :key="revenueGroup.id"
                 :revenueGroupIndex="index" :revenueGroup="revenueGroup" :revenueItems="revenues.revenueItems">
             </app-revenue-group>
             <div class="income-column add">
@@ -21,10 +21,9 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
     import _ from 'lodash';
     import utils from '@/utils'
-    import Vue from 'vue'
     import RevenueGroup from './RevenueGroup.vue'
 
     export default {
@@ -35,11 +34,8 @@
         data(){
             return {
                 showHoverOverlayMenu: false,
-                revenueGroups: {
-
-                },
-                form: {
-                },
+                revenueGroups: {},
+                form: {},
                 revenueGroupMenuParams: {
                     lastHoveredGroupId: null
                 }
@@ -76,43 +72,20 @@
                 }
                 console.log("Erro", response.message)
             },
-            draftAccountsRevenuesRevenueItemAdd(data){
-                console.log("Received draftAccountsRevenuesRevenueItemAdd", data)
+            draftAccountsRevenuesRevenueItemAdd(response){
+                console.log("Received draftAccountsRevenuesRevenueItemAdd", response)
                 const revenues = utils.removeReactivity(this.revenues)
-                revenues.revenueItems.push(data)
+                revenues.revenueItems.push(response.data)
                 this.$emit('update:revenues', revenues)
             },
-            draftAccountsRevenuesRevenueItemRemove(data){
-                console.log("Received draftAccountsRevenuesRevenueItemRemove", data)
+            draftAccountsRevenuesRevenueItemRemove(response){
+                console.log("Received draftAccountsRevenuesRevenueItemRemove", response)
                 if(response.success){
                     const revenueItemIndex = this.revenues.revenueItems.findIndex((t) => t.id === response.data.id)
                     if(revenueItemIndex !== -1) this.revenues.revenueItems.splice(revenueItemIndex, 1)
                     return
                 }
                 console.log("Erro", response.message)
-            }
-        },
-        watch: {
-            lastHoveredGroupIp(after){
-                console.log("after", after)
-            },
-            revenues(){
-                const vm = this
-                /*
-                vm.groups = utils.removeReactivity(vm.revenues.revenueGroups)
-                vm.groups.map((revenueGroup) => {
-                    revenueGroup.isRenaming = false
-                    revenueGroup.items = vm.revenues.revenueItems.filter((revenueItem) => {
-                        return revenueGroup.id === revenueItem.revenueGroupId
-                    })
-                    revenueGroup.form = {
-                        rename: null,
-                        name: null,
-                        revenueGroupId: revenueGroup.id
-                    }
-                    return revenueGroup
-                })
-                */
             }
         },
         computed: {
@@ -129,29 +102,12 @@
                 this.$socket.emit('draft:accounts:revenues:revenue-group-add', emitData)
                 console.log("Emitting draft:accounts:revenues:revenue-group-add", emitData)
             },
-
             onCurrentStepChanged(value){
                 (this.activeStep === 'revenues') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'revenues')
                 this.commitSocketChanges('activeStep')
             },
             commitSocketChanges(mapping){
                 this.$emit('sync', mapping);
-            },
-            getElPositionInScreen(el){
-                let xPos = 0, yPos = 0;
-                while (el) {
-                    if (el.tagName.toLowerCase() === "body") {
-                        let xScroll = el.scrollLeft || document.documentElement.scrollLeft;
-                        let yScroll = el.scrollTop || document.documentElement.scrollTop;
-                        xPos += (el.offsetLeft - xScroll + el.clientLeft);
-                        yPos += (el.offsetTop - yScroll + el.clientTop);
-                    } else {
-                        xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
-                        yPos += (el.offsetTop - el.scrollTop + el.clientTop);
-                    }
-                    el = el.offsetParent;
-                }
-                return { x: xPos, y: yPos };
             }
         },
         mounted(){
@@ -160,7 +116,6 @@
 </script>
 
 <style>
-
     .income-column {
         display: flex;
         flex-direction: column;
@@ -171,11 +126,9 @@
         border-radius: 5px;
         margin-right: 10px;
     }
-
     .income-column:last-child {
         margin-right: 0;
     }
-
     .income-column.add {
         display: flex;
         flex-direction: column;
@@ -183,7 +136,6 @@
         justify-content: center;
         border: 1px dashed var(--bg-color--9);
     }
-
     .income-column.add .add__button {
         display: flex;
         flex-direction: column;
@@ -191,81 +143,18 @@
         justify-content: center;
         cursor: pointer;
     }
-
     .income-column.add .add__button svg {
         margin-bottom: 15px;
     }
-
     .income-column.add .add__button .stroke {
         stroke: var(--font-color--primary);
     }
-
     .income-column.add .add__button .fill {
         fill: var(--font-color--primary)
     }
-
     .income-column.add .add__button span {
         font-size: 12px;
         font-weight: 600;
-    }
-
-    .income-column .income-column__header {
-        margin: 0 10px;
-        border-bottom: 2px solid var(--bg-color--9);
-        display: flex;
-        flex-direction: row;
-        height: 50px;
-        align-items: center;
-    }
-
-    .income-column .income-column__header h3 {
-        font-size: 14px;
-        color: var(--font-color--primary)
-    }
-
-    .income-column .income-column__body {
-        padding: 0 10px;
-        margin-top: 7px;
-        flex-grow: 1;
-        position: relative;
-    }
-
-    .income-column .income-column__body .hover-overlay-menu {
-        position: absolute;
-        top: 0;
-        height: 24px;
-        margin: 3px 0;
-        display: flex;
-        flex-direction: row;
-        /* The old syntax, deprecated, but still needed, prefixed, for WebKit-based and old browsers */
-        background: -prefix-linear-gradient(left, rgba(30, 30, 30, .3), rgba(30, 30, 30, 1) 65%));
-        /* The new syntax needed by standard-compliant browsers (Opera 12.1, IE 10, Fx 16 onwards), without prefix */
-        background: linear-gradient(to right, rgba(30, 30, 30, .3), rgba(30, 30, 30, 1) 65%);
-        align-items: center;
-        justify-content: flex-end;
-        left: -1px;
-        right: -1px;
-    }
-
-    .income-column .income-column__body .hover-overlay-menu a {
-        margin-right: 10px;
-    }
-
-    .income-column .income-column__body ul li {
-        margin: 8px 0;
-        color: var(--font-color--9);
-        font-size: 12px;
-    }
-
-    .income-column .income-column__footer {
-        display: flex;
-        flex-direction: row;
-        margin: 0 10px;
-        padding: 15px 0;
-        align-items: center;
-    }
-    .income-column .income-column__footer input {
-        margin-right: 10px;
     }
 
 </style>

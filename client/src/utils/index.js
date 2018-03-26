@@ -56,6 +56,22 @@ export default {
             number
         };
     },
+    getElPositionInScreen(el){
+        let xPos = 0, yPos = 0;
+        while (el) {
+            if (el.tagName.toLowerCase() === "body") {
+                let xScroll = el.scrollLeft || document.documentElement.scrollLeft;
+                let yScroll = el.scrollTop || document.documentElement.scrollTop;
+                xPos += (el.offsetLeft - xScroll + el.clientLeft);
+                yPos += (el.offsetTop - yScroll + el.clientTop);
+            } else {
+                xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
+                yPos += (el.offsetTop - el.scrollTop + el.clientTop);
+            }
+            el = el.offsetParent;
+        }
+        return { x: xPos, y: yPos };
+    },
 
     /*
     * Tracker utilities
