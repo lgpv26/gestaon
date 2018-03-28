@@ -21,7 +21,12 @@ module.exports = class Request {
                     {
                         id: 'temp:' + shortid.generate()
                     }
-                ]
+                ],
+                requestTimeline: {
+                    "status" : "pending",
+                    "triggeredBy" : null,
+                    "userId" : null
+                }
             }
         }
         _.assign(this._model, draft)
@@ -34,5 +39,9 @@ module.exports = class Request {
     }
     isSingle(){
         return false
+    }
+
+    setUser(userId){
+        this._model.order.requestTimeline.triggered = userId
     }
 }

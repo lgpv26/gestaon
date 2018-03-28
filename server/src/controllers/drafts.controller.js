@@ -93,6 +93,10 @@ module.exports = (server) => {
                 else{
                     const draftFormModel = new server.draftFormModels[_.upperFirst(_.camelCase(setData.type))]()
                     draftFormModel.setCompanyId(controller.request.companyId)
+                    if(setData.type == 'request'){
+                        draftFormModel.setUser(parseInt(controller.request.createdBy.id))
+                    }
+
                     setData.form = draftFormModel.getObject()
                     setData.isSingle = draftFormModel.isSingle()
                 }
