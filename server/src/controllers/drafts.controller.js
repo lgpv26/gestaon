@@ -94,7 +94,8 @@ module.exports = (server) => {
                     const draftFormModel = new server.draftFormModels[_.upperFirst(_.camelCase(setData.type))]()
                     draftFormModel.setCompanyId(controller.request.companyId)
                     if(setData.type == 'request'){
-                        draftFormModel.setUser(parseInt(controller.request.createdBy.id))
+                        draftFormModel.setUser(parseInt(controller.request.createdBy.id)) // initial user to request 
+                        draftFormModel.setStatus("pending") // status in initial request timeline
                     }
 
                     setData.form = draftFormModel.getObject()

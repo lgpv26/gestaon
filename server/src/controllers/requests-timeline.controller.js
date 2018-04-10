@@ -13,10 +13,27 @@ module.exports = (server, restify) => {
                 _.assign(createData, {
                     requestId: controller.request.requestId
                 })
+ 
                 return server.mysql.RequestTimeline.create(createData, {
                     transaction: controller.transaction
                 }).then((response) => {
                     console.log('aqui', response)
+                    resolve(response);
+                }).catch((error) => {
+                    reject(error);
+                });
+            }).catch((err) => {
+                console.log(err)
+            })
+        },
+
+        changeStatus: (controller) => {
+            return new Promise((resolve, reject) => {
+                const createData = _.cloneDeep(controller.request.data)
+                 
+                return server.mysql.RequestTimeline.create(createData, {
+                    transaction: controller.transaction
+                }).then((response) => {
                     resolve(response);
                 }).catch((error) => {
                     reject(error);

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const _ = require('lodash');
+const _ = require('lodash')
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
     return {
@@ -127,10 +128,10 @@ module.exports = (server, restify) => {
                 return users;
             })
         },
-        getOne: (req, res, next) => {
-            server.mysql.User.findOne({
+        getOne: (controller) => {
+            return server.mysql.User.findOne({
                 where: {
-                    id: req.params.id,
+                    id: controller.request.id,
                     status: 'activated'
                 },
                 include: [
@@ -138,13 +139,9 @@ module.exports = (server, restify) => {
                 ]
             }).then((user) => {
                 if(!user){
-                    return next(
-                        new restify.ResourceNotFoundError("Nenhum dado encontrado.")
-                    );
+                    console.log("error no getOne do users controller")
                 }
-                return res.send(200, {
-                    data: user
-                });
+                return JSON.parse(JSON.stringify(user))
             });
         },
         createOne: (req, res, next) => {

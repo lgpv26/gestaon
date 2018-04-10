@@ -24,8 +24,7 @@ module.exports = class Request {
                 ],
                 requestTimeline: {
                     "status" : "pending",
-                    "triggeredBy" : null,
-                    "userId" : null
+                    "triggeredBy" : null
                 }
             }
         }
@@ -41,7 +40,11 @@ module.exports = class Request {
         return false
     }
 
+    setStatus(status){
+        this._model.order.requestTimeline.status = status
+    }
+
     setUser(userId){
-        this._model.order.requestTimeline.triggered = userId
+        this._model.order.requestTimeline.triggeredBy = userId
     }
 }

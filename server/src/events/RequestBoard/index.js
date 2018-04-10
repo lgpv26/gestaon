@@ -3,16 +3,20 @@ const Controller = require('../../models/Controller')
 const shortid = require('shortid')
 const Op = require('Sequelize').Op
 
+
 module.exports = class RequestBoard {
 
     constructor(server, socket) {
         // global variabels
         this.server = server
         this.socket = socket
-
+  
         this.requestsController = require('../../controllers/requests.controller')(server)
+        this.requestTimelineController = require('../../controllers/requests-timeline.controller')(server)
 
+        //private
         this._defaultPosition = 65535
+        this._transaction = null
 
         // functions
         this.setEventListeners()
@@ -24,8 +28,11 @@ module.exports = class RequestBoard {
     setEventListeners() {
 
         const vm = this
+        const activeCompanyUserId = (vm.socket.user.activeCompanyUserId) ? vm.socket.user.activeCompanyUserId : _.first(vm.socket.user.companies)
 
         this.socket.on('request-board:load', () => {
+            vm.socket.join('company/' + activeCompanyUserId + '/request-board') // subscribe user in your request-board's company channel
+
             vm.server.mongodb.Section.find({}, null, {
                 sort: {
                     position: 1
@@ -57,6 +64,7 @@ module.exports = class RequestBoard {
                         })
                         return section
                     })
+                    
                     vm.socket.emit('requestBoardLoad', {
                         data: sections
                     })
@@ -77,12 +85,12 @@ module.exports = class RequestBoard {
                     companyId: 1,
                     position
                 }).then((section) => {
-                    vm.server.io.sockets.emit('requestBoardSectionCreate', {
+                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionCreate', {
                         data: section
                     })
                 }).catch((err) => {
                     console.log(err)
-                    vm.server.io.sockets.emit('requestBoardSectionCreate', new Error(err))
+                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionCreate', new Error(err))
                 })
             });
         })
@@ -95,7 +103,7 @@ module.exports = class RequestBoard {
                 section: evData.sectionId
             }, function(err, count) {
                 if(count > 0){
-                    vm.server.io.sockets.emit('requestBoardSectionRemove', {
+                    vm.socket.emit('requestBoardSectionRemove', {
                         success: false,
                         message: "Você não pode remover uma seção que possui pedido(s)."
                     })
@@ -104,7 +112,7 @@ module.exports = class RequestBoard {
                     vm.server.mongodb.Section.remove({
                         _id: evData.sectionId
                     }, function(){
-                        vm.server.io.sockets.emit('requestBoardSectionRemove', {
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionRemove', {
                             success: true,
                             data: {
                                 section: {
@@ -134,12 +142,12 @@ module.exports = class RequestBoard {
                             }
                         }).then((section) => {
                             _.assign(section, { position })
-                            vm.server.io.sockets.emit('requestBoardSectionMove', {
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionMove', {
                                 data: { location: 'first', section }
                             })
                         }).catch((err) => {
                             console.log(err)
-                            vm.server.io.sockets.emit('requestBoardSectionMove', new Error(err))
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionMove', new Error(err))
                         })
                     })
                     break;
@@ -155,12 +163,12 @@ module.exports = class RequestBoard {
                             }
                         }).then((section) => {
                             _.assign(section, { position })
-                            vm.server.io.sockets.emit('requestBoardSectionMove', {
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionMove', {
                                 data: { location: 'last', section }
                             })
                         }).catch((err) => {
                             console.log(err)
-                            vm.server.io.sockets.emit('requestBoardSectionMove', new Error(err))
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionMove', new Error(err))
                         })
                     })
                     break;
@@ -174,12 +182,12 @@ module.exports = class RequestBoard {
                         }
                     }).then((section) => {
                         _.assign(section, { position: evData.position })
-                        vm.server.io.sockets.emit('requestBoardSectionMove', {
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionMove', {
                             data: { location: 'middle', section }
                         })
                     }).catch((err) => {
                         console.log(err)
-                        vm.server.io.sockets.emit('requestBoardSectionMove', new Error(err))
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionMove', new Error(err))
                     })
             }
 
@@ -197,12 +205,12 @@ module.exports = class RequestBoard {
                         console.log('firstCard', firstCard.position)
                         let position = firstCard.position / 2
                         vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
-                            vm.server.io.sockets.emit('requestBoardCardMove', {
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardCardMove', {
                                 data: { location: 'first' }
                             })
                         }).catch((err) => {
                             console.log(err)
-                            vm.server.io.sockets.emit('requestBoardCardMove', new Error(err))
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardCardMove', new Error(err))
                         })
                     })
                     break;
@@ -211,12 +219,12 @@ module.exports = class RequestBoard {
                         let position = vm._defaultPosition
                         if(lastCard) position += lastCard.position
                         vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
-                            vm.server.io.sockets.emit('requestBoardCardMove', {
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardCardMove', {
                                 data: { location: 'last' }
                             })
                         }).catch((err) => {
                             console.log(err)
-                            vm.server.io.sockets.emit('requestBoardCardMove', new Error(err))
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardCardMove', new Error(err))
                         })
                     })
                     break;
@@ -225,12 +233,12 @@ module.exports = class RequestBoard {
                         prevAndNextCard.sort(function(a, b){return b.position - a.position})
                         const position = ( prevAndNextCard[0].position + prevAndNextCard[1].position ) / 2
                         vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
-                            vm.server.io.sockets.emit('requestBoardCardMove', {
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardCardMove', {
                                 data: { location: 'middle' }
                             })
                         }).catch((err) => {
                             console.log(err)
-                            vm.server.io.sockets.emit('requestBoardCardMove', new Error(err))
+                            vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardCardMove', new Error(err))
                         })
                     })
                     break;
@@ -238,17 +246,167 @@ module.exports = class RequestBoard {
                     console.log("last-and-only")
                     let position = vm._defaultPosition
                     vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
-                        vm.server.io.sockets.emit('requestBoardCardMove', {
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardCardMove', {
                             data: { location: 'last-and-only' }
                         })
                     }).catch((err) => {
                         console.log(err)
-                        vm.server.io.sockets.emit('requestBoardCardMove', new Error(err))
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardCardMove', new Error(err))
                     })
                     break;
             }
+        }),
+
+        /**
+         * On change request's status
+         */
+        this.socket.on('request-board:request-timeline:change-status', (evData) => {
+
+            return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
+               return card
+            }).then((card) => {
+                return new Promise ((resolve, reject) => {
+                    this.setTransaction().then(() => {
+                        const controller = new Controller({
+                            request: {
+                                id: card.requestId,
+                                companyId: card.companyId
+                            },
+                            transaction: this._transaction
+                        })
+                        this.requestsController.getOne(controller).then((request) => {
+                            const statusController = new Controller({
+                                request: {
+                                    id: request.id,
+                                    data: {
+                                        status: evData.status
+                                    },
+                                transaction: controller.transaction
+                                }
+                            })
+
+                            this.requestsController.changeStatus(statusController).then(() => {
+                                const timelineController = new Controller({
+                                    request: {
+                                        data: {
+                                            requestId: request.id,
+                                            status: evData.status,
+                                            triggeredBy: vm.socket.user.id
+                                        },
+                                        transaction: controller.transaction
+                                    }
+                                })
+                                this.requestTimelineController.changeStatus(timelineController).then((response) => {
+                                    const data = {
+                                        success: true,
+                                        data: {
+                                            triggeredBy: vm.socket.user.id,
+                                            cardId: evData.id,
+                                            status: response.status
+                                        }
+                                    }
+                                    resolve(data)
+                                }).catch((err) => {
+                                    const error = {
+                                        success: false,
+                                        message: "Não é possivel alterar o status do pedido!",
+                                        errorCode: "ERROR"
+                                    }
+                                    reject(error)
+                                })
+                            })
+                        })
+                    })
+                }).then((data) => {
+                    this.commit().then(() => {
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeUser', data)
+                    })
+                }).catch((err) => {
+                    this.rollback().then(() => {
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeStatus', err)
+                    })
+                })
+            })
         })
+
+
+        /**
+         * On change request's user
+         */
+        this.socket.on('request-board:request-timeline:change-user', (evData) => {
+
+            return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
+               return card
+            }).then((card) => {
+                return new Promise ((resolve, reject) => {
+                    this.setTransaction().then(() => {
+                        const controller = new Controller({
+                            request: {
+                                id: card.requestId,
+                                companyId: card.companyId
+                            },
+                            transaction: this._transaction
+                        })
+                        this.requestsController.getOne(controller).then((request) => {
+                            const userController = new Controller({
+                                request: {
+                                    id: request.id,
+                                    data: {
+                                        userId: evData.userId
+                                    },
+                                companyId: activeCompanyUserId,
+                                transaction: controller.transaction
+                                }
+                            })
+
+                            this.requestsController.changeUser(userController).then(() => {
+                                const timelineController = new Controller({
+                                    request: {
+                                        data: {
+                                            requestId: request.id,
+                                            status: request.status,
+                                            triggeredBy: vm.socket.user.id
+                                        },
+                                        transaction: controller.transaction
+                                    }
+                                })
+                                this.requestTimelineController.changeStatus(timelineController).then((response) => {
+                                    const data = {
+                                        success: true,
+                                        data: {
+                                            triggeredBy: vm.socket.user.id,
+                                            cardId: evData.id,
+                                            status: response.status
+                                        }
+                                    }
+                                    resolve(data)
+                                }).catch((err) => {
+                                    const error = {
+                                        success: false,
+                                        message: "Não é possivel alterar o usuario do pedido!",
+                                        errorCode: "ERROR"
+                                    }
+                                    reject(error)
+                                })
+                            }).catch((err) => {
+                                reject(err)
+                            })
+                        })
+                    })
+                }).then((data) => {
+                    this.commit().then(() => {
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeUser', data)
+                    })
+                }).catch((err) => {
+                    this.rollback().then(() => {
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeUser', err)
+                    })
+                })
+            })
+        })
+
     }
+
 
     saveCard(cardId, toSectionId, position){
         const vm = this
@@ -280,5 +438,42 @@ module.exports = class RequestBoard {
             })
         })
     }
+
+    setTransaction() {
+        return new Promise((resolve,reject) => {
+            return this.server.sequelize.transaction().then((transaction) => {
+                this._transaction = transaction
+                resolve(transaction)
+            })
+        })  
+    }
+
+    /**
+     * Commit persistence
+     */
+    commit() {
+        return new Promise((resolve, reject) => {
+            console.log("Commit everything!");
+            if (this._transaction) {
+                this._transaction.commit();
+            }
+            resolve()
+        })
+    }
+
+    
+    /**
+     * Rollback persistence
+     */
+    rollback() {
+        return new Promise((resolve, reject) => {
+            console.log("Just... Rollback...");
+            if (this._transaction) {
+                this._transaction.rollback();
+            }
+            resolve()
+        })
+    }
+    
 
 }

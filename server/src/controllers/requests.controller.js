@@ -5,6 +5,8 @@ const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
 
+    const usersController = require('./../controllers/users.controller')(server, restify);
+
     const ordersProductsController = require('./../controllers/orders-products.controller')(server, restify);
     const productsController = require('./../controllers/products.controller')(server, restify)
     const requestsClientsPhone = require('./../controllers/requests-clients-phones.controller')(server, restify)
@@ -33,9 +35,6 @@ module.exports = (server, restify) => {
                         model: server.mysql.RequestTimeline,
                         as: "requestTimeline",
                         include: [{
-                            model: server.mysql.User,
-                            as: "user",
-                        },{
                             model: server.mysql.User,
                             as: "triggeredByUser",
                         }]
@@ -122,9 +121,6 @@ module.exports = (server, restify) => {
                     as: "requestTimeline",
                     include: [{
                         model: server.mysql.User,
-                        as: "user",
-                    },{
-                        model: server.mysql.User,
                         as: "triggeredByUser",
                     }]
                 },
@@ -190,7 +186,7 @@ module.exports = (server, restify) => {
                 if (!request) {
                     return new restify.ResourceNotFoundError("Registro não encontrado.")
                 }
-                return request
+                return JSON.parse(JSON.stringify(request))
             });
         },
 
@@ -563,7 +559,54 @@ module.exports = (server, restify) => {
                 return next(err);
             });
 
+        }, 
+
+        changeStatus: (controller) => {
+            return server.mysql.Request.update(controller.request.data, {
+                where: {
+                    id: controller.request.id
+                },
+                transaction: controller.transaction
+            }).then(() => {
+                return true
+            }).catch((err) => {
+                return false
+            })
+        },
+
+        changeUser: (controller) => {
+            return new Promise((resolve, reject) => {
+                const userController = new Controller({
+                    request: {
+                        id: controller.request.data.userId
+                    },
+                    transaction: controller.transaction
+                })
+                return usersController.getOne(userController).then((user) => {
+
+                    let companies = _.findIndex(user.companies, (company) => {
+                        return company.id === controller.request.companyId
+                    })
+
+                    if (companies !== -1) {
+                        return server.mysql.Request.update(controller.request.data, {
+                            where: {
+                                id: controller.request.id
+                            },
+                            transaction: controller.transaction
+                        }).then(() => {
+                            resolve()
+                        }).catch((err) => {
+                            reject()
+                        })
+                    }
+                    else {
+                        reject()
+                    }
+                })
+            })
         }
+
     };
 
     // CHANCE STATUS DATA WHEN DELET (with paranoid)

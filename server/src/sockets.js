@@ -61,7 +61,7 @@ module.exports = function (server) {
                     }).exec().then((devices) => {
                         devices.forEach((device) => {
                             // console.log(user.name + " connected to room: " + 'device/' + device.code);
-                            socket.join('device/' + device.code);
+                            socket.join('device/' + device.code)
                         });
                     }).catch((err) => {
                         console.log(err);
@@ -80,7 +80,7 @@ module.exports = function (server) {
                 new RequestBoard(server, socket)
 
             }
-        });
+        })
 
         socket.on('join-device-room', (deviceCode) => {
             // console.log(user.name + " joins device/" + deviceCode + ".");

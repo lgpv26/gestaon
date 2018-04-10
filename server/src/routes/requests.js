@@ -35,6 +35,7 @@ module.exports = (server, restify) => {
     })
 
     server.get('/requests/:id', (req, res, next) => {
+
         const controller = new Controller({
             request: {
                 id: req.params.id,
