@@ -3,27 +3,24 @@
         <div class="request-board-card__container">
             <h3 class="card__client-name" data-card-tippy v-tippy="RBCClientTippyOptions">{{ card.request.client.name }}</h3>
             <h3 class="card__task" v-if="hasTaskInstruction">{{ card.request.task.text }}</h3>
-            <h3 class="card__task--add" v-else>+ Incluir Tarefa ou Anotação</h3>
+            <h3 class="card__task--add" v-else @click="onAddTaskClick()">+ Incluir Tarefa ou Anotação</h3>
             <div class="card__middle">
                 <div class="card__timer">
                     <div class="timer__objects">
                         <div class="objects__timer">
-                            <span class="timer__hours">09</span>
-                            <span class="timer__minutes">51</span>
+                            <span class="timer__hours">{{ hours }}</span>
+                            <span class="timer__minutes">{{ minutes }}</span>
                             <request-board-icon-timer></request-board-icon-timer>
                         </div>
                         <div class="objects__timeline">
-                            <div class="timeline__progress" data-card-tippy v-tippy="getRBCProgressTippyOptions(0)">
-                                <span class="progress__progress" >07</span>
-                                <request-board-icon-progress-shield></request-board-icon-progress-shield>
-                            </div>
-                            <div class="timeline__progress--current" data-card-tippy v-tippy="getRBCProgressTippyOptions(1)">
-                                <span class="progress__progress">17</span>
+                            <div class="timeline__progress" v-for="(requestTimelineItem, index) in requestTimeline"
+                                 ref="requestTimelineProgressEls" data-card-tippy v-tippy="getRBCProgressTippyOptions(requestTimelineItem.data.id)">
+                                <span class="progress__progress" >{{ timeUntilNow }}</span>
                                 <request-board-icon-progress-shield></request-board-icon-progress-shield>
                             </div>
                         </div>
-                        <div class="objects__deadline" data-card-tippy v-tippy="RBCDeadlineTippyOptions">
-                            <span class="deadline__time">30</span>
+                        <div class="objects__deadline" ref="deadline" data-card-tippy v-tippy="RBCDeadlineTippyOptions">
+                            <span class="deadline__time">{{ (timeUntilNow < settings.deadlineInMinutes) ? settings.deadlineInMinutes : timeUntilNow }}</span>
                             <span class="deadline__label">min</span>
                         </div>
                     </div>
@@ -35,13 +32,15 @@
                     <request-board-icon-location></request-board-icon-location> 4,3 km
                 </span>
                 <span class="push-both-sides"></span>
-                <a><request-board-icon-status></request-board-icon-status> Pendente</a>
-                <a><request-board-icon-flag></request-board-icon-flag> Cintia</a>
+                <a class="ignore" v-tippy="RBCStatusTippyOptions"><request-board-icon-status></request-board-icon-status> Pendente</a>
+                <a class="ignore" v-tippy="RBCUserTippyOptions"><request-board-icon-flag></request-board-icon-flag> ---</a>
             </div>
             <app-rbc-location id="rbc-location"></app-rbc-location>
             <app-rbc-client id="rbc-client"></app-rbc-client>
-            <app-rbc-progress v-for="(progress, index) in progresses" :key="index" :id="'rbc-progress' + '-' + index"></app-rbc-progress>
+            <app-rbc-progress v-for="(requestTimelineItem, index) in requestTimeline" :key="requestTimelineItem.data.id" :id="'rbc-progress' + '-' + requestTimelineItem.data.id"></app-rbc-progress>
             <app-rbc-progress id="rbc-deadline"></app-rbc-progress>
+            <app-rbc-status id="rbc-status" :cardId="card.id" v-model="form.status"></app-rbc-status>
+            <app-rbc-user id="rbc-user" :cardId="card.id" v-model="form.userId"></app-rbc-user>
         </div>
     </div>
 </template>
@@ -53,21 +52,71 @@
     import Vue from 'vue'
     import _ from 'lodash';
     import utils from '@/utils'
+    import moment from 'moment'
 
     import RBCLocation from './RequestBoardCard/RBCLocation.vue'
     import RBCClient from './RequestBoardCard/RBCClient.vue'
     import RBCProgress from './RequestBoardCard/RBCProgress.vue'
+    import RBCStatus from './RequestBoardCard/RBCStatus.vue'
+    import RBCUser from './RequestBoardCard/RBCUser.vue'
 
     export default {
         props: ['card','isDragging'],
         components: {
             'app-rbc-location': RBCLocation,
             'app-rbc-client': RBCClient,
-            'app-rbc-progress': RBCProgress
+            'app-rbc-progress': RBCProgress,
+            'app-rbc-status': RBCStatus,
+            'app-rbc-user': RBCUser
+        },
+        watch: {
+            'card.request.requestTimeline': {
+                handler(requestTimeline){
+                    this.recalculateTimeline(requestTimeline)
+                },
+                deep: true
+            }
+        },
+        sockets: {
+            requestBoardRequestTimelineChangeUser(data){
+                console.log("Received requestBoardRequestTimelineChangeUser", data)
+            }
         },
         data(){
             return {
-                progresses: [{}, {}],
+                form: {
+                    status: 'pending',
+                    userId: null
+                },
+                timeUntilNow: '?',
+                requestTimeline: [],
+                requestTimelineInterval: null,
+                RBCStatusTippyOptions: {
+                    html: '#rbc-status',
+                    trigger: 'mouseenter',
+                    hideOnClick: false,
+                    placement: 'bottom-start',
+                    theme: 'erp-dark',
+                    interactive: true,
+                    reactive : true,
+                    duration: 100,
+                    inertia: true,
+                    arrow: true,
+                    animation: 'perspective'
+                },
+                RBCUserTippyOptions: {
+                    html: '#rbc-user',
+                    trigger: 'mouseenter',
+                    hideOnClick: false,
+                    placement: 'bottom-start',
+                    theme: 'erp-dark',
+                    interactive: true,
+                    reactive : true,
+                    duration: 100,
+                    inertia: true,
+                    arrow: true,
+                    animation: 'perspective'
+                },
                 RBCLocationTippyOptions: {
                     html: '#rbc-location',
                     delay: 500,
@@ -107,18 +156,37 @@
                     arrow: true,
                     animation: 'perspective',
                     distance: 0
+                },
+                settings: {
+                    deadlineInMinutes: 30
                 }
             }
         },
         computed: {
             hasTaskInstruction(){
                 return _.has(this.card, 'request.task.text')
+            },
+            hours(){
+                return moment(this.card.request.dateCreated).format("HH")
+            },
+            minutes(){
+                return moment(this.card.request.dateCreated).format("mm")
             }
         },
         methods: {
-            getRBCProgressTippyOptions(index){
+            recalculateTimeline(requestTimeline){
+                this.requestTimeline = _.map(requestTimeline, (data) => {
+                    return {
+                        data
+                    }
+                })
+            },
+            onAddTaskClick(){
+                console.log(this.card)
+            },
+            getRBCProgressTippyOptions(requestTimelineId){
                 return {
-                    html: '#rbc-progress-' + index,
+                    html: '#rbc-progress-' + requestTimelineId,
                     delay: 500,
                     hideOnClick: false,
                     placement: 'bottom',
@@ -131,6 +199,94 @@
                     animation: 'perspective'
                 }
             }
+        },
+        mounted(){
+            const vm = this
+            vm.recalculateTimeline(vm.card.request.requestTimeline)
+            vm.requestTimelineInterval = setInterval(() => {
+                vm.requestTimeline.forEach((requestTimelineItem, index) => {
+                    const requestTimelineProgressEl = vm.$refs.requestTimelineProgressEls[index]
+                    const lastRequestTimelineItem = _.last(vm.requestTimeline)
+                    if(lastRequestTimelineItem.data.id === requestTimelineItem.data.id){ // if this is the current time object
+                        if(lastRequestTimelineItem.data.status !== 'finished') {
+                            const startDate = moment(vm.card.request.dateCreated)
+                            const endDate = moment(vm.card.request.dateCreated).add(vm.settings.deadlineInMinutes, 'm')
+                            const nowDate = moment()
+                            const diffUntilNowInSec = moment.duration(nowDate.diff(startDate)).asSeconds()
+                            const total = moment.duration(endDate.diff(startDate)).asSeconds()
+                            const percentage = (diffUntilNowInSec/total) * 100;
+                            let leftInPxs = 200 // max left in pixels, of the progress bar
+                            if (percentage < 100) {
+                                leftInPxs = (leftInPxs * percentage) / 100
+                                requestTimelineProgressEl.style.left = leftInPxs + 'px'
+                                requestTimelineProgressEl.classList.remove('timeline__progress')
+                                requestTimelineProgressEl.classList.add('timeline__progress--current')
+                                requestTimelineProgressEl.style.visibility = 'initial'
+                            }
+                            else { // if over 100%
+                                requestTimelineProgressEl.style.visibility = 'hidden'
+                                const deadlineEl = vm.$refs.deadline
+                                deadlineEl.classList.add('over')
+                            }
+                            const diffUntilNowInMin = Math.floor(diffUntilNowInSec / 60)
+                            if (diffUntilNowInMin > 99) {
+                                vm.timeUntilNow = "99+"
+                            } else {
+                                vm.timeUntilNow = diffUntilNowInMin
+                            }
+                        }
+                        else { // if finished
+                            const startDate = moment(vm.card.request.dateCreated)
+                            const endDate = moment(vm.card.request.dateCreated).add(vm.settings.deadlineInMinutes, 'm')
+                            const nowDate = moment(lastRequestTimelineItem.data.dateCreated)
+                            const diffUntilNowInSec = moment.duration(nowDate.diff(startDate)).asSeconds()
+                            const total = moment.duration(endDate.diff(startDate)).asSeconds()
+                            const percentage = (diffUntilNowInSec/total) * 100;
+                            let leftInPxs = 200 // max left in pixels, of the progress bar
+
+                            requestTimelineProgressEl.style.visibility = 'hidden'
+                            const deadlineEl = vm.$refs.deadline
+                            const diffUntilNowInMin = Math.floor(diffUntilNowInSec / 60)
+                            if(diffUntilNowInMin > vm.settings.deadlineInMinutes){
+                                deadlineEl.classList.add('over')
+                            }
+                            else {
+                                deadlineEl.classList.add('in-time')
+                            }
+                            if (diffUntilNowInMin > 99) {
+                                vm.timeUntilNow = "99+"
+                            } else {
+                                vm.timeUntilNow = diffUntilNowInMin
+                            }
+                        }
+                    }
+                    else {
+                        if(index > 0) { // don't first first item in timeline, created when the card is created
+                            if (requestTimelineProgressEl.classList.contains('timeline__progress--current')) {
+                                requestTimelineProgressEl.classList.remove('timeline__progress--current')
+                                requestTimelineProgressEl.classList.add('timeline__progress')
+                            }
+                            requestTimelineProgressEl.style.visibility = 'initial'
+
+                            console.log(vm.card, requestTimelineItem)
+                            const startDate = moment(vm.card.request.dateCreated)
+                            const endDate = moment(requestTimelineItem.data.dateCreated).add(vm.settings.deadlineInMinutes, 'm')
+                            const nowDate = moment(requestTimelineItem.data.dateCreated)
+                            const diffUntilNowInSec = moment.duration(nowDate.diff(startDate)).asSeconds()
+                            const total = moment.duration(endDate.diff(startDate)).asSeconds()
+                            const percentage = (diffUntilNowInSec / total) * 100;
+                            let leftInPxs = 200 // max left in pixels, of the progress bar
+                            if (percentage < 100) {
+                                leftInPxs = (leftInPxs * percentage) / 100
+                                requestTimelineProgressEl.style.left = leftInPxs + 'px'
+                            }
+                        }
+                    }
+                })
+            }, 300)
+        },
+        beforeDestroy(){
+            clearInterval(this.requestTimelineInterval)
         }
     }
 </script>
@@ -241,11 +397,13 @@
 
     .card__middle .objects__timeline .timeline__progress {
         position: absolute;
-        left: 40px; /* and goes until 199px */
+        left: 0; /* and goes until 199px */
         display: flex;
+        visibility: hidden;
         align-items: center;
         justify-content: center;
         z-index: 1;
+        transition: all 0.5s ease;
     }
     .card__middle .objects__timeline .timeline__progress span.progress__progress {
         position: absolute;
@@ -270,6 +428,7 @@
         align-items: center;
         justify-content: center;
         z-index: 3;
+        transition: all 0.5s ease;
     }
     .card__middle .objects__timeline .timeline__progress--current span.progress__progress {
         position: absolute;
@@ -311,13 +470,13 @@
         color: var(--font-color--d-secondary);
     }
 
-    .card__middle .objects__deadline.finished-in .deadline__time,
-    .card__middle .objects__deadline.finished-in .deadline__label {
+    .card__middle .objects__deadline.in-time .deadline__time,
+    .card__middle .objects__deadline.in-time .deadline__label {
         color: var(--font-color--d-primary);
     }
 
-    .card__middle .objects__deadline.out .deadline__time,
-    .card__middle .objects__deadline.out .deadline__label {
+    .card__middle .objects__deadline.over .deadline__time,
+    .card__middle .objects__deadline.over .deadline__label {
         color: var(--font-color--danger);
     }
 

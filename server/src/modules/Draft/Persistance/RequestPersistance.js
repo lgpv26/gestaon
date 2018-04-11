@@ -6,8 +6,11 @@ const _ = require('lodash')
 const sequelize = require('sequelize')
 
 const requestsController = require('../../../controllers/requests.controller')
+const cardsController = require('../../../controllers/request-board-cards.controller')
+const sectionsController = require('../../../controllers/request-board-sections.controller')
 
 const Controller = require('../../../models/Controller')
+
 
 module.exports = class RequestPersistance extends Persistance {
 
@@ -31,7 +34,9 @@ module.exports = class RequestPersistance extends Persistance {
         this._client = null;
         this._transaction = null;
 
-        this.requestsController = requestsController(this.server);
+        this.requestsController = requestsController(this.server)
+        this.cardsController = cardsController(this.server)
+        this.sectionsController = sectionsController(this.server)
 
     }
 
@@ -157,7 +162,57 @@ module.exports = class RequestPersistance extends Persistance {
                 return this.requestsController.createOne(controller).then((request) => {
                     console.log("Success creating request");
                     this.commit().then(() => {
-                        resolve(request)
+
+                        const controller = new Controller({
+                            request: {
+                                id: request.id,
+                                companyId: this._companyId
+                            }
+                        })
+
+                        return this.requestsController.getOne(controller).then((request) => {
+                            const consultSection  = new Controller({
+                                request: {
+                                    companyId: request.companyId
+                                }
+                            })
+                            return this.sectionsController.consultSection(consultSection).then((section) => {
+                                let maxCard = _.maxBy(section.cards, (card) => {
+                                    return card.position
+                                })
+                                let maxCardPosition = 65535
+                                if(maxCard) maxCardPosition += maxCard.position
+                                const createData = {
+                                    requestId: request.id,
+                                    position: maxCardPosition,
+                                    section: section.id
+                                }
+                                const createCard  = new Controller({
+                                    request: {
+                                        section: section,
+                                        companyId: request.companyId,
+                                        createdBy: request.userId,
+                                        data: createData
+                                    }
+                                })
+                                return this.cardsController.createOne(createCard).then((createdCard) => {
+                                    const card = createdCard.toJSON()
+                                    card.request = request
+                                    section.cards.push(createdCard)
+                                    section.save().then((section) => {
+                                        resolve(request)
+                                        this.server.io.sockets.emit('requestBoardCardCreate', {
+                                            data: {
+                                                card,
+                                                section
+                                            }
+                                        })
+                                    })
+                                })
+                            })
+                        }).catch((err) => {
+                            console.log(err)
+                        })
                     })                
                 }).catch((err) => {
                     console.log(err);

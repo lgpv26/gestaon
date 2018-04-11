@@ -62,7 +62,8 @@
                     scroll: false,
                     forceFallback: false,
                     ghostClass: 'ghost',
-                    group: 'cards'
+                    group: 'cards',
+                    filter: '.ignore'
                 },
                 lastHoveredSection: null,
                 lastSectionMove: null,

@@ -82,68 +82,6 @@ module.exports = {
 
         Request.hasMany(RequestClientAddress, {as: 'requestClientAddresses', foreignKey: 'requestId'});
         Request.belongsToMany(ClientAddress, { through: RequestClientAddress, as: 'clientAddresses', foreignKey: 'requestId' });
-    },
-
-    afterPostSettings: ({Request}, server) => {
-
-        const cardsController = require('./../../controllers/request-board-cards.controller')(server)
-        const sectionsController = require('./../../controllers/request-board-sections.controller')(server)
-
-        Request.hook('afterCreate', (instance, options) => {
-            return server.mysql.Request.findOne({
-                where: {
-                    id: instance.id
-                },
-                include: [{
-                    model: server.mysql.Client,
-                    as: 'client'
-                }],
-                transaction: options.transaction
-            }).then((request) => {
-                const consultSection  = new Controller({
-                    request: {
-                        companyId: request.companyId
-                    }
-                })
-                return sectionsController.consultSection(consultSection).then((section) => {
-                    let maxCard = _.maxBy(section.cards, (card) => {
-                        return card.position
-                    })
-                    let maxCardPosition = 65535
-                    if(maxCard) maxCardPosition += maxCard.position
-                    const createData = {
-                        requestId: request.id,
-                        position: maxCardPosition,
-                        section: section.id
-                    }
-                    const createCard  = new Controller({
-                        request: {
-                            section: section,
-                            companyId: request.companyId,
-                            createdBy: request.userId,
-                            data: createData
-                        }
-                    })
-                    return cardsController.createOne(createCard).then((createdCard) => {
-                        const card = createdCard.toJSON()
-                        card.request = request
-                        section.cards.push(createdCard)
-                        section.save().then((section) => {
-                            server.io.sockets.emit('requestBoardCardCreate', {
-                                data: {
-                                    card,
-                                    section
-                                }
-                            })
-                        })
-                    })
-                })
-
-            }).catch((err) => {
-                console.log(err)
-            })
-        })
-
     }
 
 }

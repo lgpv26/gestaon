@@ -13,9 +13,9 @@ module.exports = (server, restify) => {
     const requestsClientsAddress = require('./../controllers/requests-clients-addresses.controller')(server, restify)
     const requestTimelineController = require('./../controllers/requests-timeline.controller')(server, restify)
 
-    const addressesController = require('./../controllers/addresses.controller')(server, restify);
-    const clientsAddressesController = require('./../controllers/clients-addresses.controller')(server, restify);
-    const clientsPhonesController = require('./../controllers/clients-phones.controller')(server, restify);
+    const addressesController = require('./../controllers/addresses.controller')(server, restify)
+    const clientsAddressesController = require('./../controllers/clients-addresses.controller')(server, restify)
+    const clientsPhonesController = require('./../controllers/clients-phones.controller')(server, restify)
 
     return {
 
@@ -115,7 +115,7 @@ module.exports = (server, restify) => {
                 include: [{
                     model: server.mysql.User,
                     as: "user"
-                }, 
+                },
                 {
                     model: server.mysql.RequestTimeline,
                     as: "requestTimeline",
@@ -127,48 +127,48 @@ module.exports = (server, restify) => {
                 {
                     model: server.mysql.RequestClientPhone,
                     as: "requestClientPhones",
-                        include: [{
-                            model: server.mysql.ClientPhone,
-                            as: "clientPhone",
-                        }]
-                    }, {
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: "clientPhone",
+                    }]
+                }, {
                     model: server.mysql.RequestClientAddress,
                     as: "requestClientAddresses",
-                        include: [{
-                            model: server.mysql.ClientAddress,
-                            as: "clientAddress",
-                            include:[{
-                                model: server.mysql.Address,
-                                as: "address"
-                            }]
+                    include: [{
+                        model: server.mysql.ClientAddress,
+                        as: "clientAddress",
+                        include:[{
+                            model: server.mysql.Address,
+                            as: "address"
                         }]
-                    },{
+                    }]
+                },{
                     model: server.mysql.Client,
                     as: "client",
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: 'clientPhones'
+                    }, {
+                        model: server.mysql.ClientAddress,
+                        as: 'clientAddresses',
                         include: [{
-                            model: server.mysql.ClientPhone,
-                            as: 'clientPhones'
-                        }, {
-                            model: server.mysql.ClientAddress,
-                            as: 'clientAddresses',
-                            include: [{
-                                model: server.mysql.Address,
-                                as: 'address'
-                            }]
-                        }, {
-                            model: server.mysql.ClientCustomField,
-                            as: 'clientCustomFields',
-                            include: [{
-                                model: server.mysql.CustomField,
-                                as: 'customField'
-                            }]
-                        }, {
-                            model: server.mysql.ClientGroup,
-                            as: 'clientGroup'
+                            model: server.mysql.Address,
+                            as: 'address'
                         }]
+                    }, {
+                        model: server.mysql.ClientCustomField,
+                        as: 'clientCustomFields',
+                        include: [{
+                            model: server.mysql.CustomField,
+                            as: 'customField'
+                        }]
+                    }, {
+                        model: server.mysql.ClientGroup,
+                        as: 'clientGroup'
+                    }]
                 }, {
-                model: server.mysql.Order,
-                as: "order",
+                    model: server.mysql.Order,
+                    as: "order",
                     include: [{
                         model: server.mysql.OrderProduct,
                         as: 'orderProducts',
@@ -618,7 +618,7 @@ module.exports = (server, restify) => {
                 id: id
             }
         })
-    };
+    }
 
     /* -------------------------------------- */
     /* --- Reusable order functions ------------------------------------------
