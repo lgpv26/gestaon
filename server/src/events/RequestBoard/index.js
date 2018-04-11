@@ -2,6 +2,7 @@ const _ = require('lodash')
 const Controller = require('../../models/Controller')
 const shortid = require('shortid')
 const Op = require('Sequelize').Op
+const RequestRecoverance = require('../../modules/Draft/Recoverance/RequestRecoverance')
 
 
 module.exports = class RequestBoard {
@@ -13,6 +14,7 @@ module.exports = class RequestBoard {
   
         this.requestsController = require('../../controllers/requests.controller')(server)
         this.requestTimelineController = require('../../controllers/requests-timeline.controller')(server)
+        this.requestRecoverance = new RequestRecoverance(server)
 
         //private
         this._defaultPosition = 65535
@@ -29,6 +31,32 @@ module.exports = class RequestBoard {
 
         const vm = this
         const activeCompanyUserId = (vm.socket.user.activeCompanyUserId) ? vm.socket.user.activeCompanyUserId : _.first(vm.socket.user.companies)
+        
+       this.socket.on('request-board:request-recoverance', (evData) => {
+        /**
+        * Request Recoverance
+        * @desc Send to all sockets in Draft/:id the recoverance event
+        *
+        * @param {object} evData - expected: cardId, companyId
+        * @return {object} *Draft @property {Socket}
+        */
+
+        return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
+               return card
+        }).then((card) => {
+
+               this.requestRecoverance.setRequestId(card.requestId)
+               this.requestRecoverance.setCompanyId(evData.companyId)
+               this.requestRecoverance.setRecoverancedBy(this.socket.user)
+
+
+               this.requestRecoverance.start().then((draft) => {
+                   vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestRecoverance', draft)
+               }).catch((err) => {
+                   console.log('ERRO: REQUEST RECOVERANCE: ', err)
+               })
+           })
+        })
 
         this.socket.on('request-board:load', () => {
             vm.socket.join('company/' + activeCompanyUserId + '/request-board') // subscribe user in your request-board's company channel

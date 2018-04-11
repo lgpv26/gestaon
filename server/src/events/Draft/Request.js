@@ -32,10 +32,6 @@ module.exports = class Request extends Draft {
             this.onRequestPersist(requestPersist)
         })
     })
-
-    this.socket.on('draft:request-recoverance', (requestRecoverance) => {
-        this.onRequestRecoverance(requestRecoverance)
-    })
      
         ///////////////////////
         ///     CLIENT      ///
@@ -352,28 +348,6 @@ module.exports = class Request extends Draft {
                 console.log('ERRO: SET TRANSACTION: ', err)
             })   
         }
-    }
-
-    /**
-     * Request Recoverance
-     * @desc Send to all sockets in Draft/:id the recoverance event
-     *
-     * @param {object} requestRecoverance - expected: requestId, companyId
-     * @return {object} *Draft @property {Socket}
-     */
-    onRequestRecoverance(requestRecoverance) {
-
-        this._requestRecoverance.setRequestId(requestRecoverance.requestId)
-        this._requestRecoverance.setCompanyId(requestRecoverance.companyId)
-        this._requestRecoverance.setRecoverancedBy(this.socket.user)
-
-        
-        this._requestRecoverance.start().then((draft) => {
-            this.server.io.in('draft/' + draft.draftId).emit('draftRequestRecoverance', draft)
-        }).catch((err) => {
-            console.log('ERRO: REQUEST RECOVERANCE: ', err)
-        })
-    
     }
 
     ///////////////////////
