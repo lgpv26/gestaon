@@ -327,11 +327,8 @@ module.exports = class RequestBoard {
                                 this.requestTimelineController.changeStatus(timelineController).then((response) => {
                                     const data = {
                                         success: true,
-                                        data: {
-                                            triggeredBy: vm.socket.user.id,
-                                            cardId: evData.id,
-                                            status: response.status
-                                        }
+                                        cardId: evData.cardId,
+                                        data: response
                                     }
                                     resolve(data)
                                 }).catch((err) => {
@@ -401,11 +398,8 @@ module.exports = class RequestBoard {
                                 this.requestTimelineController.changeStatus(timelineController).then((response) => {
                                     const data = {
                                         success: true,
-                                        data: {
-                                            triggeredBy: vm.socket.user.id,
-                                            cardId: evData.id,
-                                            status: response.status
-                                        }
+                                        cardId: evData.cardId,
+                                        data: response
                                     }
                                     resolve(data)
                                 }).catch((err) => {
