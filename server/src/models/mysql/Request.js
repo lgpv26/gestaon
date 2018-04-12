@@ -15,9 +15,6 @@ module.exports = {
                 companyId: {
                     type: Sequelize.INTEGER
                 },
-                userId: {
-                    type: Sequelize.INTEGER
-                },
                 clientId: {
                     type: Sequelize.INTEGER,
                     allowNull: true,
@@ -53,8 +50,7 @@ module.exports = {
                 },
                 dateRemoved: {
                     type: Sequelize.DATE
-                },
-                status: Sequelize.STRING
+                }
             }, {
                 tableName: "request",
                 timestamps: true,
@@ -67,12 +63,11 @@ module.exports = {
         }
     },
 
-    postSettings: ({Request,Company,Client,User,Order,RequestClientPhone,RequestClientAddress,RequestTimeline,
+    postSettings: ({Request,Company,Client,Order,RequestClientPhone,RequestClientAddress,RequestTimeline,
         ClientPhone,ClientAddress}) => {
 
         Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
         Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
-        Request.belongsTo(User, {as: 'user', foreignKey: 'userId'});
         Request.belongsTo(Order, {as: 'order', foreignKey: 'orderId'})
 
         Request.hasMany(RequestTimeline, {as: 'requestTimeline', foreignKey: 'requestId'});

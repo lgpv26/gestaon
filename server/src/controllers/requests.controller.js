@@ -28,15 +28,14 @@ module.exports = (server, restify) => {
                         companyId: parseInt(controller.request.companyId)
                     },
                     include: [{
-                        model: server.mysql.User,
-                        as: "user"
-                    }, 
-                    {
                         model: server.mysql.RequestTimeline,
                         as: "requestTimeline",
                         include: [{
                             model: server.mysql.User,
                             as: "triggeredByUser",
+                        },{
+                            model: server.mysql.User,
+                            as: "user",
                         }]
                     },
                     {
@@ -113,15 +112,14 @@ module.exports = (server, restify) => {
                     companyId: parseInt(controller.request.companyId)
                 },
                 include: [{
-                    model: server.mysql.User,
-                    as: "user"
-                },
-                {
                     model: server.mysql.RequestTimeline,
                     as: "requestTimeline",
                     include: [{
                         model: server.mysql.User,
                         as: "triggeredByUser",
+                    },{
+                        model: server.mysql.User,
+                        as: "user",
                     }]
                 },
                 {
@@ -194,7 +192,6 @@ module.exports = (server, restify) => {
             const createData = _.cloneDeep(controller.request.data)
             _.assign(createData, {
                 companyId: controller.request.companyId,
-                userId: controller.request.userId,  
                 clientId: controller.request.clientId,
                 orderId: controller.request.orderId,
                 taskId: controller.request.taskId
@@ -213,6 +210,7 @@ module.exports = (server, restify) => {
                     const requestTimelineControllerObj = new Controller({
                         request: {
                             requestId: request.id,
+                            userId: controller.request.userId,
                             data: controller.request.data.order.requestTimeline
                         },
                         transaction: controller.transaction
@@ -318,8 +316,7 @@ module.exports = (server, restify) => {
                 throw new Error("Erro, dados não enviados.")
             }
             _.assign(updateData, {
-                companyId: controller.request.companyId,
-                userId: controller.request.userId,  
+                companyId: controller.request.companyId, 
                 clientId: controller.request.clientId,
                 orderId: controller.request.orderId,
                 taskId: controller.request.taskId
@@ -354,6 +351,7 @@ module.exports = (server, restify) => {
                         const requestTimelineControllerObj = new Controller({
                             request: {
                                 requestId: request.id,
+                                userId: controller.request.userId,  
                                 data: controller.request.data.order.requestTimeline
                             },
                             transaction: controller.transaction
@@ -573,39 +571,6 @@ module.exports = (server, restify) => {
                 return false
             })
         },
-
-        changeUser: (controller) => {
-            return new Promise((resolve, reject) => {
-                const userController = new Controller({
-                    request: {
-                        id: controller.request.data.userId
-                    },
-                    transaction: controller.transaction
-                })
-                return usersController.getOne(userController).then((user) => {
-
-                    let companies = _.findIndex(user.companies, (company) => {
-                        return company.id === controller.request.companyId
-                    })
-
-                    if (companies !== -1) {
-                        return server.mysql.Request.update(controller.request.data, {
-                            where: {
-                                id: controller.request.id
-                            },
-                            transaction: controller.transaction
-                        }).then(() => {
-                            resolve()
-                        }).catch((err) => {
-                            reject()
-                        })
-                    }
-                    else {
-                        reject()
-                    }
-                })
-            })
-        }
 
     };
 

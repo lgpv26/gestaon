@@ -16,6 +16,10 @@ module.exports = {
                     type: Sequelize.INTEGER,
                     default: null
                 },
+                userId: {
+                    type: Sequelize.INTEGER,
+                    default: null
+                },
                 status: {
                     type: Sequelize.STRING,
                     default: null
@@ -43,5 +47,6 @@ module.exports = {
     postSettings: ({RequestTimeline,Request,User}) => {
         RequestTimeline.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
         RequestTimeline.belongsTo(User, {as: 'triggeredByUser', foreignKey: 'triggeredBy'});
+        RequestTimeline.belongsTo(User, {as: 'user', foreignKey: 'userId'});
     }
 }

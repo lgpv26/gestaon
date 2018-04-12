@@ -110,9 +110,9 @@ module.exports = {
                 { model: CompanyUser, as: 'userCompanies' }
             ]
         });
-        User.hasMany(Request, {as: 'userRequests', foreignKey: 'userId'})
 
-        User.hasMany(RequestTimeline, {as: 'userRequestTimeline', foreignKey: 'triggeredBy'});
+        User.hasMany(RequestTimeline, {as: 'triggeredByRequestTimeline', foreignKey: 'triggeredBy'});
+        User.hasMany(RequestTimeline, {as: 'userRequestTimeline', foreignKey: 'userId'});
     },
     afterPostSettings(models){
     }

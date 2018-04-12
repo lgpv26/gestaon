@@ -18,7 +18,6 @@ module.exports = class RequestBoard {
 
         //private
         this._defaultPosition = 65535
-        this._transaction = null
 
         // functions
         this.setEventListeners()
@@ -288,71 +287,54 @@ module.exports = class RequestBoard {
         /**
          * On change request's status
          */
-        this.socket.on('request-board:request-timeline:change-status', (evData) => {
+            this.socket.on('request-board:request-timeline:change-status', (evData) => {
 
-            return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
-               return card
-            }).then((card) => {
-                return new Promise ((resolve, reject) => {
-                    this.setTransaction().then(() => {
+                return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
+                    return card
+                }).then((card) => {
+                    return new Promise((resolve, reject) => {
                         const controller = new Controller({
                             request: {
                                 id: card.requestId,
                                 companyId: card.companyId
-                            },
-                            transaction: this._transaction
+                            }
                         })
                         this.requestsController.getOne(controller).then((request) => {
                             const statusController = new Controller({
                                 request: {
-                                    id: request.id,
+                                    request: request,
                                     data: {
-                                        status: evData.status
-                                    },
-                                transaction: controller.transaction
+                                        status: evData.status,
+                                        triggeredBy: vm.socket.user.id
+                                    }
                                 }
                             })
 
-                            this.requestsController.changeStatus(statusController).then(() => {
-                                const timelineController = new Controller({
-                                    request: {
-                                        data: {
-                                            requestId: request.id,
-                                            status: evData.status,
-                                            triggeredBy: vm.socket.user.id
-                                        },
-                                        transaction: controller.transaction
-                                    }
-                                })
-                                this.requestTimelineController.changeStatus(timelineController).then((response) => {
-                                    const data = {
-                                        success: true,
+                            this.requestTimelineController.changeStatus(statusController).then((response) => {
+                                const data = {
+                                    success: true,
+                                    data: {
                                         cardId: evData.cardId,
-                                        data: response
+                                        requestTimelineItem: response
                                     }
-                                    resolve(data)
-                                }).catch((err) => {
-                                    const error = {
-                                        success: false,
-                                        message: "Não é possivel alterar o status do pedido!",
-                                        errorCode: "ERROR"
-                                    }
-                                    reject(error)
-                                })
+                                }
+                                resolve(data)
+                            }).catch((err) => {
+                                const error = {
+                                    success: false,
+                                    message: "Não é possivel alterar o status do pedido!",
+                                    errorCode: "ERROR"
+                                }
+                                reject(error)
                             })
                         })
-                    })
-                }).then((data) => {
-                    this.commit().then(() => {
-                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeUser', data)
-                    })
-                }).catch((err) => {
-                    this.rollback().then(() => {
+                    }).then((data) => {
+                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeStatus', data)
+                    }).catch((err) => {
                         vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeStatus', err)
                     })
                 })
             })
-        })
 
 
         /**
@@ -361,68 +343,49 @@ module.exports = class RequestBoard {
         this.socket.on('request-board:request-timeline:change-user', (evData) => {
 
             return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
-               return card
+                return card
             }).then((card) => {
-                return new Promise ((resolve, reject) => {
-                    this.setTransaction().then(() => {
-                        const controller = new Controller({
+                return new Promise((resolve, reject) => {
+                    const controller = new Controller({
+                        request: {
+                            id: card.requestId,
+                            companyId: card.companyId
+                        }
+                    })
+                    this.requestsController.getOne(controller).then((request) => {
+                        const statusController = new Controller({
                             request: {
-                                id: card.requestId,
-                                companyId: card.companyId
-                            },
-                            transaction: this._transaction
+                                request: request,
+                                data: {
+                                    userId: evData.userId,
+                                    triggeredBy: vm.socket.user.id
+                                },
+                                companyId: activeCompanyUserId
+                            }
                         })
-                        this.requestsController.getOne(controller).then((request) => {
-                            const userController = new Controller({
-                                request: {
-                                    id: request.id,
-                                    data: {
-                                        userId: evData.userId
-                                    },
-                                companyId: activeCompanyUserId,
-                                transaction: controller.transaction
-                                }
-                            })
 
-                            this.requestsController.changeUser(userController).then(() => {
-                                const timelineController = new Controller({
-                                    request: {
-                                        data: {
-                                            requestId: request.id,
-                                            status: request.status,
-                                            triggeredBy: vm.socket.user.id
-                                        },
-                                        transaction: controller.transaction
-                                    }
-                                })
-                                this.requestTimelineController.changeStatus(timelineController).then((response) => {
-                                    const data = {
-                                        success: true,
-                                        cardId: evData.cardId,
-                                        data: response
-                                    }
-                                    resolve(data)
-                                }).catch((err) => {
-                                    const error = {
-                                        success: false,
-                                        message: "Não é possivel alterar o usuario do pedido!",
-                                        errorCode: "ERROR"
-                                    }
-                                    reject(error)
-                                })
-                            }).catch((err) => {
-                                reject(err)
-                            })
+                        this.requestTimelineController.changeUser(statusController).then((response) => {
+                            const data = {
+                                success: true,
+                                data: {
+                                    cardId: evData.cardId,
+                                    requestTimelineItem: response
+                                }
+                            }
+                            resolve(data)
+                        }).catch((err) => {
+                            const error = {
+                                success: false,
+                                message: "Não é possivel alterar o usuario do pedido!",
+                                errorCode: "ERROR"
+                            }
+                            reject(error)
                         })
                     })
                 }).then((data) => {
-                    this.commit().then(() => {
-                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeUser', data)
-                    })
+                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeUser', data)
                 }).catch((err) => {
-                    this.rollback().then(() => {
-                        vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeUser', err)
-                    })
+                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeUser', err)
                 })
             })
         })
@@ -460,42 +423,5 @@ module.exports = class RequestBoard {
             })
         })
     }
-
-    setTransaction() {
-        return new Promise((resolve,reject) => {
-            return this.server.sequelize.transaction().then((transaction) => {
-                this._transaction = transaction
-                resolve(transaction)
-            })
-        })  
-    }
-
-    /**
-     * Commit persistence
-     */
-    commit() {
-        return new Promise((resolve, reject) => {
-            console.log("Commit everything!");
-            if (this._transaction) {
-                this._transaction.commit();
-            }
-            resolve()
-        })
-    }
-
-    
-    /**
-     * Rollback persistence
-     */
-    rollback() {
-        return new Promise((resolve, reject) => {
-            console.log("Just... Rollback...");
-            if (this._transaction) {
-                this._transaction.rollback();
-            }
-            resolve()
-        })
-    }
-    
 
 }
