@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const utils = require('../utils');
+const utils = require('../utils/index');
 const Op = require('sequelize').Op
 const Controller = require('../models/Controller')
 

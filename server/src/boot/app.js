@@ -1,0 +1,129 @@
+// imports
+const config = require('../config/index')
+const restify = require('restify')
+const corsMiddleware = require('restify-cors-middleware')
+const PrettyLogger = require('pretty-logger'), log = new PrettyLogger()
+const mongoose = require('mongoose')
+const bluebird = require('bluebird')
+
+// in-source imports
+const { BootError } = require('~errors')
+
+// dependency injection initialization
+const DI = require('./di')
+const di = new DI(restify.createServer())
+
+// overall setup
+di.setSocketIO()
+di.setElasticSearch()
+di.setSequelize()
+di.setVersion()
+di.setOAuth2()
+
+// configure CORS
+const cors = corsMiddleware({
+    origins: ['*'],
+    allowHeaders: ['X-Requested-With', 'Authorization', 'Content-type']
+})
+di.server.pre(cors.preflight)
+di.server.use(cors.actual)
+
+// configure Restify plugins
+di.server.use(restify.plugins.acceptParser(di.server.acceptable))
+di.server.use(restify.plugins.queryParser())
+di.server.use(restify.plugins.bodyParser())
+di.server.use(restify.plugins.gzipResponse())
+
+// attach models to di.server
+di.attachModels('mongodb') // attached to di.server.mongodb.{modelName}
+di.attachModels('mysql') // attached to di.server.mysql.{modelName}
+di.attachModels('draft-form','','models') // attached to server.draftFormModels.{modelName}
+
+// loading all sockets
+log.info("Loading sockets")
+require('../sockets')(di.server)
+
+// loading all http request routes
+log.info("Loading routes")
+require('../routes/index')(di.server)
+
+// initialize tracker protocols
+config.protocols.forEach((protocol) => {
+    protocol['instance'] = new (require('../modules/Tracker/protocols/' + protocol.name))(di.server, protocol)
+})
+
+// try to connect to MySQL and create database if it was not found
+const connectToMySQL = new Promise((resolve, reject) => {
+    const mysqlConnection = require('mysql').createConnection({
+        host: config.database.host,
+        user: config.database.user,
+        password: config.database.password
+    })
+    let databaseCreated = false;
+    mysqlConnection.connect((err) => {
+        if(err) return reject(err);
+        mysqlConnection.query("CREATE DATABASE `" + config.database.dbName + "`;", function (err) {
+            if(err){
+                return resolve(databaseCreated);
+            }
+            log.warning("Database not found. Database \"" + config.database.dbName + "\" created.")
+            databaseCreated = true;
+            resolve(databaseCreated)
+        })
+    })
+})
+
+// starts callback chain until server starts, or shutdown if the procedure fails
+connectToMySQL.then((databaseCreated) => {
+
+    di.server.elasticSearch.ping({
+        requestTimeout: config.elasticSearch.requestTimeout
+    }, function (error) {
+
+        if (error) {
+            console.log(new BootError('ElasticSearch is down!'))
+        } else {
+
+            log.info('ElasticSearch is running')
+
+            // guarantee MySQL structure
+            return di.server.sequelize.sync({
+                logging: false
+            }).then(() => {
+
+                log.info("Successfully connected to MySQL");
+                return new Promise((resolve, reject) => {
+
+                    if(databaseCreated){
+                        return require("~utils/first-seed.js")(di.server).then(() => {
+                            resolve()
+                        }).catch((err) => {
+                            reject(err)
+                        });
+                    }
+
+                    return resolve()
+
+                }).then(() => {
+
+                    mongoose.Promise = bluebird
+                    return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
+                        promiseLibrary: bluebird
+                    }).then(() => {
+                        log.info("Successfully connected to MongoDB");
+                        // finally, initialize di.server
+                        di.server.listen(config.mainServer.port, () => {
+                            log.info("Server v" + config.mainServer.version + " running on port: " + config.mainServer.port)
+                        })
+                    })
+
+                })
+
+            }).catch((err) => {
+                console.log(new BootError(err.message + " (" + err.name + ")"))
+            })
+        }
+
+    })
+
+})

@@ -1,4 +1,4 @@
-const utils = require('../utils')
+const utils = require('../utils/index')
 const _ = require('lodash')
 const shortid = require('shortid')
 const Controller = require('./../models/Controller')

@@ -36,20 +36,20 @@
             }
         },
         methods: {
-            onItemClick(statusItem){
-                if(statusItem !== this.value){
-                    this.changeValue(statusItem)
+            onItemClick(userItem){
+                if(userItem.value !== this.value){
+                    this.changeValue(userItem)
                 }
             },
-            changeValue(statusItem){
+            changeValue(userItem){
                 const sendData = {
                     cardId: this.cardId,
-                    status: statusItem.value
+                    userId: userItem.value
                 }
-                console.log("Emitting request-board:request-timeline:change-status", sendData)
-                this.$socket.emit('request-board:request-timeline:change-status', sendData)
-                this.$emit('change', statusItem.value)
-                this.$emit('input', statusItem.value)
+                console.log("Emitting request-board:request-timeline:change-user", sendData)
+                this.$socket.emit('request-board:request-timeline:change-user', sendData)
+                this.$emit('change', userItem.value)
+                this.$emit('input', userItem.value)
             }
         },
     }

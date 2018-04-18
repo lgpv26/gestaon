@@ -32,7 +32,7 @@
         },
         methods: {
             onItemClick(statusItem){
-                if(statusItem !== this.value){
+                if(statusItem.value !== this.value){
                     this.changeValue(statusItem)
                 }
             },

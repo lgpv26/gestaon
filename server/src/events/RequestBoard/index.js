@@ -3,7 +3,8 @@ const Controller = require('../../models/Controller')
 const shortid = require('shortid')
 const Op = require('Sequelize').Op
 const RequestRecoverance = require('../../modules/Draft/Recoverance/RequestRecoverance')
-
+const EventResponse = require('~server/models/EventResponse')
+const {PermissionError} = require('~errors')
 
 module.exports = class RequestBoard {
 
@@ -91,10 +92,7 @@ module.exports = class RequestBoard {
                         })
                         return section
                     })
-                    
-                    vm.socket.emit('requestBoardLoad', {
-                        data: sections
-                    })
+                    vm.socket.emit('requestBoardLoad', new EventResponse(sections))
                 }).catch((err) => {
                     console.log(err)
                 });

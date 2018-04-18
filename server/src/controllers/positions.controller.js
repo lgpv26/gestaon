@@ -1,7 +1,7 @@
-const utils = require('../utils');
+const utils = require('../utils/index');
 const _ = require('lodash');
 const moment = require('moment');
-const config = require('../config');
+const config = require('../config/index');
 const axios = require('axios');
 
 module.exports = (server, restify) => {

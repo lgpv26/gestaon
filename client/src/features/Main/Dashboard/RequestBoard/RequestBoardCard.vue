@@ -32,8 +32,8 @@
                     <request-board-icon-location></request-board-icon-location> 4,3 km
                 </span>
                 <span class="push-both-sides"></span>
-                <a class="ignore" v-tippy="RBCStatusTippyOptions"><request-board-icon-status></request-board-icon-status> Pendente</a>
-                <a class="ignore" v-tippy="RBCUserTippyOptions"><request-board-icon-flag></request-board-icon-flag> ---</a>
+                <a class="footer__status ignore" v-tippy="RBCStatusTippyOptions"><request-board-icon-status></request-board-icon-status> {{ status }}</a>
+                <a class="footer__responsible-user ignore" v-tippy="RBCUserTippyOptions"><request-board-icon-flag></request-board-icon-flag> {{ responsibleUserName }}</a>
             </div>
             <app-rbc-location id="rbc-location"></app-rbc-location>
             <app-rbc-client id="rbc-client"></app-rbc-client>
@@ -71,21 +71,30 @@
         },
         watch: {
             'card.request.requestTimeline': {
-                handler(requestTimeline){
-                    this.recalculateTimeline(requestTimeline)
+                handler(newValue, oldValue){
+                    this.setForm()
+                    this.recalculateTimeline(newValue)
                 },
                 deep: true
             }
         },
+
         sockets: {
-            requestBoardRequestTimelineChangeUser(data){
-                console.log("Received requestBoardRequestTimelineChangeUser", data)
+            requestBoardRequestTimelineChangeUser(evData){
+                if(evData.success && evData.data.cardId === this.card.id){
+                    console.log("Received requestBoardRequestTimelineChangeUser", evData)
+                }
+            },
+            requestBoardRequestTimelineChangeStatus(evData){
+                if(evData.success && evData.data.cardId === this.card.id){
+                    console.log("Received requestBoardRequestTimelineChangeStatus", evData)
+                }
             }
         },
         data(){
             return {
                 form: {
-                    status: 'pending',
+                    status: null,
                     userId: null
                 },
                 timeUntilNow: '?',
@@ -163,6 +172,7 @@
             }
         },
         computed: {
+            ...mapState('data/users', ['users']),
             hasTaskInstruction(){
                 return _.has(this.card, 'request.task.text')
             },
@@ -171,14 +181,48 @@
             },
             minutes(){
                 return moment(this.card.request.dateCreated).format("mm")
+            },
+            status(){
+                switch(this.form.status){
+                    case "pending":
+                        return "Pendente"
+                        break;
+                    case "sent":
+                        return "Enviado"
+                        break;
+                    case "canceled":
+                        return "Cancelado"
+                        break;
+                    case "finished":
+                        return "Finalizado"
+                        break;
+                    default:
+                        return "---"
+                }
+            },
+            responsibleUserName(){
+                const responsibleUser = _.find(this.users, {
+                    id: this.form.userId
+                })
+                if(responsibleUser)
+                    return responsibleUser.name
+                else
+                    return '---'
             }
         },
         methods: {
+            setForm(){
+                this.form.userId = _.last(this.card.request.requestTimeline).userId
+                this.form.status = _.last(this.card.request.requestTimeline).status
+            },
             recalculateTimeline(requestTimeline){
                 this.requestTimeline = _.map(requestTimeline, (data) => {
                     return {
                         data
                     }
+                })
+                this.requestTimeline = _.sortBy(this.requestTimeline, function(requestTimelineItem) {
+                    return requestTimelineItem.data.dateCreated;
                 })
             },
             onAddTaskClick(){
@@ -202,6 +246,7 @@
         },
         mounted(){
             const vm = this
+            vm.setForm()
             vm.recalculateTimeline(vm.card.request.requestTimeline)
             vm.requestTimelineInterval = setInterval(() => {
                 vm.requestTimeline.forEach((requestTimelineItem, index) => {
@@ -267,8 +312,6 @@
                                 requestTimelineProgressEl.classList.add('timeline__progress')
                             }
                             requestTimelineProgressEl.style.visibility = 'initial'
-
-                            console.log(vm.card, requestTimelineItem)
                             const startDate = moment(vm.card.request.dateCreated)
                             const endDate = moment(requestTimelineItem.data.dateCreated).add(vm.settings.deadlineInMinutes, 'm')
                             const nowDate = moment(requestTimelineItem.data.dateCreated)
@@ -304,6 +347,7 @@
         flex-grow: 1;
         padding: 10px;
         text-align: center;
+        max-width: 100%;
     }
 
     .request-board-card h3.card__client-name {
@@ -486,13 +530,17 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: center;
+        overflow: hidden;
     }
 
     .card__footer span.footer__location {
         margin: 0;
         color: var(--font-color--2);
         font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 0;
     }
 
     .card__footer span.footer__location svg {
@@ -514,6 +562,13 @@
     .card__footer span svg,
     .card__footer a svg {
         margin-right: 7px;
+    }
+
+    .card__footer .footer__responsible-user, .card__footer .status {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 0;
     }
 
 </style>

@@ -1,9 +1,11 @@
+import Sequelize from 'sequelize'
+
 module.exports = {
-    defineModel: (Sequelize, sequelize) => {
+    defineModel: (server) => {
         const modelName = 'SupplierCustomField';
         return {
             name: modelName,
-            instance: sequelize.define('supplierCustomField', {
+            instance: server.sequelize.define('supplierCustomField', {
                 id: {
                     type: Sequelize.INTEGER,
                     primaryKey: true,

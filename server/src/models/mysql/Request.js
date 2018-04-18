@@ -1,12 +1,14 @@
+import Sequelize from 'sequelize'
+
 const Controller = require('./../Controller')
 const _ = require('lodash')
 
 module.exports = {
-    defineModel: (Sequelize, sequelize) => {
+    defineModel: (server) => {
         const modelName = 'Request';
         return {
             name: modelName,
-            instance: sequelize.define(modelName, {
+            instance: server.sequelize.define(modelName, {
                 id: {
                     type: Sequelize.INTEGER,
                     primaryKey: true,

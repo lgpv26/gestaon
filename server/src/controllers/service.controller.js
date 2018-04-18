@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const utils = require('../utils');
+const utils = require('../utils/index');
 
 module.exports = (server, restify) => {
     return {

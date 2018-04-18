@@ -1,10 +1,12 @@
+import Sequelize from 'sequelize'
+
 module.exports = {
-    defineModel: (Sequelize, sequelize) => {
-        const TIMESTAMP = require('sequelize-mysql-timestamp')(sequelize);
+    defineModel: (server) => {
+        const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize);
         const modelName = 'UserAccessToken';
         return {
             name: modelName,
-            instance: sequelize.define(modelName, {
+            instance: server.sequelize.define(modelName, {
                 accessToken: {
                     type: Sequelize.STRING,
                     primaryKey: true

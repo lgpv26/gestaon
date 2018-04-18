@@ -2,8 +2,8 @@ const Protocol = require('../Protocol');
 const moment = require('moment');
 const log = new require('pretty-logger')();
 const _ = require('lodash');
-const config = require('../../../config');
-const utils = require('../../../utils');
+const config = require('../../../config/index');
+const utils = require('../../../utils/index');
 const restify = require('restify');
 const corsMiddleware = require('restify-cors-middleware');
 
@@ -30,10 +30,10 @@ module.exports = class OSMAND extends Protocol {
         protocolServer.use(cors.actual);
 
         /* configuring restify plugins */
-        protocolServer.use(restify.acceptParser(protocolServer.acceptable));
-        protocolServer.use(restify.queryParser());
-        protocolServer.use(restify.bodyParser());
-        protocolServer.use(restify.gzipResponse());
+        protocolServer.use(restify.plugins.acceptParser(protocolServer.acceptable));
+        protocolServer.use(restify.plugins.queryParser());
+        protocolServer.use(restify.plugins.bodyParser());
+        protocolServer.use(restify.plugins.gzipResponse());
 
         protocolServer.post('/', (req, res, next) => {
 

@@ -18,7 +18,7 @@ module.exports = function (server) {
             return;
         }
         // Require all drafts business logics
-        drafts.push(require('./events/Draft/' + fileName));
+        drafts.push(require('./events/Draft/' + fileName))
     });
     
     let channels = { 

@@ -343,6 +343,7 @@
         align-content: flex-start;
         width: 100%;
         position: absolute;
+        max-width: 100%;
     }
     .board-section__viewport::-webkit-scrollbar {
         background-color: rgba(0,0,0,.2);
@@ -363,6 +364,7 @@
     .request-card > .request-card__main {
         cursor: pointer;
         flex-grow:1;
+        max-width: 100%;
     }
     .request-card.ghost > .request-card__main {
         border: 2px dashed rgba(255,255,255,.1);

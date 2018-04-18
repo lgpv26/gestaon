@@ -1,9 +1,11 @@
+import Sequelize from 'sequelize'
+
 module.exports = {
-    defineModel: (Sequelize, sequelize) => {
+    defineModel: (server) => {
         const modelName = 'RequestTimeline';
         return {
             name: modelName,
-            instance: sequelize.define(modelName, {
+            instance: server.sequelize.define(modelName, {
                 id: {
                     type: Sequelize.INTEGER,
                     primaryKey: true,
@@ -46,7 +48,7 @@ module.exports = {
     },
     postSettings: ({RequestTimeline,Request,User}) => {
         RequestTimeline.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
-        RequestTimeline.belongsTo(User, {as: 'triggeredByUser', foreignKey: 'triggeredBy'});
         RequestTimeline.belongsTo(User, {as: 'user', foreignKey: 'userId'});
+        RequestTimeline.belongsTo(User, {as: 'triggeredByUser', foreignKey: 'triggeredBy'});
     }
 }

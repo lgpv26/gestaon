@@ -1,9 +1,11 @@
+import Sequelize from 'sequelize'
+
 module.exports = {
-    defineModel: (Sequelize, sequelize) => {
+    defineModel: (server) => {
         const modelName = 'SupplierCompany';
         return {
             name: modelName,
-            instance: sequelize.define(modelName, {
+            instance: server.sequelize.define(modelName, {
                 supplierId: {
                     type: Sequelize.INTEGER,
                     primaryKey: true

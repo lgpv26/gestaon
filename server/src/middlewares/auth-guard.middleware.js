@@ -1,18 +1,14 @@
 /* const jwt = require('jsonwebtoken'); */
-const moment = require('moment');
-const _ = require('lodash');
+const moment = require('moment')
+const _ = require('lodash')
+const { HTTPError } = require('~errors')
 
 module.exports = (server, restify) => {
     return (req, res, next) => {
         if(!req.query.token){
-            return next(
-                new restify.InvalidCredentialsError({
-                    body:{
-                        "code": "TOKEN_IS_REQUIRED",
-                        "message": "The token is required."
-                    }
-                })
-            );
+            const error = new HTTPError("The token is required", 401)
+            error.setCode("TOKEN_IS_REQUIRED")
+            return next(error)
         }
         server.mysql.UserAccessToken.findOne({
             where: {
@@ -43,25 +39,15 @@ module.exports = (server, restify) => {
         }).then((userAccessToken) => {
 
             if(!userAccessToken){
-                return next(
-                    new restify.InvalidCredentialsError({
-                        body:{
-                            "code": "INVALID_TOKEN",
-                            "message": "Token is not valid."
-                        }
-                    })
-                );
+                const error = new HTTPError("Token is not valid.", 401)
+                error.setCode("INVALID_TOKEN")
+                return next(error)
             }
 
             if(moment(userAccessToken.expiresAt).isBefore(moment())){
-                return next(
-                    new restify.InvalidCredentialsError({
-                        body:{
-                            "code": "EXPIRED_TOKEN",
-                            "message": "Token is expired. Try using the refresh_token grant."
-                        }
-                    })
-                );
+                const error = new HTTPError("Token is expired. Try using the refresh_token grant", 401)
+                error.setCode("EXPIRED_TOKEN")
+                return next(error)
             }
 
             // if the request was made specific to a company
@@ -69,14 +55,9 @@ module.exports = (server, restify) => {
             if(_.has(req.query,'companyId')){
                 const verifyResult = userBelongsToRequestedCompany(userAccessToken.user, req.query.companyId);
                 if (!verifyResult){
-                    return next(
-                        new restify.InvalidCredentialsError({
-                            body:{
-                                "code": "MISSING_COMPANY",
-                                "message": "The authenticated user doesn't belong to the requested company."
-                            }
-                        })
-                    );
+                    const error = new HTTPError("The authenticated user doesn't belong to the requested company", 401)
+                    error.setCode("MISSING_COMPANY")
+                    return next(error)
                 }
             }
 

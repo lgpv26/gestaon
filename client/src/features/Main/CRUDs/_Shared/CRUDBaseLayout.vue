@@ -58,14 +58,15 @@
     import _ from 'lodash';
     import Clusterize from 'clusterize.js'
 
-    import Scrollbar from 'smooth-scrollbar';
+    import Scrollbar from 'smooth-scrollbar'
+    import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 
     export default {
         props: ['title', 'columns', 'items'],
         data(){
             return {
                 scrollbar: null,
-                clusterize: null
+                resizeSensor: null
             }
         },
         computed: {
@@ -75,11 +76,23 @@
                 }
             }
         },
+        methods: {
+            updateResizeListeners(){
+                const vm = this
+                setImmediate(() => {
+                    if(this.resizeSensor) this.resizeSensor.detach()
+                    this.resizeSensor = new ResizeSensor(vm.$refs.table, () => {
+                        console.log("Mudou de tamanho")
+                    })
+                })
+            }
+        },
         mounted(){
             this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
                 overscrollEffect: 'bounce',
                 alwaysShowTracks: true
-            });
+            })
+            this.updateResizeListeners()
             /*this.clusterize = new Clusterize({
                 scrollElem: this.$refs.scrollbar,
                 contentElem: this.$refs.tbody,

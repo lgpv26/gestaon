@@ -64,11 +64,11 @@
             }
         },
         sockets: {
-            requestBoardLoad({data}){
-                console.log("Received requestBoardLoad", data)
-                if(data && data.length){
+            requestBoardLoad(eventResponse){
+                console.log("Received requestBoardLoad", eventResponse)
+                if(eventResponse.success && eventResponse.evData && eventResponse.evData.length){
                     const vm = this
-                    data.forEach((section) => {
+                    eventResponse.evData.forEach((section) => {
                         vm.ADD_SECTION(section)
                     })
                 }
