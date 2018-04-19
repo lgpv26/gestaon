@@ -44,6 +44,14 @@ module.exports = class DependencyInjection {
         return this.server.oAuth2
     }
 
+    setMoleculer(){
+        const { ServiceBroker } = require("moleculer");
+        this.server.broker = new ServiceBroker({
+            logger: false
+        })
+        return this.server.broker
+    }
+
     setVersion(){
         this.server.version = require('../../package.json').version
         return this.server.version

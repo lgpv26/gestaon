@@ -19,6 +19,7 @@ di.setElasticSearch()
 di.setSequelize()
 di.setVersion()
 di.setOAuth2()
+di.setMoleculer()
 
 // configure CORS
 const cors = corsMiddleware({
@@ -73,57 +74,54 @@ const connectToMySQL = new Promise((resolve, reject) => {
     })
 })
 
+// load services (Moleculer)
+di.server.broker.createService(require('../services/auth.service')(di.server))
+di.server.broker.createService(require('../services/request-board.service')(di.server))
+di.server.broker.createService(require('../services/data/request.service')(di.server))
+di.server.broker.createService(require('../services/data/product.service')(di.server))
+
 // starts callback chain until server starts, or shutdown if the procedure fails
-connectToMySQL.then((databaseCreated) => {
-
-    di.server.elasticSearch.ping({
-        requestTimeout: config.elasticSearch.requestTimeout
-    }, function (error) {
-
-        if (error) {
-            console.log(new BootError('ElasticSearch is down!'))
-        } else {
-
-            log.info('ElasticSearch is running')
-
-            // guarantee MySQL structure
-            return di.server.sequelize.sync({
-                logging: false
-            }).then(() => {
-
-                log.info("Successfully connected to MySQL");
-                return new Promise((resolve, reject) => {
-
-                    if(databaseCreated){
-                        return require("~utils/first-seed.js")(di.server).then(() => {
-                            resolve()
-                        }).catch((err) => {
-                            reject(err)
-                        });
-                    }
-
-                    return resolve()
-
+di.server.broker.start().then(() => {
+    connectToMySQL.then((databaseCreated) => {
+        di.server.elasticSearch.ping({
+            requestTimeout: config.elasticSearch.requestTimeout
+        }, function (error) {
+            if (error) {
+                console.log(new BootError('ElasticSearch is down!'))
+            } else {
+                log.info('ElasticSearch is running')
+                // guarantee MySQL structure
+                return di.server.sequelize.sync({
+                    logging: false
                 }).then(() => {
-
-                    mongoose.Promise = bluebird
-                    return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
-                        promiseLibrary: bluebird
+                    log.info("Successfully connected to MySQL");
+                    return new Promise((resolve, reject) => {
+                        if(databaseCreated){
+                            return require("~utils/first-seed.js")(di.server).then(() => {
+                                resolve()
+                            }).catch((err) => {
+                                reject(err)
+                            });
+                        }
+                        return resolve()
                     }).then(() => {
-                        log.info("Successfully connected to MongoDB");
-                        // finally, initialize di.server
-                        di.server.listen(config.mainServer.port, () => {
-                            log.info("Server v" + config.mainServer.version + " running on port: " + config.mainServer.port)
+                        mongoose.Promise = bluebird
+                        return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
+                            promiseLibrary: bluebird
+                        }).then(() => {
+                            log.info("Successfully connected to MongoDB");
+                            // finally, initialize di.server
+                            di.server.listen(config.mainServer.port, () => {
+                                log.info("Server v" + config.mainServer.version + " running on port: " + config.mainServer.port)
+                            })
                         })
                     })
-
+                }).catch((err) => {
+                    console.log(new BootError(err.message + " (" + err.name + ")"))
                 })
-
-            }).catch((err) => {
-                console.log(new BootError(err.message + " (" + err.name + ")"))
-            })
-        }
-
+            }
+        })
     })
-
+}).catch((err) => {
+    console.log(new BootError(err.message + " (" + err.name + ")"))
 })

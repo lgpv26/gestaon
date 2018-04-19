@@ -7,6 +7,7 @@ module.exports = {
             '~controllers': path.join(__dirname, '/src/controllers/'),
             '~errors': path.join(__dirname, '/src/errors'),
             '~utils': path.join(__dirname, '/src/utils'),
+            '~config': path.join(__dirname, '/src/config')
         }
     }
 }

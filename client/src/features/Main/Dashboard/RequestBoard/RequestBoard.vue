@@ -64,18 +64,18 @@
             }
         },
         sockets: {
-            requestBoardLoad(eventResponse){
-                console.log("Received requestBoardLoad", eventResponse)
-                if(eventResponse.success && eventResponse.evData && eventResponse.evData.length){
+            requestBoardLoad(ev){
+                console.log("Received requestBoardLoad", ev)
+                if(ev.success && ev.evData && ev.evData.sections && ev.evData.sections.length){
                     const vm = this
-                    eventResponse.evData.forEach((section) => {
+                    ev.evData.sections.forEach((section) => {
                         vm.ADD_SECTION(section)
                     })
                 }
             },
-            requestBoardSectionCreate(response){
-                console.log("Received requestBoardSectionCreate", response)
-                this.ADD_SECTION(response.data)
+            requestBoardSectionCreate(ev){
+                console.log("Received requestBoardSectionCreate", ev)
+                this.ADD_SECTION(ev.evData)
             },
             requestBoardSectionRemove(response){
                 console.log("Received requestBoardSectionRemove", response)

@@ -5,9 +5,9 @@ const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
 
-    const usersController = require('./../controllers/users.controller')(server, restify);
+    const usersController = require('./../controllers/users.controller')(server, restify)
 
-    const ordersProductsController = require('./../controllers/orders-products.controller')(server, restify);
+    const ordersProductsController = require('./../controllers/orders-products.controller')(server, restify)
     const productsController = require('./../controllers/products.controller')(server, restify)
     const requestsClientsPhone = require('./../controllers/requests-clients-phones.controller')(server, restify)
     const requestsClientsAddress = require('./../controllers/requests-clients-addresses.controller')(server, restify)

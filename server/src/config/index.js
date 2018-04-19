@@ -10,6 +10,9 @@ module.exports = {
         },
         version: packageJSON.version
     },
+    requestBoard: {
+        defaultPosition: 65535
+    },
     oAuth2: {
         webClient: {
             rawId: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpZCIsImNsaWVudCI6IndlYiIsIm5hbWUiOiJncHMuYWdpbGl6YS5tZSJ9.Wr3wqVZwwMyYN3MO9bDgyvhpOow0nFcEmCdPhutTwc0",

@@ -44,11 +44,9 @@ module.exports = class RequestBoard {
         return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
                return card
         }).then((card) => {
-
                this.requestRecoverance.setRequestId(card.requestId)
                this.requestRecoverance.setCompanyId(evData.companyId)
                this.requestRecoverance.setRecoverancedBy(this.socket.user)
-
 
                this.requestRecoverance.start().then((draft) => {
                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestRecoverance', draft)
@@ -59,65 +57,29 @@ module.exports = class RequestBoard {
         })
 
         this.socket.on('request-board:load', () => {
-            vm.socket.join('company/' + activeCompanyUserId + '/request-board') // subscribe user in your request-board's company channel
-
-            vm.server.mongodb.Section.find({}, null, {
-                sort: {
-                    position: 1
+            vm.socket.join('company/' + activeCompanyUserId + '/request-board') // subscribe the user to its request-board company channel
+            vm.server.broker.call('request-board.load', {
+                data: {
+                    companyId: activeCompanyUserId
                 }
-            }).populate('cards').exec().then((sections) => {
-                const cardsRequestsIds = []
-                // get all requestIds to consult mysql just once
-                sections.forEach((section) => {
-                    section.cards.forEach((card) => {
-                        cardsRequestsIds.push(parseInt(card.requestId))
-                    })
-                })
-                const getAll = new Controller({
-                    request: {
-                        id: cardsRequestsIds,
-                        companyId: 1
-                    }
-                })
-
-                this.requestsController.getAll(getAll).then((requests) => {
-                    sections = JSON.parse(JSON.stringify(sections))
-                    sections = _.map(sections, (section) => {
-                        _.map(section.cards, (card) => {
-                            card.request = _.find(requests, { id: card.requestId })
-                            return card
-                        })
-                        section.cards.sort(function(a, b){
-                            return a.position - b.position
-                        })
-                        return section
-                    })
-                    vm.socket.emit('requestBoardLoad', new EventResponse(sections))
-                }).catch((err) => {
-                    console.log(err)
-                });
+            }).then((sections) => {
+                vm.socket.emit('requestBoardLoad', new EventResponse({sections}))
+            }).catch((err) => {
+                console.log(err)
             })
         })
 
         /**
          * On section create
          */
-        this.socket.on('request-board:section-create', (section) => {
-            vm.server.mongodb.Section.findOne({}, {}, { sort: { position : -1 } }, function(err, lastSection) {
-                let position = vm._defaultPosition
-                if(lastSection) position += lastSection.position
-                vm.server.mongodb.Section.create({
-                    companyId: 1,
-                    position
-                }).then((section) => {
-                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionCreate', {
-                        data: section
-                    })
-                }).catch((err) => {
-                    console.log(err)
-                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardSectionCreate', new Error(err))
-                })
-            });
+        this.socket.on('request-board:section-create', () => {
+            vm.server.broker.call('request-board.createSection', {
+                data: {
+                    companyId: activeCompanyUserId
+                }
+            }).catch((err) => {
+                console.log(err)
+            })
         })
 
         /**

@@ -1,13 +1,4 @@
 \.idea/
 
 client/src/config\.js
-
 server/src/config\.js
-
-client/package\.json
-
-client/package-lock\.json
-
-server/package\.json
-
-package\.json
