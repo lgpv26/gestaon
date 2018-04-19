@@ -79,7 +79,7 @@ module.exports = class RequestBoard {
                     companyId: vm.socket.activeCompany.id
                 }
             }).catch((err) => {
-                vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardSectionCreate', new EventResponse(err))
+                vm.socket.instance.emit('requestBoardSectionCreate', new EventResponse(err))
                 console.log(err)
             })
         })
@@ -98,7 +98,7 @@ module.exports = class RequestBoard {
                     sectionId: removedSectionId
                 }))
             }).catch((err) => {
-                vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardSectionCreate', new EventResponse(err))
+                vm.socket.instance.emit('requestBoardSectionCreate', new EventResponse(err))
                 console.log(err)
             })
         })
@@ -108,67 +108,17 @@ module.exports = class RequestBoard {
          */
         this.socket.instance.on('request-board:section-move', (evData) => {
             console.log("Section moved", evData)
-            switch(evData.location){
-                case "first":
-                    vm.server.mongodb.Section.findOne({}, {}, { sort: { position: 1 } }, function(err, firstSection) {
-                        let position = firstSection.position / 2
-                        vm.server.mongodb.Section.findOneAndUpdate({
-                            _id: evData.sectionId
-                        }, {
-                            $set: {
-                                position
-                            }
-                        }).then((section) => {
-                            _.assign(section, { position })
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardSectionMove', {
-                                data: { location: 'first', section }
-                            })
-                        }).catch((err) => {
-                            console.log(err)
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardSectionMove', new Error(err))
-                        })
-                    })
-                    break;
-                case "last":
-                    vm.server.mongodb.Section.findOne({}, {}, { sort: { position: -1 } }, function(err, lastSection) {
-                        let position = vm._defaultPosition
-                        if(lastSection) position += lastSection.position
-                        vm.server.mongodb.Section.findOneAndUpdate({
-                            _id: evData.sectionId
-                        }, {
-                            $set: {
-                                position
-                            }
-                        }).then((section) => {
-                            _.assign(section, { position })
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardSectionMove', {
-                                data: { location: 'last', section }
-                            })
-                        }).catch((err) => {
-                            console.log(err)
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardSectionMove', new Error(err))
-                        })
-                    })
-                    break;
-                default:
-                    console.log("evData",evData)
-                    vm.server.mongodb.Section.findOneAndUpdate({
-                        _id: evData.sectionId
-                    }, {
-                        $set: {
-                            position: evData.position
-                        }
-                    }).then((section) => {
-                        _.assign(section, { position: evData.position })
-                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardSectionMove', {
-                            data: { location: 'middle', section }
-                        })
-                    }).catch((err) => {
-                        console.log(err)
-                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardSectionMove', new Error(err))
-                    })
-            }
-
+            vm.server.broker.call('request-board.moveSection', {
+                data: {
+                    companyId: vm.socket.activeCompany.id,
+                    sectionId: evData.sectionId,
+                    location: evData.location,
+                    position: evData.position || null
+                }
+            }).catch((err) => {
+                vm.socket.instance.emit('requestBoardSectionCreate', new EventResponse(err))
+                console.log(err)
+            })
         })
 
         /**
@@ -176,62 +126,17 @@ module.exports = class RequestBoard {
          */
         this.socket.instance.on('request-board:card-move', (evData) => {
             console.log("Card moved", evData)
-            switch(evData.location){
-                case "first":
-                    vm.server.mongodb.Card.findOne({ section: evData.toSection}, {}, { sort: { position: 1 } }, function(err, firstCard) {
-                        console.log('firstCard', firstCard.position)
-                        let position = firstCard.position / 2
-                        vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', {
-                                data: { location: 'first' }
-                            })
-                        }).catch((err) => {
-                            console.log(err)
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', new Error(err))
-                        })
-                    })
-                    break;
-                case "last":
-                    vm.server.mongodb.Card.findOne({ section: evData.toSection }, {}, { sort: { position: -1 } }, function(err, lastCard) {
-                        let position = vm._defaultPosition
-                        if(lastCard) position += lastCard.position
-                        vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', {
-                                data: { location: 'last' }
-                            })
-                        }).catch((err) => {
-                            console.log(err)
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', new Error(err))
-                        })
-                    })
-                    break;
-                case "middle":
-                    vm.server.mongodb.Card.find({ section: evData.toSection, _id: { $in: [evData.prevCard, evData.nextCard] } }, function(err, prevAndNextCard) {
-                        prevAndNextCard.sort(function(a, b){return b.position - a.position})
-                        const position = ( prevAndNextCard[0].position + prevAndNextCard[1].position ) / 2
-                        vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', {
-                                data: { location: 'middle' }
-                            })
-                        }).catch((err) => {
-                            console.log(err)
-                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', new Error(err))
-                        })
-                    })
-                    break;
-                case "last-and-only":
-                    console.log("last-and-only")
-                    let position = vm._defaultPosition
-                    vm.saveCard(evData.cardId, evData.toSection, position).then(() => {
-                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', {
-                            data: { location: 'last-and-only' }
-                        })
-                    }).catch((err) => {
-                        console.log(err)
-                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', new Error(err))
-                    })
-                    break;
-            }
+            vm.server.broker.call('request-board.moveCard', {
+                data: {
+                    location: evData.location,
+                    companyId: vm.socket.activeCompany.id,
+                    toSection: evData.toSection,
+                    cardId: evData.cardId
+                }
+            }).catch((err) => {
+                vm.socket.instance.emit('requestBoardSectionCreate', new EventResponse(err))
+                console.log(err)
+            })
         })
 
         /**

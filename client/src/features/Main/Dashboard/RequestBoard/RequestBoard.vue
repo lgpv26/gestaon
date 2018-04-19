@@ -94,19 +94,22 @@
                     console.log("ERROR", ev.error)
                 }
             },
-            requestBoardSectionMove(response){
-                console.log("Received requestBoardSectionMove", response)
-                const section = response.data.section
-                console.log(section.id, section.position)
-                this.SET_SECTION({
-                    sectionId: section.id,
-                    section: {
-                        position: section.position
-                    }
-                })
-                Vue.nextTick(() => {
-                    this.SORT_SECTIONS()
-                })
+            requestBoardSectionMove(ev){
+                console.log("Received requestBoardSectionMove", ev)
+                if(ev.success) {
+                    this.SET_SECTION({
+                        sectionId: ev.evData.id,
+                        section: {
+                            position: ev.evData.position
+                        }
+                    })
+                    Vue.nextTick(() => {
+                        this.SORT_SECTIONS()
+                    })
+                }
+                else {
+                    console.log("ERROR", ev.error)
+                }
             },
             requestBoardCardCreate(request){
                 console.log("Received requestBoardCardCreate", request)
