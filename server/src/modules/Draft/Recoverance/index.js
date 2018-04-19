@@ -1,6 +1,6 @@
 import { resolve } from 'dns';
 
-const Drafts = require('../../../events/Draft/index')
+const Drafts = require('../../../events-old/Draft/index')
 const basePath = require('../../../middlewares/base-path.middleware')
 const _ = require('lodash')
 

@@ -128,14 +128,31 @@ module.exports = (server) => { return {
                 }).then((section) => {
                     server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionCreate', new EventResponse(section))
                     return section
-                }).catch((err) => {
-                    server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionCreate', new Error(err))
                 })
             })
         },
         moveSection(ctx){
         },
+        /**
+         * Remove a section associated to the company request-board
+         * @param {Number} data.companyId, {Number} data.sectionId
+         * @returns {Promise.<Number>} removedSectionId
+         */
         removeSection(ctx){
+            return server.mongodb.Card.count({
+                section: ctx.params.data.sectionId
+            }).then((count) => {
+                if(count > 0){
+                    throw new Error("Você não pode remover uma seção que possui pedido(s).")
+                }
+                else {
+                    return server.mongodb.Section.remove({
+                        _id: ctx.params.data.sectionId
+                    }).then(() => {
+                        return ctx.params.data.sectionId
+                    })
+                }
+            })
         },
         createCard(ctx){
         },

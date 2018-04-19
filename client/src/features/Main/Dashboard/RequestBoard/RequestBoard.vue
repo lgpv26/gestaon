@@ -66,24 +66,32 @@
         sockets: {
             requestBoardLoad(ev){
                 console.log("Received requestBoardLoad", ev)
-                if(ev.success && ev.evData && ev.evData.sections && ev.evData.sections.length){
+                if(ev.success && _.has(ev, 'evData.sections') && ev.evData.sections.length){
                     const vm = this
                     ev.evData.sections.forEach((section) => {
                         vm.ADD_SECTION(section)
                     })
                 }
+                else {
+                    console.log("ERROR", ev.error)
+                }
             },
             requestBoardSectionCreate(ev){
                 console.log("Received requestBoardSectionCreate", ev)
-                this.ADD_SECTION(ev.evData)
-            },
-            requestBoardSectionRemove(response){
-                console.log("Received requestBoardSectionRemove", response)
-                if(response.success){
-                    this.REMOVE_SECTION(response.data.section.id)
+                if(ev.success) {
+                    this.ADD_SECTION(ev.evData)
                 }
                 else {
-                    console.log("Erro: ", response.message)
+                    console.log("ERROR", ev.error)
+                }
+            },
+            requestBoardSectionRemove(ev){
+                console.log("Received requestBoardSectionRemove", ev)
+                if(ev.success){
+                    this.REMOVE_SECTION(ev.evData.sectionId)
+                }
+                else {
+                    console.log("ERROR", ev.error)
                 }
             },
             requestBoardSectionMove(response){

@@ -42,11 +42,12 @@ di.attachModels('draft-form','','models') // attached to server.draftFormModels.
 
 // loading all sockets
 log.info("Loading sockets")
-require('../sockets')(di.server)
+const Socket = require('../events')
+new Socket(di.server)
 
 // loading all http request routes
 log.info("Loading routes")
-require('../routes/index')(di.server)
+require('../routes')(di.server)
 
 // initialize tracker protocols
 config.protocols.forEach((protocol) => {

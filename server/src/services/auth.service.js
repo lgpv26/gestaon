@@ -4,16 +4,12 @@ module.exports = (server) => { return {
         get(ctx) {
         },
         list(ctx){
-
         },
         create(ctx){
-
         },
         update(ctx){
-
         },
         remove(ctx){
-
         }
     }
 }}
