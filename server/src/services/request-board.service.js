@@ -87,8 +87,8 @@ module.exports = (server) => { return {
                                 as: 'clientGroup'
                             }]
                         },{
-                            model: server.mysql.Order,
-                            as: "order",
+                            model: server.mysql.RequestOrder,
+                            as: "requestOrder",
                             include: [{
                                 model: server.mysql.OrderProduct,
                                 as: 'orderProducts',
