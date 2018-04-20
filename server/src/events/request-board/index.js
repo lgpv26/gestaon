@@ -9,6 +9,8 @@ const {PermissionError} = require('~errors')
 module.exports = class RequestBoard {
 
     /**
+     * Events emitted and received when user is connected in a company dashboard
+     * @constructor
      * @param {Object} server
      * @param {Object} socket = { instance, user, activeCompany, activeUserCompany}
      */
@@ -27,7 +29,8 @@ module.exports = class RequestBoard {
     }
 
     /**
-     * Events on Request Listeners
+     * @private
+     * Set listeners
      */
     _setListeners() {
 
@@ -239,37 +242,6 @@ module.exports = class RequestBoard {
                 }).catch((err) => {
                     vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', err)
                 })
-            })
-        })
-    }
-
-    saveCard(cardId, toSectionId, position){
-        const vm = this
-        return vm.server.mongodb.Card.findOne({
-            _id: cardId
-        }).then((card) => {
-            const prevSectionId = card.section.toString()
-            _.assign(card, {
-                position,
-                section: toSectionId
-            })
-            return card.save().then(() => {
-                if(prevSectionId !== toSectionId) { // only execute here if card is going to another section
-                    const removeCardFromPrevSection = vm.server.mongodb.Section.findOne({
-                        _id: prevSectionId
-                    }).then((prevSection) => {
-                        const prevSectionCardIndex = _.findIndex(prevSection.cards, card._id)
-                        prevSection.cards.splice(prevSectionCardIndex, 1)
-                        return prevSection.save()
-                    })
-                    const addCardToNextSection = vm.server.mongodb.Section.findOne({
-                        _id: toSectionId
-                    }).then((toSection) => {
-                        toSection.cards.push(card._id)
-                        return toSection.save()
-                    })
-                    return Promise.all([removeCardFromPrevSection, addCardToNextSection])
-                }
             })
         })
     }

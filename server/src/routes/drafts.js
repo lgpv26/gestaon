@@ -17,11 +17,6 @@ module.exports = (server, restify) => {
 
     server.get('/drafts', (req, res, next) => {
         draftsController.getAll(req).then((getAllResult) => {
-            if (!getAllResult || getAllResult.length < 1) {
-                return next(
-                    new restify.ResourceNotFoundError("Nenhum dado encontrado.")
-                );
-            }
             return res.send(200, { data: getAllResult })
         })
     })

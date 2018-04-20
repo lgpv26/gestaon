@@ -30,7 +30,7 @@ module.exports = {
     database: {
         dialect: 'mysql',
         host: 'localhost',
-        dbName: 'agiliza-gps',
+        dbName: 'gestaon-dev',
         user: 'thyoity',
         password: 'atrroot'
     },

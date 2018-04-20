@@ -66,7 +66,7 @@
         sockets: {
             requestBoardLoad(ev){
                 console.log("Received requestBoardLoad", ev)
-                if(ev.success && _.has(ev, 'evData.sections') && ev.evData.sections.length){
+                if(ev.success){
                     const vm = this
                     ev.evData.sections.forEach((section) => {
                         vm.ADD_SECTION(section)
@@ -214,6 +214,7 @@
         mounted(){
             const vm = this
             this.SET_SECTIONS([])
+            console.log("Request Board")
             this.$socket.emit('request-board:load')
         }
     }

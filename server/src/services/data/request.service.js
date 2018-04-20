@@ -11,8 +11,8 @@ module.exports = (server) => { return {
          */
         list(ctx){
             return server.mysql.Request.findAll({
-                where: ctx.params.where || {},
-                include: ctx.params.include || []
+                where: ctx.params.where,
+                include: ctx.params.include
             })
         },
         create(ctx){
