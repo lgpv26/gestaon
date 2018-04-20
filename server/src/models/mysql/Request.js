@@ -24,11 +24,11 @@ module.exports = {
                         this.setDataValue('clientId', (val == '' | val == null) ? null : val);
                     }
                 },
-                orderId: {
+                requestOrderId: {
                     type: Sequelize.INTEGER,
                     allowNull: true,
                     set(val) {
-                        this.setDataValue('orderId', (val == '' | val == null) ? null : val);
+                        this.setDataValue('requestOrderId', (val == '' | val == null) ? null : val);
                     }
                 },
                 taskId: {
@@ -65,12 +65,12 @@ module.exports = {
         }
     },
 
-    postSettings: ({Request,Company,Client,Order,RequestClientPhone,RequestClientAddress,RequestTimeline,
+    postSettings: ({Request,Company,Client,RequestOrder,RequestClientPhone,RequestClientAddress,RequestTimeline,
         ClientPhone,ClientAddress}) => {
 
         Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
         Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
-        Request.belongsTo(Order, {as: 'order', foreignKey: 'orderId'})
+        Request.belongsTo(RequestOrder, {as: 'requestOrder', foreignKey: 'requestOrderId'})
 
         Request.hasMany(RequestTimeline, {as: 'requestTimeline', foreignKey: 'requestId'});
 

@@ -11,7 +11,7 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
-                orderId: {
+                requestOrderId: {
                     type: Sequelize.INTEGER
                 },
                 productId: {
@@ -45,8 +45,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({OrderProduct, Order, Product}) => {
-        OrderProduct.belongsTo(Order, {as: 'order', foreignKey: 'orderId'});
+    postSettings: ({OrderProduct, RequestOrder, Product}) => {
+        OrderProduct.belongsTo(RequestOrder, {as: 'requestOrder', foreignKey: 'requestOrderId'});
         OrderProduct.belongsTo(Product, {as: 'product', foreignKey: 'productId'});
     }
 };
