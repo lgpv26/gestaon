@@ -219,46 +219,117 @@ const request = {
 
     },
     data: { // info about data that needs to be edited or created when the persist occurs
-        "revenues": {
-            "revenueGroups": [
-                {},
-                {}
+        client: {
+            id: '', // null if creating, update if filled
+            name: '', 
+            legalDocument: '',
+            // if id + name + legalDocument isEmpty or null = client is null
+            clientAddresses: [{
+                    id: '', // temp: if creating, update if filled
+                    number: '',
+                    complement: '',
+                    selectedTypeIds: [
+                        {
+                            id: 'temp:', // temp: if creating, update if filled
+                            name: ''  // if update name isn't required
+                        }
+                    ],
+                    address: {
+                        id: '', // temp: if creating, update if filled
+                        name: '',
+                        neighborhood: '',
+                        cep: '',
+                        city: '',
+                        state: ''
+                    }
+                }
             ],
-            "revenueItems": [
+
+            clientPhones: [
                 {
-                },
+                    id: '', // temp: if creating, update if filled
+                    ddd: '',
+                    number: '',
+                    name: ''
+                }
+            ],
+
+            customField: [
                 {
+                    id: '', // temp: if creating, update if filled
+                    name: ''
+                }
+            ],
+            clientCustomFields: [
+                {
+                    id: '', // id of the custom field, if "temp:" required create a custom field.
+                    value: '' // value of the custom field
+                }
+            ],
+
+            clientGroupId: '', // if "temp:" required create a client group.
+            clientGroup: [
+                {
+                    id: '', // temp: if creating, update if filled
+                    name: ''
                 }
             ]
         },
-        "expenses": {
-            "revenueGroups": [
-                {},
-                {}
-            ],
-            "revenueItems": [
+        order: {
+            orderProducts: [
                 {
-
-                },
-                {
-
+                    id: '', // temp: if creating, update if filled
+                    product: {
+                        id: '',  // temp: if creating, update if filled
+                        name: '',
+                        supplier: { 
+                            '': '?'    
+                        } // This one I was in doubt.
+                    },
+                    quantity: '',
+                    unitPrice: '',
+                    unitDiscount: ''
                 }
-            ]
-        },
-        "accounts": {
-            "revenueGroups": [
-                {},
-                {}
             ],
-            "revenueItems": [
-                {
 
-                },
+            divulgationChannelId: '', // if "temp:" required create a divulgation channel.
+            divulgationChannel: [
                 {
-
+                    id: '', // temp: if creating, update if filled
+                    name: ''
                 }
-            ]
+            ],
+
+            deliveryDatetime: '',
+            responsibleUser: '',
+
+            obs: ''
         },
+        task: {
+        },
+        paymentMethods: [
+            { 
+                id: '', // if payment in cash
+                deadline: '', // current date
+                amount: 0.00
+            },
+            {
+                id: '', // if payment in installments
+                deadline: '', // current date
+                amount: 0.00,
+                nextInstallments: [
+                    {
+                        deadline: '',
+                        amount: 0.00
+                    }
+                ]
+            }
+        ],
+        accountId: '', // if "temp:" required create a account.
+        account: {
+            id: '',  // temp: if creating, update if filled
+            name: ''
+        }
     }
 }
 
