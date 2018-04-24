@@ -52,12 +52,12 @@ module.exports = class Request extends Draft {
             vm.saveWithTimeout()
         })
         /**
-         * @param {Object} evData = { draftId:Number, showClientAddressForm:Boolean }
+         * @param {Object} evData = { draftId:Number, showForm:Boolean }
          */
-        vm.socket.instance.on('draft/request.client.showClientAddressForm', (evData) => {
-            vm.setDraftForm('client.showClientAddressForm', evData.showClientAddressForm)
-            vm.socket.instance.broadcast.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.client.showClientAddressForm', new EventResponse({
-                showClientAddressForm: evData.showClientAddressForm
+        vm.socket.instance.on('draft/request.client.clientAddress.showForm', (evData) => {
+            vm.setDraftForm('client.clientAddress.showForm', evData.showClientAddressForm)
+            vm.socket.instance.broadcast.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.client.clientAddress.showForm', new EventResponse({
+                showForm: evData.showForm
             }))
             vm.saveInstantly()
         })

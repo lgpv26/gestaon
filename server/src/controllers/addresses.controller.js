@@ -7,8 +7,8 @@ module.exports = (server, restify) => {
     return {
         search: (req, res, next) => {
             let actingCitiesString = "";
-            if (typeof req.params.actingCities !== "undefined") {
-                req.params.actingCities.forEach(function (actingCity, index) {
+            if (typeof req.query.actingCities !== "undefined") {
+                req.query.actingCities.forEach(function (actingCity, index) {
                     actingCitiesString += " " + actingCity;
                 });
                 actingCitiesString = utils.removeDiacritics(actingCitiesString.trim());
@@ -23,7 +23,7 @@ module.exports = (server, restify) => {
                             "bool": {
                                 "must": {
                                     "multi_match": {
-                                        "query": utils.removeDiacritics(req.params.q.trim()),
+                                        "query": utils.removeDiacritics(req.query.q.trim()),
                                         "fields": ["name", "cep"],
                                         "analyzer": "standard",
                                         "operator": "AND"
@@ -53,17 +53,9 @@ module.exports = (server, restify) => {
                             const addressId = parseInt(hit._id)
                             dataSearch[index] = { source: _.assign({}, { id: addressId }, hit._source) }
                         })
-
-                        if (dataSearch < 1) {
-                            return next(
-                                new restify.ResourceNotFoundError("Nenhum registro encontrado.")
-                            );
-                        }
-                        else {
-                            return res.send(200, {
-                                data: dataSearch
-                            });
-                        }
+                        return res.send(200, {
+                            data: dataSearch
+                        })
                     }
                 }
             )
@@ -164,10 +156,10 @@ module.exports = (server, restify) => {
             return server.sequelize.transaction(function (t) {
                 return server.mysql.Address.destroy({
                     where: {
-                        id: req.params.addressId,
+                        id: req.query.addressId,
                         companyId: {
                             [Op.not]: 0,
-                            [Op.eq]: parseInt(req.params.companyId)
+                            [Op.eq]: parseInt(req.query.companyId)
                         }
                     },
                     transaction: t
@@ -178,7 +170,7 @@ module.exports = (server, restify) => {
                     return server.elasticSearch.delete({
                         index: 'main',
                         type: 'address',
-                        id: req.params.addressId,
+                        id: req.query.addressId,
                     }, function (esErr, esRes) {
                         if (esErr) {
                             throw esErr;

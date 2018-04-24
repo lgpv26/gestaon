@@ -20,7 +20,7 @@
             <!-- Client form -->
             <form :class="{'active': this.form.activeStep === 'client'}">
                 <div class="form__content" v-show=" this.form.activeStep === 'client'">
-                    <app-client-form :form.sync="form.client" :data.sync="data.client"></app-client-form>
+                    <app-client-form :client.sync="form.client" :data.sync="data"></app-client-form>
                 </div>
                 <div class="form__header" v-if="!this.form.activeStep === 'client' && client.id" :class="{'summary': !this.form.activeStep === 'client' && client.id}">
                     <div class="form-columns" style="flex-grow: 1;">

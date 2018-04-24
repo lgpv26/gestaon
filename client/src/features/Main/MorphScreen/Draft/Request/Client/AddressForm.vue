@@ -1,9 +1,9 @@
 <template>
-    <app-search ref="search" v-if="!address.id" :items="addresses" :shouldStayOpen="isAddressInputFocused" :query="addressQuery" :verticalOffset="8" :horizontalOffset="-20"
-    @itemSelected="addressSearchItemSelected($event)">
+    <app-search ref="searchComponent" v-if="!address.id" :items="search.items" :shouldStayOpen="search.isAddressInputFocused" :query="search.query" :verticalOffset="8" :horizontalOffset="-20"
+    @itemSelected="searchMethods().searchAddressSelected($event)">
         <input type="text" class="search-input__field" v-model="address.name" ref="searchInput"
-        @focus="isAddressInputFocused = true" @blur="isAddressInputFocused = false" @keydown="onAddressSearchInputKeyDown($event)"
-        @input="onSearchInput()" />
+        @focus="search.isAddressInputFocused = true" @blur="search.isAddressInputFocused = false" @keydown="searchMethods().searchValueUpdated()"
+        @input="inputName()" />
         <template slot="item" slot-scope="props">
             <div class="search-input__item">
                 <span class="detail__address" v-html="props.item.name"></span>
@@ -22,7 +22,7 @@
         </template>
     </app-search>
     <div style="flex-grow: 1" v-else>
-        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="address.name" @input="onSearchInput()" />
+        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="address.name" @input="inputName()" />
         <div style="position: absolute; right: 0; top: -3px; cursor: pointer;" @click="changeAddress()">
             <icon-change></icon-change>
         </div>
@@ -32,7 +32,7 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import AddressesAPI from '../../../../../../api/addresses';
+    import AddressesAPI from '@/api/addresses';
     import SearchComponent from '../../../../../../components/Inputs/Search.vue';
     import utils from '../../../../../../utils/index';
     import models from '../../../../../../models';
@@ -45,10 +45,13 @@
         props: ['address', 'clientAddress'],
         data(){
             return {
-                addressQuery: null,
-                addressInputTimeout: null,
-                isAddressInputFocused: false,
-                addresses: [],
+                search: {
+                    items: [],
+                    isAddressInputFocused: false,
+                    query: '',
+                    lastQuery: '',
+                    commitTimeout: null
+                },
                 addressEmptyObj: {
                     companyId: null,
                     id: null,
@@ -67,11 +70,11 @@
         },
         sockets: {
             draftClientAddressAddressReset(){
-                Object.assign(this.address, models.createAddressModel());
+                Object.assign(this.address, models.createAddressModel())
             },
             draftClientAddressAddressSelect(address){
-                utils.assignToExistentKeys(this.address, address);
-                this.$emit('change', this.address);
+                utils.assignToExistentKeys(this.address, address)
+                this.$emit('change', this.address)
             }
         },
         methods: {
@@ -80,38 +83,39 @@
              * Search
              */
 
-            searchAddresses(){
-                const vm = this;
-                const searchComponent = vm.$refs.search;
-                AddressesAPI.search({
-                    actingCities: ['MARINGA'],
-                    q: vm.addressQuery
-                }).then((result) => {
-                    vm.addresses = result.data.map(({source}) => {
-                        return source;
-                    });
-                    searchComponent.search();
-                }).catch((err) => {
-                    vm.addresses = [];
-                });
-            },
-            onSearchInput(){
-                this.$emit('input', this.address.name);
-            },
-            onAddressSearchInputKeyDown(ev){
-                if(this.addressInputTimeout) clearTimeout(this.addressInputTimeout);
-                this.addressInputTimeout = setTimeout(() => {
-                    this.addressQuery = this.address.name;
-                    this.searchAddresses()
-                }, 300)
-            },
-            addressSearchItemSelected(item){
-                if(this.clientAddress){
-                    this.$socket.emit('draft:client-address-address-select', {
-                        draftId: this.activeMorphScreen.draft.draftId,
-                        addressId: item.id,
-                        clientAddressId: (this.clientAddress.id) ? this.clientAddress.id : null
-                    });
+            searchMethods(){
+                const vm = this
+                return {
+                    searchAddresses(){
+                        AddressesAPI.search({
+                            actingCities: ['MARINGA'],
+                            q: vm.search.query,
+                            companyId: vm.company.id
+                        }).then((result) => {
+                            vm.search.items = result.data.map(({source}) => {
+                                return source
+                            })
+                            vm.$refs.searchComponent.search()
+                        }).catch((err) => {
+                            vm.search.items = []
+                        })
+                    },
+                    searchValueUpdated(){
+                        if(vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout)
+                        vm.search.commitTimeout = setTimeout(() => {
+                            vm.search.query = vm.address.name
+                            vm.searchMethods().searchAddresses()
+                        }, 300)
+                    },
+                    searchAddressSelected(item){
+                        if(vm.clientAddress){
+                            vm.$socket.emit('draft:client-address-address-select', {
+                                draftId: vm.activeMorphScreen.draft.draftId,
+                                addressId: item.id,
+                                clientAddressId: (vm.clientAddress.id) ? vm.clientAddress.id : null
+                            })
+                        }
+                    }
                 }
             },
 
@@ -119,14 +123,37 @@
              * Actions
              */
 
+            inputName(){
+                const vm = this
+                const emitData = {
+                    draftId: vm.activeMorphScreen.draft.draftId,
+                    name: vm.address.name
+                }
+                console.log("Emitting to draft/request.client.clientAddress.form.address.name", emitData)
+                vm.$socket.emit('draft/request.client.clientAddress.form.address.name', emitData)
+            },
+
             changeAddress(){
                 this.$socket.emit('draft:client-address-address-reset', {
                     draftId: this.activeMorphScreen.draft.draftId
-                });
+                })
+            }
+        },
+        created(){
+            const vm = this
+            /**
+             * Update address name
+             * @param {Object} ev = { success:Boolean, evData = { name:String } }
+             */
+            vm.$options.sockets['draft/request.client.clientAddress.form.address.name'] = (ev) => {
+                if(ev.success){
+                    console.log("Received draft/request.client.clientAddress.form.address.name", ev)
+                    vm.address.name = ev.evData.name
+                }
             }
         },
         mounted(){
-            this.initialAddressForm = _.clone(this.address, true);
+            this.initialAddressForm = _.clone(this.address, true)
         }
 
     }

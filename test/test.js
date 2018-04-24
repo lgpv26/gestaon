@@ -110,12 +110,14 @@ const request = {
                 number: '',
                 complement: '',
                 selectedTypeIds: [],
-                typeAdd: {
-                    name: ''
-                },
-                typeEdit: {
-                    id: '',
-                    name: ''
+                type: {
+                    add: {
+                        name: ''
+                    },
+                    edit: {
+                        id: '',
+                        name: ''
+                    }
                 },
                 address: {
                     id: '', // null if creating, update if filled
@@ -127,30 +129,32 @@ const request = {
                 }
             },
             selectedClientPhoneId: null,
-            clientPhoneAdd: {
-                name: '',
-                number: ''
+            clientPhone: {
+                add: {
+                    name: '',
+                    number: ''
+                },
+                edit: {
+                    id: '',
+                    name: '',
+                    number: ''
+                }
             },
-            clientPhoneEdit: {
-                id: '',
-                name: '',
-                number: ''
-            },
-
             selectedCustomFields: [
                 {
                     id: '', // id of the custom field
                     value: '' // value of the custom field
                 }
             ],
-            customFieldAdd: {
-                name: ''
+            customField: {
+                add: {
+                    name: ''
+                },
+                edit: {
+                    id: '',
+                    name: ''
+                }
             },
-            customFieldEdit: {
-                id: '',
-                name: ''
-            },
-
             selectedClientGroupId: null,
             clientGroupAdd: {
                 name: ''

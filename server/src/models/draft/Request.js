@@ -18,59 +18,69 @@ module.exports = class Request extends Draft {
                     id: null, // null if creating, update if filled
                     name: null,
                     legalDocument: null,
-                    showClientAddressForm: false, // if in the current for state, should it show the respective form?
-                    selectedClientAddressId: null,
                     clientAddress: {
-                        id: null, // null if creating, update if filled
-                        number: null,
-                        complement: null,
-                        selectedTypeIds: [],
-                        typeAdd: {
+                        selected: null,
+                        showForm: false,
+                        form: {
+                            id: null, // null if creating, update if filled
+                            number: null,
+                            complement: null,
+                            type: {
+                                selected: [],
+                                add: {
+                                    name: null
+                                },
+                                edit: {
+                                    id: null,
+                                    name: null
+                                }
+                            },
+                            address: {
+                                id: null, // null if creating, update if filled
+                                name: null,
+                                neighborhood: null,
+                                cep: null,
+                                city: null,
+                                state: null
+                            }
+                        }
+                    },
+                    clientPhone: {
+                        selected: null,
+                        add: {
+                            name: null,
+                            number: null
+                        },
+                        edit: {
+                            id: null,
+                            name: null,
+                            number: null
+                        }
+                    },
+                    customField: {
+                        selected: [
+                            {
+                                id: null, // id of the custom field
+                                value: null // value of the custom field
+                            }
+                        ],
+                        add: {
                             name: null
                         },
-                        typeEdit: {
+                        edit: {
                             id: null,
                             name: null
+                        }
+                    },
+                    clientGroup: {
+                        selected: null,
+                        add: {
+                            name: null
                         },
-                        address: {
-                            id: null, // null if creating, update if filled
-                            name: null,
-                            neighborhood: null,
-                            cep: null,
-                            city: null,
-                            state: null
+                        edit: {
+                            id: null,
+                            name: null
                         }
-                    },
-                    selectedClientPhoneId: null,
-                    clientPhoneAdd: {
-                        name: null,
-                        number: null
-                    },
-                    clientPhoneEdit: {
-                        id: null,
-                        name: null,
-                        number: null
-                    },
-                    selectedCustomFields: [
-                        {
-                            id: null, // id of the custom field
-                            value: null // value of the custom field
-                        }
-                    ],
-                    customFieldAdd: {
-                        name: null
-                    },
-                    customFieldEdit: {
-                        id: null,
-                        name: null
-                    },
-                    selectedClientGroupId: null,
-                    clientGroupAdd: {
-                        name: null
-                    },
-                    clientGroupEdit: {
-                        id: null,
-                        name: null
                     }
                 },
                 order: {
@@ -130,9 +140,11 @@ module.exports = class Request extends Draft {
                 selectedStatusId: ''
             },
             data: {
-                client: {
-                    clientAddresses: []
-                }
+                customFields: [],
+                clientGroups: [],
+                clientAddresses: [],
+                clientPhones: [],
+                clientCustomFields: []
             }
         }
     }

@@ -36,13 +36,11 @@ module.exports = class Draft {
             vm.server.innkeeper.join(vm.socket.instance, evData.draftId)
             // get draft from memory or from database to the respective draft id
             if(vm.server.innkeeper.room(evData.draftId).get('draft')){
-                console.log("Em memória")
                 // if from memory
                 vm.draft = vm.server.innkeeper.room(evData.draftId).get('draft')
                 vm.socket.instance.emit('draft.load', new EventResponse(vm.server.innkeeper.room(evData.draftId).get('draft')))
             }
             else {
-                console.log("Do banco de dados")
                 // if from database, call the service
                 vm.server.broker.call('draft.get', {
                     data: {

@@ -7,12 +7,12 @@
                     <div class="form-columns">
                         <div class="form-column" style="flex-grow: 1;">
                             Nome / Empresa
-                            <div v-if="form.id">
-                                <input type="text" class="input--borderless" style="color: var(--font-color--primary)" v-model="form.name" v-if="form.id" placeholder="..." @input="inputName()" />
+                            <div v-if="client.id">
+                                <input type="text" class="input--borderless" style="color: var(--font-color--primary)" v-model="client.name" v-if="client.id" placeholder="..." @input="inputName()" />
                             </div>
                             <app-search v-else ref="search" :items="search.items" :shouldStayOpen="search.isNameInputFocused" :query="search.query" :verticalOffset="5" :horizontalOffset="-20"
                                 @itemSelected="searchMethods().searchClientSelected($event)" >
-                                <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="form.name" ref="searchInput"
+                                <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="client.name" ref="searchInput"
                                 @keydown="searchMethods().searchValueUpdated()" @focus="search.isNameInputFocused = true" @blur="search.isNameInputFocused = false" @input="inputName()" />
                                 <template slot="item" slot-scope="props">
                                     <div class="search-input__item" v-if="props.item.client">
@@ -33,7 +33,7 @@
                             </app-search>
                         </div>
                         <div class="form-column" style="justify-content: flex-end;">
-                            <icon-search v-if="!form.id" style="position: relative; top: -4px;"></icon-search>
+                            <icon-search v-if="!client.id" style="position: relative; top: -4px;"></icon-search>
                             <div style="cursor: pointer;" @click="changeClient()" v-else>
                                 <icon-change></icon-change>
                             </div>
@@ -42,69 +42,15 @@
                 </div>
                 <div class="form-group">
                     CPF / CNPJ
-                    <app-mask class="input--borderless" ref="legalDocumentInput" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="form.legalDocument"
+                    <app-mask class="input--borderless" ref="legalDocumentInput" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="client.legalDocument"
                     placeholder="..." @input.native="inputLegalDocument($event)" />
                 </div>
             </div>
-            <!--
             <div class="form-groups">
-                &lt;!&ndash; Show client address form &ndash;&gt;
-                <div class="form-group" v-if="form.showClientAddressForm">
-                    <div class="form-group__header">
-                        <div style="display: flex; flex-direction: row;" v-if="form.clientAddress.id">
-                            <span style="margin-right: 10px;">Tipo do local</span>
-                            <icon-local></icon-local>
-                            <app-client-address-types-input style="margin-left: 10px;" v-model="clientAddressForm.clientAddressTypes"></app-client-address-types-input>
-                        </div>
-                        <div style="display: flex; flex-direction: row;" v-else>
-                            <span style="margin-right: 10px;">Selecione um local</span>
-                            <icon-local></icon-local>
-                        </div>
-                        <span class="push-both-sides"></span>
-                        <a class="btn btn&#45;&#45;border-only" v-if="data.clientAddresses.length > 0" @click="backToClientAddressesList()">Voltar</a>
-                        <div v-if="data.clientAddresses.length <= 0">
-                            <a class="btn btn&#45;&#45;primary" @click="saveClientAddress()" v-if="!isSavingClientAddress" style="margin-left: 10px;">Adicionar</a>
-                            <a class="btn btn&#45;&#45;primary btn&#45;&#45;disabled" v-else style="margin-left: 10px;">Adicionar</a>
-                        </div>
-                        <div v-else>
-                            <a class="btn btn&#45;&#45;primary" @click="saveClientAddress()" v-if="!isSavingClientAddress" style="margin-left: 10px;">Salvar</a>
-                            <a class="btn btn&#45;&#45;primary btn&#45;&#45;disabled" v-else style="margin-left: 10px;">Salvar</a>
-                        </div>
-                    </div>
-                    <div class="form-group__content">
-                        <app-client-address-form ref="clientAddressForm" :clientId="client.id" :form.sync="form.clientAddress" :isSaving.sync="isSavingClientAddress"
-                        @save="onClientAddressSave($event)"></app-client-address-form>
-                    </div>
-                </div>
-                &lt;!&ndash; Show client address list &ndash;&gt;
-                <div class="form-group" v-else>
-                    <div class="form-group__header">
-                        <span style="margin-right: 10px;">Selecione um local</span><icon-local></icon-local>
-                        <span class="push-both-sides"></span>
-                        <a class="btn btn&#45;&#45;border-only" @click="addClientAddress()">Novo</a>
-                    </div>
-                    <div class="form-group__content">
-                        <ul class="content__list">
-                            <li class="list__item" v-for="clientAddress in data.clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
-                                <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
-                                    {{ clientAddress.address.name }},
-                                    {{ clientAddress.number.toString().trim() || "SN" }}
-                                </span>
-                                <span class="push-both-sides"></span>
-                                <div class="item__check item__icon" @click="onClientAddressSelected(clientAddress)" style="cursor: pointer; margin-right: 10px;">
-                                    <icon-check style="width: 16px;"></icon-check>
-                                </div>
-                                <div class="item__icon" @click="editClientAddress(clientAddress)" style="cursor: pointer; margin-right: 10px;">
-                                    <icon-edit></icon-edit>
-                                </div>
-                                <div class="item__icon" @click="removeClientAddress(clientAddress)" style="cursor: pointer;">
-                                    <icon-remove></icon-remove>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>-->
+                <!-- Show client address form -->
+                <app-client-address-form ref="clientAddressForm" :clientAddress.sync="client.clientAddress" :data.sync="data"
+                     @save="onClientAddressSave($event)"></app-client-address-form>
+            </div>
         </div>
         <div class="form__side-column">
             <!--
@@ -222,7 +168,7 @@
             'app-client-address-form': ClientAddressForm,
             'app-client-address-types-input': ClientAddressTypesInput,
         },
-        props: ['form','data','client','clientAddressId','clientPhoneId'],
+        props: ['client','data','clientAddressId','clientPhoneId'],
         data(){
             return {
                 search: {
@@ -279,7 +225,7 @@
             }
         },
         watch: {
-            'form.legalDocument': function(legalDocument){
+            'client.legalDocument': function(legalDocument){
                 this.$refs.legalDocumentInput.display = legalDocument;
             },
             'clientAddress.address.cep': function(cep){
@@ -293,7 +239,7 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company']),
             isCurrentStepActive(){
-                return this.form.activeStep === 'client';
+                return this.client.activeStep === 'client';
             },
             customFieldsSelectOptions(){
                 return _.map(this.customFields, (customField) => {
@@ -305,14 +251,14 @@
                 });
             },
             selectedClientGroup(){
-                return _.find(this.clientGroups, { value: this.form.clientGroup });
+                return _.find(this.clientGroups, { value: this.client.clientGroup });
             },
             selectedClientAddress(){
-                const clientAddress = _.find(this.form.clientAddresses, { id: this.clientAddressId });
+                const clientAddress = _.find(this.client.clientAddresses, { id: this.clientAddressId });
                 return clientAddress || null;
             },
             selectedClientPhone(){
-                const clientPhone = _.find(this.form.clientPhones, { id: this.clientPhoneId });
+                const clientPhone = _.find(this.client.clientPhones, { id: this.clientPhoneId });
                 return clientPhone || null;
             },
             formatedClientPhone(){
@@ -320,8 +266,8 @@
                 return utils.formatPhone(this.selectedClientPhone.ddd + this.selectedClientPhone.number);
             },
             shortenedClientName(){
-                if(this.form.id)
-                return utils.getShortString(this.form.name, 18, '[...]');
+                if(this.client.id)
+                return utils.getShortString(this.client.name, 18, '[...]');
             },
             shortenedClientAddress(){
                 if(this.selectedClientAddress)
@@ -350,13 +296,13 @@
 
             draftClientCustomFieldUpdate(clientCustomField){
                 console.log("Received draftClientCustomFieldUpdate", clientCustomField);
-                const clientCustomFieldIndex = _.findIndex(this.form.clientCustomFields, { id: clientCustomField.clientCustomFieldId });
+                const clientCustomFieldIndex = _.findIndex(this.client.clientCustomFields, { id: clientCustomField.clientCustomFieldId });
                 if(clientCustomFieldIndex !== -1){
-                    let tClientCustomField = this.form.clientCustomFields[clientCustomFieldIndex];
+                    let tClientCustomField = this.client.clientCustomFields[clientCustomFieldIndex];
                     _.assign(tClientCustomField, {
                         value: clientCustomField.clientCustomFieldForm.value
                     });
-                    Vue.set(this.form.clientCustomFields, clientCustomFieldIndex, tClientCustomField)
+                    Vue.set(this.client.clientCustomFields, clientCustomFieldIndex, tClientCustomField)
                 }
             },
             draftClientCustomFieldAdd(clientCustomField){
@@ -365,17 +311,17 @@
                 utils.assignToExistentKeys(tClientCustomField.customField, clientCustomField.customField);
                 delete clientCustomField.customField;
                 utils.assignToExistentKeys(tClientCustomField, clientCustomField);
-                this.form.clientCustomFields.push(tClientCustomField);
+                this.client.clientCustomFields.push(tClientCustomField);
                 this.updateClientCustomFieldsSelectedOptions();
             },
             draftClientCustomFieldRemove(clientCustomFieldId){
                 console.log("Received draftClientCustomFieldRemove", clientCustomFieldId);
-                _.forEach(this.form.clientCustomFields, (clientCustomField, index) => {
+                _.forEach(this.client.clientCustomFields, (clientCustomField, index) => {
                     if(_.has(clientCustomField, 'id') && clientCustomField.id === clientCustomFieldId){
-                        this.form.clientCustomFields.splice(index, 1);
+                        this.client.clientCustomFields.splice(index, 1);
                     }
                 });
-                this.updateClientCustomFieldsSelectedOptions(this.form.clientCustomFields);
+                this.updateClientCustomFieldsSelectedOptions(this.client.clientCustomFields);
             },
 
             /* draft client phone */
@@ -394,18 +340,18 @@
             },
             draftClientPhoneSave(clientPhone){
                 console.log("Received draftClientPhoneSave", clientPhone);
-                const clientPhoneId = _.findIndex(this.form.clientPhones, { id: clientPhone.id });
+                const clientPhoneId = _.findIndex(this.client.clientPhones, { id: clientPhone.id });
                 if(clientPhoneId >= 0){ // found
-                    this.form.clientPhones[clientPhoneId] = clientPhone;
+                    this.client.clientPhones[clientPhoneId] = clientPhone;
                 }
                 else {
-                    this.form.clientPhones.push(clientPhone);
+                    this.client.clientPhones.push(clientPhone);
                 }
                 this.clientPhoneForm = models.createClientPhoneModel();
             },
             draftClientPhoneEdit(clientPhoneId){
                 console.log("Received draftClientPhoneEdit", clientPhoneId);
-                let clientPhone = _.find(this.form.clientPhones, {id: clientPhoneId});
+                let clientPhone = _.find(this.client.clientPhones, {id: clientPhoneId});
                 if(clientPhone){
                     clientPhone = utils.removeReactivity(clientPhone);
                     utils.assignToExistentKeys(this.clientPhoneForm, clientPhone);
@@ -414,9 +360,9 @@
             },
             draftClientPhoneRemove(clientPhoneId){
                 console.log("Received draftClientPhoneRemove", clientPhoneId);
-                const clientPhoneIndex = _.findIndex(this.form.clientPhones, {id: clientPhoneId});
+                const clientPhoneIndex = _.findIndex(this.client.clientPhones, {id: clientPhoneId});
                 if(clientPhoneIndex !== -1){
-                    this.form.clientPhones.splice(clientPhoneIndex, 1);
+                    this.client.clientPhones.splice(clientPhoneIndex, 1);
                 }
             },
 
@@ -431,16 +377,16 @@
                 this.isEditing = false;
             },
             draftClientAddressEdit(clientAddressId){
-                const clientAddress = _.find(this.form.clientAddresses, {id: clientAddressId});
+                const clientAddress = _.find(this.client.clientAddresses, {id: clientAddressId});
                 if(clientAddress){
                     _.assign(this.clientAddressForm, utils.removeReactivity(clientAddress));
                     this.isEditing = true;
                 }
             },
             draftClientAddressRemove(clientAddressId){
-                const clientAddressIndex = _.findIndex(this.form.clientAddresses, {id: clientAddressId});
+                const clientAddressIndex = _.findIndex(this.client.clientAddresses, {id: clientAddressId});
                 if(clientAddressIndex !== -1){
-                    this.form.clientAddresses.splice(clientAddressIndex, 1);
+                    this.client.clientAddresses.splice(clientAddressIndex, 1);
                 }
             },
 
@@ -456,11 +402,11 @@
                     clientAddress.active = false;
                     return clientAddress;
                 });
-                utils.assignToExistentKeys(this.form, client);
+                utils.assignToExistentKeys(this.client, client);
                 this.updateClientCustomFieldsSelectedOptions();
             },
             draftClientReset() {
-                Object.assign(this.$data.form, this.$options.data.apply(this).form);
+                Object.assign(this.$data.client, this.$options.data.apply(this).client);
                 utils.assignToExistentKeys(this.clientPhoneForm, models.createClientPhoneModel());
                 utils.assignToExistentKeys(this.clientAddressForm, models.createClientAddressModel());
             }
@@ -478,7 +424,7 @@
                     search() {
                         ServiceAPI.search({
                             actingCities: ['MARINGA'],
-                            q: vm.query,
+                            q: vm.search.query,
                             companyId: vm.company.id
                         }).then(({data}) => {
                             let clients = data[0];
@@ -486,11 +432,11 @@
                                 // source refers to search address item
                                 return {
                                     client: source
-                                };
-                            });
-                            vm.$refs.search.search();
+                                }
+                            })
+                            vm.$refs.search.search()
                         }).catch((err) => {
-                            vm.search.items = [];
+                            vm.search.items = []
                         })
                     },
                     searchClientSelected(searchItem) {
@@ -504,7 +450,7 @@
                     searchValueUpdated() {
                         if (vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout);
                         vm.search.commitTimeout = setTimeout(() => {
-                            vm.query = vm.form.name;
+                            vm.query = vm.client.name;
                             vm.searchMethods().commitUpdatedValue();
                         }, 300)
                     },
@@ -524,7 +470,7 @@
                 const vm = this
                 const emitData = {
                     draftId: vm.activeMorphScreen.draft.draftId,
-                    name: vm.form.name
+                    name: vm.client.name
                 }
                 console.log("Emitting to draft/request.client.name", emitData)
                 vm.$socket.emit('draft/request.client.name', emitData)
@@ -533,7 +479,7 @@
                 const vm = this
                 const emitData = {
                     draftId: vm.activeMorphScreen.draft.draftId,
-                    legalDocument: vm.form.legalDocument
+                    legalDocument: vm.client.legalDocument
                 }
                 console.log("Emitting to draft/request.client.legalDocument", emitData)
                 vm.$socket.emit('draft/request.client.legalDocument', emitData)
@@ -627,7 +573,7 @@
             // client custom fields
 
             updateClientCustomFieldsSelectedOptions(){
-                this.form.clientSelectedCustomFields = _.map(this.form.clientCustomFields, (clientCustomField) => {
+                this.client.clientSelectedCustomFields = _.map(this.client.clientCustomFields, (clientCustomField) => {
                     return clientCustomField.customField.id
                 });
             },
@@ -643,12 +589,12 @@
                 this.commitSocketChanges('clientAddressId');
             },
             onClientAddressSave(clientAddress){
-                const clientAddressId = _.findIndex(this.form.clientAddresses, {id: clientAddress.id});
+                const clientAddressId = _.findIndex(this.client.clientAddresses, {id: clientAddress.id});
                 if (clientAddressId !== -1) {
-                    this.form.clientAddresses[clientAddressId] = clientAddress;
+                    this.client.clientAddresses[clientAddressId] = clientAddress;
                 }
                 else {
-                    this.form.clientAddresses.push(clientAddress);
+                    this.client.clientAddresses.push(clientAddress);
                 }
                 this.backToClientAddressesList();
             },
@@ -675,7 +621,7 @@
                 this.$socket.emit('draft:client-custom-field-add', emitData);
             },
             onClientCustomFieldUnselect(customFieldId){
-                const clientCustomField = _.find(this.form.clientCustomFields, (clientCustomField) => {
+                const clientCustomField = _.find(this.client.clientCustomFields, (clientCustomField) => {
                     if(clientCustomField.customField.id === customFieldId) return true;
                 });
                 if(clientCustomField){
@@ -746,7 +692,7 @@
             vm.$options.sockets['draft/request.client.name'] = (ev) => {
                 if(ev.success){
                     console.log("Received draft/request.client.name", ev)
-                    vm.form.name = ev.evData.name
+                    vm.client.name = ev.evData.name
                 }
             }
             /**
@@ -756,17 +702,17 @@
             vm.$options.sockets['draft/request.client.legalDocument'] = (ev) => {
                 if(ev.success){
                     console.log("Received draft/request.client.legalDocument", ev)
-                    vm.form.legalDocument = ev.evData.legalDocument
+                    vm.client.legalDocument = ev.evData.legalDocument
                 }
             }
             /**
-             * On legal document input
-             * @param {Object} ev = { success:Boolean, evData = { showClientAddressForm:String } }
+             * On show/hide form
+             * @param {Object} ev = { success:Boolean, evData = { showForm:String } }
              */
-            vm.$options.sockets['draft/request.client.showClientAddressForm'] = (ev) => {
+            vm.$options.sockets['draft/request.client.clientAddress.showForm'] = (ev) => {
                 if(ev.success){
-                    console.log("Received draft/request.client.showClientAddressForm", ev)
-                    vm.form.showClientAddressForm = ev.evData.showClientAddressForm
+                    console.log("Received draft/request.client.clientAddress.showForm", ev)
+                    vm.client.clientAddress.showForm = ev.evData.showForm
                 }
             }
         }
