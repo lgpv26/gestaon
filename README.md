@@ -1,4 +1,4 @@
-Agiliza ERP - Introdução
+GestaON - Introdução
 ===================
 
 ERP que visa ajudar a gerência de pequenas/médias empresas, onde a atividade da mesma envolve vendas e logística.
