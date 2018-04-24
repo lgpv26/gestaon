@@ -14,6 +14,7 @@ const DI = require('./di')
 const di = new DI(restify.createServer())
 
 // overall setup
+di.setInnkeeper()
 di.setSocketIO()
 di.setElasticSearch()
 di.setSequelize()
@@ -80,6 +81,7 @@ di.server.broker.createService(require('../services/auth.service')(di.server))
 di.server.broker.createService(require('../services/request-board.service')(di.server))
 di.server.broker.createService(require('../services/data/request.service')(di.server))
 di.server.broker.createService(require('../services/data/product.service')(di.server))
+di.server.broker.createService(require('../services/draft/index.service')(di.server))
 
 // starts callback chain until server starts, or shutdown if the procedure fails
 di.server.broker.start().then(() => {

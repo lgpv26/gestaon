@@ -1,6 +1,6 @@
-const packageJSON = require('../../package.json');
-const utils = require('../utils/index');
-const path = require('path');
+const packageJSON = require('../../package.json')
+const utils = require('../utils/index')
+const path = require('path')
 
 module.exports = {
     mainServer: {

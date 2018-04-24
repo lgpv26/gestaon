@@ -17,11 +17,77 @@
                 </div>
             </div>
             <div class="separator" v-if="!form.activeStep"></div>
-            <app-client-form :activeStep.sync="form.activeStep" :clientAddressId.sync="form.clientAddressId" :clientPhoneId.sync="form.clientPhoneId" :client.sync="form.client" @sync="sync($event)"></app-client-form>
+            <!-- Client form -->
+            <form :class="{'active': this.form.activeStep === 'client'}">
+                <div class="form__content" v-show=" this.form.activeStep === 'client'">
+                    <app-client-form :form.sync="form.client" :data.sync="data.client"></app-client-form>
+                </div>
+                <div class="form__header" v-if="!this.form.activeStep === 'client' && client.id" :class="{'summary': !this.form.activeStep === 'client' && client.id}">
+                    <div class="form-columns" style="flex-grow: 1;">
+                        <div class="form-column" style="flex-grow: 1; flex-basis: 70%; display: flex; flex-direction: row; justify-content: flex-start; align-items: center;">
+                            <span style="margin-right: 8px;">{{ shortenedClientName }}</span>
+                            <div v-if="selectedClientAddress">
+                                <span style="margin-right: 8px;">{{ shortenedClientAddress }}</span>
+                            </div>
+                            <icon-edit style="width:10px;"></icon-edit>
+                        </div>
+                        <div class="form-column" v-if="selectedClientPhone">
+                            <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
+                                <icon-phone class="icon--d-secondary" style="margin-right: 10px;"></icon-phone>
+                                <span style="white-space: nowrap;">{{ formatedClientPhone }}</span>
+                            </a>
+                        </div>
+                        <div class="form-column" v-if="client.clientGroup">
+                            <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
+                                <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
+                                    <div class="header__icon">
+                                        <icon-client-group class="icon--d-secondary" style="margin-right: 10px;"></icon-client-group>
+                                    </div>
+                                    <span class="static" style="white-space: nowrap" v-if="!selectedClientGroup.value">Grupo de cliente</span>
+                                    <span style="white-space: nowrap" v-else>{{ selectedClientGroup.text }}</span>
+                                    <span class="push-both-sides"></span>
+                                    <icon-dropdown class="header__action-icon"></icon-dropdown>
+                                </a>
+                                <template slot="item" slot-scope="itemProps">
+                                    <span>{{itemProps.text }}</span>
+                                </template>
+                            </app-select>
+                        </div>
+                        <div class="form-column" style="flex-grow: initial; flex-direction: row; align-items: center;">
+                            <h3 style="top: 0;">Cliente</h3> <app-switch style="float: right;" :value=" this.form.activeStep === 'client'" @change="onCurrentStepChanged()"></app-switch>
+                        </div>
+                    </div>
+                </div>
+                <div class="form__header" v-else>
+                    <span v-if="!this.form.activeStep === 'client'">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
+                    <span class="push-both-sides"></span>
+                    <h3 :class="{active: this.form.activeStep === 'client'}">Cliente</h3> <app-switch style="float: right;" :value="this.form.activeStep === 'client'" @change="changeStep('client')"></app-switch>
+                </div>
+            </form>
             <div class="separator"></div>
-            <app-order-form :activeStep.sync="form.activeStep" :order.sync="form.order" @sync="sync($event)"></app-order-form>
+            <!-- Order form -->
+            <form :class="{'active': this.form.activeStep === 'order'}">
+                <div class="form__content" v-show="this.form.activeStep === 'order'">
+                    <app-order-form @step-change="onStepChange($event)" :order.sync="form.order"></app-order-form>
+                </div>
+                <div class="form__header">
+                    <span v-if="!this.form.activeStep === 'order'">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
+                    <span class="push-both-sides"></span>
+                    <h3 :class="{active: this.form.activeStep === 'order'}">Venda</h3> <app-switch style="float: right;" :value="this.form.activeStep === 'order'" @changed="changeStep('order')"></app-switch>
+                </div>
+            </form>
             <div class="separator"></div>
-            <app-task-form :activeStep.sync="form.activeStep" :task.sync="form.task" @sync="sync($event)"></app-task-form>
+            <!-- Task form -->
+            <form :class="{'active': this.form.activeStep === 'task'}">
+                <div class="form__content" v-show="this.form.activeStep === 'task'">
+                    <app-task-form @step-change="onStepChange($event)" :task.sync="form.task"></app-task-form>
+                </div>
+                <div class="form__header">
+                    <span v-if="!this.form.activeStep === 'task'">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
+                    <span class="push-both-sides"></span>
+                    <h3 :class="{active: this.form.activeStep === 'task'}">Tarefa</h3> <app-switch style="float: right;" :value="this.form.activeStep === 'task'" @changed="changeStep('task')"></app-switch>
+                </div>
+            </form>
         </div>
     </div>
 </template>
@@ -36,30 +102,12 @@
     import Scrollbar from 'smooth-scrollbar';
 
     export default {
-        sockets: {
-            draftPresence(data){
-                this.presenceUsers = data;
-            },
-            draftSave(){
-                this.saving = false;
-            },
-            draftUpdate({draftId, form}){
-                if(draftId === this.activeMorphScreen.draft.draftId) {
-                    console.log("Received draft:update", { draftId, form });
-                    this.form = _.merge(this.form, form);
-                    this.$bus.$emit('draft:update', {
-                        draftId: draftId,
-                        form: this.form
-                    });
-                    this.stopLoading();
-                }
-            }
-        },
         components: {
             'app-client-form': ClientForm,
             'app-order-form': OrderForm,
             'app-task-form': TaskForm
         },
+        props: ['form','data'],
         data(){
             return {
                 scrollbar: null,
@@ -71,7 +119,7 @@
                 createdBy: null,
                 createdAt: null,
                 updatedAt: null,
-                form: {
+                /*form: {
                     activeStep: null,
                     clientPhoneId: null,
                     clientAddressId: null,
@@ -89,7 +137,7 @@
                                 complement: null,
                                 addressId: null, // o id do endereço salvo no MySQL (address).
                                 type: ['billing','invoicing','delivery'], // billing - cobrança. invoicing - faturamento. delivery - entrega.
-                                /* salva no mysql -- nao no draft */
+                                /!* salva no mysql -- nao no draft *!/
                                 address: {
                                     companyId: null,
                                     id: null, // se passar, usar e ignorar os outros campos. se não, criar usando os outros dados do address.
@@ -99,7 +147,7 @@
                                     city: null,
                                     state: null
                                 },
-                                /* --- */
+                                /!* --- *!/
                             }
                         ],
                         clientPhones: [
@@ -117,7 +165,7 @@
                     task: {
                         name: ''
                     }
-                },
+                },*/
                 saving: false
             }
         },
@@ -128,46 +176,73 @@
         methods: {
             ...mapActions('toast', ['showToast']),
             ...mapActions('loading', ['stopLoading']),
-            getIsolatedFormPathObj(path){
-                return _.set({}, path, _.get(this.form, path));
-            },
-            sync(path){
-                this.saving = true;
-                let pathWithoutArrayIndex = path
-                if(path.charAt(path.length - 1) === ']'){ // remove index from path
-                    pathWithoutArrayIndex = ''
-                    const pathArray = path.split('[')
-                    pathArray.forEach((pathSection, index) => {
-                        if(index !== pathArray.length - 1){
-                            pathWithoutArrayIndex += pathSection
-                        }
-                    })
+            changeStep(step){
+                let activeStep = null
+                if(this.form.activeStep !== step){
+                    if (this.form.activeStep !== 'client' && step === 'client') {
+                        activeStep = 'client'
+                    }
+                    if (this.form.activeStep !== 'order' && step === 'order') {
+                        activeStep = 'order'
+                    }
+                    if (this.form.activeStep !== 'task' && step === 'task') {
+                        activeStep = 'task'
+                    }
                 }
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId,
-                    form: this.getIsolatedFormPathObj(path),
-                    path: pathWithoutArrayIndex
-                };
-                console.log("Emitting draft:update", emitData);
-                this.$socket.emit('draft:update', emitData);
+                    activeStep: activeStep
+                }
+                console.log("Emitting to draft/request.activeStep", emitData)
+                this.$socket.emit('draft/request.activeStep', emitData)
+            }
+        },
+        created(){
+            const vm = this
+            /**
+             * On active step change
+             * @param ev
+             */
+            vm.$options.sockets['draft/request.activeStep'] = (ev) => {
+                console.log("Received draft/request.activeStep", ev)
+                vm.form.activeStep = ev.evData.activeStep
             }
         },
         mounted(){
             this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
                 overscrollEffect: 'bounce',
                 alwaysShowTracks: true
-            });
-            const emitData = { draftId: this.activeMorphScreen.draft.draftId, userId: this.user.id};
-            console.log("Emitting draft:presence", emitData);
-            this.$socket.emit('draft:presence', emitData);
+            })
         },
         updated(){
-            this.scrollbar.update();
+            this.scrollbar.update()
         }
     }
 </script>
 
 <style>
+    .form__header.summary {
+        height: auto;
+    }
+
+    .form__header.summary >>> .colorizable {
+        fill: var(--font-color--2);
+    }
+
+    .form__header.summary span {
+        text-transform: uppercase;
+        margin-right: 10px;
+        color: var(--font-color--8)
+    }
+
+    .form__header.summary .form-group {
+        padding: 0 20px;
+        display: flex;
+        height: 50px;
+        align-items: center;
+        flex-direction: row;
+    }
+
     .form-groups {
         display: flex;
         flex-direction: row;

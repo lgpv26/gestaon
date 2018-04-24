@@ -1,6 +1,5 @@
 <template>
-    <form :class="{'active': isCurrentStepActive}">
-        <div class="form__content" v-show="isCurrentStepActive">
+    <div style="display: flex; flex-grow: 1; flex-direction: row">
             <div class="form__main-column" style="display: flex; flex-direction: column; margin-right: 10px;">
                 <div class="form-groups">
                     <div class="form-group" style="padding: 0; background: transparent;">
@@ -191,13 +190,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="form__header">
-            <span v-if="!isCurrentStepActive">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
-            <span class="push-both-sides"></span>
-            <h3 :class="{active: isCurrentStepActive}">Venda</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
-        </div>
-    </form>
+    </div>
 </template>
 
 <script>
@@ -279,6 +272,15 @@
 
         },
         methods: {
+            /**
+             * Recreating
+             */
+
+            onStepChange(){
+                const vm = this
+                this.$emit('step-change', vm.activeStep)
+            },
+
             addProduct(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId

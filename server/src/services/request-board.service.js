@@ -8,7 +8,7 @@ module.exports = (server) => { return {
     actions: {
         /**
          * Load the request-board in a company context
-         * @param {Number} data.companyId
+         * @param {Object} ctx.params.data = { companyId:Number }
          * @returns {Promise.<Array>} sections
          */
         load(ctx){

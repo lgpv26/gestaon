@@ -89,6 +89,9 @@ module.exports = class Events {
                     })
                 }
             })
+            socket.instance.on('disconnect', () => {
+                this.server.innkeeper.leaveAll(socket.instance)
+            })
             socket.instance.on('join-device-room', (deviceCode) => {
                 // console.log(user.name + " joins device/" + deviceCode + ".")
                 socket.join('device/' + deviceCode)

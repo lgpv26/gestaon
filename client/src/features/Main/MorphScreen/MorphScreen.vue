@@ -252,8 +252,8 @@
                 });
                 Promise.all(allAnimationsCompleted).then(() => {
                     setTimeout(() => {
-                        vm.setLoadingText("Carregando rascunho...");
-                        vm.startLoading();
+                        /*vm.setLoadingText("Carregando rascunho...");
+                        vm.startLoading();*/
                         vm.SET_MS(_.assign({}, screen, { active: true }));
                         vm.isAnimating = false;
                     }, 300);

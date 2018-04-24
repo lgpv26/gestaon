@@ -12,6 +12,11 @@ module.exports = class DependencyInjection {
         this.server[modelType] = require(`../models/${type}/index`)(this.server)
     }
 
+    setInnkeeper(){
+        const Innkeeper = require('../modules/Innkeeper')
+        this.server.innkeeper = new Innkeeper()
+    }
+
     setSocketIO(){
         this.server.io = require('socket.io')(this.server.server, {
             pingInterval: 3000,

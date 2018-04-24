@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const basePath = require('./../middlewares/base-path.middleware');
 const Controller = require('./../models/Controller')
+import { HTTPError } from '~errors'
 
 module.exports = (server, restify) => {
 
@@ -22,26 +23,16 @@ module.exports = (server, restify) => {
     })
 
     server.post('/drafts', (req, res, next) => {
- 
-        const controller = new Controller({
-            request: {
-                createdBy: req.auth || null,
-                companyId: req.query.companyId,
-                type: req.params.type || null
+        server.broker.call("draft.create", {
+            data: {
+                companyId: parseInt(req.query.companyId),
+                type: 'request',
+                createdBy: 1
             }
-        })
-
-        draftsController.createOne(controller).then((draft) => {
+        }).then((draft) => {
             return res.send(200, { data: draft })
         }).catch((err) => {
-            return next(new restify.InternalServerError({
-                body: {
-                    "code": err.name,
-                    "message": err.message,
-                    "detailed": err
-                }
-            })
-            );
+            return next(new HTTPError(err.message, 500))
         })
     });
 

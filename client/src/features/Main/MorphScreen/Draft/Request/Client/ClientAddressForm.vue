@@ -5,16 +5,16 @@
                 <label>Endereço</label>
                 <div class="search">
                     <app-address-form :clientAddress="clientAddress" :address.sync="clientAddress.address"
-                                      @input="syncClientAddressForm('address.name')" @change="addressChanged($event)"></app-address-form>
+                                      @input="inputName()" @change="addressChanged($event)"></app-address-form>
                 </div>
             </div>
             <div class="form-column" style="flex: 1 1 10%;">
                 <label>Número</label>
-                <input type="text" v-model="clientAddress.number" @input="syncClientAddressForm('number')" />
+                <input type="text" v-model="form.number" @input="inputNumber()" />
             </div>
             <div class="form-column" style="flex: 1 1 25%;">
                 <label>Complemento</label>
-                <input type="text" v-model="clientAddress.complement" @input="syncClientAddressForm('complement')" />
+                <input type="text" v-model="form.complement" @input="inputComplement()" />
             </div>
         </div>
         <div class="form-columns">
@@ -53,7 +53,7 @@
         components: {
             'app-address-form': AddressForm
         },
-        props: ['value','clientId','clientAddress','isSaving'],
+        props: ['form','value','clientId','clientAddress','isSaving'],
         data(){
             return {
             }
@@ -87,6 +87,18 @@
         },
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
+
+
+            inputName(){
+
+            },
+            inputComplement(){
+
+            },
+            inputNumber(){
+
+            },
+
             addressChanged(ev){
                 /*
                 this.clientAddress.address.cep = ev.cep;

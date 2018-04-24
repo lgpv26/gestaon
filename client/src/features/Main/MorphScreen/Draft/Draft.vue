@@ -17,7 +17,7 @@
                 </ul>
             </div>
             <div class="header__actions">
-                <div class="actions__draft-menu" @click="$emit('closeDraft')">
+                <div class="actions__draft-menu" @click="leaveDraft()">
                     <div class="count">
                         <span>{{ screens.length }}</span>
                     </div>
@@ -26,7 +26,8 @@
             </div>
         </div>
         <div class="container__body">
-            <component :is="'app-' + details.entryComponent"></component>
+            <span v-if="!draft">Carregando...</span>
+            <component :is="'app-' + details.entryComponent" v-else :form.sync="draft.form" :data.sync="draft.data"></component>
         </div>
         <div class="container__actions">
             <a>Excluir Rascunho</a>
@@ -63,21 +64,11 @@
                 selectedContent: null,
                 clipboardInstance: null,
                 isPersisting: false,
-                persistingText: "Salvando..."
+                persistingText: "Salvando...",
+                draft: null
             }
         },
         props: ['details','screen'],
-        sockets: {
-            draftClientPersist(draft){
-                console.log("Received draftClientPersist", draft);
-                this.isPersisting = false;
-            },
-            draftRequestPersist(draft){
-                console.log("Received draftRequestPersist", draft);
-                this.isPersisting = false;
-                this.$emit('closeDraft')
-            }
-        },
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen','tags']),
             ...mapState('morph-screen', ['screens','isShowing']),
@@ -89,30 +80,57 @@
             }
         },
         methods: {
+
+            // <editor-fold desc="Vuex">
+            // </editor-fold>
+
             ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS','SHOW_MS', 'ADD_DRAFT']),
             ...mapActions('morph-screen', ['createMorphScreen']),
             ...mapActions('loading', ['startLoading','setLoadingText']),
-            // <editor-fold desc="MorphScreen animations">
+
+            // <editor-fold desc="Component methods">
             // </editor-fold>
-            persistClient(){
-                this.isPersisting = true;
+
+            loadDraft(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
-                };
-                console.log("Emitting draft:client-persist", emitData);
-                this.$socket.emit('draft:client-persist', emitData);
+                }
+                console.log("Emitting to draft.load", emitData)
+                this.$socket.emit('draft.load', emitData)
             },
-            persistRequest(){
-                this.isPersisting = true;
+            leaveDraft(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
-                };
-                console.log("Emitting draft:request-persist", emitData);
-                this.$socket.emit('draft:request-persist', emitData);
+                }
+                console.log("Emitting to draft.leave", emitData)
+                this.$socket.emit('draft.leave', emitData)
+                this.$emit('closeDraft')
+            },
+
+            // <editor-fold desc="Listeners">
+            // </editor-fold>
+
+            onDraftLoad(draft){
+                this.draft = draft
+            }
+
+        },
+        created(){
+            const vm = this
+            /**
+             * On active step change
+             * @param {Object} ev = { success:Boolean, evData:Draft }
+             */
+            vm.$options.sockets['draft.load'] = (ev) => {
+                console.log("Received draft.load", ev)
+                if(ev.success){
+                    vm.onDraftLoad(ev.evData)
+                }
             }
         },
         mounted(){
-            this.clipboardInstance = new Clipboard('.copiable-content');
+            this.clipboardInstance = new Clipboard('.copiable-content')
+            this.loadDraft()
         }
     }
 </script>

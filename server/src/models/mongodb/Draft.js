@@ -8,15 +8,11 @@ module.exports = {
             draftId: Number, 
             companyId: Number,
             createdBy: Number,
-            recoverancedBy: {
-                type: Number,
-                default: null
-            },
             type: {
                 type: String,
                 enum: {
                     values: ['request','expense','accounts'],
-                    message: 'Tipo de raschunho não reconhecido.'
+                    message: 'Tipo de raschunho inválido'
                 }
             },
             isSingle: {
@@ -27,20 +23,17 @@ module.exports = {
                 type: Object,
                 default: {}
             },
-            presence: {
-                type: Array,
-                default: []
-            },
             data: {
                 type: Object,
                 default: {}
-            },
+            }
         }, {
             timestamps: {
                 createdAt: 'createdAt',
                 updatedAt: 'updatedAt'
-            }
-        });
+            },
+            minimize: false
+        })
 
         schema.set('toJSON', {
              transform: function (doc, ret, options) {

@@ -17,11 +17,6 @@
                 </div>
             </div>
         </div>
-        <div class="form__header">
-            <span v-if="!isCurrentStepActive">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
-            <span class="push-both-sides"></span>
-            <h3 :class="{active: isCurrentStepActive}">Tarefa</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @changed="onCurrentStepChanged($event)"></app-switch>
-        </div>
     </form>
 </template>
 
@@ -32,7 +27,7 @@
     export default {
         components: {
         },
-        props: ['task','activeStep'],
+        props: ['task'],
         data(){
             return {
                 form: {
@@ -41,13 +36,17 @@
         },
         computed: {
             isCurrentStepActive(){
-                return this.activeStep === 'task';
+                return this.form.activeStep === 'task';
             }
         },
         methods: {
-            onCurrentStepChanged(value){
-                (this.activeStep === 'task') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'task');
-                this.commitSocketChanges('activeStep');
+            /**
+             * Recreating
+             */
+
+            onStepChange(){
+                const vm = this
+                this.$emit('step-change', 'task')
             },
             commitSocketChanges(mapping){
                 this.$emit('sync', mapping);

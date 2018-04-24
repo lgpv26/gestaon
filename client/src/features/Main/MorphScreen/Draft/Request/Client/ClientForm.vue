@@ -1,252 +1,207 @@
 <template>
-    <form :class="{'active': isCurrentStepActive}">
-        <div class="form__content" v-show="isCurrentStepActive">
-            <div class="form__main-column">
-                <!-- client name and document -->
-                <div class="form-groups">
-                    <div class="form-group">
-                        <div class="form-columns">
-                            <div class="form-column" style="flex-grow: 1;">
-                                Nome / Empresa
-                                <div v-if="client.id"> <!-- unassociate client -->
-                                    <input type="text" class="input--borderless" style="color: var(--font-color--primary)"
-                                    v-model="client.name" v-if="client.id" placeholder="..." @input="commitSocketChanges('client.name')" />
-                                </div>
-                                <app-search v-else ref="search" :items="searchItems" :shouldStayOpen="isNameInputFocused" :query="query" :verticalOffset="5" :horizontalOffset="-20"
-                                    @itemSelected="searchClientSelected($event)" >
-                                    <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="client.name" ref="searchInput"
-                                    @keydown="searchValueUpdated()" @focus="isNameInputFocused = true" @blur="isNameInputFocused = false" @input="commitSocketChanges('client.name')" />
-                                    <template slot="item" slot-scope="props">
-                                        <div class="search-input__item" v-if="props.item.client">
-                                            <span class="detail__name" v-html="props.item.client.name"></span>
-                                            <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address + ', ' + props.item.client.address.number"></span>
-                                            <span class="detail__phones" v-if="props.item.client.phones.length > 0">
-                                            <span v-for="(clientPhone, index) in props.item.client.phones"
-                                                v-html="((index === 0) ? '' : ', ') + clientPhone.ddd + clientPhone.number"></span>
-                                            </span>
-                                        </div>
-                                        <div class="search-input__item" v-if="props.item.address">
-                                            <span class="detail__address" v-html="props.item.address.name"></span>
-                                        </div>
-                                    </template>
-                                    <template slot="no-results">
-                                        <span>Nenhum resulado encontrado...</span>
-                                    </template>
-                                </app-search>
+    <div style="display: flex; flex-grow: 1; flex-direction: row">
+        <div class="form__main-column">
+            <!-- client name and document -->
+            <div class="form-groups">
+                <div class="form-group">
+                    <div class="form-columns">
+                        <div class="form-column" style="flex-grow: 1;">
+                            Nome / Empresa
+                            <div v-if="form.id">
+                                <input type="text" class="input--borderless" style="color: var(--font-color--primary)" v-model="form.name" v-if="form.id" placeholder="..." @input="inputName()" />
                             </div>
-                            <div class="form-column" style="justify-content: flex-end;">
-                                <icon-search v-if="!client.id" style="position: relative; top: -4px;"></icon-search>
-                                <div style="cursor: pointer;" @click="changeClient()" v-else>
-                                    <icon-change></icon-change>
-                                </div>
+                            <app-search v-else ref="search" :items="search.items" :shouldStayOpen="search.isNameInputFocused" :query="search.query" :verticalOffset="5" :horizontalOffset="-20"
+                                @itemSelected="searchMethods().searchClientSelected($event)" >
+                                <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="form.name" ref="searchInput"
+                                @keydown="searchMethods().searchValueUpdated()" @focus="search.isNameInputFocused = true" @blur="search.isNameInputFocused = false" @input="inputName()" />
+                                <template slot="item" slot-scope="props">
+                                    <div class="search-input__item" v-if="props.item.client">
+                                        <span class="detail__name" v-html="props.item.client.name"></span>
+                                        <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address + ', ' + props.item.client.address.number"></span>
+                                        <span class="detail__phones" v-if="props.item.client.phones.length > 0">
+                                        <span v-for="(clientPhone, index) in props.item.client.phones"
+                                            v-html="((index === 0) ? '' : ', ') + clientPhone.ddd + clientPhone.number"></span>
+                                        </span>
+                                    </div>
+                                    <div class="search-input__item" v-if="props.item.address">
+                                        <span class="detail__address" v-html="props.item.address.name"></span>
+                                    </div>
+                                </template>
+                                <template slot="no-results">
+                                    <span>Nenhum resulado encontrado...</span>
+                                </template>
+                            </app-search>
+                        </div>
+                        <div class="form-column" style="justify-content: flex-end;">
+                            <icon-search v-if="!form.id" style="position: relative; top: -4px;"></icon-search>
+                            <div style="cursor: pointer;" @click="changeClient()" v-else>
+                                <icon-change></icon-change>
                             </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        CPF / CNPJ
-                        <app-mask class="input--borderless" ref="legalDocumentInput" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="form.legalDocument"
-                        placeholder="..." @input.native="commitTrustedSocketChanges($event,'client.legalDocument')" />
                     </div>
                 </div>
-                <!-- client addresses -->
-                <div class="form-groups">
-                    <div class="form-group" v-if="isEditing || isAdding || form.clientAddresses.length <= 0">
-                        <div class="form-group__header">
-                            <!-- previous implementation - shows the client address name/number
-                            <h3 style="margin-right: 10px; color: var(--font-color--2);" v-if="isEditing && !clientAddressForm.address.id">Editando endereço...</h3>
-                            <h3 style="margin-right: 10px; color: var(--font-color--2);" v-else-if="isEditing">
-                                {{ clientAddressForm.address.name + ', ' + clientAddressForm.number }}
-                            </h3>
-                            -->
-                            <div style="display: flex; flex-direction: row;" v-if="isEditing">
-                                <span style="margin-right: 10px;">Tipo do local</span>
-                                <icon-local></icon-local>
-                                <app-client-address-types-input style="margin-left: 10px;" v-model="clientAddressForm.clientAddressTypes"></app-client-address-types-input>
-                            </div>
-                            <div style="display: flex; flex-direction: row;" v-else>
-                                <span style="margin-right: 10px;">Selecione um local</span>
-                                <icon-local></icon-local>
-                            </div>
-                            <span class="push-both-sides"></span>
-                            <a class="btn btn--border-only" v-if="form.clientAddresses.length > 0" @click="backToClientAddressesList()">Voltar</a>
-                            <div v-if="form.clientAddresses.length <= 0">
-                                <a class="btn btn--primary" @click="saveClientAddress()" v-if="!isSavingClientAddress" style="margin-left: 10px;">Adicionar</a>
-                                <a class="btn btn--primary btn--disabled" v-else style="margin-left: 10px;">Adicionar</a>
-                            </div>
-                            <div v-else>
-                                <a class="btn btn--primary" @click="saveClientAddress()" v-if="!isSavingClientAddress" style="margin-left: 10px;">Salvar</a>
-                                <a class="btn btn--primary btn--disabled" v-else style="margin-left: 10px;">Salvar</a>
-                            </div>
-                        </div>
-                        <div class="form-group__content">
-                            <app-client-address-form ref="clientAddressForm" :clientId="client.id" :clientAddress.sync="clientAddressForm" :isSaving.sync="isSavingClientAddress"
-                            @save="onClientAddressSave($event)"></app-client-address-form>
-                        </div>
-                    </div>
-                    <div class="form-group" v-else>
-                        <div class="form-group__header">
-                            <span style="margin-right: 10px;">Selecione um local</span><icon-local></icon-local>
-                            <span class="push-both-sides"></span>
-                            <a class="btn btn--border-only" @click="addClientAddress()">Novo</a>
-                        </div>
-                        <div class="form-group__content">
-                            <ul class="content__list">
-
-                                <li class="list__item" v-for="clientAddress in form.clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
-                                    <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
-                                        {{ clientAddress.address.name }},
-                                        {{ clientAddress.number.toString().trim() || "SN" }}
-                                    </span>
-                                    <span class="push-both-sides"></span>
-                                    <div class="item__check item__icon" @click="onClientAddressSelected(clientAddress)" style="cursor: pointer; margin-right: 10px;">
-                                        <icon-check style="width: 16px;"></icon-check>
-                                    </div>
-                                    <div class="item__icon" @click="editClientAddress(clientAddress)" style="cursor: pointer; margin-right: 10px;">
-                                        <icon-edit></icon-edit>
-                                    </div>
-                                    <div class="item__icon" @click="removeClientAddress(clientAddress)" style="cursor: pointer;">
-                                        <icon-remove></icon-remove>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    CPF / CNPJ
+                    <app-mask class="input--borderless" ref="legalDocumentInput" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="form.legalDocument"
+                    placeholder="..." @input.native="inputLegalDocument($event)" />
                 </div>
             </div>
-            <div class="form__side-column">
-                <div class="form-groups">
-                    <div class="form-group">
-                        <div class="form-group__header">
-                            <div class="header__icon">
-                                <icon-phone></icon-phone>
-                            </div>
-                            <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" ref="clientPhoneInput" v-model="clientPhoneForm.number"
-                                      @input.native="syncClientPhoneTrustedEvent($event, 'number')" placeholder="(##) #####-####"></app-mask>
-                            <div class="header__mini-circle"></div>
-                            <input type="text" v-model="clientPhoneForm.name" @input="syncClientPhoneForm('name')" class="input--borderless" placeholder="fixo ou celular" />
-                            <span class="push-both-sides"></span>
-                            <div style="cursor: pointer; margin-right: 8px;" @click="cancelClientPhoneEdition()" v-if="clientPhoneForm.id">
-                                <a style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">V</a>
-                            </div>
-                            <div style="cursor: pointer;" @click="saveClientPhone()">
-                                <icon-add class="header__action-icon" v-if="!clientPhoneForm.id"></icon-add>
-                                <a v-else style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">S</a>
-                            </div>
+            <!--
+            <div class="form-groups">
+                &lt;!&ndash; Show client address form &ndash;&gt;
+                <div class="form-group" v-if="form.showClientAddressForm">
+                    <div class="form-group__header">
+                        <div style="display: flex; flex-direction: row;" v-if="form.clientAddress.id">
+                            <span style="margin-right: 10px;">Tipo do local</span>
+                            <icon-local></icon-local>
+                            <app-client-address-types-input style="margin-left: 10px;" v-model="clientAddressForm.clientAddressTypes"></app-client-address-types-input>
                         </div>
-                        <div class="form-group__content">
-                            <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length > 0">
-                                <li class="list__item" v-for="clientPhone in form.clientPhones" :class="{ active: clientPhoneId === clientPhone.id }">
-                                    <div class="item__check" @click="selectClientPhone(clientPhone)" style="margin-right: 10px; cursor: pointer;">
-                                        <icon-check></icon-check>
-                                    </div>
-                                    <span style="cursor: pointer;" @click="selectClientPhone(clientPhone)">({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
-                                    <div class="item__mini-circle"></div>
-                                    <span>{{ clientPhone.name }}</span>
-                                    <span class="push-both-sides"></span>
-                                    <div class="item__icon" @click="editClientPhone(clientPhone)" style="cursor: pointer; margin-right: 10px;">
-                                        <icon-edit></icon-edit>
-                                    </div>
-                                    <div @click="removeClientPhone(clientPhone)" style="display: flex; cursor: pointer;">
-                                        <icon-remove></icon-remove>
-                                    </div>
-                                </li>
-                            </ul>
-                            <span v-else>Nenhum telefone...</span>
+                        <div style="display: flex; flex-direction: row;" v-else>
+                            <span style="margin-right: 10px;">Selecione um local</span>
+                            <icon-local></icon-local>
+                        </div>
+                        <span class="push-both-sides"></span>
+                        <a class="btn btn&#45;&#45;border-only" v-if="data.clientAddresses.length > 0" @click="backToClientAddressesList()">Voltar</a>
+                        <div v-if="data.clientAddresses.length <= 0">
+                            <a class="btn btn&#45;&#45;primary" @click="saveClientAddress()" v-if="!isSavingClientAddress" style="margin-left: 10px;">Adicionar</a>
+                            <a class="btn btn&#45;&#45;primary btn&#45;&#45;disabled" v-else style="margin-left: 10px;">Adicionar</a>
+                        </div>
+                        <div v-else>
+                            <a class="btn btn&#45;&#45;primary" @click="saveClientAddress()" v-if="!isSavingClientAddress" style="margin-left: 10px;">Salvar</a>
+                            <a class="btn btn&#45;&#45;primary btn&#45;&#45;disabled" v-else style="margin-left: 10px;">Salvar</a>
                         </div>
                     </div>
+                    <div class="form-group__content">
+                        <app-client-address-form ref="clientAddressForm" :clientId="client.id" :form.sync="form.clientAddress" :isSaving.sync="isSavingClientAddress"
+                        @save="onClientAddressSave($event)"></app-client-address-form>
+                    </div>
                 </div>
-                <div class="form-groups">
-                    <div class="form-group">
-                        <app-select class="form-group__header" :verticalOffset="8" :items="customFieldsSelectOptions" v-model="form.clientSelectedCustomFields"
-                            :multiple="true" :showInput="true" @select="onClientCustomFieldSelect($event)" @unselect="onClientCustomFieldUnselect($event)"
-                            @save="onCustomFieldSave($event)">
-                            <div class="header__icon">
-                                <icon-client-details></icon-client-details>
-                            </div>
-                            <span class="static">Informações adicionais</span>
-                            <span class="push-both-sides"></span>
-                            <icon-dropdown class="header__action-icon" v-if="form.clientCustomFields && form.clientCustomFields.length >= 0"></icon-dropdown>
-                            <icon-add class="header__action-icon" v-else></icon-add>
-                            <template slot="item" slot-scope="itemProps">
-                                <span>{{itemProps.text }}</span>
-                                <div style="margin-left: 8px;" v-if="itemProps.isRemovable" @click="removeCustomField(itemProps.value)">
+                &lt;!&ndash; Show client address list &ndash;&gt;
+                <div class="form-group" v-else>
+                    <div class="form-group__header">
+                        <span style="margin-right: 10px;">Selecione um local</span><icon-local></icon-local>
+                        <span class="push-both-sides"></span>
+                        <a class="btn btn&#45;&#45;border-only" @click="addClientAddress()">Novo</a>
+                    </div>
+                    <div class="form-group__content">
+                        <ul class="content__list">
+                            <li class="list__item" v-for="clientAddress in data.clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
+                                <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
+                                    {{ clientAddress.address.name }},
+                                    {{ clientAddress.number.toString().trim() || "SN" }}
+                                </span>
+                                <span class="push-both-sides"></span>
+                                <div class="item__check item__icon" @click="onClientAddressSelected(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                                    <icon-check style="width: 16px;"></icon-check>
+                                </div>
+                                <div class="item__icon" @click="editClientAddress(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                                    <icon-edit></icon-edit>
+                                </div>
+                                <div class="item__icon" @click="removeClientAddress(clientAddress)" style="cursor: pointer;">
                                     <icon-remove></icon-remove>
                                 </div>
-                            </template>
-                        </app-select>
-                        <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
-                            <ul class="content__list--mini">
-                                <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
-                                    <span style="white-space: nowrap">{{ clientCustomField.customField.name }}</span>
-                                    <div class="item__mini-circle"></div>
-                                    <input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" />
-                                    <span class="push-both-sides"></span>
-                                    <icon-remove style="flex-shrink: 0;"></icon-remove>
-                                </li>
-                            </ul>
-                        </div>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-                <div class="form-groups">
-                    <div class="form-group">
-                        <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
-                            <div class="header__icon">
-                                <icon-client-group></icon-client-group>
-                            </div>
-                            <span class="static" v-if="!selectedClientGroup.value">Grupo de cliente</span>
-                            <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</span>
-                            <span class="push-both-sides"></span>
-                            <icon-dropdown class="header__action-icon"></icon-dropdown>
-                            <template slot="item" slot-scope="itemProps">
-                                <span>{{itemProps.text }}</span>
-                            </template>
-                        </app-select>
+            </div>-->
+        </div>
+        <div class="form__side-column">
+            <!--
+            <div class="form-groups">
+                <div class="form-group">
+                    <div class="form-group__header">
+                        <div class="header__icon">
+                            <icon-phone></icon-phone>
+                        </div>
+                        <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" ref="clientPhoneInput" v-model="clientPhoneForm.number"
+                                  @input.native="syncClientPhoneTrustedEvent($event, 'number')" placeholder="(##) #####-####"></app-mask>
+                        <div class="header__mini-circle"></div>
+                        <input type="text" v-model="clientPhoneForm.name" @input="syncClientPhoneForm('name')" class="input--borderless" placeholder="fixo ou celular" />
+                        <span class="push-both-sides"></span>
+                        <div style="cursor: pointer; margin-right: 8px;" @click="cancelClientPhoneEdition()" v-if="clientPhoneForm.id">
+                            <a style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">V</a>
+                        </div>
+                        <div style="cursor: pointer;" @click="saveClientPhone()">
+                            <icon-add class="header__action-icon" v-if="!clientPhoneForm.id"></icon-add>
+                            <a v-else style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">S</a>
+                        </div>
+                    </div>
+                    <div class="form-group__content">
+                        <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length > 0">
+                            <li class="list__item" v-for="clientPhone in form.clientPhones" :class="{ active: clientPhoneId === clientPhone.id }">
+                                <div class="item__check" @click="selectClientPhone(clientPhone)" style="margin-right: 10px; cursor: pointer;">
+                                    <icon-check></icon-check>
+                                </div>
+                                <span style="cursor: pointer;" @click="selectClientPhone(clientPhone)">({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
+                                <div class="item__mini-circle"></div>
+                                <span>{{ clientPhone.name }}</span>
+                                <span class="push-both-sides"></span>
+                                <div class="item__icon" @click="editClientPhone(clientPhone)" style="cursor: pointer; margin-right: 10px;">
+                                    <icon-edit></icon-edit>
+                                </div>
+                                <div @click="removeClientPhone(clientPhone)" style="display: flex; cursor: pointer;">
+                                    <icon-remove></icon-remove>
+                                </div>
+                            </li>
+                        </ul>
+                        <span v-else>Nenhum telefone...</span>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="form__header" v-if="!isCurrentStepActive && client.id" :class="{'summary': !isCurrentStepActive && client.id}">
-            <div class="form-columns" style="flex-grow: 1;">
-                <div class="form-column" style="flex-grow: 1; flex-basis: 70%; display: flex; flex-direction: row; justify-content: flex-start; align-items: center;">
-                    <span style="margin-right: 8px;">{{ shortenedClientName }}</span>
-                    <div v-if="selectedClientAddress">
-                        <span style="margin-right: 8px;">{{ shortenedClientAddress }}</span>
-                    </div>
-                    <icon-edit style="width:10px;"></icon-edit>
-                </div>
-                <div class="form-column" v-if="selectedClientPhone">
-                    <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
-                        <icon-phone class="icon--d-secondary" style="margin-right: 10px;"></icon-phone>
-                        <span style="white-space: nowrap;">{{ formatedClientPhone }}</span>
-                    </a>
-                </div>
-                <div class="form-column" v-if="client.clientGroup">
-                    <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
-                        <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
-                            <div class="header__icon">
-                                <icon-client-group class="icon--d-secondary" style="margin-right: 10px;"></icon-client-group>
+            -->
+            <!--
+            <div class="form-groups">
+                <div class="form-group">
+                    <app-select class="form-group__header" :verticalOffset="8" :items="customFieldsSelectOptions" v-model="form.clientSelectedCustomFields"
+                        :multiple="true" :showInput="true" @select="onClientCustomFieldSelect($event)" @unselect="onClientCustomFieldUnselect($event)"
+                        @save="onCustomFieldSave($event)">
+                        <div class="header__icon">
+                            <icon-client-details></icon-client-details>
+                        </div>
+                        <span class="static">Informações adicionais</span>
+                        <span class="push-both-sides"></span>
+                        <icon-dropdown class="header__action-icon" v-if="form.clientCustomFields && form.clientCustomFields.length >= 0"></icon-dropdown>
+                        <icon-add class="header__action-icon" v-else></icon-add>
+                        <template slot="item" slot-scope="itemProps">
+                            <span>{{itemProps.text }}</span>
+                            <div style="margin-left: 8px;" v-if="itemProps.isRemovable" @click="removeCustomField(itemProps.value)">
+                                <icon-remove></icon-remove>
                             </div>
-                            <span class="static" style="white-space: nowrap" v-if="!selectedClientGroup.value">Grupo de cliente</span>
-                            <span style="white-space: nowrap" v-else>{{ selectedClientGroup.text }}</span>
-                            <span class="push-both-sides"></span>
-                            <icon-dropdown class="header__action-icon"></icon-dropdown>
-                        </a>
+                        </template>
+                    </app-select>
+                    <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
+                        <ul class="content__list--mini">
+                            <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
+                                <span style="white-space: nowrap">{{ clientCustomField.customField.name }}</span>
+                                <div class="item__mini-circle"></div>
+                                <input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" />
+                                <span class="push-both-sides"></span>
+                                <icon-remove style="flex-shrink: 0;"></icon-remove>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="form-groups">
+                <div class="form-group">
+                    <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
+                        <div class="header__icon">
+                            <icon-client-group></icon-client-group>
+                        </div>
+                        <span class="static" v-if="!selectedClientGroup.value">Grupo de cliente</span>
+                        <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</span>
+                        <span class="push-both-sides"></span>
+                        <icon-dropdown class="header__action-icon"></icon-dropdown>
                         <template slot="item" slot-scope="itemProps">
                             <span>{{itemProps.text }}</span>
                         </template>
                     </app-select>
                 </div>
-                <div class="form-column" style="flex-grow: initial; flex-direction: row; align-items: center;">
-                    <h3 style="top: 0;">Cliente</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
-                </div>
             </div>
+            -->
         </div>
-        <div class="form__header" v-else>
-            <span v-if="!isCurrentStepActive">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
-            <span class="push-both-sides"></span>
-            <h3 :class="{active: isCurrentStepActive}">Cliente</h3> <app-switch style="float: right;" :value="isCurrentStepActive" @change="onCurrentStepChanged()"></app-switch>
-        </div>
-    </form>
+    </div>
 </template>
 
 <script>
@@ -267,47 +222,15 @@
             'app-client-address-form': ClientAddressForm,
             'app-client-address-types-input': ClientAddressTypesInput,
         },
-        props: ['client','activeStep','clientAddressId','clientPhoneId'],
+        props: ['form','data','client','clientAddressId','clientPhoneId'],
         data(){
             return {
-                lastQuery: '',
-                query: '',
-                isNameInputFocused: false,
-                isAdding: false,
-                isEditing: false,
-                isSavingClientAddress: false,
-                clientPhoneForm: {
-                    id: null,
-                    name: null,
-                    number: null
-                },
-                selectedClientAddressId: null,
-                clientAddressForm: {
-                    id: null,
-                    name: null,
-                    number: null,
-                    complement: null,
-                    clientAddressTypes: [],
-                    address: {
-                        id: null,
-                        name: null,
-                        neighborhood: null,
-                        cep: null,
-                        city: null,
-                        state: null
-                    }
-                },
-                form: {
-                    active: false,
-                    id: null, // se passar, atualizar cliente. se não, criar.
-                    name: '', // se passar e tiver id, atualizar. se não, criar.
-                    legalDocument: '', // cpf, cnpj
-                    clientGroup: null,
-                    clientSelectedCustomFields: [],
-                    clientCustomFields: [],
-                    clientAddresses: [],
-                    clientPhones: [],
-                    clientAddressName: null
+                search: {
+                    items: [],
+                    isNameInputFocused: false,
+                    query: '',
+                    lastQuery: '',
+                    commitTimeout: null
                 },
                 customFields: [
                     {
@@ -352,9 +275,7 @@
                         text: 'COMÉRCIO',
                         value: 'commerce'
                     }
-                ],
-                searchItems: [],
-                commitTimeout: null
+                ]
             }
         },
         watch: {
@@ -366,19 +287,13 @@
             },
             'clientPhoneForm.number': function(number){
                 this.$refs.clientPhoneInput.display = number;
-            },
-            form: {
-                handler: function(form) {
-                    this.syncWithParentForm();
-                },
-                deep: true
             }
         },
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company']),
             isCurrentStepActive(){
-                return this.activeStep === 'client';
+                return this.form.activeStep === 'client';
             },
             customFieldsSelectOptions(){
                 return _.map(this.customFields, (customField) => {
@@ -554,46 +469,83 @@
 
             ...mapActions('toast', ['showToast', 'showError']),
 
-            /**
-             * Client search
-             */
+            //<editor-fold desc="Search methods">
+            //</editor-fold>
 
-            search(){
-                const vm = this;
-                ServiceAPI.search({
-                    actingCities: ['MARINGA'],
-                    q: vm.query,
-                    companyId: vm.company.id
-                }).then(({data}) => {
-                    let clients = data[0];
-                    vm.searchItems = clients.map(({source}) => {
-                        // source refers to search address item
-                        return {
-                            client: source
+            searchMethods(){
+                const vm = this
+                return {
+                    search() {
+                        ServiceAPI.search({
+                            actingCities: ['MARINGA'],
+                            q: vm.query,
+                            companyId: vm.company.id
+                        }).then(({data}) => {
+                            let clients = data[0];
+                            vm.search.items = clients.map(({source}) => {
+                                // source refers to search address item
+                                return {
+                                    client: source
+                                };
+                            });
+                            vm.$refs.search.search();
+                        }).catch((err) => {
+                            vm.search.items = [];
+                        })
+                    },
+                    searchClientSelected(searchItem) {
+                        const toBeEmitted = {
+                            draftId: vm.activeMorphScreen.draft.draftId,
+                            clientId: searchItem.client.id
                         };
-                    });
-                    vm.$refs.search.search();
-                }).catch((err) => {
-                    vm.searchItems = [];
-                })
-            },
-            searchClientSelected(searchItem){
-                const toBeEmitted = { draftId: this.activeMorphScreen.draft.draftId, clientId: searchItem.client.id};
-                this.$socket.emit('draft:client-select', toBeEmitted);
-                this.searchItems = [];
-            },
-            searchValueUpdated(){
-                if(this.commitTimeout) clearTimeout(this.commitTimeout);
-                this.commitTimeout = setTimeout(() => {
-                    this.query = this.form.name;
-                    this.commitUpdatedValue();
-                }, 300)
-            },
-            commitUpdatedValue(){
-                if(this.query.trim() !== this.lastQuery){
-                    this.lastQuery = this.query.trim();
-                    this.search();
+                        vm.$socket.emit('draft:client-select', toBeEmitted);
+                        vm.search.items = [];
+                    },
+                    searchValueUpdated() {
+                        if (vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout);
+                        vm.search.commitTimeout = setTimeout(() => {
+                            vm.query = vm.form.name;
+                            vm.searchMethods().commitUpdatedValue();
+                        }, 300)
+                    },
+                    commitUpdatedValue() {
+                        if (vm.query.trim() !== vm.search.lastQuery) {
+                            vm.search.lastQuery = vm.query.trim();
+                            vm.searchMethods().search();
+                        }
+                    }
                 }
+            },
+
+            //<editor-fold desc="On events">
+            //</editor-fold>
+
+            inputName(){
+                const vm = this
+                const emitData = {
+                    draftId: vm.activeMorphScreen.draft.draftId,
+                    name: vm.form.name
+                }
+                console.log("Emitting to draft/request.client.name", emitData)
+                vm.$socket.emit('draft/request.client.name', emitData)
+            },
+            inputLegalDocument(){
+                const vm = this
+                const emitData = {
+                    draftId: vm.activeMorphScreen.draft.draftId,
+                    legalDocument: vm.form.legalDocument
+                }
+                console.log("Emitting to draft/request.client.legalDocument", emitData)
+                vm.$socket.emit('draft/request.client.legalDocument', emitData)
+            },
+            addClientAddress(){
+                const vm = this
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    showClientAddressForm: true
+                }
+                console.log("Emitting to draft/request.client.showClientAddressForm", emitData)
+                vm.$socket.emit('draft/request.client.showClientAddressForm', emitData)
             },
 
             /**
@@ -647,11 +599,6 @@
 
             backToClientAddressesList(){
                 this.$socket.emit('draft:client-address-back', {
-                    draftId: this.activeMorphScreen.draft.draftId
-                });
-            },
-            addClientAddress(){
-                this.$socket.emit('draft:client-address-add', {
                     draftId: this.activeMorphScreen.draft.draftId
                 });
             },
@@ -753,48 +700,6 @@
                 this.$socket.emit('draft:client-custom-field-update', emitData);
             },
 
-            /**
-             * Resets
-             */
-
-            resetForm(){
-                this.resetClientForm();
-                this.resetClientAddressForm();
-            },
-            resetClientForm(){
-                this.$socket.emit('draft:client-reset', {
-                    draftId: this.activeMorphScreen.draft.draftId
-                });
-            },
-            resetClientPhoneForm(){
-                this.clientPhoneForm = models.createClientPhoneModel();
-            },
-            resetClientAddressForm(){
-                this.clientAddressForm = models.createClientAddressModel();
-            },
-
-            /**
-             * Real-time
-             */
-
-            commitTrustedSocketChanges(ev, mapping){
-                if(ev.isTrusted){
-                    setImmediate(() => {
-                        this.commitSocketChanges(mapping);
-                    });
-                }
-            },
-            onCurrentStepChanged(){
-                (this.activeStep === 'client') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'client');
-                this.commitSocketChanges('activeStep');
-            },
-            syncWithParentForm(){
-                this.$emit('update:client', this.form);
-            },
-            commitSocketChanges(mapping){
-                this.$emit('sync', mapping);
-            },
-
             // client phone
 
             getIsolatedClientPhoneFormPathObj(path){
@@ -818,8 +723,8 @@
                             number: clientPhone.number || null
                         }
                     };
-                    console.log("Emitting draft:client-phone-update", emitData);
-                    this.$socket.emit("draft:client-phone-update", emitData);
+                    console.log("Emitting draft:client-phone-update", emitData)
+                    this.$socket.emit("draft:client-phone-update", emitData)
                 }
                 else {
                     const emitData = {
@@ -832,43 +737,43 @@
                 }
             },
         },
-        mounted(){
-            this.syncWithParentForm();
-            this.$bus.$on('draft:update', ({draftId, form}) => {
-                if(this.activeMorphScreen.draft.draftId === draftId){
-                    const client = form.client;
-                    this.form.clientSelectedCustomFields = _.map(client.clientCustomFields, (clientCustomField) => {
-                        return clientCustomField.customField.id
-                    });
+        created(){
+            const vm = this
+            /**
+             * On name input
+             * @param {Object} ev = { success:Boolean, evData = { name:String } }
+             */
+            vm.$options.sockets['draft/request.client.name'] = (ev) => {
+                if(ev.success){
+                    console.log("Received draft/request.client.name", ev)
+                    vm.form.name = ev.evData.name
                 }
-            })
+            }
+            /**
+             * On legal document input
+             * @param {Object} ev = { success:Boolean, evData = { legalDocument:String } }
+             */
+            vm.$options.sockets['draft/request.client.legalDocument'] = (ev) => {
+                if(ev.success){
+                    console.log("Received draft/request.client.legalDocument", ev)
+                    vm.form.legalDocument = ev.evData.legalDocument
+                }
+            }
+            /**
+             * On legal document input
+             * @param {Object} ev = { success:Boolean, evData = { showClientAddressForm:String } }
+             */
+            vm.$options.sockets['draft/request.client.showClientAddressForm'] = (ev) => {
+                if(ev.success){
+                    console.log("Received draft/request.client.showClientAddressForm", ev)
+                    vm.form.showClientAddressForm = ev.evData.showClientAddressForm
+                }
+            }
         }
     }
 </script>
 
 <style scoped>
-
-    .form__header.summary {
-        height: auto;
-    }
-
-    .form__header.summary >>> .colorizable {
-        fill: var(--font-color--2);
-    }
-
-    .form__header.summary span {
-        text-transform: uppercase;
-        margin-right: 10px;
-        color: var(--font-color--8)
-    }
-
-    .form__header.summary .form-group {
-        padding: 0 20px;
-        display: flex;
-        height: 50px;
-        align-items: center;
-        flex-direction: row;
-    }
 
     .mini-circle {
         flex-shrink: 0;

@@ -170,10 +170,9 @@ const request = {
                     },
                     quantity: 1,
                     unitPrice: 0.00,
-                    unitDiscount: 0.00
+                    discount: 0.00
                 }
             ],
-
             selectedDivulgationChannelId: null,
             divulgationChannelAdd: {
                 name: ''
@@ -182,10 +181,8 @@ const request = {
                 id: '',
                 name: ''
             },
-
             deliveryDatetime: '',
             responsibleUser: '',
-
             obs: ''
         },
         task: {
@@ -215,8 +212,8 @@ const request = {
         accountEdit: {
             id: '',
             name: ''
-        }
-
+        },
+        selectedStatusId: ''
     },
     data: { // info about data that needs to be edited or created when the persist occurs
         client: {
