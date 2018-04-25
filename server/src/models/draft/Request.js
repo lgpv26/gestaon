@@ -14,75 +14,7 @@ module.exports = class Request extends Draft {
         this.model = {
             form: {
                 activeStep: null,
-                client: {
-                    id: null, // null if creating, update if filled
-                    name: null,
-                    legalDocument: null,
-                    clientAddress: {
-                        selected: null,
-                        showForm: false,
-                        form: {
-                            id: null, // null if creating, update if filled
-                            number: null,
-                            complement: null,
-                            type: {
-                                selected: [],
-                                add: {
-                                    name: null
-                                },
-                                edit: {
-                                    id: null,
-                                    name: null
-                                }
-                            },
-                            address: {
-                                id: null, // null if creating, update if filled
-                                name: null,
-                                neighborhood: null,
-                                cep: null,
-                                city: null,
-                                state: null
-                            }
-                        }
-                    },
-                    clientPhone: {
-                        selected: null,
-                        add: {
-                            name: null,
-                            number: null
-                        },
-                        edit: {
-                            id: null,
-                            name: null,
-                            number: null
-                        }
-                    },
-                    customField: {
-                        selected: [
-                            {
-                                id: null, // id of the custom field
-                                value: null // value of the custom field
-                            }
-                        ],
-                        add: {
-                            name: null
-                        },
-                        edit: {
-                            id: null,
-                            name: null
-                        }
-                    },
-                    clientGroup: {
-                        selected: null,
-                        add: {
-                            name: null
-                        },
-                        edit: {
-                            id: null,
-                            name: null
-                        }
-                    }
-                },
+                client: Request.getClientModel(),
                 order: {
                     orderProducts: [
                         {
@@ -145,6 +77,82 @@ module.exports = class Request extends Draft {
                 clientAddresses: [],
                 clientPhones: [],
                 clientCustomFields: []
+            }
+        }
+    }
+
+    static getClientFormModel(){
+        return {
+            id: null, // null if creating, update if filled
+            name: null,
+            legalDocument: null,
+            clientAddress: getClientAddressModel(),
+            clientPhone: {
+                selected: null,
+                add: {
+                    name: null,
+                    number: null
+                },
+                edit: {
+                    id: null,
+                    name: null,
+                    number: null
+                }
+            },
+            customField: {
+                selected: [
+                    {
+                        id: null, // id of the custom field
+                        value: null // value of the custom field
+                    }
+                ],
+                add: {
+                    name: null
+                },
+                edit: {
+                    id: null,
+                    name: null
+                }
+            },
+            clientGroup: {
+                selected: null,
+                add: {
+                    name: null
+                },
+                edit: {
+                    id: null,
+                    name: null
+                }
+            }
+        }
+    }
+    
+    getClientAddressModel() {
+        return {
+            selected: null,
+            showForm: false,
+            form: {
+                id: null, // null if creating, update if filled
+                number: null,
+                complement: null,
+                type: {
+                    selected: [],
+                    add: {
+                        name: null
+                    },
+                    edit: {
+                        id: null,
+                        name: null
+                    }
+                },
+                address: {
+                    id: null, // null if creating, update if filled
+                    name: null,
+                    neighborhood: null,
+                    cep: null,
+                    city: null,
+                    state: null
+                }
             }
         }
     }

@@ -26,7 +26,7 @@ module.exports = (server, restify) => {
         },
 
         getOne: (controller) => {
-           return server.mysql.Client.findOne({
+            return server.mysql.Client.findOne({
                 where: {
                     id: controller.request.id,
                     status: 'activated'

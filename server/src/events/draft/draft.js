@@ -113,4 +113,41 @@ module.exports = class Draft {
     setDraftForm(path, value){
         if(_.has(this.draft, 'form')) _.set(this.draft.form, path, value)
     }
+
+     /**
+     * Set a path and its value for the draft data
+     * The path is relative to the form property in the draft array
+     * @param path
+     * @param value
+     */
+    setDraftData(path, values, reset = false){
+
+        if(reset){
+            _.set(this.draft, 'data.' + path, values)
+        }
+        else{
+            return new Promise((resolve, reject) => {
+                let update = _.get(this.draft, 'data.' + path)
+
+                values.map((value, index) => {
+                    const arrayIndex = _.findIndex(update, { id: value.id })
+                    if (arrayIndex !== -1) {
+                        update[arrayIndex] = _.assign(update[arrayIndex], value)
+                    }
+                    else {
+                        update.push(values[index])
+                    }
+                })
+                resolve(update)
+            }).then((update) => {
+                _.set(this.draft, 'data.' + path,
+                    update
+                )
+            }).catch((err) => {
+                console.log(err)
+            })
+        }
+
+    }
+
 }

@@ -268,7 +268,7 @@ module.exports = (server) => {
                 })
             })
         },
-
+        
         resetClient(clientReset) {
             return this.getOne(clientReset.draftId).then((draft) => {
                 const update = _.assign(draft.form, { client: { id: null,  name: null, legalDocument: null, clientAddresses: [], clientPhones: [], clientCustomFields: [], isNull: true }, clientAddressForm: {}, clientAddressId: null})

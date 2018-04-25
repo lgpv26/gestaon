@@ -6,15 +6,15 @@ module.exports = (server, restify) => {
         search(req) {
             /* preparing settings data */
             let actingCitiesString = "";
-            if (typeof req.params.actingCities !== "undefined") {
-                req.params.actingCities.forEach(function (actingCity, index) {
+            if (typeof req.query.actingCities !== "undefined") {
+                req.query.actingCities.forEach(function (actingCity, index) {
                     actingCitiesString += " " + actingCity;
                 });
                 actingCitiesString = utils.removeDiacritics(actingCitiesString.trim());
             }
 
             return new Promise((resolve, reject) => {
-                if (!req.params.companyId) {
+                if (!req.query.companyId) {
                     return reject(new restify.BadDigestError("CompanyId is requerid."))
                 }
                 server.elasticSearch.msearch({
@@ -34,7 +34,7 @@ module.exports = (server, restify) => {
                                                 "should": [
                                                     {
                                                         "multi_match": {
-                                                            "query": utils.removeDiacritics(req.params.q.trim()),
+                                                            "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
                                                                 "name",
                                                                 "obs",
@@ -50,7 +50,7 @@ module.exports = (server, restify) => {
                                                             "path": "customFields",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "customFields.documentValue"
                                                                     ],
@@ -66,7 +66,7 @@ module.exports = (server, restify) => {
                                                             "path": "addresses",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
                                                                         "addresses.cep^5", "addresses.neighborhood"
@@ -84,7 +84,7 @@ module.exports = (server, restify) => {
                                                             "path": "phones",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "phones.ddd", "phones.number"
                                                                     ],
@@ -103,7 +103,7 @@ module.exports = (server, restify) => {
                                                 "should": [
                                                     {
                                                         "multi_match": {
-                                                            "query": utils.removeDiacritics(req.params.q.trim()),
+                                                            "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
                                                                 "name",
                                                                 "obs",
@@ -120,7 +120,7 @@ module.exports = (server, restify) => {
                                                             "path": "addresses",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
                                                                         "addresses.cep^5", "addresses.neighborhood"
@@ -136,7 +136,7 @@ module.exports = (server, restify) => {
                                                             "path": "customFields",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "customFields.documentValue"
                                                                     ],
@@ -151,7 +151,7 @@ module.exports = (server, restify) => {
                                                             "path": "phones",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "phones.ddd", "phones.number"
                                                                     ],
@@ -168,7 +168,7 @@ module.exports = (server, restify) => {
                                                 "should": [
                                                     {
                                                         "multi_match": {
-                                                            "query": utils.removeDiacritics(req.params.q.trim()),
+                                                            "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
                                                                 "name",
                                                                 "obs",
@@ -185,7 +185,7 @@ module.exports = (server, restify) => {
                                                             "path": "addresses",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
                                                                         "addresses.cep^5", "addresses.neighborhood"
@@ -203,7 +203,7 @@ module.exports = (server, restify) => {
                                                             "path": "customFields",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "customFields.documentValue"
                                                                     ],
@@ -220,7 +220,7 @@ module.exports = (server, restify) => {
                                                             "path": "phones",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "phones.ddd", "phones.number"
                                                                     ],
@@ -237,7 +237,7 @@ module.exports = (server, restify) => {
                                     ],
                                     "filter": {
                                         "term": {
-                                            "companyId": req.params.companyId
+                                            "companyId": req.query.companyId
                                         }
                                     }
                                 }
@@ -253,7 +253,7 @@ module.exports = (server, restify) => {
                                 "bool": {
                                     "must": {
                                         "multi_match": {
-                                            "query": utils.removeDiacritics(req.params.q.trim()),
+                                            "query": utils.removeDiacritics(req.query.q.trim()),
                                             "fields": ["name", "cep", "neighborhood"],
                                             "analyzer": "standard",
                                             "operator": "AND"

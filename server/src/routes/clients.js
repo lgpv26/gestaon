@@ -1,4 +1,5 @@
 const basePath = require('./../middlewares/base-path.middleware');
+const Controller = require('../models/Controller')
 
 module.exports = (server, restify) => {
 
@@ -23,8 +24,14 @@ module.exports = (server, restify) => {
 
     server.get('/clients', clientsController.getAll);
     server.get('/clients/:id', (req, res, next) => {
-        clientsController.getOne(req).then((client) => {
-            return client
+        const controller = new Controller({
+            request: {
+                id: (req.params.id) ? req.params.id : null,
+                companyId: (req.query.companyId) ? req.query.companyId : null
+            }
+        })
+        clientsController.getOne(controller).then((client) => {
+            return res.send(200, { data: client })
         }).catch((err) => {
             console.log('catch da rota do client', err)
         })

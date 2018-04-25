@@ -53,6 +53,18 @@ module.exports = (server, restify) => {
         })
     })
 
+    server.post('/requests', (req, res, next) => {
+        server.broker.call('data/request.create', {
+            data: {
+                companyId: 1
+            }
+        }).then((request) => {
+            return res.send(200, request)
+        }).catch((err) => {
+            console.log(err)
+        })
+    })
+
 
 
 };
