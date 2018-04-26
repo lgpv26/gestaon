@@ -53,49 +53,7 @@
             </div>
         </div>
         <div class="form__side-column">
-            <!--
-            <div class="form-groups">
-                <div class="form-group">
-                    <div class="form-group__header">
-                        <div class="header__icon">
-                            <icon-phone></icon-phone>
-                        </div>
-                        <app-mask :mask="['(##) ####-####','(##) #####-####']" class="input--borderless" ref="clientPhoneInput" v-model="clientPhoneForm.number"
-                                  @input.native="syncClientPhoneTrustedEvent($event, 'number')" placeholder="(##) #####-####"></app-mask>
-                        <div class="header__mini-circle"></div>
-                        <input type="text" v-model="clientPhoneForm.name" @input="syncClientPhoneForm('name')" class="input--borderless" placeholder="fixo ou celular" />
-                        <span class="push-both-sides"></span>
-                        <div style="cursor: pointer; margin-right: 8px;" @click="cancelClientPhoneEdition()" v-if="clientPhoneForm.id">
-                            <a style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">V</a>
-                        </div>
-                        <div style="cursor: pointer;" @click="saveClientPhone()">
-                            <icon-add class="header__action-icon" v-if="!clientPhoneForm.id"></icon-add>
-                            <a v-else style="font-size: 15px; font-weight: 600; color: var(--base-color); position: relative; top: -2px;">S</a>
-                        </div>
-                    </div>
-                    <div class="form-group__content">
-                        <ul class="content__list--mini" v-if="form.clientPhones && form.clientPhones.length > 0">
-                            <li class="list__item" v-for="clientPhone in form.clientPhones" :class="{ active: clientPhoneId === clientPhone.id }">
-                                <div class="item__check" @click="selectClientPhone(clientPhone)" style="margin-right: 10px; cursor: pointer;">
-                                    <icon-check></icon-check>
-                                </div>
-                                <span style="cursor: pointer;" @click="selectClientPhone(clientPhone)">({{ clientPhone.ddd }}) {{ clientPhone.number }}</span>
-                                <div class="item__mini-circle"></div>
-                                <span>{{ clientPhone.name }}</span>
-                                <span class="push-both-sides"></span>
-                                <div class="item__icon" @click="editClientPhone(clientPhone)" style="cursor: pointer; margin-right: 10px;">
-                                    <icon-edit></icon-edit>
-                                </div>
-                                <div @click="removeClientPhone(clientPhone)" style="display: flex; cursor: pointer;">
-                                    <icon-remove></icon-remove>
-                                </div>
-                            </li>
-                        </ul>
-                        <span v-else>Nenhum telefone...</span>
-                    </div>
-                </div>
-            </div>
-            -->
+            <app-client-phone-form :clientPhone.sync="client.clientPhone" :data.sync="data"></app-client-phone-form>
             <!--
             <div class="form-groups">
                 <div class="form-group">
@@ -129,44 +87,34 @@
                     </div>
                 </div>
             </div>
-            <div class="form-groups">
-                <div class="form-group">
-                    <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
-                        <div class="header__icon">
-                            <icon-client-group></icon-client-group>
-                        </div>
-                        <span class="static" v-if="!selectedClientGroup.value">Grupo de cliente</span>
-                        <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</span>
-                        <span class="push-both-sides"></span>
-                        <icon-dropdown class="header__action-icon"></icon-dropdown>
-                        <template slot="item" slot-scope="itemProps">
-                            <span>{{itemProps.text }}</span>
-                        </template>
-                    </app-select>
-                </div>
-            </div>
             -->
+            <div class="form-groups">
+                <app-client-group-form :clientGroup="client.clientGroup" :data="data"></app-client-group-form>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import _ from 'lodash';
-    import utils from '@/utils/index';
-    import models from '@/models';
-    import ClientAddressForm from './ClientAddressForm.vue';
-    import SearchComponent from '@/components/Inputs/Search.vue';
-    import ClientAddressTypesInput from './ClientAddressTypesInput.vue';
-    import ClientsAPI from '@/api/clients';
-    import ServiceAPI from '@/api/service';
-    import Vue from 'vue';
+    import _ from 'lodash'
+    import utils from '@/utils'
+    import models from '@/models'
+    import ClientAddressForm from './ClientAddressForm.vue'
+    import ClientPhoneForm from './ClientPhoneForm.vue'
+    import ClientGroupForm from './ClientGroupForm.vue'
+    import SearchComponent from '@/components/Inputs/Search.vue'
+    import ClientAddressTypesInput from './ClientAddressTypesInput.vue'
+    import ServiceAPI from '@/api/service'
+    import Vue from 'vue'
 
     export default {
         components: {
             'app-search': SearchComponent,
             'app-client-address-form': ClientAddressForm,
             'app-client-address-types-input': ClientAddressTypesInput,
+            'app-client-phone-form': ClientPhoneForm,
+            'app-client-group-form': ClientGroupForm
         },
         props: ['client','data','clientAddressId','clientPhoneId'],
         data(){
@@ -415,8 +363,9 @@
 
             ...mapActions('toast', ['showToast', 'showError']),
 
-            //<editor-fold desc="Search methods">
-            //</editor-fold>
+            /**
+             * Search
+             */
 
             searchMethods(){
                 const vm = this
@@ -440,31 +389,33 @@
                         })
                     },
                     searchClientSelected(searchItem) {
-                        const toBeEmitted = {
+                        vm.search.items = [];
+                        const emitData = {
                             draftId: vm.activeMorphScreen.draft.draftId,
                             clientId: searchItem.client.id
-                        };
-                        vm.$socket.emit('draft:client-select', toBeEmitted);
-                        vm.search.items = [];
+                        }
+                        console.log("Emitting to draft/request.client.select", emitData)
+                        vm.$socket.emit('draft/request.client.select', emitData)
                     },
                     searchValueUpdated() {
                         if (vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout);
                         vm.search.commitTimeout = setTimeout(() => {
-                            vm.query = vm.client.name;
-                            vm.searchMethods().commitUpdatedValue();
+                            vm.search.query = vm.client.name;
+                            vm.searchMethods().commitUpdatedValue()
                         }, 300)
                     },
                     commitUpdatedValue() {
-                        if (vm.query.trim() !== vm.search.lastQuery) {
-                            vm.search.lastQuery = vm.query.trim();
-                            vm.searchMethods().search();
+                        if (vm.search.query.trim() !== vm.search.lastQuery) {
+                            vm.search.lastQuery = vm.search.query.trim()
+                            vm.searchMethods().search()
                         }
                     }
                 }
             },
 
-            //<editor-fold desc="On events">
-            //</editor-fold>
+            /**
+             * Inputs
+             */
 
             inputName(){
                 const vm = this
@@ -484,6 +435,11 @@
                 console.log("Emitting to draft/request.client.legalDocument", emitData)
                 vm.$socket.emit('draft/request.client.legalDocument', emitData)
             },
+
+            /**
+             * Actions
+             */
+
             addClientAddress(){
                 const vm = this
                 const emitData = {
@@ -493,52 +449,12 @@
                 console.log("Emitting to draft/request.client.showClientAddressForm", emitData)
                 vm.$socket.emit('draft/request.client.showClientAddressForm', emitData)
             },
-
-            /**
-             * Actions
-             */
-
             changeClient(){
-                this.resetForm();
-            },
-
-            // client phone
-
-            selectClientPhone(selectedClientPhone){
-                this.$emit('update:clientPhoneId', selectedClientPhone.id);
-                this.commitSocketChanges('clientPhoneId');
-            },
-            cancelClientPhoneEdition(){
                 const emitData = {
                     draftId: this.activeMorphScreen.draft.draftId
-                };
-                console.log("Emitting draft:client-phone-edition-cancel", emitData);
-                this.$socket.emit('draft:client-phone-edition-cancel', emitData);
-            },
-            editClientPhone(clientPhone){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    clientPhoneId: clientPhone.id
-                };
-                console.log("Emitting draft:client-phone-edit", emitData);
-                this.$socket.emit('draft:client-phone-edit', emitData);
-            },
-            saveClientPhone(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId
-                };
-                console.log("Emitting draft:client-phone-save", emitData);
-                this.$socket.emit('draft:client-phone-save', {
-                    draftId: this.activeMorphScreen.draft.draftId
-                });
-            },
-            removeClientPhone(clientPhone){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    clientPhoneId: clientPhone.id
-                };
-                console.log("Emitting draft:client-phone-remove", emitData);
-                this.$socket.emit('draft:client-phone-remove', emitData);
+                }
+                console.log("Emitting to draft/request.client.reset", emitData)
+                this.$socket.emit('draft/request.client.reset', emitData)
             },
 
             // client address
@@ -644,44 +560,7 @@
                 };
                 console.log("Emitting draft:client-custom-field-update", emitData);
                 this.$socket.emit('draft:client-custom-field-update', emitData);
-            },
-
-            // client phone
-
-            getIsolatedClientPhoneFormPathObj(path){
-                return _.set({}, path, _.get(this.clientPhoneForm, path));
-            },
-            syncClientPhoneTrustedEvent(ev, mapping){
-                if(ev.isTrusted){
-                    setImmediate(() => {
-                        this.syncClientPhoneForm(mapping);
-                    });
-                }
-            },
-            syncClientPhoneForm(mapping){
-                if(mapping === 'number'){
-                    const clientPhone = utils.getDDDAndNumber(this.clientPhoneForm.number);
-                    const emitData = {
-                        draftId: this.activeMorphScreen.draft.draftId,
-                        clientPhoneId: this.clientPhoneForm.id || null,
-                        clientPhoneForm: {
-                            ddd: clientPhone.ddd,
-                            number: clientPhone.number || null
-                        }
-                    };
-                    console.log("Emitting draft:client-phone-update", emitData)
-                    this.$socket.emit("draft:client-phone-update", emitData)
-                }
-                else {
-                    const emitData = {
-                        draftId: this.activeMorphScreen.draft.draftId,
-                        clientPhoneId: this.clientPhoneForm.id || null,
-                        clientPhoneForm: this.getIsolatedClientPhoneFormPathObj(mapping)
-                    };
-                    console.log("Emitting draft:client-phone-update", emitData);
-                    this.$socket.emit("draft:client-phone-update", emitData);
-                }
-            },
+            }
         },
         created(){
             const vm = this
@@ -706,13 +585,29 @@
                 }
             }
             /**
-             * On show/hide form
-             * @param {Object} ev = { success:Boolean, evData = { showForm:String } }
+             * On client select
+             * @param {Object} ev = { success:Boolean, evData = { client:Object, $data:Array = [ clientAddresses, clientPhones, clientCustomFields ] } }
              */
-            vm.$options.sockets['draft/request.client.clientAddress.showForm'] = (ev) => {
+            vm.$options.sockets['draft/request.client.select'] = (ev) => {
                 if(ev.success){
-                    console.log("Received draft/request.client.clientAddress.showForm", ev)
-                    vm.client.clientAddress.showForm = ev.evData.showForm
+                    console.log("Received draft/request.client.select", ev)
+                    vm.$emit('update:client', ev.evData.client)
+                    vm.data.clientAddresses = ev.evData.$data.clientAddresses
+                    vm.data.clientPhones = ev.evData.$data.clientPhones
+                    vm.data.clientCustomFields = ev.evData.$data.clientCustomFields
+                }
+            }
+            /**
+             * On client reset
+             * @param {Object} ev = { success:Boolean, evData = { client:Object, $data:Object = { clientAddresses:Array, clientPhones:Array, clientCustomFields:Array } } }
+             */
+            vm.$options.sockets['draft/request.client.reset'] = (ev) => {
+                if(ev.success){
+                    console.log("Received draft/request.client.reset", ev)
+                    vm.$emit('update:client', ev.evData.client)
+                    vm.data.clientAddresses = ev.evData.$data.clientAddresses
+                    vm.data.clientPhones = ev.evData.$data.clientPhones
+                    vm.data.clientCustomFields = ev.evData.$data.clientCustomFields
                 }
             }
         }

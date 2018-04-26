@@ -20,18 +20,17 @@ export default {
      * */
 
     formatPhone(phoneNumber){
-        phoneNumber = phoneNumber.trim();
-        const ddd = phoneNumber.substring(0, 2);
-        const number = phoneNumber.substring(2);
+        phoneNumber = phoneNumber.toString().trim()
+        const ddd = phoneNumber.substring(0, 2)
+        const number = phoneNumber.substring(2)
         if(number.length === 8){
-            return '(' + ddd + ') ' + number.substring(0, 4) + '-' + number.substring(4, 8);
+            return '(' + ddd + ') ' + number.substring(0, 4) + '-' + number.substring(4, 8)
         }
         else if(number.length === 9){
-
-            return '(' + ddd + ') ' + number.substring(0, 5) + '-' + number.substring(5, 10);
+            return '(' + ddd + ') ' + number.substring(0, 5) + '-' + number.substring(5, 10)
         }
         else{
-            return false;
+            return false
         }
     },
 

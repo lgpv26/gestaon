@@ -62,7 +62,7 @@
                     }
                     this.popperInstance = new Popper(this.$refs.target, this.$refs.popover, {
                         placement: (!this.placement) ? 'bottom-start' : this.placement
-                    });
+                    })
                 });
             },
             closeSelect(){

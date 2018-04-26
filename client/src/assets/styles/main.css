@@ -6,6 +6,30 @@ body {
     color: #AAA;
 }
 
+/* Flexbox gutter */
+
+.row {
+    margin: 0;
+}
+
+.row div[class^="col-"] {
+    padding: 0 10px;
+}
+
+/* Popup component labels */
+
+.popover-content label {
+    color: var(--font-color);
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+}
+
+.popover-shadow {
+    -webkit-box-shadow: var(--popover-shadow);
+    box-shadow: var(--popover-shadow);
+}
+
 /* Components */
 
 .v--modal-overlay {
@@ -352,6 +376,8 @@ li.router-link-active svg.icon {
     z-index: 9999999;
 }
 
+
+
 /* Vue Tippy theme */
 
 .tippy-tooltip.erp-theme {
@@ -361,7 +387,7 @@ li.router-link-active svg.icon {
 }
 
 .tippy-tooltip.erp-theme .tippy-content * {
-    color: var(--font-color--10)
+    /* color: var(--font-color--10) */
 }
 
 .tippy-popper[x-placement^=top] .tippy-tooltip.erp-theme .tippy-arrow {
@@ -387,7 +413,7 @@ li.router-link-active svg.icon {
 }
 
 .tippy-tooltip.erp-dark-theme .tippy-content * {
-    color: var(--font-color--10)
+    /* color: var(--font-color--10) */
 }
 
 .tippy-popper[x-placement^=top] .tippy-tooltip.erp-dark-theme .tippy-arrow {

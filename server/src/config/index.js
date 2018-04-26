@@ -36,7 +36,7 @@ module.exports = {
     },
     mongoDb: {
         host: 'localhost',
-        dbName: 'AgilizaERP'
+        dbName: 'GestaON'
     },
     pubNub: {
         subscribeKey: "sub-c-ddbbcb76-eec5-11e6-889b-02ee2ddab7fe",

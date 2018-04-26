@@ -18,11 +18,11 @@
             </div>
             <div class="separator" v-if="!form.activeStep"></div>
             <!-- Client form -->
-            <form :class="{'active': this.form.activeStep === 'client'}">
-                <div class="form__content" v-show=" this.form.activeStep === 'client'">
+            <form :class="{'active': form.activeStep === 'client'}">
+                <div class="form__content" v-show="form.activeStep === 'client'">
                     <app-client-form :client.sync="form.client" :data.sync="data"></app-client-form>
                 </div>
-                <div class="form__header" v-if="!this.form.activeStep === 'client' && client.id" :class="{'summary': !this.form.activeStep === 'client' && client.id}">
+                <div class="form__header" v-if="!form.activeStep === 'client' && client.id" :class="{'summary': !form.activeStep === 'client' && client.id}">
                     <div class="form-columns" style="flex-grow: 1;">
                         <div class="form-column" style="flex-grow: 1; flex-basis: 70%; display: flex; flex-direction: row; justify-content: flex-start; align-items: center;">
                             <span style="margin-right: 8px;">{{ shortenedClientName }}</span>
@@ -38,7 +38,8 @@
                             </a>
                         </div>
                         <div class="form-column" v-if="client.clientGroup">
-                            <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroups" v-model="client.clientGroup" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
+                            <app-select class="form-group__header" title="Grupo de cliente"  v-model="client.clientGroup"
+                                :verticalOffset="8" :items="clientGroups" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
                                 <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
                                     <div class="header__icon">
                                         <icon-client-group class="icon--d-secondary" style="margin-right: 10px;"></icon-client-group>
@@ -54,38 +55,41 @@
                             </app-select>
                         </div>
                         <div class="form-column" style="flex-grow: initial; flex-direction: row; align-items: center;">
-                            <h3 style="top: 0;">Cliente</h3> <app-switch style="float: right;" :value=" this.form.activeStep === 'client'" @change="onCurrentStepChanged()"></app-switch>
+                            <h3 style="top: 0;">Cliente</h3>
+                            <app-switch style="float: right;" :value="form.activeStep === 'client'" @change="onCurrentStepChanged()"></app-switch>
                         </div>
                     </div>
                 </div>
                 <div class="form__header" v-else>
-                    <span v-if="!this.form.activeStep === 'client'">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
+                    <span v-if="form.activeStep !== 'client'">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
                     <span class="push-both-sides"></span>
-                    <h3 :class="{active: this.form.activeStep === 'client'}">Cliente</h3> <app-switch style="float: right;" :value="this.form.activeStep === 'client'" @change="changeStep('client')"></app-switch>
+                    <h3 :class="{active: form.activeStep === 'client'}">Cliente</h3>
+                    <app-switch style="float: right;" :value="form.activeStep === 'client'" @change="changeStep('client')"></app-switch>
                 </div>
             </form>
             <div class="separator"></div>
             <!-- Order form -->
-            <form :class="{'active': this.form.activeStep === 'order'}">
+            <form :class="{'active': form.activeStep === 'order'}">
                 <div class="form__content" v-show="this.form.activeStep === 'order'">
                     <app-order-form @step-change="onStepChange($event)" :order.sync="form.order"></app-order-form>
                 </div>
                 <div class="form__header">
-                    <span v-if="!this.form.activeStep === 'order'">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
+                    <span v-if="form.activeStep !== 'order'">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
                     <span class="push-both-sides"></span>
-                    <h3 :class="{active: this.form.activeStep === 'order'}">Venda</h3> <app-switch style="float: right;" :value="this.form.activeStep === 'order'" @changed="changeStep('order')"></app-switch>
+                    <h3 :class="{active: form.activeStep === 'order'}">Venda</h3>
+                    <app-switch style="float: right;" :value="form.activeStep === 'order'" @changed="changeStep('order')"></app-switch>
                 </div>
             </form>
             <div class="separator"></div>
             <!-- Task form -->
-            <form :class="{'active': this.form.activeStep === 'task'}">
-                <div class="form__content" v-show="this.form.activeStep === 'task'">
+            <form :class="{'active': form.activeStep === 'task'}">
+                <div class="form__content" v-show="form.activeStep === 'task'">
                     <app-task-form @step-change="onStepChange($event)" :task.sync="form.task"></app-task-form>
                 </div>
                 <div class="form__header">
-                    <span v-if="!this.form.activeStep === 'task'">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
+                    <span v-if="form.activeStep !== 'task'">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
                     <span class="push-both-sides"></span>
-                    <h3 :class="{active: this.form.activeStep === 'task'}">Tarefa</h3> <app-switch style="float: right;" :value="this.form.activeStep === 'task'" @changed="changeStep('task')"></app-switch>
+                    <h3 :class="{active: form.activeStep === 'task'}">Tarefa</h3> <app-switch style="float: right;" :value="form.activeStep === 'task'" @changed="changeStep('task')"></app-switch>
                 </div>
             </form>
         </div>
@@ -94,7 +98,7 @@
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import utils from '../../../../../utils/index'
+    import utils from '@/utils/index'
     import _ from 'lodash';
     import ClientForm from './Client/ClientForm.vue';
     import OrderForm from './Order/OrderForm.vue';
@@ -254,7 +258,7 @@
     }
 
     .form-group {
-        display: flex;
+        flex: 1;
         flex-direction: column;
         background-color: var(--bg-color--8);
         padding: 15px 20px;
@@ -426,8 +430,8 @@
     .form-column {
         display: flex;
         flex-direction: column;
-        margin-right: 20px;
         justify-content: center;
+        padding-right: 15px;
     }
 
     .form-column label {
@@ -435,7 +439,7 @@
     }
 
     .form-column:last-child {
-        margin-right: 0px;
+        padding-right: 0;
     }
 
     div.ms-form {

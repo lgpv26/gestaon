@@ -2,11 +2,9 @@
 
 import './assets/fonts/montserrat.css'
 
-/*import 'bulma/css/bulma.css'*/
 import 'material-icons/css/material-icons.min.css'
 import 'izitoast/dist/css/iziToast.min.css'
 import 'smooth-scrollbar/dist/smooth-scrollbar.css'
-/*import './assets/theme/slider.css'*/
 import './assets/styles/reset.css'
 import './assets/styles/main.css'
 import './assets/styles/dark-theme.css'
@@ -37,8 +35,8 @@ import store from './vuex/store'
 
 /* Plugins imports */
 
-import moment from 'moment';
-import _ from 'lodash';
+import moment from 'moment'
+import _ from 'lodash'
 
 /* Resource Configs */
 
@@ -105,7 +103,9 @@ Vue.component("app-scrollable", ScrollableComponent);
 import DatetimePickerComponent from './components/Inputs/DatetimePicker.vue';
 Vue.component("app-datetime-picker", DatetimePickerComponent);
 import CheckboxInputComponent from './components/Inputs/CheckboxInput.vue';
-Vue.component("app-checkbox", CheckboxInputComponent);
+Vue.component("app-checkbox", CheckboxInputComponent)
+import PopoverComponent from './components/Utilities/Popover.vue'
+Vue.component("app-popover", PopoverComponent)
 
 /* icons from src/assets/svgs */
 

@@ -127,6 +127,12 @@
                     vm.onDraftLoad(ev.evData)
                 }
             }
+            /**
+             * Load draft again on reconnect
+             */
+            vm.$socket.on('reconnect', (reason) => {
+                vm.loadDraft()
+            })
         },
         mounted(){
             this.clipboardInstance = new Clipboard('.copiable-content')

@@ -1,6 +1,6 @@
 <template>
     <div style="display: flex; flex-grow: 1; flex-direction: column">
-        <div class="form-group" v-if="!data.clientAddresses.length">
+        <div class="form-group" v-if="clientAddress.showForm || !data.clientAddresses.length">
             <div class="form-group__header">
                 <div style="display: flex; flex-direction: row;" v-if="clientAddress.form.id">
                     <span style="margin-right: 10px;">Tipo do local</span>
@@ -12,7 +12,9 @@
                     <icon-local></icon-local>
                 </div>
                 <span class="push-both-sides"></span>
-                <a class="btn btn--border-only" v-if="data.clientAddresses.length" @click="backToClientAddressesList()">Voltar</a>
+                <div v-if="data.clientAddresses.length">
+                    <a class="btn btn--primary" style="margin-left: 10px;" @click="backToClientAddressList()">Voltar</a>
+                </div>
                 <div v-if="data.clientAddresses.length">
                     <a class="btn btn--primary" @click="saveClientAddress()" style="margin-left: 10px;">Salvar</a>
                 </div>
@@ -70,7 +72,7 @@
             </div>
             <div class="form-group__content">
                 <ul class="content__list">
-                    <li class="list__item" v-for="clientAddress in data.clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
+                    <li class="list__item" v-for="clientAddress in data.clientAddresses" :class="{ active: false }">
                                     <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
                                         {{ clientAddress.address.name }},
                                         {{ clientAddress.number.toString().trim() || "SN" }}
@@ -176,7 +178,30 @@
                 }
                 console.log("Emitting to draft/request.client.clientAddress.form.address.cep", emitData)
                 this.$socket.emit('draft/request.client.clientAddress.form.address.cep', emitData)
+            },
+
+            /**
+             * Actions
+             */
+
+            addClientAddress(){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    showForm: true
+                }
+                console.log("Emitting to draft/request.client.clientAddress.showForm", emitData)
+                this.$socket.emit('draft/request.client.clientAddress.showForm', emitData)
+            },
+
+            backToClientAddressList(){
+                const emitData = {
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    showForm: false
+                }
+                console.log("Emitting to draft/request.client.clientAddress.showForm", emitData)
+                this.$socket.emit('draft/request.client.clientAddress.showForm', emitData)
             }
+
         },
         created(){
             const vm = this
@@ -185,8 +210,8 @@
              * @param {Object} ev = { success:Boolean, evData = { showForm:Boolean } }
              */
             vm.$options.sockets['draft/request.client.clientAddress.showForm'] = (ev) => {
+                console.log("Received draft/request.client.clientAddress.showForm", ev)
                 if(ev.success){
-                    console.log("Received draft/request.client.clientAddress.showForm", ev)
                     vm.clientAddress.showForm = ev.evData.showForm
                 }
             }

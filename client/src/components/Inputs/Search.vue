@@ -160,7 +160,7 @@
 <style scoped>
 
     .ag-search .fade-enter-active, .ag-search  .fade-leave-active {
-        transition: opacity .1s
+        transition: opacity 0s
     }
 
     .ag-search .fade-enter, .ag-search  .fade-leave-to {
@@ -179,13 +179,13 @@
     }
     .ag-search .search-input__result-box {
         flex-shrink: 0;
-        transition: .5s opacity;
+        transition: .0s opacity;
         width: 420px;
         position: absolute;
         z-index: 99999;
-        background-color: var(--bg-color);
+        background-color: var(--bg-color--2);
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 5px;
         cursor: initial;
         margin: 0;
         -webkit-box-shadow: 0 2px 4px 0px rgba(0,0,0,.2);

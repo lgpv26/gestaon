@@ -101,6 +101,11 @@ ul li {
     list-style: none;
 }
 
+.form-row {
+    display: flex;
+    flex-direction: row;
+}
+
 /* classes */
 
 .dot-separator {
