@@ -15,12 +15,12 @@
                         <div class="form-row" style="margin-bottom: 15px;">
                             <div class="form-column">
                                 <label>Número</label>
-                                <app-mask :mask="['(##) ####-####','(##) #####-####']" ref="clientPhoneInput" v-model="clientPhone.add.number"
+                                <app-mask :mask="['(##) ####-####','(##) #####-####']" ref="clientPhoneInput" v-model="form.addForm.number"
                                     @input.native="inputAddNumber($event)" placeholder="(##) #####-####"></app-mask>
                             </div>
                             <div class="form-column">
                                 <label>Apelido</label>
-                                <input type="text" v-model="clientPhone.add.name" @input="inputAddName()" placeholder="Digite..." />
+                                <input type="text" v-model="form.addForm.name" @input="sync(form.addForm.name,'addForm.name')" placeholder="Digite..." />
                             </div>
                         </div>
                         <a class="btn btn--primary" @click="addClientPhone()" style="float: right;">Adicionar</a>
@@ -28,16 +28,16 @@
                 </app-popover>
             </div>
             <div class="form-group__content">
-                <ul class="content__list--mini" v-if="data.clientPhones && data.clientPhones.length">
-                    <li class="list__item" v-for="(dataClientPhone, index) in data.clientPhones" :class="{ active: false }">
-                        <div class="item__check" @click="selectClientPhone(dataClientPhone)" style="margin-right: 10px; cursor: pointer;">
+                <ul class="content__list--mini" v-if="clientPhones && clientPhones.length">
+                    <li class="list__item" v-for="(clientPhone, index) in clientPhones" :class="{ active: false }">
+                        <div class="item__check" @click="selectClientPhone(clientPhone)" style="margin-right: 10px; cursor: pointer;">
                             <icon-check></icon-check>
                         </div>
-                        <span style="cursor: pointer;" @click="selectClientPhone(dataClientPhone)">{{ maskedClientPhones[index] }}</span>
+                        <span style="cursor: pointer;" @click="selectClientPhone(clientPhone)">{{ clientPhone.number }}</span>
                         <div class="item__mini-circle"></div>
-                        <span>{{ dataClientPhone.name }}</span>
+                        <span>{{ clientPhone.name }}</span>
                         <span class="push-both-sides"></span>
-                        <app-popover>
+                        <app-popover @open="editClientPhone(clientPhone)">
                             <template slot="triggerer">
                                 <div class="item__icon" style="cursor: pointer; margin-right: 10px;">
                                     <icon-edit></icon-edit>
@@ -47,15 +47,16 @@
                                 <div class="form-row" style="margin-bottom: 15px;">
                                     <div class="form-column">
                                         <label>Número</label>
-                                        <app-mask :mask="['(##) ####-####','(##) #####-####']" ref="clientPhoneInput" v-model="clientPhone.edit[index].number"
-                                                  @input.native="inputEditNumber($event, dataClientPhone.id)" placeholder="(##) #####-####"></app-mask>
+                                        <app-mask :mask="['(##) ####-####','(##) #####-####']" ref="clientPhoneInput"
+                                              v-model="form.editForm.number" @input.native="inputEditNumber($event)" placeholder="(##) #####-####"></app-mask>
                                     </div>
                                     <div class="form-column">
                                         <label>Apelido</label>
-                                        <input type="text" v-model="clientPhone.edit[index].name" @input="inputEditName(dataClientPhone.id)" placeholder="Digite..." />
+                                        <input type="text" v-model="form.editForm.name" @input="sync(form.editForm.name, 'editForm.name')" placeholder="Digite..." />
                                     </div>
                                 </div>
-                                <a class="btn btn--primary" @click="saveClientPhone(dataClientPhone)" style="float: right;">Salvar</a>
+                                <a class="btn btn--primary" @click="saveClientPhone(clientPhone)" style="float: right;">Salvar</a>
+                                <a class="btn btn--danger" @click="removeClientPhone(clientPhone)" style="float: right; margin-right: 5px;">Remover</a>
                             </template>
                         </app-popover>
                     </li>
@@ -72,21 +73,42 @@
     import utils from '@/utils/index'
     import models from '@/models'
     import Vue from 'vue'
+    import DraftMixin from '../../DraftMixin'
+
+    import shortid from 'shortid'
 
     export default {
-        props: ['clientPhone','data'],
+        props: ['data'],
+        mixins: [DraftMixin],
         data(){
             return {
-                maskedClientPhones: []
+                form: {
+                    addForm: {
+                        name: null,
+                        number: null
+                    },
+                    editForm: {
+                        name: null,
+                        number: null
+                    },
+                    clientPhones: {}
+                },
+                clientPhones: [],
+                formPath: 'request.client.clientPhone'
             }
         },
-        watch: {
-            'data.clientPhones': function(clientPhones){
-                if(clientPhones.length)
-                this.maskClientPhones(clientPhones)
-            },
-            'clientPhone.number': function(number){
-                this.$refs.clientPhoneInput.display = number;
+        watch:{
+            'form.clientPhones': {
+                handler(){
+                    this.clientPhones = []
+                    _.forOwn(this.form.clientPhones, (value, key) => {
+                        this.clientPhones.push(_.assign(value, {
+                            id: key
+                        }))
+                    })
+                },
+                deep: true,
+                immediate: true
             }
         },
         computed: {
@@ -97,220 +119,59 @@
 
             ...mapActions('toast', ['showToast', 'showError']),
 
-            maskClientPhones(clientPhones){
-                const vm = this
-                clientPhones = utils.removeReactivity(clientPhones)
-                console.log("maskClientPhones", clientPhones)
-                this.maskedClientPhones = []
-                clientPhones.forEach((clientPhone) => {
-                    vm.maskedClientPhones.push(utils.formatPhone(clientPhone.number))
-                })
-                console.log(vm.clientPhone, vm.data.clientPhones)
-            },
-
-            /**
-             * Inputs
-             */
-
-            inputAddName(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    name: this.clientPhone.add.name
-                }
-                console.log("Emitting to draft/request.client.clientPhone.add.name", emitData)
-                this.$socket.emit('draft/request.client.clientPhone.add.name', emitData)
-            },
             inputAddNumber(ev){
-                if(!ev.isTrusted){
-                    return
+                if(ev.isTrusted){
+                    this.sync(this.form.addForm.number, 'addForm.number')
                 }
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    number: this.clientPhone.add.number
-                }
-                console.log("Emitting to draft/request.client.clientPhone.add.number", emitData)
-                this.$socket.emit('draft/request.client.clientPhone.add.number', emitData)
             },
 
-            inputEditName(clientPhoneId){
-                const clientPhone = _.find(this.clientPhone.edit, {id: clientPhoneId})
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    clientPhoneId: clientPhoneId,
-                    name: clientPhone.name
+            inputEditNumber(ev){
+                if(ev.isTrusted){
+                    this.sync(this.form.editForm.number, 'editForm.number')
                 }
-                console.log("Emitting to draft/request.client.clientPhone.edit.name", emitData)
-                this.$socket.emit('draft/request.client.clientPhone.edit.name', emitData)
-            },
-            inputEditNumber(ev, clientPhoneId){
-                if(!ev.isTrusted){
-                    return
-                }
-                const clientPhone = _.find(this.clientPhone.edit, {id: clientPhoneId})
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    clientPhoneId: clientPhoneId,
-                    number: clientPhone.number
-                }
-                console.log("Emitting to draft/request.client.clientPhone.edit.number", emitData)
-                this.$socket.emit('draft/request.client.clientPhone.edit.number', emitData)
             },
 
-            /**
-             * Actions
-             */
-
-            selectClientPhone(clientPhone){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    clientPhoneId: clientPhone.id
-                }
-                console.log("Emitting to draft/request.client.clientPhone.select", emitData)
-                this.$socket.emit('draft/request.client.clientPhone.select', emitData)
-            },
-
-            addClientPhone(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId
-                }
-                console.log("Emitting to draft/request.client.clientPhone.add", emitData)
-                this.$socket.emit('draft/request.client.clientPhone.add', emitData)
-            },
-
-            saveClientPhone(clientPhone){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    clientPhoneId: clientPhone.id
-                }
-                console.log("Emitting to draft/request.client.clientPhone.save", emitData)
-                this.$socket.emit('draft/request.client.clientPhone.save', emitData)
+            editClientPhone(clientPhone){
+                clientPhone = utils.removeReactivity(clientPhone)
+                this.form.editForm.number = clientPhone.number
+                this.form.editForm.name = clientPhone.name
             },
 
             removeClientPhone(clientPhone){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    clientPhoneId: clientPhone.id
-                };
-                console.log("Emitting to draft/request.client.clientPhone.remove", emitData);
-                this.$socket.emit('draft/request.client.clientPhone.remove', emitData);
+                this.form.clientPhones = _.omit(this.form.clientPhones, [clientPhone.id])
+                this.syncKeyRemove('clientPhones.' + clientPhone.id)
+            },
+
+            saveClientPhone(clientPhone){
+                Vue.set(this.form.clientPhones, clientPhone.id, {
+                    name: this.form.editForm.name,
+                    number: this.form.editForm.number
+                })
+
+                this.sync(this.form.clientPhones, 'clientPhones')
+            },
+
+            addClientPhone(){
+                Vue.set(this.form.clientPhones, shortid.generate(), {
+                    name: this.form.addForm.name,
+                    number: this.form.addForm.number
+                })
+
+                this.form.addForm.number = null
+                this.form.addForm.name = null
+
+                this.syncMultiple([
+                    { data: this.form.addForm.number, path: 'addForm.number' },
+                    { data: this.form.addForm.name, path: 'addForm.name' },
+                    { data: this.form.clientPhones, path: 'clientPhones' }
+                ])
             }
+
         },
         created(){
             const vm = this
-            /**
-             * On name input in the add form
-             * @param {Object} ev = { success:Boolean, evData = { name:String } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.add.name'] = (ev) => {
-                console.log("Received draft/request.client.clientPhone.add.name", ev)
-                if(ev.success){
-                    vm.clientPhone.add.name = ev.evData.name
-                }
-            }
-
-            /**
-             * On number input in the add form
-             * @param {Object} ev = { success:Boolean, evData = { number:String } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.add.number'] = (ev) => {
-                console.log("Received draft/request.client.clientPhone.add.number", ev)
-                if(ev.success){
-                    vm.clientPhone.add.number = ev.evData.number
-                }
-            }
-            /**
-             * On name input in the edit form
-             * @param {Object} ev = { success:Boolean, evData = { clientPhoneId:String, name:String } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.edit.name'] = (ev) => {
-                console.log("Received draft/request.client.clientPhone.edit.name", ev)
-                if(ev.success){
-                    const clientPhone = _.find(vm.clientPhone.edit, {id: ev.evData.clientPhoneId})
-                    // const dataClientPhone = _.find(vm.data.clientPhones, {id: ev.evData.clientPhoneId})
-                    clientPhone.name = ev.evData.name
-                    // dataClientPhone.name = ev.evData.name
-                }
-            }
-            /**
-             * On number input in the edit form
-             * @param {Object} ev = { success:Boolean, evData = { clientPhoneId:String, number:String } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.edit.number'] = (ev) => {
-                console.log("Received draft/request.client.clientPhone.edit.number", ev)
-                if(ev.success){
-                    const clientPhone = _.find(vm.clientPhone.edit, {id: ev.evData.clientPhoneId})
-                    // const dataClientPhone = _.find(vm.data.clientPhones, {id: ev.evData.clientPhoneId})
-                    clientPhone.number = ev.evData.number
-                    // dataClientPhone.number = ev.evData.number
-                }
-            }
-            /**
-             * When a client phone has been selected
-             * @param {Object} ev = { success:Boolean, evData = { clientPhoneId:String } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.select'] = (ev) => {
-                console.log("Received draft/request.client.clientPhone.select", ev)
-                if(ev.success){
-                    vm.clientPhone.selected = ev.evData.clientPhoneId
-                }
-            }
-            /**
-             * When a new client phone has beed added
-             * @param {Object} ev = { success:Boolean, evData = { $data:Object = { clientPhones } } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.add'] = (ev) => {
-                console.log("Received draft/request.client.clientPhone.add", ev)
-                if(ev.success){
-                    vm.clientPhone.add.name = null
-                    vm.clientPhone.add.number = null
-                    vm.clientPhone.edit = ev.evData.clientPhone.edit
-                    vm.data.clientPhones = ev.evData.$data.clientPhones
-                }
-            }
-            /**
-             * The edit form should now be visible
-             * @param {Object} ev = { success:Boolean, evData = { id:Number , name:String, number:String } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.edit'] = (ev) => {
-                if(ev.success){
-                    console.log("Received draft/request.client.clientPhone.edit", ev)
-                    vm.clientPhone.edit.id = ev.evData.id
-                    vm.clientPhone.edit.name = ev.evData.name
-                    vm.clientPhone.edit.number = ev.evData.number
-                }
-            }
-            /**
-             * When a client phone was saved (after ...clientPhone.edit), this event won't happen in additions/creations
-             * @param {Object} ev = { success:Boolean, evData = { $data:Object = { clientPhones } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.save'] = (ev) => {
-                if(ev.success){
-                    console.log("Received draft/request.client.clientPhone.save", ev)
-                    vm.clientPhone.edit.id = null
-                    vm.clientPhone.edit.name = null
-                    vm.clientPhone.edit.number = null
-                    vm.clientPhone.edit = ev.evData.clientPhone.edit
-                    vm.data.clientPhones = ev.evData.$data.clientPhones
-                }
-            }
-            /**
-             * When a client phone was removed
-             * @param {Object} ev = { success:Boolean, evData = { clientPhoneId:String } }
-             */
-            vm.$options.sockets['draft/request.client.clientPhone.remove'] = (ev) => {
-                if(ev.success){
-                    console.log("Received draft/request.client.clientPhone.remove", ev)
-                    vm.data.clientPhones = _.remove(vm.data.clientPhones, (clientPhone) => {
-                        if(clientPhone.id === ev.evData.clientPhoneId){
-                            return true // remove the elements that accomplishes the condition
-                        }
-                    })
-                }
-            }
         },
         mounted(){
-            if(_.has(this.data,'clientPhones') && this.data.clientPhones.length)
-            this.maskClientPhones(this.data.clientPhones, false)
         }
     }
 </script>

@@ -20,7 +20,7 @@
             <!-- Client form -->
             <form :class="{'active': form.activeStep === 'client'}">
                 <div class="form__content" v-show="form.activeStep === 'client'">
-                    <app-client-form :client.sync="form.client" :data.sync="data"></app-client-form>
+                    <app-client-form :data.sync="data"></app-client-form>
                 </div>
                 <div class="form__header" v-if="!form.activeStep === 'client' && client.id" :class="{'summary': !form.activeStep === 'client' && client.id}">
                     <div class="form-columns" style="flex-grow: 1;">
@@ -71,7 +71,7 @@
             <!-- Order form -->
             <form :class="{'active': form.activeStep === 'order'}">
                 <div class="form__content" v-show="this.form.activeStep === 'order'">
-                    <app-order-form @step-change="onStepChange($event)" :order.sync="form.order"></app-order-form>
+                    <!--<app-order-form @step-change="onStepChange($event)" :order.sync="form.order"></app-order-form>-->
                 </div>
                 <div class="form__header">
                     <span v-if="form.activeStep !== 'order'">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
@@ -84,7 +84,7 @@
             <!-- Task form -->
             <form :class="{'active': form.activeStep === 'task'}">
                 <div class="form__content" v-show="form.activeStep === 'task'">
-                    <app-task-form @step-change="onStepChange($event)" :task.sync="form.task"></app-task-form>
+                    <!--<app-task-form @step-change="onStepChange($event)" :task.sync="form.task"></app-task-form>-->
                 </div>
                 <div class="form__header">
                     <span v-if="form.activeStep !== 'task'">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
@@ -97,13 +97,15 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
     import utils from '@/utils/index'
-    import _ from 'lodash';
-    import ClientForm from './Client/ClientForm.vue';
-    import OrderForm from './Order/OrderForm.vue';
-    import TaskForm from './Task/TaskForm.vue';
-    import Scrollbar from 'smooth-scrollbar';
+    import _ from 'lodash'
+    import DraftMixin from '../DraftMixin'
+
+    import ClientForm from './Client/ClientForm.vue'
+    import OrderForm from './Order/OrderForm.vue'
+    import TaskForm from './Task/TaskForm.vue'
+    import Scrollbar from 'smooth-scrollbar'
 
     export default {
         components: {
@@ -111,65 +113,16 @@
             'app-order-form': OrderForm,
             'app-task-form': TaskForm
         },
-        props: ['form','data'],
+        props: ['data'],
+        mixins: [DraftMixin],
         data(){
             return {
                 scrollbar: null,
                 presenceUsers: [],
-                lastForm: null,
-                draftId: null, // requestId
-                originalId: null, // se estiver editando um draft originado de um dado já salvo no MySQL
-                type: 'request',
-                createdBy: null,
-                createdAt: null,
-                updatedAt: null,
-                /*form: {
-                    activeStep: null,
-                    clientPhoneId: null,
-                    clientAddressId: null,
-                    client: {
-                        id: null, // se passar, atualizar cliente. se não, criar.
-                        name: '', // se passar e tiver id, atualizar. se não, criar.
-                        clientGroup: null,
-                        legalDocument: '', // cpf, cnpj
-                        clientAddresses: [
-                            {
-                                active: false,
-                                clientAddressId: null,
-                                name: null,
-                                number: null,
-                                complement: null,
-                                addressId: null, // o id do endereço salvo no MySQL (address).
-                                type: ['billing','invoicing','delivery'], // billing - cobrança. invoicing - faturamento. delivery - entrega.
-                                /!* salva no mysql -- nao no draft *!/
-                                address: {
-                                    companyId: null,
-                                    id: null, // se passar, usar e ignorar os outros campos. se não, criar usando os outros dados do address.
-                                    name: null,
-                                    neighborhood: null,
-                                    cep: null,
-                                    city: null,
-                                    state: null
-                                },
-                                /!* --- *!/
-                            }
-                        ],
-                        clientPhones: [
-                            {
-                                ddd: null, // string
-                                number: null, // string
-                                name: null // string
-                            }
-                        ],
-                        clientCustomFields: []
-                    },
-                    order: {
-                        requestProducts: []
-                    },
-                    task: {
-                        name: ''
-                    }
-                },*/
+                form: {
+                    activeStep: null
+                },
+                formPath: 'request',
                 saving: false
             }
         },
@@ -193,24 +146,12 @@
                         activeStep = 'task'
                     }
                 }
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    activeStep: activeStep
-                }
-                console.log("Emitting to draft/request.activeStep", emitData)
-                this.$socket.emit('draft/request.activeStep', emitData)
+                this.form.activeStep = activeStep
+                this.sync(this.form.activeStep, 'activeStep')
             }
         },
         created(){
             const vm = this
-            /**
-             * On active step change
-             * @param ev
-             */
-            vm.$options.sockets['draft/request.activeStep'] = (ev) => {
-                console.log("Received draft/request.activeStep", ev)
-                vm.form.activeStep = ev.evData.activeStep
-            }
         },
         mounted(){
             this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {

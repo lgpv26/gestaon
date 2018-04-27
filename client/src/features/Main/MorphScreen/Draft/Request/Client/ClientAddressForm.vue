@@ -1,26 +1,26 @@
 <template>
     <div style="display: flex; flex-grow: 1; flex-direction: column">
-        <div class="form-group" v-if="clientAddress.showForm || !data.clientAddresses.length">
+        <div class="form-group" v-if="form.show">
             <div class="form-group__header">
-                <div style="display: flex; flex-direction: row;" v-if="clientAddress.form.id">
+                <div style="display: flex; flex-direction: row;" v-if="form.id">
                     <span style="margin-right: 10px;">Tipo do local</span>
                     <icon-local></icon-local>
-                    <app-client-address-types-input style="margin-left: 10px;" v-model="clientAddressForm.clientAddressTypes"></app-client-address-types-input>
+                    <!--<app-client-address-types-input style="margin-left: 10px;" v-model="clientAddressForm.clientAddressTypes"></app-client-address-types-input>-->
                 </div>
                 <div style="display: flex; flex-direction: row;" v-else>
                     <span style="margin-right: 10px;">Selecione um local</span>
                     <icon-local></icon-local>
                 </div>
                 <span class="push-both-sides"></span>
-                <div v-if="data.clientAddresses.length">
+                <div>
                     <a class="btn btn--primary" style="margin-left: 10px;" @click="backToClientAddressList()">Voltar</a>
                 </div>
-                <div v-if="data.clientAddresses.length">
-                    <a class="btn btn--primary" @click="saveClientAddress()" style="margin-left: 10px;">Salvar</a>
+                <!--<div v-if="data.clientAddresses.length">
+                    <a class="btn btn&#45;&#45;primary" @click="saveClientAddress()" style="margin-left: 10px;">Salvar</a>
                 </div>
                 <div v-else>
-                    <a class="btn btn--primary" @click="saveClientAddress()" style="margin-left: 10px;">Adicionar</a>
-                </div>
+                    <a class="btn btn&#45;&#45;primary" @click="saveClientAddress()" style="margin-left: 10px;">Adicionar</a>
+                </div>-->
             </div>
             <div class="form-group__content">
                 <div class="ms-form">
@@ -28,36 +28,36 @@
                         <div class="form-column" style="flex: 1 1 60%;">
                             <label>Endereço</label>
                             <div class="search">
-                                <app-address-form :address.sync="clientAddress.form.address" @change="addressChanged($event)"></app-address-form>
+                                <app-address-form :id.sync="form.address.id" :name.sync="form.address.name" @input="inputAddress($event)" @select="selectAddress($event)" @reset="resetAddress()"></app-address-form>
                             </div>
                         </div>
                         <div class="form-column" style="flex: 1 1 10%;">
                             <label>Número</label>
-                            <input type="text" v-model="clientAddress.form.number" @input="inputNumber()" />
+                            <input type="text" v-model="form.number" @input="sync(form.number, 'number')" />
                         </div>
                         <div class="form-column" style="flex: 1 1 25%;">
                             <label>Complemento</label>
-                            <input type="text" v-model="clientAddress.form.complement" @input="inputComplement()" />
+                            <input type="text" v-model="form.complement" @input="sync(form.complement, 'complement')" />
                         </div>
                     </div>
                     <div class="form-columns">
                         <div class="form-column" style="flex: 1 1 40%;">
                             <label>Bairro</label>
-                            <input type="text" v-model="clientAddress.form.address.neighborhood" @input="inputAddressNeighborhood()" />
+                            <input type="text" v-model="form.address.neighborhood" @input="sync(form.address.neighborhood, 'address.neighborhood')" />
                         </div>
                         <div class="form-column" style="flex: 1 1 15%;">
                             <label>CEP</label>
                             <!--<input type="text" v-model="form.address.cep" />-->
-                            <app-mask ref="cepInput" placeholder="#####-###" :mask="'#####-###'" v-model="clientAddress.form.address.cep"
-                            @input.native="inputAddressCEP()"></app-mask>
+                            <app-mask ref="cepInput" placeholder="#####-###" :mask="'#####-###'" v-model="form.address.cep"
+                            @input.native="inputAddressCEP($event)"></app-mask>
                         </div>
                         <div class="form-column" style="flex: 1 1 35%;">
                             <label>Cidade</label>
-                            <input type="text" v-model="clientAddress.form.address.city" @input="inputAddressCity()" />
+                            <input type="text" v-model="form.address.city" @input="sync(form.address.city, 'address.city')" />
                         </div>
                         <div class="form-column" style="flex: 1 1 8%;">
                             <label>Estado</label>
-                            <input type="text" v-model="clientAddress.form.address.state" @input="inputAddressState()" />
+                            <input type="text" v-model="form.address.state" @input="sync(form.address.state, 'address.state')" />
                         </div>
                     </div>
                 </div>
@@ -72,7 +72,7 @@
             </div>
             <div class="form-group__content">
                 <ul class="content__list">
-                    <li class="list__item" v-for="clientAddress in data.clientAddresses" :class="{ active: false }">
+                    <!--<li class="list__item" v-for="clientAddress in data.clientAddresses" :class="{ active: false }">
                                     <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
                                         {{ clientAddress.address.name }},
                                         {{ clientAddress.number.toString().trim() || "SN" }}
@@ -87,7 +87,7 @@
                         <div class="item__icon" @click="removeClientAddress(clientAddress)" style="cursor: pointer;">
                             <icon-remove></icon-remove>
                         </div>
-                    </li>
+                    </li>-->
                 </ul>
             </div>
         </div>
@@ -98,18 +98,29 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
     import utils from '../../../../../../utils/index';
+    import models from '../../../../../../models';
     import AddressesAPI from '../../../../../../api/addresses';
     import ClientAPI from '../../../../../../api/clients';
     import AddressForm from './AddressForm.vue';
     import Vue from 'vue';
 
+    import DraftMixin from '../../DraftMixin'
+
     export default {
         components: {
             'app-address-form': AddressForm
         },
-        props: ['clientAddress','data'],
+        props: ['data'],
+        mixins: [DraftMixin],
         data(){
             return {
+                form: {
+                    show: true,
+                    number: null,
+                    complement: null,
+                    address: models.createAddressModel()
+                },
+                formPath: 'request.client.clientAddress'
             }
         },
         watch: {
@@ -126,58 +137,37 @@
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
 
-            inputNumber(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    number: this.clientAddress.form.number
-                }
-                console.log("Emitting to draft/request.client.clientAddress.form.number", emitData)
-                this.$socket.emit('draft/request.client.clientAddress.form.number', emitData)
+            resetAddress(){
+                this.form.address = models.createAddressModel()
+                const addressToSync = _.map(this.form.address, (v, k) => {
+                    return {
+                        data: v || null,
+                        path: 'address.' + k
+                    }
+                })
+                this.syncMultiple(addressToSync)
             },
 
-            inputComplement(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    complement: this.clientAddress.form.complement
+            inputAddressCEP(ev){
+                if(ev.isTrusted){
+                    this.sync(this.form.address.cep, 'address.cep')
                 }
-                console.log("Emitting to draft/request.client.clientAddress.form.complement", emitData)
-                this.$socket.emit('draft/request.client.clientAddress.form.complement', emitData)
             },
 
-            inputAddressNeighborhood(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    neighborhood: this.clientAddress.form.address.neighborhood
-                }
-                console.log("Emitting to draft/request.client.clientAddress.form.address.neighborhood", emitData)
-                this.$socket.emit('draft/request.client.clientAddress.form.address.neighborhood', emitData)
+            inputAddress(addressInputValue){
+                this.form.address.name = addressInputValue
+                this.sync(this.form.address.name, 'address.name')
             },
 
-            inputAddressCity(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    city: this.clientAddress.form.address.city
-                }
-                console.log("Emitting to draft/request.client.clientAddress.form.address.city", emitData)
-                this.$socket.emit('draft/request.client.clientAddress.form.address.city', emitData)
-            },
-
-            inputAddressState(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    state: this.clientAddress.form.address.state
-                }
-                console.log("Emitting to draft/request.client.clientAddress.form.address.state", emitData)
-                this.$socket.emit('draft/request.client.clientAddress.form.address.state', emitData)
-            },
-
-            inputAddressCEP(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    cep: this.clientAddress.form.address.cep
-                }
-                console.log("Emitting to draft/request.client.clientAddress.form.address.cep", emitData)
-                this.$socket.emit('draft/request.client.clientAddress.form.address.cep', emitData)
+            selectAddress(address){
+                this.form.address = utils.removeReactivity(address)
+                const addressToSync = _.map(address, (v, k) => {
+                    return {
+                        data: v || null,
+                        path: 'address.' + k
+                    }
+                })  
+                this.syncMultiple(addressToSync)
             },
 
             /**
@@ -185,21 +175,13 @@
              */
 
             addClientAddress(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    showForm: true
-                }
-                console.log("Emitting to draft/request.client.clientAddress.showForm", emitData)
-                this.$socket.emit('draft/request.client.clientAddress.showForm', emitData)
+                this.form.show = true
+                this.sync(this.form.show, 'show')
             },
 
             backToClientAddressList(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    showForm: false
-                }
-                console.log("Emitting to draft/request.client.clientAddress.showForm", emitData)
-                this.$socket.emit('draft/request.client.clientAddress.showForm', emitData)
+                this.form.show = false
+                this.sync(this.form.show, 'show')
             }
 
         },

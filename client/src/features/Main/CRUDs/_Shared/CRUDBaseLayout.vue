@@ -56,7 +56,6 @@
     import utils from '../../../../utils/index';
     import moment from 'moment';
     import _ from 'lodash';
-    import Clusterize from 'clusterize.js'
 
     import Scrollbar from 'smooth-scrollbar'
     import ResizeSensor from 'css-element-queries/src/ResizeSensor'
@@ -93,21 +92,6 @@
                 alwaysShowTracks: true
             })
             this.updateResizeListeners()
-            /*this.clusterize = new Clusterize({
-                scrollElem: this.$refs.scrollbar,
-                contentElem: this.$refs.tbody,
-                callbacks: {
-                    clusterWillChange: function() {
-                        console.log("clusterWillChange")
-                    },
-                    clusterChanged: function() {
-                        console.log("clusterChanged")
-                    },
-                    scrollingProgress: function(progress) {
-                        console.log("scrollingProgress", progress)
-                    }
-                }
-            });*/
         }
     }
 </script>

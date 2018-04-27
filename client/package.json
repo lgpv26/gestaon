@@ -25,6 +25,7 @@
     "material-icons": "^0.1.0",
     "moment": "^2.22.0",
     "popper.js": "^1.12.9",
+    "shortid": "^2.2.8",
     "smooth-scrollbar": "^7.3.0",
     "socket.io-client": "^2.0.3",
     "v-money": "^0.8.0",

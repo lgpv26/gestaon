@@ -100,13 +100,15 @@ export default {
     },
     createAddressModel(){
         return {
-            companyId: null,
             id: null,
+            companyId: null,
             name: null,
             neighborhood: null,
             cep: null,
             city: null,
-            state: null
+            state: null,
+            dateCreated: null,
+            dateUpdated: null
         }
     },
     createOrderProductModel(){
