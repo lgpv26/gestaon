@@ -26,6 +26,9 @@ module.exports = class DependencyInjection {
         return this.server.io
     }
 
+    setY(){
+    }
+
     setElasticSearch(){
         this.server.elasticSearch = new require('elasticsearch').Client({
             host: config.elasticSearch.host + ':' + config.elasticSearch.port

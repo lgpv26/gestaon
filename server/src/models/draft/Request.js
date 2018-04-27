@@ -12,7 +12,7 @@ module.exports = class Request extends Draft {
 
     setInitialModel(){
         this.model = {
-            form: {
+            /*form: {
                 activeStep: null,
                 client: Request.getClientModel(),
                 order: {
@@ -49,7 +49,7 @@ module.exports = class Request extends Draft {
                         deadline: null, // current date
                         amount: 0.00
                     },
-                    /*{
+                    /!*{
                         id: 2, // if payment in installments
                         deadline: '', // current date
                         amount: 0.00,
@@ -59,7 +59,7 @@ module.exports = class Request extends Draft {
                                 amount: 0.00
                             }
                         ]
-                    }*/
+                    }*!/
                 ],
                 selectedAccountId: '',
                 accountAdd: {
@@ -77,7 +77,7 @@ module.exports = class Request extends Draft {
                 clientAddresses: [],
                 clientPhones: [],
                 clientCustomFields: []
-            }
+            }*/
         }
     }
 
@@ -162,6 +162,7 @@ module.exports = class Request extends Draft {
             draftId: this.draftId,
             companyId: this.companyId,
             createdBy: this.createdBy,
+            draft: {},
             type: 'request',
             isSingle: false
         })

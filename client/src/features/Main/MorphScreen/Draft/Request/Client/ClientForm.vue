@@ -7,13 +7,13 @@
                     <div class="form-columns">
                         <div class="form-column" style="flex-grow: 1;">
                             Nome / Empresa
-                            <div v-if="client.id">
-                                <input type="text" class="input--borderless" style="color: var(--font-color--primary)" v-model="client.name" v-if="client.id" placeholder="..." @input="inputName()" />
+                            <div v-if="false">
+                                <input type="text" class="input--borderless" style="color: var(--font-color--primary)" v-model="form.name" v-if="client.id" placeholder="..." />
                             </div>
                             <app-search v-else ref="search" :items="search.items" :shouldStayOpen="search.isNameInputFocused" :query="search.query" :verticalOffset="5" :horizontalOffset="-20"
                                 @itemSelected="searchMethods().searchClientSelected($event)" >
-                                <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="client.name" ref="searchInput"
-                                @keydown="searchMethods().searchValueUpdated()" @focus="search.isNameInputFocused = true" @blur="search.isNameInputFocused = false" @input="inputName()" />
+                                <input type="text" class="input--borderless search-input__field" placeholder="..." v-model="form.name" @input="sync(form.name, 'name')" ref="searchInput"
+                                @keydown="searchMethods().searchValueUpdated()" @focus="search.isNameInputFocused = true" @blur="search.isNameInputFocused = false" />
                                 <template slot="item" slot-scope="props">
                                     <div class="search-input__item" v-if="props.item.client">
                                         <span class="detail__name" v-html="props.item.client.name"></span>
@@ -33,7 +33,7 @@
                             </app-search>
                         </div>
                         <div class="form-column" style="justify-content: flex-end;">
-                            <icon-search v-if="!client.id" style="position: relative; top: -4px;"></icon-search>
+                            <icon-search v-if="false" style="position: relative; top: -4px;"></icon-search>
                             <div style="cursor: pointer;" @click="changeClient()" v-else>
                                 <icon-change></icon-change>
                             </div>
@@ -42,18 +42,17 @@
                 </div>
                 <div class="form-group">
                     CPF / CNPJ
-                    <app-mask class="input--borderless" ref="legalDocumentInput" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="client.legalDocument"
+                    <app-mask class="input--borderless" ref="legalDocumentInput" :mask="['###.###.###-##', '##.###.###/####-##']" v-model="form.legalDocument"
                     placeholder="..." @input.native="inputLegalDocument($event)" />
                 </div>
             </div>
             <div class="form-groups">
                 <!-- Show client address form -->
-                <app-client-address-form ref="clientAddressForm" :clientAddress.sync="client.clientAddress" :data.sync="data"
-                     @save="onClientAddressSave($event)"></app-client-address-form>
+                <app-client-address-form ref="clientAddressForm" :data="data" @save="onClientAddressSave($event)"></app-client-address-form>
             </div>
         </div>
         <div class="form__side-column">
-            <app-client-phone-form :clientPhone.sync="client.clientPhone" :data.sync="data"></app-client-phone-form>
+            <app-client-phone-form :data="data"></app-client-phone-form>
             <!--
             <div class="form-groups">
                 <div class="form-group">
@@ -88,9 +87,11 @@
                 </div>
             </div>
             -->
+            <!--
             <div class="form-groups">
                 <app-client-group-form :clientGroup="client.clientGroup" :data="data"></app-client-group-form>
             </div>
+            -->
         </div>
     </div>
 </template>
@@ -100,6 +101,7 @@
     import _ from 'lodash'
     import utils from '@/utils'
     import models from '@/models'
+    import DraftMixin from '../../DraftMixin'
     import ClientAddressForm from './ClientAddressForm.vue'
     import ClientPhoneForm from './ClientPhoneForm.vue'
     import ClientGroupForm from './ClientGroupForm.vue'
@@ -116,7 +118,8 @@
             'app-client-phone-form': ClientPhoneForm,
             'app-client-group-form': ClientGroupForm
         },
-        props: ['client','data','clientAddressId','clientPhoneId'],
+        props: ['data','clientAddressId','clientPhoneId'],
+        mixins: [DraftMixin],
         data(){
             return {
                 search: {
@@ -169,11 +172,16 @@
                         text: 'COMÉRCIO',
                         value: 'commerce'
                     }
-                ]
+                ],
+                form: {
+                    name: '',
+                    legalDocument: ''
+                },
+                formPath: 'request.client'
             }
         },
         watch: {
-            'client.legalDocument': function(legalDocument){
+            'form.legalDocument': function(legalDocument){
                 this.$refs.legalDocumentInput.display = legalDocument;
             },
             'clientAddress.address.cep': function(cep){
@@ -186,7 +194,7 @@
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company']),
-            isCurrentStepActive(){
+            /*isCurrentStepActive(){
                 return this.client.activeStep === 'client';
             },
             customFieldsSelectOptions(){
@@ -220,11 +228,10 @@
             shortenedClientAddress(){
                 if(this.selectedClientAddress)
                 return utils.getShortString(this.selectedClientAddress.address.name, 24, '[...]') + ', ' + this.selectedClientAddress.number + ' - ' + this.selectedClientAddress.complement;
-            }
+            }*/
         },
         sockets: {
-
-            /* draft custom fields */
+            /*/!* draft custom fields *!/
 
             draftCustomFieldSave(customField){
                 console.log("Received draftCustomFieldSave", customField);
@@ -240,7 +247,7 @@
                 }
             },
 
-            /* draft client custom fields */
+            /!* draft client custom fields *!/
 
             draftClientCustomFieldUpdate(clientCustomField){
                 console.log("Received draftClientCustomFieldUpdate", clientCustomField);
@@ -272,7 +279,7 @@
                 this.updateClientCustomFieldsSelectedOptions(this.client.clientCustomFields);
             },
 
-            /* draft client phone */
+            /!* draft client phone *!/
 
             draftClientPhoneEditionCancel(){
                 console.log("Received draftClientPhoneEditionCancel");
@@ -314,7 +321,7 @@
                 }
             },
 
-            /* draft client address fields */
+            /!* draft client address fields *!/
 
             draftClientAddressAdd(){
                 this.resetClientAddressForm();
@@ -338,7 +345,7 @@
                 }
             },
 
-            /* draft client */
+            /!* draft client *!/
 
             draftClientSelect(data){
                 const client = data;
@@ -357,7 +364,7 @@
                 Object.assign(this.$data.client, this.$options.data.apply(this).client);
                 utils.assignToExistentKeys(this.clientPhoneForm, models.createClientPhoneModel());
                 utils.assignToExistentKeys(this.clientAddressForm, models.createClientAddressModel());
-            }
+            }*/
         },
         methods: {
 
@@ -400,7 +407,7 @@
                     searchValueUpdated() {
                         if (vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout);
                         vm.search.commitTimeout = setTimeout(() => {
-                            vm.search.query = vm.client.name;
+                            vm.search.query = vm.form.name;
                             vm.searchMethods().commitUpdatedValue()
                         }, 300)
                     },
@@ -417,23 +424,10 @@
              * Inputs
              */
 
-            inputName(){
-                const vm = this
-                const emitData = {
-                    draftId: vm.activeMorphScreen.draft.draftId,
-                    name: vm.client.name
+            inputLegalDocument(ev){
+                if(ev.isTrusted){
+                    this.sync(this.form.legalDocument, 'legalDocument')
                 }
-                console.log("Emitting to draft/request.client.name", emitData)
-                vm.$socket.emit('draft/request.client.name', emitData)
-            },
-            inputLegalDocument(){
-                const vm = this
-                const emitData = {
-                    draftId: vm.activeMorphScreen.draft.draftId,
-                    legalDocument: vm.client.legalDocument
-                }
-                console.log("Emitting to draft/request.client.legalDocument", emitData)
-                vm.$socket.emit('draft/request.client.legalDocument', emitData)
             },
 
             /**
@@ -564,52 +558,6 @@
         },
         created(){
             const vm = this
-            /**
-             * On name input
-             * @param {Object} ev = { success:Boolean, evData = { name:String } }
-             */
-            vm.$options.sockets['draft/request.client.name'] = (ev) => {
-                if(ev.success){
-                    console.log("Received draft/request.client.name", ev)
-                    vm.client.name = ev.evData.name
-                }
-            }
-            /**
-             * On legal document input
-             * @param {Object} ev = { success:Boolean, evData = { legalDocument:String } }
-             */
-            vm.$options.sockets['draft/request.client.legalDocument'] = (ev) => {
-                if(ev.success){
-                    console.log("Received draft/request.client.legalDocument", ev)
-                    vm.client.legalDocument = ev.evData.legalDocument
-                }
-            }
-            /**
-             * On client select
-             * @param {Object} ev = { success:Boolean, evData = { client:Object, $data:Array = [ clientAddresses, clientPhones, clientCustomFields ] } }
-             */
-            vm.$options.sockets['draft/request.client.select'] = (ev) => {
-                if(ev.success){
-                    console.log("Received draft/request.client.select", ev)
-                    vm.$emit('update:client', ev.evData.client)
-                    vm.data.clientAddresses = ev.evData.$data.clientAddresses
-                    vm.data.clientPhones = ev.evData.$data.clientPhones
-                    vm.data.clientCustomFields = ev.evData.$data.clientCustomFields
-                }
-            }
-            /**
-             * On client reset
-             * @param {Object} ev = { success:Boolean, evData = { client:Object, $data:Object = { clientAddresses:Array, clientPhones:Array, clientCustomFields:Array } } }
-             */
-            vm.$options.sockets['draft/request.client.reset'] = (ev) => {
-                if(ev.success){
-                    console.log("Received draft/request.client.reset", ev)
-                    vm.$emit('update:client', ev.evData.client)
-                    vm.data.clientAddresses = ev.evData.$data.clientAddresses
-                    vm.data.clientPhones = ev.evData.$data.clientPhones
-                    vm.data.clientCustomFields = ev.evData.$data.clientCustomFields
-                }
-            }
         }
     }
 </script>

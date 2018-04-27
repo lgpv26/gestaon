@@ -16,6 +16,7 @@ const di = new DI(restify.createServer())
 // overall setup
 di.setInnkeeper()
 di.setSocketIO()
+di.setY()
 di.setElasticSearch()
 di.setSequelize()
 di.setVersion()

@@ -71,6 +71,7 @@
             },
             openPopover(){
                 this.visible = true
+                this.$emit('open', true)
                 Vue.nextTick(() => {
                     this.popper.update()
                 })

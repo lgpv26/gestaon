@@ -6,7 +6,8 @@
                     {{ details.text }}
                     <span class="title__draft-or-definitive">Rascunho</span>
                     <span class="title__draft-id">#{{ screen.draft.draftId }}</span>
-                    <icon-log style="margin-left: 3px; position: relative; top: 1px;"></icon-log></h1>
+                    <icon-log style="margin-left: 3px; position: relative; top: 1px;"></icon-log>
+                </h1>
                 <span class="summary__info">Iniciado às <em>{{ formatedCreatedAt }}</em> por <em>{{ screen.draft.createdBy }}</em></span>
             </div>
             <span class="push-both-sides"></span>
@@ -17,6 +18,7 @@
                 </ul>
             </div>
             <div class="header__actions">
+                <a @click="loadDraft()" style="margin-right: 20px; font-size: 34px; position: relative; top: 3px;"><i class="mi mi-refresh"></i></a>
                 <div class="actions__draft-menu" @click="leaveDraft()">
                     <div class="count">
                         <span>{{ screens.length }}</span>
@@ -26,8 +28,8 @@
             </div>
         </div>
         <div class="container__body">
-            <span v-if="!draft">Carregando...</span>
-            <component :is="'app-' + details.entryComponent" v-else :form.sync="draft.form" :data.sync="draft.data"></component>
+            <span v-show="!draft">Carregando...</span>
+            <component :is="'app-' + details.entryComponent" v-show="draft" :data.sync="draft.data"></component>
         </div>
         <div class="container__actions">
             <a>Excluir Rascunho</a>
@@ -65,7 +67,8 @@
                 clipboardInstance: null,
                 isPersisting: false,
                 persistingText: "Salvando...",
-                draft: null
+                draft: {},
+                remountTimeout: null
             }
         },
         props: ['details','screen'],
@@ -88,8 +91,9 @@
             ...mapActions('morph-screen', ['createMorphScreen']),
             ...mapActions('loading', ['startLoading','setLoadingText']),
 
-            // <editor-fold desc="Component methods">
-            // </editor-fold>
+            /**
+             * Component methods
+             */
 
             loadDraft(){
                 const emitData = {
@@ -105,13 +109,6 @@
                 console.log("Emitting to draft.leave", emitData)
                 this.$socket.emit('draft.leave', emitData)
                 this.$emit('closeDraft')
-            },
-
-            // <editor-fold desc="Listeners">
-            // </editor-fold>
-
-            onDraftLoad(draft){
-                this.draft = draft
             }
 
         },
@@ -124,7 +121,7 @@
             vm.$options.sockets['draft.load'] = (ev) => {
                 console.log("Received draft.load", ev)
                 if(ev.success){
-                    vm.onDraftLoad(ev.evData)
+                    vm.draft = ev.evData
                 }
             }
             /**
@@ -135,8 +132,9 @@
             })
         },
         mounted(){
-            this.clipboardInstance = new Clipboard('.copiable-content')
-            this.loadDraft()
+            const vm = this
+            vm.clipboardInstance = new Clipboard('.copiable-content')
+            vm.loadDraft()
         }
     }
 </script>

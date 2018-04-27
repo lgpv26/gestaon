@@ -19,10 +19,6 @@ module.exports = {
                 type: Boolean,
                 default: false
             },
-            form: {
-                type: Object,
-                default: {}
-            },
             data: {
                 type: Object,
                 default: {}

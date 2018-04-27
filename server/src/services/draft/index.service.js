@@ -28,6 +28,15 @@ module.exports = (server) => { return {
                 }
                 return 1
             }).then((draftId) => {
+                return server.mongodb.Draft.create({
+                    draftId: draftId,
+                    companyId: ctx.params.data.companyId,
+                    createdBy: ctx.params.data.createdBy,
+                    draft: {},
+                    type: 'request',
+                    isSingle: false
+                })
+                /*
                 try {
                     const draftModelFile = require('../../models/draft/' + _.upperFirst(_.camelCase(ctx.params.data.type)) + '.js')
                     if(draftModelFile){
@@ -39,6 +48,7 @@ module.exports = (server) => { return {
                     console.log(err)
                     throw new Error(err.message)
                 }
+                */
                 /*
                 if(controller.request.recoverance){
                     // temporary until generic file is created

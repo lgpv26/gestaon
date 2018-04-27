@@ -1,7 +1,7 @@
 <template>
-    <app-search ref="searchComponent" v-if="!address.id" :items="search.items" :shouldStayOpen="search.isAddressInputFocused" :query="search.query" :verticalOffset="8" :horizontalOffset="-20"
+    <app-search ref="searchComponent" v-if="!form.id" :items="search.items" :shouldStayOpen="search.isAddressInputFocused" :query="search.query" :verticalOffset="8" :horizontalOffset="-20"
     @itemSelected="searchMethods().searchAddressSelected($event)">
-        <input type="text" class="search-input__field" v-model="address.name" ref="searchInput"
+        <input type="text" class="search-input__field" v-model="form.name" ref="searchInput"
         @focus="search.isAddressInputFocused = true" @blur="search.isAddressInputFocused = false" @keydown="searchMethods().searchValueUpdated()"
         @input="inputName()" />
         <template slot="item" slot-scope="props">
@@ -22,7 +22,7 @@
         </template>
     </app-search>
     <div style="flex-grow: 1" v-else>
-        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="address.name" @input="inputName()" />
+        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="form.name" @input="inputName()" />
         <div style="position: absolute; right: 0; top: -3px; cursor: pointer;" @click="changeAddress()">
             <icon-change></icon-change>
         </div>
@@ -42,7 +42,21 @@
         components: {
             'app-search': SearchComponent
         },
-        props: ['address', 'clientAddress'],
+        props: ['id', 'name'],
+        watch: {
+            id: {
+                handler(){
+                    this.form.id = this.id
+                },
+                immediate: true
+            },
+            name: {
+                handler(){
+                    this.form.name = this.name
+                },
+                immediate: true
+            }
+        },
         data(){
             return {
                 search: {
@@ -52,15 +66,11 @@
                     lastQuery: '',
                     commitTimeout: null
                 },
-                addressEmptyObj: {
-                    companyId: null,
+                form: {
                     id: null,
-                    name: null,
-                    neighborhood: null,
-                    cep: null,
-                    city: null,
-                    state: null
+                    name: null
                 },
+                address: {},
                 initialAddressForm: null
             }
         },
@@ -69,13 +79,6 @@
             ...mapState('auth', ['user','company'])
         },
         sockets: {
-            draftClientAddressAddressReset(){
-                Object.assign(this.address, models.createAddressModel())
-            },
-            draftClientAddressAddressSelect(address){
-                utils.assignToExistentKeys(this.address, address)
-                this.$emit('change', this.address)
-            }
         },
         methods: {
 
@@ -103,18 +106,20 @@
                     searchValueUpdated(){
                         if(vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout)
                         vm.search.commitTimeout = setTimeout(() => {
-                            vm.search.query = vm.address.name
+                            vm.search.query = vm.form.name
                             vm.searchMethods().searchAddresses()
                         }, 300)
                     },
                     searchAddressSelected(item){
-                        if(vm.clientAddress){
+                        vm.$emit('select', item)
+                        console.log(item)
+                        /*if(vm.clientAddress){
                             vm.$socket.emit('draft:client-address-address-select', {
                                 draftId: vm.activeMorphScreen.draft.draftId,
                                 addressId: item.id,
                                 clientAddressId: (vm.clientAddress.id) ? vm.clientAddress.id : null
                             })
-                        }
+                        }*/
                     }
                 }
             },
@@ -124,36 +129,13 @@
              */
 
             inputName(){
-                const vm = this
-                const emitData = {
-                    draftId: vm.activeMorphScreen.draft.draftId,
-                    name: vm.address.name
-                }
-                console.log("Emitting to draft/request.client.clientAddress.form.address.name", emitData)
-                vm.$socket.emit('draft/request.client.clientAddress.form.address.name', emitData)
+                this.$emit('update:name', this.form.name)
+                this.$emit('input', this.form.name)
             },
 
             changeAddress(){
-                this.$socket.emit('draft:client-address-address-reset', {
-                    draftId: this.activeMorphScreen.draft.draftId
-                })
+                this.$emit('reset', true)
             }
-        },
-        created(){
-            const vm = this
-            /**
-             * Update address name
-             * @param {Object} ev = { success:Boolean, evData = { name:String } }
-             */
-            vm.$options.sockets['draft/request.client.clientAddress.form.address.name'] = (ev) => {
-                if(ev.success){
-                    console.log("Received draft/request.client.clientAddress.form.address.name", ev)
-                    vm.address.name = ev.evData.name
-                }
-            }
-        },
-        mounted(){
-            this.initialAddressForm = _.clone(this.address, true)
         }
 
     }
