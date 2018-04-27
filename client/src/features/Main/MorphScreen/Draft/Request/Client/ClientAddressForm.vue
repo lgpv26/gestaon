@@ -166,7 +166,7 @@
                         data: v || null,
                         path: 'address.' + k
                     }
-                })  
+                })
                 this.syncMultiple(addressToSync)
             },
 

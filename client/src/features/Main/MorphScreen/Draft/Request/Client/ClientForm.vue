@@ -7,8 +7,8 @@
                     <div class="form-columns">
                         <div class="form-column" style="flex-grow: 1;">
                             Nome / Empresa
-                            <div v-if="false">
-                                <input type="text" class="input--borderless" style="color: var(--font-color--primary)" v-model="form.name" v-if="client.id" placeholder="..." />
+                            <div v-if="form.id">
+                                <input type="text" class="input--borderless" style="color: var(--font-color--primary)" v-model="form.name" placeholder="..." />
                             </div>
                             <app-search v-else ref="search" :items="search.items" :shouldStayOpen="search.isNameInputFocused" :query="search.query" :verticalOffset="5" :horizontalOffset="-20"
                                 @itemSelected="searchMethods().searchClientSelected($event)" >
@@ -33,7 +33,7 @@
                             </app-search>
                         </div>
                         <div class="form-column" style="justify-content: flex-end;">
-                            <icon-search v-if="false" style="position: relative; top: -4px;"></icon-search>
+                            <icon-search v-if="!form.id" style="position: relative; top: -4px;"></icon-search>
                             <div style="cursor: pointer;" @click="changeClient()" v-else>
                                 <icon-change></icon-change>
                             </div>
@@ -174,6 +174,7 @@
                     }
                 ],
                 form: {
+                    id: null,
                     name: '',
                     legalDocument: ''
                 },
@@ -397,12 +398,13 @@
                     },
                     searchClientSelected(searchItem) {
                         vm.search.items = [];
-                        const emitData = {
+                        console.log(searchItem)
+                        /*const emitData = {
                             draftId: vm.activeMorphScreen.draft.draftId,
                             clientId: searchItem.client.id
                         }
                         console.log("Emitting to draft/request.client.select", emitData)
-                        vm.$socket.emit('draft/request.client.select', emitData)
+                        vm.$socket.emit('draft/request.client.select', emitData)*/
                     },
                     searchValueUpdated() {
                         if (vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout);

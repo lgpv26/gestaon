@@ -95,6 +95,7 @@
                             q: vm.search.query,
                             companyId: vm.company.id
                         }).then((result) => {
+                            console.log(result)
                             vm.search.items = result.data.map(({source}) => {
                                 return source
                             })
