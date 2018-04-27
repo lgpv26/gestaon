@@ -40,7 +40,7 @@ import _ from 'lodash'
 
 /* Resource Configs */
 
-Vue.use(Resource);
+Vue.use(Resource)
 
 /* Vue Plugins */
 
@@ -51,13 +51,13 @@ Vue.use(VueTimeago, {
         // you will need json-loader in webpack 1
         'pt-BR': require('vue-timeago/locales/pt-BR.json')
     }
-});
+})
 
-Vue.use(VueResize);
+Vue.use(VueResize)
 
-Vue.use(VueModal);
+Vue.use(VueModal)
 
-Vue.use(VueTippy);
+Vue.use(VueTippy)
 
 Vue.use(VueMoney, {
     decimal: ',',
@@ -66,7 +66,7 @@ Vue.use(VueMoney, {
     suffix: '',
     precision: 2,
     masked: false
-});
+})
 
 /* Mask */
 
