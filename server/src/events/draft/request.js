@@ -63,7 +63,7 @@ module.exports = class Request extends Draft {
                     id: evData.clientId
                 }
             }).then((client) => {
-
+/*
                 vm.setDraftData('clientAddresses', client.clientAddresses)
                 vm.setDraftData('clientPhones', client.clientPhones)
                 vm.setDraftData('clientCustomFields', client.clientCustomFields)
@@ -83,13 +83,17 @@ module.exports = class Request extends Draft {
                     }
                 }))
                 vm.saveInstantly()
+*/
+                vm.server.io.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.client.select', new EventResponse({
+                    client
+                }))
             })
         })
         /**
          * @param {Object} evData = { draftId:Number }
          */
         vm.socket.instance.on('draft/request.client.reset', (evData) => {
-
+/*
             vm.setDraftData('clientAddresses', [], true)
             vm.setDraftData('clientPhones', [], true)
             vm.setDraftData('clientCustomFields', [], true)
@@ -104,6 +108,25 @@ module.exports = class Request extends Draft {
                 }
             }))
             vm.saveInstantly()
+*/
+
+        })
+
+        /**
+         * @param {Object} evData = { addressId:Number, draftId:Number }
+         */
+        vm.socket.instance.on('draft/request.address.select', (evData) => {
+            // call the service to get a address's data
+            vm.server.broker.call('data/address.get', {
+                data: {
+                    companyId: vm.socket.activeCompany.id,
+                    id: evData.addressId
+                }
+            }).then((address) => {
+                vm.server.io.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.address.select', new EventResponse({
+                    address
+                }))
+            })
         })
         /**
          * @param {Object} evData = { draftId:Number, showForm:Boolean }
