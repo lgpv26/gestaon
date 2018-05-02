@@ -11,7 +11,7 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} requests
          */
         get(ctx) {
-            return server.mysql.Client.findOne({
+            return server.mysql.Address.findOne({
                 where: {
                     id: ctx.params.data.id,
                     companyId: {
