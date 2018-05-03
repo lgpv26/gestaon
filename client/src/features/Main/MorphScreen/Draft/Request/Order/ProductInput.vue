@@ -29,7 +29,6 @@
     import { Select } from "@/components/Inputs/Select/index";
     import _ from 'lodash';
     import utils from '@/utils/index';
-    import models from '@/models'
     import ProductsAPI from '@/api/products';
     import SearchComponent from '@/components/Inputs/Search.vue';
 
@@ -68,7 +67,6 @@
             draftOrderProductProductReset(data){
                 console.log("Received draftOrderProductProductReset", data)
                 // Object.assign(this.client, models.createAddressModel());
-                _.assign(this.product, models.createProductModel())
             }
 
         },

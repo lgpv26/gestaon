@@ -38,7 +38,7 @@
 
     import _ from 'lodash'
     import utils from '@/utils'
-    import models from '@/models'
+    import models from '@/models/index'
     import AddressesAPI from '@/api/addresses'
     import ClientAPI from '@/api/clients'
     import AddressForm from './AddressForm.vue'
@@ -106,8 +106,8 @@
              */
 
             editClientAddress(clientAddress){
+                clientAddress.show = true
                 this.setClientAddressForm(clientAddress)
-                this.show = true
                 this.syncMultiple(
                     _.map(this.clientAddressForm, (v, k) => {
                         return {

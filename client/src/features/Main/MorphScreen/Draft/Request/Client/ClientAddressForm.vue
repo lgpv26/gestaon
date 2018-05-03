@@ -70,7 +70,6 @@
 
     import _ from 'lodash';
     import utils from '@/utils';
-    import models from '@/models';
     import AddressesAPI from '@/api/addresses';
     import ClientAPI from '@/api/clients';
     import AddressForm from './AddressForm.vue';

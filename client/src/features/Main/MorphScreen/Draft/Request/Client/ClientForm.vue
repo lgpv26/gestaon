@@ -101,7 +101,6 @@
     import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash'
     import utils from '@/utils'
-    import models from '@/models'
     import DraftMixin from '../../DraftMixin'
     import ClientAddressForm from './ClientAddressForm.vue'
     import ClientPhoneForm from './ClientPhoneForm.vue'

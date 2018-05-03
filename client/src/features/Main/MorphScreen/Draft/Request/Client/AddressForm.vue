@@ -37,7 +37,6 @@
     import AddressesAPI from '@/api/addresses'
     import SearchComponent from '@/components/Inputs/Search.vue'
     import utils from '@/utils/index'
-    import models from '@/models'
     import Vue from 'vue'
 
     import DraftMixin from '../../DraftMixin'

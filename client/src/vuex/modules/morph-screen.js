@@ -1,6 +1,5 @@
-import _ from 'lodash';
-import DraftsAPI from '../../api/drafts';
-import models from '@/models'
+import _ from 'lodash'
+import DraftsAPI from '../../api/drafts'
 
 const state = () => ({
     screens: [],

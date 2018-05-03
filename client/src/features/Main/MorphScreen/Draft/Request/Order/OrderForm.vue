@@ -203,7 +203,6 @@
     import StorageInput from './StorageInput.vue';
     import DivulgationChannelInput from './DivulgationChannelInput.vue';
     import ProductsAPI from '@/api/products';
-    import models from '@/models'
 
     export default {
         components: {
@@ -221,9 +220,6 @@
                 form: {
                     paymentMethodId: null,
                     orderProducts: [
-                        /*Object.assign(models.createOrderProductModel(), {
-                            id: _.uniqueId("order-product#")
-                        })*/
                     ],
                     orderPaymentMethods: [
                         {
@@ -251,24 +247,6 @@
             }
         },
         sockets: {
-
-            /* draft order products */
-
-            draftOrderProductAdd(orderProductId){
-                console.log("Received draftOrderProductAdd", orderProductId);
-                const orderProduct = models.createOrderProductModel()
-                _.assign(orderProduct, {
-                    id: orderProductId
-                })
-                this.form.orderProducts.push(orderProduct);
-            },
-            draftOrderProductRemove(orderProductId){
-                console.log("Received draftOrderProductRemove", orderProductId);
-                const orderProductIndex = _.findIndex(this.form.orderProducts, { id: orderProductId });
-                if(orderProductIndex !== -1){
-                    this.form.orderProducts.splice(orderProductIndex, 1);
-                }
-            }
 
         },
         methods: {

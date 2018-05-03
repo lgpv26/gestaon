@@ -19,20 +19,20 @@
 
 <script>
     import Tracker from './Tracker/Tracker'
-    import moment from 'moment';
-    import Utils from '../../../utils/index';
-    import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
+    import moment from 'moment'
+    import Utils from '../../../utils/index'
+    import { mapMutations, mapGetters, mapState, mapActions } from 'vuex'
 
-    import RequestPanel from './RequestBoard/RequestBoard.vue';
+    import RequestPanel from './RequestBoard/RequestBoard.vue'
 
-    import PanelLoadingComponent from '../../../components/Utilities/PanelLoading.vue';
+    import PanelLoadingComponent from '../../../components/Utilities/PanelLoading.vue'
 
-    import TrackerControls from './Tracker/TrackerControls.vue';
-    import BottomPanel from './Tracker/BottomPanel/BottomPanel.vue';
-    import DeviceDetails from './Tracker/DeviceDetails.vue';
+    import TrackerControls from './Tracker/TrackerControls.vue'
+    import BottomPanel from './Tracker/BottomPanel/BottomPanel.vue'
+    import DeviceDetails from './Tracker/DeviceDetails.vue'
 
-    import geolib from 'geolib/dist/geolib';
-    import _ from 'lodash';
+    import geolib from 'geolib/dist/geolib'
+    import _ from 'lodash'
 
     export default {
         name: 'app-dashboard',

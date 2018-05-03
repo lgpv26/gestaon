@@ -57,25 +57,26 @@ module.exports = class Draft {
 
         /**
          * Socket is leaving the draft, remove the socket from its listeners
-         * @param {object} evData = { draftId:Number, path:String, timeout:Number }
-         */
-        vm.socket.instance.on('draft.removeData', (evData) => {
-            vm.draft.data = _.omit(vm.draft.data, evData.path)
-            this.saveInstantly()
-        })
-
-        /**
-         * Socket is leaving the draft, remove the socket from its listeners
          * @param {object} evData = { draftId:Number, data:Object|Array, timeout:Number }
          */
         vm.socket.instance.on('draft.setData', (evData) => {
             if (_.isArray(evData.data)) {
                 evData.data.forEach((dataObj) => {
-                    _.set(vm.draft.data, dataObj.path, dataObj.value)
+                    if(_.has(dataObj,'remove') && dataObj.remove){ // if it has to be removed
+                        _.unset(vm.draft.data, dataObj.path)
+                    }
+                    else {
+                        _.set(vm.draft.data, dataObj.path, dataObj.value)
+                    }
                 })
             }
             else if (_.isObject(evData.data)) {
-                _.set(vm.draft.data, evData.data.path, evData.data.value)
+                if(_.has(evData.data,'remove') && evData.data.remove) {
+                    _.unset(vm.draft.data, evData.data.path)
+                }
+                else {
+                    _.set(vm.draft.data, evData.data.path, evData.data.value)
+                }
             }
             this.saveInstantly()
         })

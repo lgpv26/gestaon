@@ -71,7 +71,6 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
     import _ from 'lodash'
     import utils from '@/utils/index'
-    import models from '@/models'
     import Vue from 'vue'
     import DraftMixin from '../../DraftMixin'
 

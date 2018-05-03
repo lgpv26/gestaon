@@ -35,7 +35,7 @@
     import AddressesAPI from '../../../../../../api/addresses';
     import SearchComponent from '../../../../../../components/Inputs/Search.vue';
     import utils from '../../../../../../utils/index';
-    import models from '../../../../../../models';
+    import models from '../../../../../../models-old';
     import Vue from 'vue';
 
     export default {

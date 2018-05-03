@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import _ from 'lodash'
-import models from '@/models'
+import { RequestBoardCardModel, RequestBoardSectionModel } from '@/models/index'
 import utils from '@/utils'
 
 const state = {
@@ -50,19 +50,19 @@ const mutations = {
     SET_SECTIONS(state, sections){
         if(Array.isArray(sections)){
             state.sections = sections.map((section) => {
-                const newSection = models.createRequestBoardSectionModel()
+                const newSection = new RequestBoardSectionModel()
                 _.assign(newSection, section)
                 return newSection
             })
         }
     },
     ADD_SECTION(state, sectionObj = {}){
-        const section = models.createRequestBoardSectionModel()
+        const section = new RequestBoardSectionModel()
         // _.assign(request, {})
 
         if(_.has(sectionObj, 'cards') && sectionObj.cards.length){
             _.map(sectionObj.cards, (card) => {
-                const tCard = models.createRequestBoardCardModel()
+                const tCard = new RequestBoardCardModel()
                 utils.assignToExistentKeys(tCard, card)
                 _.assign(card, {
                     state: {
@@ -107,7 +107,7 @@ const mutations = {
         }
     },
     ADD_REQUEST(state, requestObj = {}){
-        const request = models.createRequestBoardCardModel()
+        const request = new RequestBoardCardModel()
         _.assign(request, requestObj, {
             state: {
                 showCard: true
