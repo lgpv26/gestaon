@@ -11,20 +11,41 @@ export default {
         syncMultiple(array){
             const sendArray = []
             array.forEach((syncItem) => {
-                if(!this.formPath){
+                const baseFormPath = syncItem.customBaseFormPath || this.formPath
+                if(!baseFormPath){
                     const obj = {}
-                    _.set(obj, syncItem.path, syncItem.data)
+                    obj.path = syncItem.path
+                    obj.value = syncItem.value
                     sendArray.push(obj)
                 }
                 else {
                     const obj = {}
-                    _.set(obj, this.formPath + '.' + syncItem.path, syncItem.data)
+                    obj.path = baseFormPath + '.' + syncItem.path
+                    obj.value = syncItem.value
                     sendArray.push(obj)
                 }
             })
             const emitData = {
                 draftId: this.activeMorphScreen.draft.draftId,
                 data: sendArray
+            }
+            console.log("Emitting to draft.setData", emitData)
+            this.$socket.emit('draft.setData', emitData)
+        },
+        sync(newData, path = null, customBaseFormPath = null){
+            const baseFormPath = customBaseFormPath || this.formPath
+            const obj = {}
+            if(!baseFormPath){
+                obj.path = path
+                obj.value = newData
+            }
+            else {
+                obj.path = baseFormPath + '.' + path
+                obj.value = newData
+            }
+            const emitData = {
+                draftId: this.activeMorphScreen.draft.draftId,
+                data: obj
             }
             console.log("Emitting to draft.setData", emitData)
             this.$socket.emit('draft.setData', emitData)
@@ -39,22 +60,6 @@ export default {
             }
             console.log("Emitting to draft.removeData", emitData)
             this.$socket.emit('draft.removeData', emitData)
-        },
-        sync(newData, path = null){
-            const obj = {}
-            if(!this.formPath){
-                _.set(obj, path, newData)
-            }
-            else {
-                _.set(obj, this.formPath + '.' + path, newData)
-                console.log(obj)
-            }
-            const emitData = {
-                draftId: this.activeMorphScreen.draft.draftId,
-                data: obj
-            }
-            console.log("Emitting to draft.setData", emitData)
-            this.$socket.emit('draft.setData', emitData)
         }
     },
     watch: {

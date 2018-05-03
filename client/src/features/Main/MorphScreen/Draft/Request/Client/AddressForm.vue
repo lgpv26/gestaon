@@ -1,9 +1,9 @@
 <template>
-    <app-search ref="searchComponent" v-if="!form.id" :items="search.items" :shouldStayOpen="search.isAddressInputFocused" :query="search.query" :verticalOffset="8" :horizontalOffset="-20"
+    <app-search ref="searchComponent" v-if="!id" :items="search.items" :shouldStayOpen="search.isAddressInputFocused" :query="search.query" :verticalOffset="8" :horizontalOffset="-20"
     @itemSelected="searchMethods().searchAddressSelected($event)">
-        <input type="text" class="search-input__field" v-model="form.name" ref="searchInput"
+        <input type="text" class="search-input__field" v-model="name" ref="searchInput"
         @focus="search.isAddressInputFocused = true" @blur="search.isAddressInputFocused = false" @keydown="searchMethods().searchValueUpdated()"
-        @input="inputName()" />
+        @input="sync(name, 'name')" />
         <template slot="item" slot-scope="props">
             <div class="search-input__item">
                 <span class="detail__address" v-html="props.item.name"></span>
@@ -22,7 +22,7 @@
         </template>
     </app-search>
     <div style="flex-grow: 1" v-else>
-        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="form.name" @input="inputName()" />
+        <input type="text" class="search-input__field" style="color: var(--font-color--primary)" v-model="name" @input="sync(name, 'name')" />
         <div style="position: absolute; right: 0; top: -3px; cursor: pointer;" @click="changeAddress()">
             <icon-change></icon-change>
         </div>
@@ -30,33 +30,28 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import _ from 'lodash';
-    import AddressesAPI from '@/api/addresses';
-    import SearchComponent from '../../../../../../components/Inputs/Search.vue';
-    import utils from '../../../../../../utils/index';
-    import models from '../../../../../../models';
-    import Vue from 'vue';
+    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { createHelpers } from 'vuex-map-fields'
+
+    import _ from 'lodash'
+    import AddressesAPI from '@/api/addresses'
+    import SearchComponent from '@/components/Inputs/Search.vue'
+    import utils from '@/utils/index'
+    import models from '@/models'
+    import Vue from 'vue'
+
+    import DraftMixin from '../../DraftMixin'
+
+    const { mapFields } = createHelpers({
+        getterType: 'draft/request/getField',
+        mutationType: 'draft/request/updateField',
+    })
 
     export default {
         components: {
             'app-search': SearchComponent
         },
-        props: ['id', 'name'],
-        watch: {
-            id: {
-                handler(){
-                    this.form.id = this.id
-                },
-                immediate: true
-            },
-            name: {
-                handler(){
-                    this.form.name = this.name
-                },
-                immediate: true
-            }
-        },
+        mixins: [DraftMixin],
         data(){
             return {
                 search: {
@@ -66,21 +61,23 @@
                     lastQuery: '',
                     commitTimeout: null
                 },
-                form: {
-                    id: null,
-                    name: null
-                },
-                address: {},
-                initialAddressForm: null
+                formPath: 'request.client.clientAddressForm.address'
             }
         },
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
-            ...mapState('auth', ['user','company'])
+            ...mapState('auth', ['user','company']),
+            ...mapFields([
+                'form.client.clientAddressForm.address',
+                'form.client.clientAddressForm.address.id',
+                'form.client.clientAddressForm.address.name'
+            ])
         },
         sockets: {
         },
         methods: {
+
+            ...mapActions('draft/request', ['setClientAddressFormAddress']),
 
             /**
              * Search
@@ -107,20 +104,18 @@
                     searchValueUpdated(){
                         if(vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout)
                         vm.search.commitTimeout = setTimeout(() => {
-                            vm.search.query = vm.form.name
+                            vm.search.query = vm.name
                             vm.searchMethods().searchAddresses()
                         }, 300)
                     },
                     searchAddressSelected(item){
                         vm.$emit('select', item)
-                        console.log(item)
-                        /*if(vm.clientAddress){
-                            vm.$socket.emit('draft:client-address-address-select', {
-                                draftId: vm.activeMorphScreen.draft.draftId,
-                                addressId: item.id,
-                                clientAddressId: (vm.clientAddress.id) ? vm.clientAddress.id : null
-                            })
-                        }*/
+                        const emitData = {
+                            draftId: vm.activeMorphScreen.draft.draftId,
+                            addressId: parseInt(item.id)
+                        }
+                        console.log("Emitting draft/request.address.select", emitData)
+                        vm.$socket.emit('draft/request.address.select', emitData)
                     }
                 }
             },
@@ -129,13 +124,36 @@
              * Actions
              */
 
-            inputName(){
-                this.$emit('update:name', this.form.name)
-                this.$emit('input', this.form.name)
-            },
-
             changeAddress(){
-                this.$emit('reset', true)
+                this.setClientAddressFormAddress()
+                this.syncMultiple(_.map(this.address, (v, k) => {
+                    return {
+                        value: v,
+                        path: k
+                    }
+                }))
+            }
+        },
+        created(){
+            const vm = this
+
+            /**
+             * On address select
+             * @param {Object} ev = { success:Boolean, evData = { } }
+             */
+            vm.$options.sockets['draft/request.address.select'] = (ev) => {
+                console.log("Received draft/request.address.select", ev)
+                if (ev.success) {
+                    vm.setClientAddressFormAddress(ev.evData)
+                    Vue.nextTick(() => {
+                        vm.syncMultiple(_.map(vm.address, (v, k) => {
+                            return {
+                                value: v,
+                                path: k
+                            }
+                        }))
+                    })
+                }
             }
         }
 

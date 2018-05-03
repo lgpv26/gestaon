@@ -42,7 +42,8 @@
     "vue-timeago": "^3.3.6",
     "vue-tippy": "^2.0.10",
     "vuedraggable": "^2.15.0",
-    "vuex": "^2.1.1"
+    "vuex": "^2.1.1",
+    "vuex-map-fields": "^1.1.7"
   },
   "devDependencies": {
     "babel-core": "^6.0.0",

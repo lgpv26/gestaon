@@ -98,17 +98,22 @@ export default {
             address: this.createAddressModel()
         }
     },
+    createClientModel(){
+        return {
+            id: null,
+            name: null,
+            legalDocument: null,
+            clientAddresses: [],
+            clientPhones: []
+        }
+    },
     createAddressModel(){
         return {
             id: null,
-            companyId: null,
-            name: null,
             neighborhood: null,
             cep: null,
             city: null,
-            state: null,
-            dateCreated: null,
-            dateUpdated: null
+            state: null
         }
     },
     createOrderProductModel(){

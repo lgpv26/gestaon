@@ -85,6 +85,9 @@ di.server.broker.createService(require('../services/data/client.service')(di.ser
 di.server.broker.createService(require('../services/data/product.service')(di.server))
 di.server.broker.createService(require('../services/draft/index.service')(di.server))
 
+di.server.broker.createService(require('../services/draft/request/persistence.service')(di.server))
+di.server.broker.createService(require('../services/draft/request/recoverance.service')(di.server))
+
 // starts callback chain until server starts, or shutdown if the procedure fails
 di.server.broker.start().then(() => {
     connectToMySQL.then((databaseCreated) => {

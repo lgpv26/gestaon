@@ -1,13 +1,10 @@
 <template>
     <div ref="scrollbar">
         <div class="ms-form">
-            <div class="ms-form__spinner" v-if="saving && !form.activeStep">
+            <div class="ms-form__spinner" v-if="false">
                 <span>Salvando...</span>
             </div>
-            <span style="position: absolute; top: 0; left: 2px;">
-                <span style="color: rgba(255,255,255,.05); margin-right: 5px;" v-for="presenceUser in presenceUsers">{{ presenceUser.name }}</span>
-            </span>
-            <div class="form__instruction" v-if="!form.activeStep">
+            <div class="form__instruction" v-if="!activeStep">
                 <div class="instruction__container">
                     <div class="container__area">
                         <small>O que vamos fazer?</small>
@@ -16,13 +13,13 @@
                     <img-request-form></img-request-form>
                 </div>
             </div>
-            <div class="separator" v-if="!form.activeStep"></div>
+            <div class="separator" v-if="!activeStep"></div>
             <!-- Client form -->
-            <form :class="{'active': form.activeStep === 'client'}">
-                <div class="form__content" v-show="form.activeStep === 'client'">
-                    <app-client-form :data.sync="data"></app-client-form>
+            <form :class="{'active': activeStep === 'client'}">
+                <div class="form__content" v-show="activeStep === 'client'">
+                    <app-client-form></app-client-form>
                 </div>
-                <div class="form__header" v-if="!form.activeStep === 'client' && client.id" :class="{'summary': !form.activeStep === 'client' && client.id}">
+                <div class="form__header" v-if="!activeStep === 'client' && client.id" :class="{'summary': !activeStep === 'client' && client.id}">
                     <div class="form-columns" style="flex-grow: 1;">
                         <div class="form-column" style="flex-grow: 1; flex-basis: 70%; display: flex; flex-direction: row; justify-content: flex-start; align-items: center;">
                             <span style="margin-right: 8px;">{{ shortenedClientName }}</span>
@@ -56,40 +53,40 @@
                         </div>
                         <div class="form-column" style="flex-grow: initial; flex-direction: row; align-items: center;">
                             <h3 style="top: 0;">Cliente</h3>
-                            <app-switch style="float: right;" :value="form.activeStep === 'client'" @change="onCurrentStepChanged()"></app-switch>
+                            <app-switch style="float: right;" :value="activeStep === 'client'" @change="onCurrentStepChanged()"></app-switch>
                         </div>
                     </div>
                 </div>
                 <div class="form__header" v-else>
-                    <span v-if="form.activeStep !== 'client'">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
+                    <span v-if="activeStep !== 'client'">Incluir um <span style="color: var(--primary-color)">cliente</span> neste atendimento</span>
                     <span class="push-both-sides"></span>
-                    <h3 :class="{active: form.activeStep === 'client'}">Cliente</h3>
-                    <app-switch style="float: right;" :value="form.activeStep === 'client'" @change="changeStep('client')"></app-switch>
+                    <h3 :class="{active: activeStep === 'client'}">Cliente</h3>
+                    <app-switch style="float: right;" :value="activeStep === 'client'" @change="changeStep('client')"></app-switch>
                 </div>
             </form>
             <div class="separator"></div>
             <!-- Order form -->
-            <form :class="{'active': form.activeStep === 'order'}">
-                <div class="form__content" v-show="this.form.activeStep === 'order'">
+            <form :class="{'active': activeStep === 'order'}">
+                <div class="form__content" v-show="activeStep === 'order'">
                     <!--<app-order-form @step-change="onStepChange($event)" :order.sync="form.order"></app-order-form>-->
                 </div>
                 <div class="form__header">
-                    <span v-if="form.activeStep !== 'order'">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
+                    <span v-if="activeStep !== 'order'">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
                     <span class="push-both-sides"></span>
-                    <h3 :class="{active: form.activeStep === 'order'}">Venda</h3>
-                    <app-switch style="float: right;" :value="form.activeStep === 'order'" @changed="changeStep('order')"></app-switch>
+                    <h3 :class="{active: activeStep === 'order'}">Venda</h3>
+                    <app-switch style="float: right;" :value="activeStep === 'order'" @changed="changeStep('order')"></app-switch>
                 </div>
             </form>
             <div class="separator"></div>
             <!-- Task form -->
-            <form :class="{'active': form.activeStep === 'task'}">
-                <div class="form__content" v-show="form.activeStep === 'task'">
+            <form :class="{'active': activeStep === 'task'}">
+                <div class="form__content" v-show="activeStep === 'task'">
                     <!--<app-task-form @step-change="onStepChange($event)" :task.sync="form.task"></app-task-form>-->
                 </div>
                 <div class="form__header">
-                    <span v-if="form.activeStep !== 'task'">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
+                    <span v-if="activeStep !== 'task'">Incluir uma <span style="color: var(--terciary-color)">tarefa</span> neste atendimento</span>
                     <span class="push-both-sides"></span>
-                    <h3 :class="{active: form.activeStep === 'task'}">Tarefa</h3> <app-switch style="float: right;" :value="form.activeStep === 'task'" @changed="changeStep('task')"></app-switch>
+                    <h3 :class="{active: activeStep === 'task'}">Tarefa</h3> <app-switch style="float: right;" :value="activeStep === 'task'" @changed="changeStep('task')"></app-switch>
                 </div>
             </form>
         </div>
@@ -98,6 +95,7 @@
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { createHelpers } from 'vuex-map-fields'
     import utils from '@/utils/index'
     import _ from 'lodash'
     import DraftMixin from '../DraftMixin'
@@ -107,47 +105,54 @@
     import TaskForm from './Task/TaskForm.vue'
     import Scrollbar from 'smooth-scrollbar'
 
+    const { mapFields } = createHelpers({
+        getterType: 'draft/request/getField',
+        mutationType: 'draft/request/updateField',
+    })
+
     export default {
         components: {
             'app-client-form': ClientForm,
             'app-order-form': OrderForm,
             'app-task-form': TaskForm
         },
-        props: ['data'],
+        props: [],
         mixins: [DraftMixin],
         data(){
             return {
                 scrollbar: null,
-                presenceUsers: [],
-                form: {
-                    activeStep: null
-                },
                 formPath: 'request',
-                saving: false
             }
         },
         computed: {
             ...mapState('auth', ['user']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
+            ...mapFields([
+                'form.activeStep'
+            ])
         },
         methods: {
+            ...mapActions('draft/request', ['setRequest']),
             ...mapActions('toast', ['showToast']),
             ...mapActions('loading', ['stopLoading']),
             changeStep(step){
                 let activeStep = null
-                if(this.form.activeStep !== step){
-                    if (this.form.activeStep !== 'client' && step === 'client') {
+                if(this.activeStep !== step){
+                    if (this.activeStep !== 'client' && step === 'client') {
                         activeStep = 'client'
                     }
-                    if (this.form.activeStep !== 'order' && step === 'order') {
+                    if (this.activeStep !== 'order' && step === 'order') {
                         activeStep = 'order'
                     }
-                    if (this.form.activeStep !== 'task' && step === 'task') {
+                    if (this.activeStep !== 'task' && step === 'task') {
                         activeStep = 'task'
                     }
                 }
-                this.form.activeStep = activeStep
-                this.sync(this.form.activeStep, 'activeStep')
+                this.activeStep = activeStep
+                this.sync(this.activeStep, 'activeStep')
+            },
+            loadData(data){
+                this.setRequest(data.request)
             }
         },
         created(){

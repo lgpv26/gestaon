@@ -69,20 +69,15 @@ module.exports = class Draft {
          * @param {object} evData = { draftId:Number, data:Object|Array, timeout:Number }
          */
         vm.socket.instance.on('draft.setData', (evData) => {
-            if(_.isArray(evData.data)){
+            if (_.isArray(evData.data)) {
                 evData.data.forEach((dataObj) => {
-                    vm.draft.data = merge(vm.draft.data, dataObj)
+                    _.set(vm.draft.data, dataObj.path, dataObj.value)
                 })
             }
-            else if(_.isObject(evData.data)) {
-                vm.draft.data = merge(vm.draft.data, evData.data)
+            else if (_.isObject(evData.data)) {
+                _.set(vm.draft.data, evData.data.path, evData.data.value)
             }
-            if(evData.timeout){
-                this.saveWithTimeout(evData.timeout)
-            }
-            else {
-                this.saveInstantly()
-            }
+            this.saveInstantly()
         })
 
     }

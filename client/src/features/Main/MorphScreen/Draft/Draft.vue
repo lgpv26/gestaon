@@ -29,7 +29,7 @@
         </div>
         <div class="container__body">
             <span v-show="!draft">Carregando...</span>
-            <component :is="'app-' + details.entryComponent" v-show="draft" :data.sync="draft.data"></component>
+            <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent"></component>
         </div>
         <div class="container__actions">
             <a>Excluir Rascunho</a>
@@ -67,7 +67,7 @@
                 clipboardInstance: null,
                 isPersisting: false,
                 persistingText: "Salvando...",
-                draft: {},
+                draft: null,
                 remountTimeout: null
             }
         },
@@ -122,6 +122,7 @@
                 console.log("Received draft.load", ev)
                 if(ev.success){
                     vm.draft = ev.evData
+                    vm.$refs.draftRootComponent.loadData(ev.evData.data)
                 }
             }
             /**

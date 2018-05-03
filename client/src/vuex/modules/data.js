@@ -1,7 +1,4 @@
-import data from './data/index';
-import moment from 'moment';
-import _ from 'lodash';
-
+import data from './data/index'
 
 export default {
     namespaced: true,
