@@ -117,8 +117,7 @@
             ...mapActions('draft/request', ['setClientAddressForm','setClientAddressFormAddress', 'addClientAddress', 'saveClientAddress']),
 
             backToClientAddressList(){
-                this.setClientAddressForm({})
-                this.show = false
+                this.setClientAddressForm()
                 this.syncMultiple(
                     _.map(this.clientAddressForm, (v, k) => {
                         return {

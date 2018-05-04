@@ -3,7 +3,10 @@ import _ from 'lodash'
 import { getField, updateField } from 'vuex-map-fields'
 import shortid from 'shortid'
 
-import { ClientModel, ClientAddressModel, AddressModel } from '../../../models/index'
+import {createClient} from '@/models/ClientModel'
+import {createClientAddress} from '@/models/ClientAddressModel'
+import {createClientAddressForm} from '@/models/ClientAddressFormModel'
+import {createAddress} from '@/models/AddressModel'
 
 const state = {
     form: {
@@ -12,6 +15,7 @@ const state = {
             id: '',
             name: '',
             legalDocument: '',
+            clientGroupId: null,
             clientAddressForm: {
                 id: '',
                 show: false,
@@ -26,6 +30,7 @@ const state = {
                     state: ''
                 }
             },
+            clientCustomFields: [],
             clientAddresses: [],
             clientPhones: []
         },
@@ -46,35 +51,35 @@ const mutations = {
     SET_REQUEST(state, request = {}){
         state.form.activeStep = _.get(request, 'activeStep', null)
     },
-    SET_CLIENT(state, client){
-        state.form.client = ClientModel(client)
+    SET_CLIENT(state, client = {}){
+        state.form.client = _.assign(state.form.client,createClient(client))
     },
-    ADD_CLIENT_ADDRESS(state, clientAddress){
-        clientAddress = ClientAddressModel(clientAddress)
-        clientAddress.id = 'tmp/' + shortid.generate() // attr a temporary ID
-        state.form.client.clientAddresses.push(clientAddress)
+    ADD_CLIENT_ADDRESS(state, clientAddress = {}){
+        clientAddress.id = 'tmp/' + shortid.generate()
+        state.form.client.clientAddresses.push(createClientAddress(clientAddress))
     },
-    SAVE_CLIENT_ADDRESS(state, clientAddress){
+    SAVE_CLIENT_ADDRESS(state, clientAddress = {}){
         const clientAddressIndex = _.findIndex(state.form.client.clientAddresses, { id: clientAddress.id })
         if(clientAddressIndex !== -1 && clientAddress.id){
-            state.form.client.clientAddresses[clientAddressIndex] = ClientAddressModel(clientAddress)
+            state.form.client.clientAddresses[clientAddressIndex] = _.assign(state.form.client.clientAddresses[clientAddressIndex], createClientAddress(clientAddress))
         }
     },
     SET_CLIENT_ADDRESS_FORM(state, clientAddressForm = {}){
-        //state.form.client.clientAddressForm = new ClientAddressModel(clientAddressForm)
-
-        state.form.client.clientAddressForm = {
-            id: _.get(clientAddressForm, 'id', null),
-            show: _.get(clientAddressForm, 'show', false),
-            complement: _.get(clientAddressForm, 'complement', ''),
-            number: _.get(clientAddressForm, 'number', ''),
-            address: AddressModel(_.get(clientAddressForm, 'address', {}))
-        }
-
-        //state.form.client.clientAddressForm.show = _.get(clientAddressForm, 'show', false) // attr form properties
+        state.form.client.clientAddressForm = _.assign(state.form.client.clientAddressForm, createClientAddressForm(clientAddressForm))
     },
-    SET_CLIENT_ADDRESS_FORM_ADDRESS(state, clientAddressFormAddress){
-        state.form.client.clientAddressForm.address = AddressModel(clientAddressFormAddress)
+    SET_CLIENT_ADDRESS_FORM_ADDRESS(state, clientAddressFormAddress = {}){
+        state.form.client.clientAddressForm.address = _.assign(state.form.client.clientAddressForm.address, createAddress(clientAddressFormAddress))
+    },
+    ADD_CLIENT_PHONE(state, clientPhone = {}){
+        clientPhone.id = 'tmp/' + shortid.generate()
+        state.form.client.clientPhones.push(clientPhone)
+    },
+    REMOVE_CLIENT_PHONE(state, clientPhoneId){
+        const index = _.findIndex(state.form.client.clientPhones, {id: clientPhoneId})
+        console.log("Chegou aqui com o index", index)
+        if(index !== -1){
+            state.form.client.clientPhones.splice(index, 1)
+        }
     },
     updateField
 }
@@ -84,12 +89,10 @@ const actions = {
         context.commit('SET_REQUEST', request || {})
         context.commit('SET_CLIENT', _.get(request, 'client', {}))
         context.commit('SET_CLIENT_ADDRESS_FORM', _.get(request, 'client.clientAddressForm', {}))
-        context.commit('SET_CLIENT_ADDRESS_FORM_ADDRESS', _.get(request, 'client.clientAddressForm.address', {}))
     },
     setClient(context, client){
         context.commit('SET_CLIENT', client)
         context.commit('SET_CLIENT_ADDRESS_FORM', _.get(client, 'clientAddressForm', {}))
-        context.commit('SET_CLIENT_ADDRESS_FORM_ADDRESS', _.get(client, 'clientAddressForm.address', {}))
     },
     addClientAddress(context, clientAddress){
         context.commit('ADD_CLIENT_ADDRESS', clientAddress)
@@ -99,11 +102,16 @@ const actions = {
     },
     setClientAddressForm(context, clientAddressForm){
         context.commit('SET_CLIENT_ADDRESS_FORM', clientAddressForm)
-        /*context.commit('SET_CLIENT_ADDRESS_FORM_ADDRESS', _.get(clientAddressForm, 'address', {}))*/
     },
     setClientAddressFormAddress(context, clientAddressFormAddress = {}){
         context.commit('SET_CLIENT_ADDRESS_FORM_ADDRESS', clientAddressFormAddress)
-    }
+    },
+    addClientPhone(context, clientPhone){
+        context.commit('ADD_CLIENT_PHONE', clientPhone)
+    },
+    removeClientPhone(context, clientPhoneId){
+        context.commit('REMOVE_CLIENT_PHONE', clientPhoneId)
+    },
 }
 
 export default {

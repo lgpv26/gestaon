@@ -13,7 +13,7 @@
                             <icon-check></icon-check>
                         </div>
                     </div>
-                    <div v-else :class="{ active: value === item.value }" style="display: flex; flex-direction: row;">
+                    <div v-else :class="{ active: _.find(value, { id: item.value }) }" style="display: flex; flex-direction: row;">
                         <span style="cursor: pointer;" @click="select(item)" @dblclick="edit(item)">{{ item.text }}</span>
                         <span class="push-both-sides"></span>
                         <icon-check></icon-check>
@@ -26,6 +26,7 @@
                     </div>
                 </div>
             </div>
+
         </template>
     </app-popover>
 </template>
@@ -50,11 +51,23 @@
         computed: {
         },
         methods: {
+            haas(item){
+                return _.find(this.value, { id: item.value })
+            },
             select(item){
-                if(item.value !== this.value){
-                    this.$emit('change', item.value)
+                const customFields = utils.removeReactivity(this.value)
+                if(_.find(customFields, {id: item.value})){
+                    const index = _.findIndex(customFields, {id: item.value})
+                    customFields.splice(index, 1)
                 }
-                this.$emit('input', item.value)
+                else {
+                    customFields.push({
+                        id: item.value,
+                        value: ''
+                    })
+                }
+                this.$emit('change', customFields)
+                this.$emit('input', customFields)
             },
             edit(item){
                 this.editing = item.value

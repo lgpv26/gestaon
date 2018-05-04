@@ -38,6 +38,9 @@ import store from './vuex/store'
 import moment from 'moment'
 import _ from 'lodash'
 
+/* Set Vue */
+Vue.set(Vue.prototype, '_', _)
+
 /* Resource Configs */
 
 Vue.use(Resource)

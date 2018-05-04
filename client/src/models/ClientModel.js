@@ -1,25 +1,28 @@
 import _ from 'lodash'
-import { ClientAddressModel } from './index'
+import { createClientAddress } from './ClientAddressModel'
 
-export default function(client = {}){
-
-    const tClient =  {
-        id: _.get(client, 'id', null),
-        name: _.get(client, 'name', ''),
-        legalDocument: _.get(client, 'legalDocument', ''),
-    }
-
-    // client addresses
-
-    if(_.has(client, 'clientAddresses') && client.clientAddresses.length){
-        tClient.clientAddresses = _.map(client.clientAddresses, (clientAddress) => {
-            return new ClientAddressModel(clientAddress)
+export class ClientModel {
+    constructor({
+        id = null,
+        name = '',
+        legalDocument = '',
+        clientGroupId = null,
+        clientCustomFields = [],
+        clientAddresses = [],
+        clientPhones = []
+    } = {}){
+        this.id = id
+        this.name = name
+        this.legalDocument = legalDocument
+        this.clientGroupId = clientGroupId
+        this.clientCustomFields = clientCustomFields
+        this.clientPhones = clientPhones
+        this.clientAddresses = _.map(clientAddresses, (clientAddress) => {
+            return _.assign(clientAddress, createClientAddress(clientAddress))
         })
     }
-    else {
-        tClient.clientAddresses = []
-    }
+}
 
-    return tClient
-
+export function createClient(data){
+    return new ClientModel(data)
 }

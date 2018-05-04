@@ -1,12 +1,16 @@
 import _ from 'lodash'
-import { AddressModel } from './index'
+import { createAddress } from './AddressModel'
 
-export default function(clientAddress = {}){
-    return {
-        id: _.get(clientAddress, 'id', null),
-        show: _.get(clientAddress, 'show', false),
-        complement: _.get(clientAddress, 'complement', ''),
-        number: _.get(clientAddress, 'number', ''),
-        address: new AddressModel(_.get(clientAddress, 'address', {}))
+export class ClientAddressFormModel {
+    constructor({ id = null, show = false, complement = '', number = '', address = {} } = {}){
+        this.id = id
+        this.show = show
+        this.complement = complement
+        this.number = number
+        this.address = _.assign(this.address,createAddress(address))
     }
+}
+
+export function createClientAddressForm(data){
+    return new ClientAddressFormModel(data)
 }

@@ -1,19 +1,17 @@
-const basePath = require('./../middlewares/base-path.middleware');
+const basePath = require('./../middlewares/base-path.middleware')
 
 module.exports = (server, restify) => {
 
-    const authGuard = require('./../middlewares/auth-guard.middleware')(server, restify);
+    const authGuard = require('./../middlewares/auth-guard.middleware')(server, restify)
+
+    server.use(basePath(
+        '/client-groups', authGuard
+    ));
 
     /* CRUD */
 
-    server.use(basePath(
-        '/custom-fields', authGuard
-    ));
-
-    /* Users CRUD */
-
-    server.get('/custom-fields', (req, res, next) => {
-        return server.broker.call('data/custom-field.list', {
+    server.get('/client-groups', (req, res, next) => {
+        return server.broker.call('data/client-group.getList', {
             data: {
                 companyId: req.query.companyId
             }
@@ -24,8 +22,8 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.get('/custom-fields/:id', (req, res, next) => {
-        return server.broker.call('data/custom-field.get', {
+    server.get('/client-groups/:id', (req, res, next) => {
+        return server.broker.call('data/client-group.getOne', {
             data: {
                 id: req.params.id,
                 companyId: req.query.companyId
@@ -37,8 +35,8 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.patch('/custom-fields', (req, res, next) => {
-        return server.broker.call('data/custom-field.update', {
+    server.patch('/client-groups', (req, res, next) => {
+        return server.broker.call('data/client-group.update', {
             data: req.body
         }).then((data) => {
             return res.send(200, { data })
@@ -47,8 +45,8 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.del('/custom-fields/:id', (req, res, next) => {
-        return server.broker.call('data/custom-field.remove', {
+    server.del('/client-groups/:id', (req, res, next) => {
+        return server.broker.call('data/client-group.remove', {
             data: {
                 id: req.params.id,
                 companyId: req.query.companyId
@@ -60,4 +58,4 @@ module.exports = (server, restify) => {
         })
     })
 
-};
+}

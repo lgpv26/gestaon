@@ -106,8 +106,8 @@
              */
 
             editClientAddress(clientAddress){
-                clientAddress.show = true
                 this.setClientAddressForm(clientAddress)
+                this.show = true
                 this.syncMultiple(
                     _.map(this.clientAddressForm, (v, k) => {
                         return {

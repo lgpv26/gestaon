@@ -52,46 +52,15 @@
             </div>
         </div>
         <div class="form__side-column">
-            <!--<app-client-phone-form :data="data"></app-client-phone-form>-->
-            <!--
             <div class="form-groups">
-                <div class="form-group">
-                    <app-select class="form-group__header" :verticalOffset="8" :items="customFieldsSelectOptions" v-model="form.clientSelectedCustomFields"
-                        :multiple="true" :showInput="true" @select="onClientCustomFieldSelect($event)" @unselect="onClientCustomFieldUnselect($event)"
-                        @save="onCustomFieldSave($event)">
-                        <div class="header__icon">
-                            <icon-client-details></icon-client-details>
-                        </div>
-                        <span class="static">Informações adicionais</span>
-                        <span class="push-both-sides"></span>
-                        <icon-dropdown class="header__action-icon" v-if="form.clientCustomFields && form.clientCustomFields.length >= 0"></icon-dropdown>
-                        <icon-add class="header__action-icon" v-else></icon-add>
-                        <template slot="item" slot-scope="itemProps">
-                            <span>{{itemProps.text }}</span>
-                            <div style="margin-left: 8px;" v-if="itemProps.isRemovable" @click="removeCustomField(itemProps.value)">
-                                <icon-remove></icon-remove>
-                            </div>
-                        </template>
-                    </app-select>
-                    <div class="form-group__content" v-if="form.clientCustomFields && form.clientCustomFields.length > 0">
-                        <ul class="content__list--mini">
-                            <li class="list__item" v-for="clientCustomField in form.clientCustomFields">
-                                <span style="white-space: nowrap">{{ clientCustomField.customField.name }}</span>
-                                <div class="item__mini-circle"></div>
-                                <input type="text" placeholder="..." v-model="clientCustomField.value" @input="onClientCustomFieldInput(clientCustomField)" class="input--borderless" />
-                                <span class="push-both-sides"></span>
-                                <icon-remove style="flex-shrink: 0;"></icon-remove>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                <app-client-phone-form></app-client-phone-form>
             </div>
-            -->
-            <!--
             <div class="form-groups">
-                <app-client-group-form :clientGroup="client.clientGroup" :data="data"></app-client-group-form>
+                <app-client-custom-field-form></app-client-custom-field-form>
             </div>
-            -->
+            <div class="form-groups">
+                <app-client-group-form></app-client-group-form>
+            </div>
         </div>
     </div>
 </template>
@@ -102,6 +71,7 @@
     import _ from 'lodash'
     import utils from '@/utils'
     import DraftMixin from '../../DraftMixin'
+    import ClientCustomFieldForm from './ClientCustomFieldForm.vue'
     import ClientAddressForm from './ClientAddressForm.vue'
     import ClientPhoneForm from './ClientPhoneForm.vue'
     import ClientGroupForm from './ClientGroupForm.vue'
@@ -123,6 +93,7 @@
             'app-client-address-types-input': ClientAddressTypesInput,
             'app-client-phone-form': ClientPhoneForm,
             'app-client-group-form': ClientGroupForm,
+            'app-client-custom-field-form': ClientCustomFieldForm,
             'app-client-addresses': ClientAddresses
         },
         props: [],

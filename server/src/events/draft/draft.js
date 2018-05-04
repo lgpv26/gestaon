@@ -62,8 +62,15 @@ module.exports = class Draft {
         vm.socket.instance.on('draft.setData', (evData) => {
             if (_.isArray(evData.data)) {
                 evData.data.forEach((dataObj) => {
-                    if(_.has(dataObj,'remove') && dataObj.remove){ // if it has to be removed
-                        _.unset(vm.draft.data, dataObj.path)
+                    if(_.get(dataObj,'remove', false)){ // if it has to be removed
+                        const containerToRemoveKey = _.get(vm.draft.data, dataObj.path)
+                        if(_.isArray(containerToRemoveKey)){
+                            containerToRemoveKey.splice(dataObj.key, 1)
+                            _.set(vm.draft.data, dataObj.path, containerToRemoveKey)
+                        }
+                        else if(_.isObject(containerToRemoveKey)){
+                            _.unset(vm.draft.data, dataObj.path)
+                        }
                     }
                     else {
                         _.set(vm.draft.data, dataObj.path, dataObj.value)
@@ -71,8 +78,15 @@ module.exports = class Draft {
                 })
             }
             else if (_.isObject(evData.data)) {
-                if(_.has(evData.data,'remove') && evData.data.remove) {
-                    _.unset(vm.draft.data, evData.data.path)
+                if(_.get(evData.data,'remove', false)) {
+                    const containerToRemoveKey = _.get(vm.draft.data, evData.data.path)
+                    if(_.isArray(containerToRemoveKey)){
+                        containerToRemoveKey.splice(evData.data.key, 1)
+                        _.set(vm.draft.data, evData.data.path, containerToRemoveKey)
+                    }
+                    else if(_.isObject(containerToRemoveKey)){
+                        _.unset(vm.draft.data, evData.data.path)
+                    }
                 }
                 else {
                     _.set(vm.draft.data, evData.data.path, evData.data.value)

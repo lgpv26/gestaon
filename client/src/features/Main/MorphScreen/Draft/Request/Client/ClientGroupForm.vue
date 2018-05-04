@@ -1,63 +1,73 @@
 <template>
-    <div class="form-group">
-        <app-select class="form-group__header" title="Grupo de cliente" :verticalOffset="8" :items="clientGroupSelectItems" v-model="clientGroup.selected" :showInput="true" @change="changeSelected()">
-            <div class="header__icon">
-                <icon-client-group></icon-client-group>
+    <app-client-group-select v-model="clientGroupId" :items="items" @change="change($event)">
+        <div style="cursor: pointer; display: flex; flex-direction: row; align-items: center;" class="form-group">
+            <div class="header__icon" style="margin-right: 8px;">
+                <icon-client-group style="position: relative; top: 2px;"></icon-client-group>
             </div>
             <span class="static" v-if="!selectedClientGroup">Grupo de cliente</span>
             <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</span>
             <span class="push-both-sides"></span>
             <icon-dropdown class="header__action-icon"></icon-dropdown>
-            <template slot="item" slot-scope="itemProps">
-                <span>{{itemProps.text }}</span>
-            </template>
-        </app-select>
-    </div>
+        </div>
+    </app-client-group-select>
 </template>
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash'
     import utils from '@/utils/index'
     import Vue from 'vue'
+    import ClientGroupsAPI from '@/api/client-groups'
+
+    import DraftMixin from '../../DraftMixin'
+
+    import ClientGroupSelect from '../../_Shared/ClientGroupSelect.vue'
+
+    const { mapFields } = createHelpers({
+        getterType: 'draft/request/getField',
+        mutationType: 'draft/request/updateField',
+    })
 
     export default {
-        props: ['clientGroup','data'],
+        props: [],
+        components: {
+            'app-client-group-select': ClientGroupSelect
+        },
+        mixins: [DraftMixin],
         data(){
             return {
-                clientGroupSelectItems: []
-            }
-        },
-        watch: {
-            'data.clientGroups': function(clientGroups){
-                this.clientGroupSelectItems = _.map(clientGroups, (clientGroup) => {
-                    return {
-                        value: clientGroup.id,
-                        text: clientGroup.name
-                    }
-                })
+                items: [],
+                formPath: 'request.client'
             }
         },
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company']),
+            ...mapFields([
+                'form.client.clientGroupId'
+            ]),
             selectedClientGroup(){
-                if(this.clientGroup.selected){
-                    return _.find(this.clientGroupSelectItems, { value: this.clientGroup.selected })
-                }
-                return false
+                return _.find(this.items, { value: this.clientGroupId })
             }
         },
         methods: {
-
             ...mapActions('toast', ['showToast', 'showError']),
-            changeSelected(){
-                console.log("Changing selected client group")
+            change(clientGroupId){
+                this.clientGroupId = clientGroupId
+                this.sync(this.clientGroupId, 'clientGroupId')
             }
-
         },
         created(){
             const vm = this
+            ClientGroupsAPI.getList({ companyId: this.company.id }).then(({data}) => {
+                vm.items = _.map(data, (clientGroup) => {
+                    return {
+                        value: clientGroup.id,
+                        text: clientGroup.name
+                    }
+                })
+            })
         }
     }
 </script>

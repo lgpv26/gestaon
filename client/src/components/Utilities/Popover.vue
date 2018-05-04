@@ -1,5 +1,5 @@
 <template>
-    <div class="popover-component">
+    <div class="popover-component" style="flex-grow: 1;">
         <div ref="content" :style="style" class="popover-content popover-shadow" :class="{hidden: !visible && !forceVisible}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
             <slot name="content">
             </slot>
