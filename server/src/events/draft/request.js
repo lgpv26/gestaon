@@ -28,10 +28,31 @@ module.exports = class Request extends Draft {
         vm.socket.instance.on('draft/request.client.select', (evData) => {
             // call the service to get a client's data
             vm.server.broker.call('data/client.get', {
-                data: {
+                where: {
                     companyId: vm.socket.activeCompany.id,
                     id: evData.clientId
-                }
+                },
+                include: [{
+                    model: this.server.mysql.ClientPhone,
+                    as: 'clientPhones'
+                }, {
+                    model: this.server.mysql.ClientAddress,
+                    as: 'clientAddresses',
+                    include: [{
+                        model: this.server.mysql.Address,
+                        as: 'address'
+                    }]
+                }, {
+                    model: this.server.mysql.ClientCustomField,
+                    as: 'clientCustomFields',
+                    include: [{
+                        model: this.server.mysql.CustomField,
+                        as: 'customField'
+                    }]
+                }, {
+                    model: this.server.mysql.ClientGroup,
+                    as: 'clientGroup'
+                }]
             }).then((client) => {
                 vm.server.io.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.client.select', new EventResponse(client))
             })

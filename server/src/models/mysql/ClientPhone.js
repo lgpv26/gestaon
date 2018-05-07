@@ -14,21 +14,11 @@ module.exports = {
                 clientId: {
                     type: Sequelize.INTEGER
                 },
-                ddd: {
-                    type: Sequelize.STRING,
-                    validate: {
-                        isValidDDD(value){
-                            if(parseInt(value) <= 9 || parseInt(value) > 99){
-                                throw new Error('DDD inválido!');
-                            }
-                        }
-                    }
-                },
                 number: {
                     type: Sequelize.STRING,
                     validate: {
                         isValidPhoneNumber(value){
-                            if(parseInt(value) <= 9999999 || parseInt(value) > 999999999){
+                            if(parseInt(value) <= 999999999 || parseInt(value) > 99999999999){
                                 throw new Error('Número de telefone/celular inválido!');
                             }
                         }
