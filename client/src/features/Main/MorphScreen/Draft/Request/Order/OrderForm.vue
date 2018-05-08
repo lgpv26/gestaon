@@ -2,99 +2,47 @@
     <div style="display: flex; flex-grow: 1; flex-direction: row">
             <div class="form__main-column" style="display: flex; flex-direction: column; margin-right: 10px;">
                 <div class="form-groups">
-                    <div class="form-group" style="padding: 0; background: transparent;">
-                        <div class="form-group__content">
-                            <table class="order-products" style="width: 100%; text-align: left;">
-                                <thead>
-                                    <tr>
-                                        <th>Produto</th>
-                                        <th class="content-size" style="text-align: center; width: 40px;">Qnt.</th>
-                                        <th style="text-align: right; width: 90px;">Valor Un.</th>
-                                        <th style="text-align: right; width: 120px;">Desc. Un.</th>
-                                        <th style="text-align: right; width: 120px;">Subtotal</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(orderProduct, index) in form.orderProducts" :key="orderProduct.id">
-                                        <td><app-product-input :orderProduct.sync="orderProduct" :product.sync="orderProduct.product" @input="onOrderProductInput($event, orderProduct, index)" /></td>
-                                        <td class="content-size"><input v-model="orderProduct.quantity" type="text" style="text-align: center;" /></td>
-                                        <td><money v-model="form.price"  style="text-align: right;"/></td>
-                                        <td><money v-model="form.price" type="text" style="text-align: right;" /></td>
-                                        <td><money v-model="form.price" type="text" style="text-align: right;" /></td>
-                                        <td style="text-align: center; cursor: pointer; width: 30px;">
-                                            <div style="display: flex; flex-direction: row; margin-top: -4px;">
-                                                <div style="cursor: pointer; margin-right: 8px;">
-                                                    <icon-mini-chart></icon-mini-chart>
-                                                </div>
-                                                <div style="cursor: pointer; margin-top: -1px;" @click="removeProduct(orderProduct.id)" v-if="form.orderProducts.length > 1">
-                                                    <icon-remove></icon-remove>
-                                                </div>
-                                                <div style="cursor: not-allowed; opacity: .3; margin-top: -1px;" v-else>
-                                                    <icon-remove></icon-remove>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="3">
-                                            <a class="btn btn--border-only" @click="addProduct" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Adicionar produto</a>
-                                        </td>
-                                        <td style="text-align: right; font-weight: 800;">R$ XX,XX</td>
-                                        <td style="text-align: right; font-weight: 800; color: var(--font-color--secondary)">R$ XX,XX</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div class="content__separator"></div>
-                            <table class="order-payment-method" style="width: 100%; text-align: left;">
-                                <thead>
-                                <tr>
-                                    <th>Forma de pagamento</th>
-                                    <th style="text-align: right; width: 120px;">Desc. Extra</th>
-                                    <th style="text-align: right; width: 120px;">Total a pagar</th>
-                                    <th></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(orderPaymentMethod, index) in form.orderPaymentMethods" :key="orderPaymentMethod.id">
-                                        <td><app-payment-method-input v-model="form.paymentMethodId" /></td>
-                                        <td><money v-model="form.price" type="text" style="text-align: right;" /></td>
-                                        <td><money v-model="form.price" type="text" style="text-align: right; color: var(--font-color--primary)" /></td>
-                                        <td style="text-align: center; cursor: pointer; width: 30px; padding-right: 0;">
-                                            <div style="display: flex; flex-direction: row; margin-top: -4px;">
-                                                <div style="cursor: pointer; margin-top: -2px;" @click="removePaymentMethod(orderPaymentMethod.id)" v-if="form.orderPaymentMethods.length > 1">
-                                                    <icon-remove></icon-remove>
-                                                </div>
-                                                <div style="cursor: not-allowed; opacity: .3; margin-top: -2px;" v-else>
-                                                    <icon-remove></icon-remove>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="1">
-                                            <a class="btn btn--border-only" @click="addPaymentMethod" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Incluir pagamento</a>
-                                        </td>
-                                        <td style="text-align: right; font-weight: 600;">Saldo</td>
-                                        <td style="text-align: right; font-weight: 800; color: var(--font-color--secondary)">R$ XX,XX</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <app-order-products-form></app-order-products-form>
+                    <!--
+                    <div class="content__separator"></div>
+                    <table class="order-payment-method" style="width: 100%; text-align: left;">
+                        <thead>
+                        <tr>
+                            <th>Forma de pagamento</th>
+                            <th style="text-align: right; width: 120px;">Desc. Extra</th>
+                            <th style="text-align: right; width: 120px;">Total a pagar</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(orderPaymentMethod, index) in form.orderPaymentMethods" :key="orderPaymentMethod.id">
+                                <td><app-payment-method-input v-model="form.paymentMethodId" /></td>
+                                <td><money v-model="form.price" type="text" style="text-align: right;" /></td>
+                                <td><money v-model="form.price" type="text" style="text-align: right; color: var(--font-color--primary)" /></td>
+                                <td style="text-align: center; cursor: pointer; width: 30px; padding-right: 0;">
+                                    <div style="display: flex; flex-direction: row; margin-top: -4px;">
+                                        <div style="cursor: pointer; margin-top: -2px;" @click="removePaymentMethod(orderPaymentMethod.id)" v-if="form.orderPaymentMethods.length > 1">
+                                            <icon-remove></icon-remove>
+                                        </div>
+                                        <div style="cursor: not-allowed; opacity: .3; margin-top: -2px;" v-else>
+                                            <icon-remove></icon-remove>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="1">
+                                    <a class="btn btn--border-only" @click="addPaymentMethod" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Incluir pagamento</a>
+                                </td>
+                                <td style="text-align: right; font-weight: 600;">Saldo</td>
+                                <td style="text-align: right; font-weight: 800; color: var(--font-color--secondary)">R$ XX,XX</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    -->
                 </div>
                 <span class="push-both-sides"></span>
-                <div class="form-groups">
-                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
-                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
-                            Observação do pedido
-                        </label>
-                        <input type="text" style="width: initial;" class="input--borderless" placeholder="..."
-                        v-model="order.obs" @input="commitSocketChanges('order.obs')"/>
-                    </div>
-                </div>
                 <div class="form-groups">
                     <div class="form-group" style="flex-grow: 1; flex-direction: row;">
                         <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
@@ -102,6 +50,28 @@
                         </label>
                         <span class="push-both-sides"></span>
                         <app-divulgation-channel-input></app-divulgation-channel-input>
+                    </div>
+                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
+                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px; white-space: nowrap">
+                            Hora da entrega
+                        </label>
+                        <app-datetime-selector class="input--borderless" v-model="datetime" :config="datetimeSelectorConfig" placeholder="..."></app-datetime-selector>
+                    </div>
+                </div>
+                <div class="form-groups">
+                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
+                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
+                            Observação do pedido
+                        </label>
+                        <input type="text" style="width: initial;" class="input--borderless" placeholder="..."
+                               v-model="obs" @input="sync(obs,'obs','request')"/>
+                    </div>
+                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
+                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
+                            Responsável
+                        </label>
+                        <span class="push-both-sides"></span>
+                        <app-employee-input></app-employee-input>
                     </div>
                 </div>
             </div>
@@ -179,152 +149,61 @@
                         </div>
                     </div>
                 </div>
-                <span class="push-both-sides"></span>
-                <div class="form-groups">
-                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
-                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
-                            Responsável
-                        </label>
-                        <span class="push-both-sides"></span>
-                        <app-employee-input></app-employee-input>
-                    </div>
-                </div>
             </div>
     </div>
 </template>
 
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash';
     import Highcharts from 'highcharts';
-    import ProductInput from './ProductInput.vue';
-    import PaymentMethodInput from './PaymentMethodInput.vue';
+    import OrderProductsForm from './OrderProductsForm.vue';
     import EmployeeInput from './EmployeeInput.vue';
     import StorageInput from './StorageInput.vue';
-    import DivulgationChannelInput from './DivulgationChannelInput.vue';
-    import ProductsAPI from '@/api/products';
+    import DivulgationChannelInput from './DivulgationChannelInput.vue'
+    import DraftMixin from '../../DraftMixin'
+
+    import { Portuguese } from 'flatpickr/dist/l10n/pt'
+
+    const { mapFields } = createHelpers({
+        getterType: 'draft/request/getField',
+        mutationType: 'draft/request/updateField',
+    })
 
     export default {
         components: {
-            'app-product-input': ProductInput,
-            'app-payment-method-input': PaymentMethodInput,
+            'app-order-products-form': OrderProductsForm,
             'app-employee-input': EmployeeInput,
-            'app-storage-input': StorageInput,
             'app-divulgation-channel-input': DivulgationChannelInput
         },
-        props: ['order','activeStep'],
+        mixins: [DraftMixin],
         data(){
             return {
                 activeTab: 'chart',
                 productChart: null,
-                form: {
-                    paymentMethodId: null,
-                    orderProducts: [
-                    ],
-                    orderPaymentMethods: [
-                        {
-                            id: _.uniqueId("payment-method#"),
-                            paymentMethodId: null
-                        }
-                    ],
-                    price: 0
+                datetime: null,
+                datetimeSelectorConfig: {
+                    dateFormat: 'd/m/Y H:i',
+                    locale: Portuguese,
+                    time_24hr: true,
+                    enableTime: true
                 },
-                searchProducts: []
+                formPath: 'request.order'
             }
         },
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
-            isCurrentStepActive(){
-                return this.activeStep === 'order';
-            }
-        },
-        watch: {
-            form: {
-                handler: function(form) {
-                    this.syncWithParentForm();
-                },
-                deep: true
-            }
-        },
-        sockets: {
-
+            ...mapFields([
+                'form.obs',
+            ])
         },
         methods: {
-            /**
-             * Recreating
-             */
-
-            onStepChange(){
-                const vm = this
-                this.$emit('step-change', vm.activeStep)
-            },
-
-            addProduct(){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId
-                };
-                console.log("Emitting draft:order-product-add", emitData);
-                this.$socket.emit('draft:order-product-add', emitData);
-            },
-            addPaymentMethod(){
-                this.form.orderPaymentMethods.push({
-                    id: _.uniqueId("payment-method#"),
-                    paymentMethodId: null
-                })
-            },
-            removeProduct(orderProductId){
-                const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId,
-                    id: orderProductId
-                };
-                console.log("Emitting draft:order-product-remove", emitData);
-                this.$socket.emit('draft:order-product-remove', emitData);
-            },
-            removePaymentMethod(orderPaymentMethodId){
-                let orderPaymentMethodIndex = _.findIndex(this.form.orderPaymentMethods, { id: orderPaymentMethodId });
-                if(orderPaymentMethodIndex !== -1){
-                    this.form.orderPaymentMethods.splice(orderPaymentMethodIndex, 1);
-                }
-            },
             activateTab(tab){
                 this.activeTab = tab;
-            },
-
-            /**
-             * Events
-             */
-
-            // order product
-
-            onOrderProductInput(value, orderProduct, index){
-                this.commitSocketChanges('order.orderProducts[' + index + ']')
-            },
-
-            /**
-             * Real-time
-             */
-
-            commitTrustedSocketChanges(ev, mapping){
-                if(ev.isTrusted){
-                    setImmediate(() => {
-                        this.commitSocketChanges(mapping);
-                    });
-                }
-            },
-            onCurrentStepChanged(value){
-                (this.activeStep === 'order') ? this.$emit('update:activeStep', null) : this.$emit('update:activeStep', 'order');
-                this.commitSocketChanges('activeStep');
-            },
-            syncWithParentForm(){
-                this.$emit('update:order', this.form);
-            },
-            commitSocketChanges(mapping){
-                this.$emit('sync', mapping);
             }
-
         },
         mounted(){
-            this.syncWithParentForm();
             Highcharts.theme = {
                 colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066',
                     '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
@@ -668,7 +547,7 @@
     }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 
     /**
     Main column
@@ -677,23 +556,7 @@
     div.ms-form form .form__side-column {
         width: 400px;
     }
-    .form__main-column .form-group__header {
-        background-image: none;
-        padding-bottom: 0;
-    }
-    .order-products td, .order-products th, table.order-payment-method td, table.order-payment-method th {
-        padding-right: 10px;
-        padding-left: 0;
-        font-weight: initial;
-        padding-bottom: 8px;
-    }
-    .order-products td:last-child, .order-products th:last-child {
-        padding-right: 0;
-    }
-    .order-products td.content-size, .order-products th.content-size {
-        width: 1px;
-        white-space: nowrap;
-    }
+
     .form__side-column .reports .form-group {
         border-top-left-radius: 0;
         margin-bottom: 10px;

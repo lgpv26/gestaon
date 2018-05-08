@@ -27,18 +27,8 @@
                 </div>
             </div>
         </div>
-        <div class="container__body">
-            <span v-show="!draft">Carregando...</span>
-            <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent"></component>
-        </div>
-        <div class="container__actions">
-            <a>Excluir Rascunho</a>
-            <span class="push-both-sides"></span>
-            <a style="margin-right: 20px;" @click="$emit('closeMorphScreen')">Voltar</a>
-            <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
-            <a style="color: var(--font-color--primary)" @click="persistRequest()" v-if="!isPersisting">Salvar request</a>
-            <a style="color: var(--font-color--primary)" v-else>{{ persistingText }}</a>
-        </div>
+        <span v-show="!draft">Carregando...</span>
+        <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent" @close="$emit('closeMorphScreen')"></component>
     </div>
 </template>
 
@@ -141,33 +131,5 @@
 </script>
 
 <style>
-    #draft {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-    }
-
-    .container__header .header__summary > .summary__title {
-        font-weight: 800;
-        line-height: 120%;
-        font-size: 14px;
-        color: var(--terciary-color);
-        text-transform: uppercase;
-    }
-
-    .container__header .header__summary > .summary__title .title__draft-or-definitive {
-        text-transform: initial;
-        font-weight: 600;
-    }
-
-    .container__header .header__summary > .summary__title .title__draft-id {
-        color: var(--base-color);
-        font-weight: 600;
-    }
-
-    .container__header .header__summary > .summary__info > em {
-        font-style: initial;
-        color: var(--primary-color);
-        font-weight: 600;
-    }
+    @import '../../../../assets/styles/draft.scss';
 </style>

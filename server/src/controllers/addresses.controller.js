@@ -18,7 +18,8 @@ module.exports = (server, restify) => {
                     index: 'main',
                     type: 'address',
                     body: {
-                        "from": 0, "size": 10,
+                        "from": 0,
+                        "size": 10,
                         "query": {
                             "bool": {
                                 "must": {

@@ -552,28 +552,4 @@
         border-radius: 5px;
     }
 
-    .morph-screen__container .container__actions {
-        display: flex;
-        flex-direction: row;
-        height: 50px;
-        padding: 0 20px;
-        align-items: center;
-        flex-shrink: 0;
-    }
-
-    .morph-screen__container .container__actions > span em {
-        background-color: transparent;
-        color: var(--font-color--danger)
-    }
-
-    .morph-screen__container .container__actions > a {
-        font-size: 14px;
-        text-transform: uppercase;
-        color: var(--font-color--5);
-        font-weight: initial;
-        cursor: pointer;
-        position: relative;
-        top: 1px;
-    }
-
 </style>

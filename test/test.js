@@ -194,6 +194,7 @@ const request = {
         paymentMethods: [
             { // the id is required, its not possible to create a payment method from a request draft
                 id: 1, // if payment in cash
+                paymentMethod: {},
                 deadline: '', // current date
                 amount: 0.00
             },

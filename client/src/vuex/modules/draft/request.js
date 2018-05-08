@@ -8,9 +8,17 @@ import {createClientAddress} from '@/models/ClientAddressModel'
 import {createClientAddressForm} from '@/models/ClientAddressFormModel'
 import {createAddress} from '@/models/AddressModel'
 
+import {createOrder} from '@/models/OrderModel'
+import {createOrderProduct} from '@/models/OrderProductModel'
+import {createProduct} from '@/models/ProductModel'
+
+import {createRequestPaymentMethod} from '@/models/RequestPaymentMethodModel'
+import {createPaymentMethod} from '@/models/PaymentMethodModel'
+
 const state = {
     form: {
         activeStep: null,
+        obs: '',
         client: {
             id: '',
             name: '',
@@ -35,24 +43,33 @@ const state = {
             clientPhones: []
         },
         order: {
-
+            orderProducts: []
         },
         task: {
-
-        }
+        },
+        requestPaymentMethods: []
     }
 }
 
 const getters = {
-    getField
+    getField,
+    isClientSummaryAvailable(state, getters){
+        if(state.form.activeStep === 'client') return false
+        if(state.form.client.id){
+            return true
+        }
+        else if(state.form.client.name && state.form.client.name.length > 2){
+            return true
+        }
+        return false
+    }
 }
 
-const mutations = {
-    SET_REQUEST(state, request = {}){
-        state.form.activeStep = _.get(request, 'activeStep', null)
-    },
+/* mutations */
+
+const clientMutations = {
     SET_CLIENT(state, client = {}){
-        state.form.client = _.assign(state.form.client,createClient(client))
+        _.assign(state.form.client,createClient(client))
     },
     ADD_CLIENT_ADDRESS(state, clientAddress = {}){
         clientAddress.id = 'tmp/' + shortid.generate()
@@ -76,19 +93,72 @@ const mutations = {
     },
     REMOVE_CLIENT_PHONE(state, clientPhoneId){
         const index = _.findIndex(state.form.client.clientPhones, {id: clientPhoneId})
-        console.log("Chegou aqui com o index", index)
         if(index !== -1){
             state.form.client.clientPhones.splice(index, 1)
         }
     },
+    ADD_CLIENT_PHONE(state, clientPhone = {}){
+        clientPhone.id = 'tmp/' + shortid.generate()
+        state.form.client.clientPhones.push(clientPhone)
+    },
+    REMOVE_CLIENT_PHONE(state, clientPhoneId){
+        const index = _.findIndex(state.form.client.clientPhones, {id: clientPhoneId})
+        if(index !== -1){
+            state.form.client.clientPhones.splice(index, 1)
+        }
+    }
+}
+const orderMutations = {
+    SET_ORDER(state, order = {}){
+        _.assign(state.form.order,createOrder(order))
+    },
+    ADD_ORDER_PRODUCT(state, orderProduct = {}){
+        orderProduct.id = 'tmp/' + shortid.generate()
+        state.form.order.orderProducts.push(createOrderProduct(orderProduct))
+    },
+    REMOVE_ORDER_PRODUCT(state, orderProductId){
+        const index = _.findIndex(state.form.order.orderProducts, {id: orderProductId})
+        if(index !== -1){
+            state.form.order.orderProducts.splice(index, 1)
+        }
+    },
+    SET_ORDER_PRODUCT_PRODUCT(state, {orderProductId,product}){
+        const orderProduct = _.find(state.form.order.orderProducts, {id: orderProductId})
+        if(orderProduct){
+            _.assign(orderProduct.product,createProduct(product))
+        }
+    }
+}
+const mutations = {
+    SET_REQUEST(state, request = {}){
+        state.form.activeStep = _.get(request, 'activeStep', null)
+    },
+    ADD_REQUEST_PAYMENT_METHOD(state, requestPaymentMethod = {}){
+        requestPaymentMethod.id = 'tmp/' + shortid.generate()
+        state.form.requestPaymentMethods.push(createRequestPaymentMethod(requestPaymentMethod))
+    },
+    REMOVE_REQUEST_PAYMENT_METHOD(state, requestPaymentMethodId){
+        const index = _.findIndex(state.form.requestPaymentMethods, {id: requestPaymentMethodId})
+        if(index !== -1){
+            state.form.requestPaymentMethods.splice(index, 1)
+        }
+    },
+    SET_REQUEST_PAYMENT_METHOD_PAYMENT_METHOD(state, {requestPaymentMethodId,paymentMethod}){
+        const requestPaymentMethod = _.find(state.form.requestPaymentMethods, {id: requestPaymentMethodId})
+        if(requestPaymentMethod){
+            _.assign(requestPaymentMethod.paymentMethod,createPaymentMethod(paymentMethod))
+        }
+    },
+    ...clientMutations,
+    ...orderMutations,
     updateField
 }
 
-const actions = {
-    setRequest(context, request){
-        context.commit('SET_REQUEST', request || {})
-        context.commit('SET_CLIENT', _.get(request, 'client', {}))
-        context.commit('SET_CLIENT_ADDRESS_FORM', _.get(request, 'client.clientAddressForm', {}))
+/* actions */
+
+const clientActions = {
+    persistenceClient(context, client){
+        console.log(client)
     },
     setClient(context, client){
         context.commit('SET_CLIENT', client)
@@ -111,7 +181,40 @@ const actions = {
     },
     removeClientPhone(context, clientPhoneId){
         context.commit('REMOVE_CLIENT_PHONE', clientPhoneId)
+    }
+}
+const orderActions = {
+    setOrder(context, order){
+        context.commit('SET_ORDER', order)
     },
+    addOrderProduct(context, orderProduct){
+        context.commit('ADD_ORDER_PRODUCT', orderProduct)
+    },
+    removeOrderProduct(context, orderProductId){
+        context.commit('REMOVE_ORDER_PRODUCT', orderProductId)
+    },
+    setOrderProductProduct(context, {orderProductId, product}){
+        context.commit('SET_ORDER_PRODUCT_PRODUCT', {orderProductId, product})
+    },
+}
+const actions = {
+    setRequest(context, request){
+        context.commit('SET_REQUEST', request || {})
+        context.commit('SET_CLIENT', _.get(request, 'client', {}))
+        context.commit('SET_CLIENT_ADDRESS_FORM', _.get(request, 'client.clientAddressForm', {}))
+        context.commit('SET_ORDER', _.get(request, 'order', {}))
+    },
+    addRequestPaymentMethod(context, requestPaymentMethod){
+        context.commit('ADD_REQUEST_PAYMENT_METHOD', requestPaymentMethod)
+    },
+    removeRequestPaymentMethod(context, requestPaymentMethodId){
+        context.commit('REMOVE_REQUEST_PAYMENT_METHOD', requestPaymentMethodId)
+    },
+    setRequestPaymentMethodPaymentMethod(context, {requestPaymentMethodId, paymentMethod}){
+        context.commit('SET_REQUEST_PAYMENT_METHOD_PAYMENT_METHOD', {requestPaymentMethodId, paymentMethod})
+    },
+    ...clientActions,
+    ...orderActions
 }
 
 export default {

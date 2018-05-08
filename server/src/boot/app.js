@@ -86,6 +86,7 @@ di.server.broker.createService(require('../services/data/product.service')(di.se
 di.server.broker.createService(require('../services/data/client-group.service')(di.server))
 di.server.broker.createService(require('../services/data/custom-field.service')(di.server))
 di.server.broker.createService(require('../services/data/address.service')(di.server))
+di.server.broker.createService(require('../services/data/payment-method.service')(di.server))
 di.server.broker.createService(require('../services/draft/index.service')(di.server))
 
 di.server.broker.createService(require('../services/draft/request/persistence.service')(di.server))

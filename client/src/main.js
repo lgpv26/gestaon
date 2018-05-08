@@ -5,6 +5,8 @@ import './assets/fonts/montserrat.css'
 import 'material-icons/css/material-icons.min.css'
 import 'izitoast/dist/css/iziToast.min.css'
 import 'smooth-scrollbar/dist/smooth-scrollbar.css'
+import 'flatpickr/dist/flatpickr.css'
+import 'flatpickr/dist/themes/airbnb.css'
 import './assets/styles/reset.css'
 import './assets/styles/main.css'
 import './assets/styles/dark-theme.css'
@@ -91,6 +93,8 @@ Vue.use(Router);
 
 /* Components */
 
+import FlatPickrComponent from 'vue-flatpickr-component'
+Vue.component("app-datetime-selector", FlatPickrComponent)
 import PanelLoadingComponent from './components/Utilities/PanelLoading.vue';
 Vue.component("app-panel-loading", PanelLoadingComponent);
 import SelectComponent from './components/Inputs/Select.vue';

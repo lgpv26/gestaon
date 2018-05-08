@@ -2,10 +2,10 @@ import Sequelize from 'sequelize'
 
 module.exports = {
     defineModel: (server) => {
-        const modelName = 'PaymentMethod';
+        const modelName = 'PromotionChannel';
         return {
             name: modelName,
-            instance: server.sequelize.define(modelName, {
+            instance: server.sequelize.define('promotionChannel', {
                 id: {
                     type: Sequelize.INTEGER,
                     primaryKey: true,
@@ -16,42 +16,22 @@ module.exports = {
                 },
                 name: {
                     type: Sequelize.STRING,
+                    allowNull: false,
                     set(val) {
                         this.setDataValue('name', (val === '' || val === null) ? null : val.toUpperCase().trim());
                     }
                 },
-                rule: {
-                    type: Sequelize.STRING
-                },
-                tax: {
-                    type: Sequelize.DECIMAL(10,2),
-                    default: null
-                },
-                taxUnit: {
-                    type: Sequelize.STRING,
-                    default: '%'
-                },
-                autoPay: {
-                    type: Sequelize.INTEGER,
-                    default: 0
-                },
                 dateUpdated: {
-                    type: Sequelize.DATE,
-                    default: null
+                    type: Sequelize.DATE
                 },
                 dateCreated: {
                     type: Sequelize.DATE
                 },
                 dateRemoved: {
-                    type: Sequelize.DATE,
-                    default: null
-                },
-                status: {
-                    type: Sequelize.STRING,
-                    default: 'activated'
+                    type: Sequelize.DATE
                 }
             }, {
-                tableName: "payment_method",
+                tableName: 'promotion_channel',
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -61,6 +41,6 @@ module.exports = {
             })
         }
     },
-    postSettings: ({ }) => {
+    postSettings: ({}) => {
     }
-}
+};

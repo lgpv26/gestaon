@@ -376,7 +376,11 @@ li.router-link-active svg.icon {
     z-index: 9999999;
 }
 
+/* Vue Flatpickr */
 
+.flatpickr-calendar.animate.open {
+    z-index: 999999
+}
 
 /* Vue Tippy theme */
 

@@ -18,7 +18,7 @@ const mutations = {
 
 const actions = {
     loadAll(context, { companyId }){
-        PaymentMethodsAPI.getAll({
+        PaymentMethodsAPI.getList({
             companyId: companyId
         }).then(({data}) => {
             context.commit('SET_PAYMENT_METHODS', data)

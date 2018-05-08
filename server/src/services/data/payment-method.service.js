@@ -2,10 +2,10 @@ import _ from 'lodash'
 import {Op} from 'sequelize'
 
 module.exports = (server) => { return {
-    name: "data/custom-field",
+    name: "data/payment-method",
     actions: {
         get(ctx) {
-            return server.mysql.CustomField.findOne({
+            return server.mysql.PaymentMethod.findOne({
                 where: {
                     id: ctx.params.data.id,
                     companyId: {
@@ -21,7 +21,7 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} requests
          */
         list(ctx){
-            return server.mysql.CustomField.findAll({
+            return server.mysql.PaymentMethod.findAll({
                 where: {
                     companyId: {
                         [Op.in]: [0,ctx.params.data.companyId]
@@ -30,23 +30,25 @@ module.exports = (server) => { return {
             })
         },
         create(ctx){
-            return server.mysql.CustomField.create(ctx.params.data)
+            return server.mysql.PaymentMethod.create(ctx.params.data)
         },
         update(ctx){
-            return server.mysql.CustomField.update(ctx.params.data,{
+            return server.mysql.PaymentMethod.update(ctx.params.data,{
                 where: {
                     id: ctx.params.data.id,
                     companyId: ctx.params.data.companyId
                 }
             }).then((customField) => {
                 if(!customField){
-                    throw new Error("Nenhum registro encontrado.")
+                    return next(
+                        new Error("Nenhum registro encontrado.")
+                    )
                 }
-                return server.mysql.CustomField.findById(ctx.params.data.id)
-            })
+                return server.mysql.PaymentMethod.findById(ctx.params.data.id)
+            });
         },
         remove(ctx){
-            return server.mysql.CustomField.destroy({
+            return server.mysql.PaymentMethod.destroy({
                 where: {
                     id: ctx.params.data.id,
                     companyId: ctx.params.data.companyId

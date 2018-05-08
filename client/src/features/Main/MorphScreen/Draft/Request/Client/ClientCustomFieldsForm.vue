@@ -14,7 +14,7 @@
             <div class="dashed-line"></div>
             <ul class="content__list--mini">
                 <li class="list__item" v-for="(clientCustomFieldRow, index) in clientCustomFieldRows">
-                    <span style="white-space: nowrap">{{ _.find(items, { value: clientCustomFieldRow.id }).text }}</span>
+                    <span style="white-space: nowrap">{{ customFieldNames[index] }}</span>
                     <div class="item__mini-circle"></div>
                     <input type="text" placeholder="..." v-model="clientCustomFieldRow.value"
                            @input="inputClientCustomFieldRowValue(index, clientCustomFieldRow.value)" class="input--borderless" />
@@ -65,6 +65,17 @@
                 clientCustomFieldRows: 'form.client.clientCustomFields'
             }),
             ...mapFields(['form.client.clientCustomFields']),
+            customFieldNames(){
+                return _.map(this.clientCustomFieldRows, (clientCustomFieldRow) => {
+                    const item = _.find(this.items, {value: clientCustomFieldRow.id})
+                    if(item){
+                        return item.text
+                    }
+                    else {
+                        return ''
+                    }
+                })
+            }
         },
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
