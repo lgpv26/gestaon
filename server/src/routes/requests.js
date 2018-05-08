@@ -65,6 +65,14 @@ module.exports = (server, restify) => {
         })
     })
 
+    server.post('/requests/persistence', (req, res, next) => {
+        return server.broker.call('draft/request/persistence.start', {
+            request: req.body
+        }).then((request) => {
+            return res.send(200, request)
+        }).catch((err) => {
+            console.log(err)
+        })
+    })
 
-
-};
+}

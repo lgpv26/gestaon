@@ -36,7 +36,7 @@ module.exports = (server) => {
                     return JSON.parse(JSON.stringify(client))
                 }).catch(() => {
                     console.log("Nenhum registro encontrado. Create.")
-                    throw new MoleculerError
+                    throw new Error("Nenhum registro encontrado.")
                 })
             },
             /**
@@ -50,7 +50,7 @@ module.exports = (server) => {
                 }).then((updated) => {
                     if (parseInt(_.toString(updated)) < 1 ) {
                         console.log("Nenhum registro encontrado. Update.")
-                        throw new MoleculerError
+                        throw new Error("Nenhum registro encontrado.")
                     }
                     return server.mysql.Client.findById(ctx.params.data.id, {
                             transaction: ctx.params.transaction
@@ -79,17 +79,17 @@ module.exports = (server) => {
              * @param {Object} data, {Object} transaction
              * @returns {Promise.<Array>} clientAddresses
              */
-            setClientAddress(ctx) {
+            setClientAddresses(ctx) {
                 return ctx.call("data/address.saveAddresses", {
                     data: ctx.params.data,
-                    companyId: 1, //HARD CODED
+                    companyId: ctx.params.data.companyId, 
                     transaction: ctx.params.transaction
                 }).then((clientAddressWithAddress) => {
-                    let clientAddressData = []
+                    let clientAddresses = []
                     clientAddressWithAddress.forEach((result) => {
-                        clientAddressData.push({
+                        clientAddresses.push({
                             id: (result.id) ? result.id : null,
-                            status: (result.selected) ? 'selected' : 'activated',
+                            status: 'activated',
                             clientId: parseInt(ctx.params.data.clientId),
                             addressId: parseInt(result.address.id),
                             name: (result.name) ? result.name : null,
@@ -99,18 +99,16 @@ module.exports = (server) => {
                     })
 
                     return ctx.call("data/client.saveClientAddresses", {
-                        data: clientAddressData,
+                        data: clientAddresses,
                         clientId: parseInt(ctx.params.data.clientId),
                         transaction: ctx.params.transaction
                     }).then((clientAddresses) => {
                         return clientAddresses
                     }).catch((err) => {
-                        console.log("Erro em: data/client.saveClientAddresses")
-                        throw new MoleculerError
+                        throw new Error("Nenhum registro encontrado.")
                     }) 
                 }).catch((err) => {
-                    console.log("Erro em: data/address.saveAddresses")
-                    throw new MoleculerError
+                    throw new Error(err)                    
                 })
             },
             /**
@@ -134,7 +132,7 @@ module.exports = (server) => {
                     }).then((response) => {
                         if (!response) {
                             console.log('Registro não encontrado. data/client.saveClientAddresses')
-                            throw new MoleculerError
+                            throw new Error("Nenhum registro encontrado.")
                         }
                        return response
                     }).catch((err) => {
@@ -158,13 +156,13 @@ module.exports = (server) => {
                     transaction: ctx.params.transaction
                 }).then(() => {
                     return server.mysql.ClientPhone.bulkCreate(ctx.params.data, {
-                        updateOnDuplicate: ['clientId', 'name', 'ddd', 'number', 'dateUpdated', 'dateRemoved', 'status'],
+                        updateOnDuplicate: ['clientId', 'name', 'number', 'dateUpdated', 'dateRemoved', 'status'],
                         returning: true,
                         transaction: ctx.params.transaction
                     }).then((response) => {
                         if (!response) {
                             console.log('Registro não encontrado. data/client.saveClientPhones')
-                            throw new MoleculerError
+                            throw new Error("Nenhum registro encontrado.")
                         }
                         return response
                     }).catch((err) => {

@@ -47,7 +47,7 @@ module.exports = (server) => { return {
             }).then((address) => {
                 if(!address){
                     console.log("Nenhum registro encontrado. Create.")
-                    throw new MoleculerError
+                    throw new Error("Nenhum registro encontrado.")
                 }
                 return JSON.parse(JSON.stringify(address))
             })
@@ -63,7 +63,7 @@ module.exports = (server) => { return {
             }).then((addressUpdate) => {
                 if(parseInt(_.toString(addressUpdate)) < 1 ){
                     console.log("Nenhum registro encontrado. Update.")
-                    throw new MoleculerError
+                    throw new Error("Nenhum registro encontrado.")
                 }
                 return server.mysql.Address.findById(ctx.params.data.id, {
                     transaction: ctx.params.transaction
@@ -86,15 +86,15 @@ module.exports = (server) => { return {
                 * Get addresses and verify if address can or cant change (companyId = 0)
                 */  
                 return new Promise((resolve, reject) => {
-                    let setData = _.cloneDeep(ctx.params.data)
+                    let data = ctx.params.data
 
                     let addressesIds = []
-                    setData.forEach((forEachAddress, index) => {
+                    data.forEach((forEachAddress, index) => {
                         if (forEachAddress.address.id) {
                             addressesIds.push(forEachAddress.address.id)
                         }
                         else {
-                            setData[index].address.companyId = parseInt(ctx.params.data.companyId)
+                            data[index].address.companyId = parseInt(ctx.params.data.companyId)
                         }
                     })
 
@@ -107,22 +107,22 @@ module.exports = (server) => { return {
                         transaction: ctx.params.transaction
                     }).then((addressesConsult) => {
                         addressesConsult.forEach((result) => {
-                            const index = _.findIndex(setData, (addressesFind) => {
+                            const index = _.findIndex(data, (addressesFind) => {
                                 return addressesFind.address.id === result.id
                             })
                             if (result.companyId === 0) {
-                                addressCantChange.push(_.assign(setData[index], { address: JSON.parse(JSON.stringify(result)) }))
-                                setData.splice(index, 1)
+                                addressCantChange.push(_.assign(data[index], { address: JSON.parse(JSON.stringify(result)) }))
+                                data.splice(index, 1)
                             }
                         })
-                        resolve(setData)
+                        resolve(data)
                     })
-                }).then((setData) => {
+                }).then((data) => {
                 /*
                 * Create or Update the allow Address
                 */
                     let addressChangePromises = []
-                    setData.forEach((clientAddress) => {
+                    data.forEach((clientAddress) => {
                         if (clientAddress.address.id) {
                             addressChangePromises.push(ctx.call("data/address.update", {
                                 data: clientAddress.address,
@@ -159,7 +159,7 @@ module.exports = (server) => { return {
                 return _.concat((response) ? response : [], (addressCantChange) ? addressCantChange : [])
             }).catch((err) => {
                 console.log("Erro em: data/address.saveAddresses")
-                throw new MoleculerError
+                throw new Error(err)
             })
         }
     }

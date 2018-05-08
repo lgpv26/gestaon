@@ -341,3 +341,77 @@ const ev = {
 
     }
 }
+
+// PERSISTANCE 
+
+const request =  {
+        client: {
+            id: 7,
+            name: 'MAILON RUAN DE LIMA',
+            legalDocument: '06941033908',
+            clientAddresses: [ 
+                {
+                    "id" : 41,
+                    "complement" : "CASA",
+                    "number" : 70,
+                    "address" : {
+                        "id" : 50594,
+                        "name" : "RUA ONESIO FRANCISCO DE FARIAS",
+                        "cep" : "87140000",
+                        "neighborhood" : "CENTRO",
+                        "city" : "PAIÇANDU",
+                        "state" : "PR"
+                    }
+                }, 
+                {
+                    "id" : 67,
+                    "complement" : "APTO 806",
+                    "number" : 1733,
+                    "address" : {
+                        "id" : 50596,
+                        "name" : "AVENIDA PIONEIRO ANTONIO RUIZ SALDANHA",
+                        "cep" : "87065303",
+                        "neighborhood" : "JARDIM DAS ESTAÇÕES",
+                        "city" : "MARINGÁ",
+                        "state" : "PR"
+                    }
+                }
+            ],
+            clientPhones : [ 
+                {
+                    "id" : 193,
+                    "clientId" : 7,
+                    "number" : "4432443158",
+                    "name" : "COMERCIAL",
+                    "dateUpdated" : "2018-04-13T14:00:20.000Z",
+                    "dateCreated" : "2018-02-28T13:46:17.000Z",
+                    "dateRemoved" : null,
+                    "status" : "activated"
+                }, 
+                {
+                    "id" : 194,
+                    "clientId" : 7,
+                    "number" : "44999916911",
+                    "name" : "TIM",
+                    "dateUpdated" : "2018-04-13T14:00:20.000Z",
+                    "dateCreated" : "2018-02-28T13:46:17.000Z",
+                    "dateRemoved" : null,
+                    "status" : "activated"
+                }, 
+                {
+                    "id" : 195,
+                    "clientId" : 7,
+                    "number" : "44991681939",
+                    "name" : "VIVO",
+                    "dateUpdated" : "2018-04-13T14:00:20.000Z",
+                    "dateCreated" : "2018-02-28T13:46:17.000Z",
+                    "dateRemoved" : null,
+                    "status" : "activated"
+                }
+            ],
+        },
+        order: {
+        },
+        task: {
+        }
+    }

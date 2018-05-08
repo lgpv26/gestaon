@@ -2,7 +2,7 @@ import Sequelize from 'sequelize'
 
 module.exports = {
     defineModel: (server) => {
-        const modelName = 'OrderProduct';
+        const modelName = 'RequestOrderProduct';
         return {
             name: modelName,
             instance: server.sequelize.define(modelName, {
@@ -36,7 +36,7 @@ module.exports = {
                     type: Sequelize.DATE
                 }
             }, {
-                tableName: 'order_product',
+                tableName: 'request_order_product',
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -45,8 +45,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({OrderProduct, RequestOrder, Product}) => {
-        OrderProduct.belongsTo(RequestOrder, {as: 'requestOrder', foreignKey: 'requestOrderId'});
-        OrderProduct.belongsTo(Product, {as: 'product', foreignKey: 'productId'});
+    postSettings: ({RequestOrderProduct, RequestOrder, Product}) => {
+        RequestOrderProduct.belongsTo(RequestOrder, {as: 'requestOrder', foreignKey: 'requestOrderId'});
+        RequestOrderProduct.belongsTo(Product, {as: 'product', foreignKey: 'productId'});
     }
 };

@@ -22,6 +22,16 @@ module.exports = (server, restify) => {
 
     /* CRUD */
 
+    server.post('/clients/persistence', (req, res, next) => {
+        return server.broker.call('draft/client/persistence.start', {
+            client: req.body.client
+        }).then((client) => {
+            return res.send(200, client)
+        }).catch((err) => {
+            console.log(err)
+        })
+    })
+
     server.get('/clients', clientsController.getAll);
     server.get('/clients/:id', (req, res, next) => {
         const controller = new Controller({

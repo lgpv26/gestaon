@@ -92,6 +92,9 @@ di.server.broker.createService(require('../services/draft/index.service')(di.ser
 di.server.broker.createService(require('../services/draft/request/persistence.service')(di.server))
 di.server.broker.createService(require('../services/draft/request/recoverance.service')(di.server))
 
+di.server.broker.createService(require('../services/draft/client/persistence.service')(di.server))
+di.server.broker.createService(require('../services/draft/client/recoverance.service')(di.server))
+
 // starts callback chain until server starts, or shutdown if the procedure fails
 di.server.broker.start().then(() => {
     connectToMySQL.then((databaseCreated) => {
@@ -125,7 +128,6 @@ di.server.broker.start().then(() => {
                             // finally, initialize di.server
                             di.server.listen(config.mainServer.port, () => {
                                 log.info("Server v" + config.mainServer.version + " running on port: " + config.mainServer.port)
-                                
                             })
                         })
                     })

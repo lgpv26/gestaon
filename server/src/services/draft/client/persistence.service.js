@@ -1,0 +1,306 @@
+const _ = require('lodash')
+const sequelize = require('sequelize')
+
+module.exports = (server) => { 
+    //PRIVATES
+    let _client = null
+    let _transaction = null
+    let _saveInRequest = null
+
+    return {
+    name: "draft/client/persistence",
+    actions: {
+        start(ctx){
+            this._client = ctx.params.client
+            this._transaction = ctx.params.transaction || null
+
+            return ctx.call("draft/client/persistence.setTransaction").then(() => {
+            
+                return ctx.call("draft/client/persistence.saveClient").then((client) => {
+                
+                    let clientPromisses = []
+                    
+                    if(_.has(this._client, "clientAddresses")){
+                        clientPromisses.push(ctx.call("draft/client/persistence.setClientAddresses", {
+                            data: {
+                                clientId: client.id
+                            }
+                        }).then((clientAddresses) => {
+                            _.set(client, "clientAddresses", clientAddresses)
+                        })
+                    )
+                    }
+                    if(_.has(this._client, "clientPhones")){
+                        clientPromisses.push(ctx.call("draft/client/persistence.setClientPhones", {
+                            data: {
+                                clientId: client.id
+                            }
+                        }).then((clientPhones) => {
+                            _.set(client, "clientPhones", clientPhones)
+                        })
+                    )
+                    }
+    
+                    if(_.has(this._client, "clientCustomFields")){
+                        clientPromisses.push(ctx.call("draft/client/persistence.setClientCustomFields", {
+                            data: {
+                                clientId: client.id
+                            }
+                        })
+                    )
+                    }
+
+                    this._client = client
+                    
+                    return Promise.all(clientPromisses).then(() => {
+                        return ctx.call("draft/client/persistence.saveES", {
+                            transaction: this._transaction
+                        }).then(() => {
+                            if(_saveInRequest) {
+                                return this._client
+                            }
+                            else{
+                                return ctx.call("draft/client/persistence.commit").then(() => {
+                                    return this._client
+                                })
+                            }
+                        }).catch(() => {
+                            return ctx.call("draft/client/persistence.saveES", {
+                                transaction: null
+                            }).then(() => {
+                                if(_saveInRequest) {
+                                    throw new Error("Nenhum registro encontrado.")
+                                }
+                                else{
+                                    return ctx.call("draft/client/persistence.rollback")
+                                }
+                            }).catch((err) => {
+                                console.log("Erro em: draft/client/persistence.saveES (catch para transaction)")
+                                return ctx.call("draft/client/persistence.rollback")
+                            })
+                        })
+                    }).catch(() => {
+                        console.log("Erro em: draft/client/persistence.setClient")
+                        throw new Error("Nenhum registro encontrado.")
+                    })           
+                }).catch((err) => {
+                    console.log("Erro em: draft/client/persistence.saveClient", err)
+                    return ctx.call("draft/client/persistence.rollback")
+                }) 
+            })
+        },
+
+        setTransaction(ctx) {
+            if(!this._transaction){
+                return server.sequelize.transaction().then((transaction) => {
+                    this._transaction = transaction
+                })
+            }
+            else {
+                _saveInRequest = true
+                return true
+            }
+        },
+
+        /**
+         * @returns {Promise.<Object>} client 
+         */
+        saveClient(ctx){
+            if (this._client.id) { // update client
+                return ctx.call("data/client.update", {
+                    data: _.assign(this._client, {
+                        companyId: 1 // HARD CODED
+                    }),
+                    where: {
+                        id: this._client.id,
+                        companyId: 1 // HARD CODED
+                    },
+                    transaction: this._transaction
+                }).then((client) => {
+                    return client
+                }).catch((err) => {
+                    console.log("Erro em: data/client.update")
+                    throw new Error(err)
+                })   
+            }
+            else { // create client
+                return ctx.call("data/client.create", {
+                    data: _.assign(this._client, {
+                        companyId: 1 /// HARD CODED
+                    }),
+                    transaction: this._transaction
+                }).then((client) => {
+                    return client
+                }).catch((err) => {
+                    console.log("Erro em: data/client.create")
+                    throw new Error(err)
+                })   
+            }
+        },
+
+        setClientAddresses(ctx){
+            return ctx.call("data/client.setClientAddresses", {
+                data: _.assign(this._client.clientAddresses, {
+                    clientId: ctx.params.data.clientId,
+                    companyId: 1 /// HARD CODED
+                }),
+                transaction: this._transaction
+            }).then((clientAddresses) => {
+                return clientAddresses
+            })
+        },
+
+        setClientPhones(ctx){
+            return ctx.call("data/client.saveClientPhones", {
+                data: _.map(this._client.clientPhones, clientPhone => {
+                    return _.assign(clientPhone, {
+                        clientId: ctx.params.data.clientId,
+                    })
+                }),
+                clientId: ctx.params.data.clientId,
+                companyId: 1, /// HARD CODED
+                transaction: this._transaction
+            }).then((clientPhones) => {
+                return clientPhones
+            })
+        },
+        
+        saveES(ctx) {
+            return ctx.call("draft/client/persistence.setES", {
+                transaction: ctx.params.transaction
+            }).then((responseClient) => {
+                const esIndexPromises = []
+                if (_.has(responseClient, "client")) {
+                        esIndexPromises.push(server.elasticSearch.index({
+                            index: 'main',
+                            type: 'client',
+                            id: responseClient.client.id,
+                            body: _.omit(responseClient.client, 'id')
+                        }, function (esErr, esRes, esStatus) {
+                            if (esErr) {
+                                console.log("Erro em: draft/client/persistence.saveES (client)")
+                                throw new Error(esErr)
+                            }
+                        })
+                    )
+                }
+                if (_.has(responseClient, "addresses")) {
+                    responseClient.addresses.forEach((address) => {
+                        esIndexPromises.push(server.elasticSearch.index({
+                                index: 'main',
+                                type: 'address',
+                                id: address.id,
+                                body: _.omit(address, 'id')
+                            }, function (esErr, esRes, esStatus) {
+                                if (esErr) {
+                                    console.log("Erro em: draft/client/persistence.saveES (address)")
+                                    throw new Error(esErr)
+                                }
+                            })
+                        )
+                    })
+                }
+                return Promise.all(esIndexPromises)
+            }).catch((err) => {
+                console.log("Erro em: draft/client/persistence.saveES (general)")
+                throw new Error(err)
+            })                
+        },
+
+        setES(ctx){
+            return ctx.call("data/client.get", {
+                where: {
+                    id: this._client.id
+                },
+                include: [{
+                    model: server.mysql.ClientPhone,
+                    as: 'clientPhones'
+                }, {
+                    model: server.mysql.ClientAddress,
+                    as: 'clientAddresses',
+                    include: [{
+                        model: server.mysql.Address,
+                        as: 'address'
+                    }]
+                }, {
+                    model: server.mysql.ClientCustomField,
+                    as: 'clientCustomFields',
+                    include: [{
+                        model: server.mysql.CustomField,
+                        as: 'customField'
+                    }]
+                }, {
+                    model: server.mysql.ClientGroup,
+                    as: 'clientGroup'
+                }],
+                transaction: (ctx.params.transaction) ? ctx.params.transaction : null
+            }).then((client) => {
+                let addressesES = []
+                let clientES = {
+                    id: client.id,
+                    companyId: client.companyId,
+                    name: client.name,
+                    obs: client.obs,
+                    legalDocument: client.legalDocument
+                }
+
+                if(_.has(client, "clientAddresses")){
+                    let clientAddresses = []
+                     client.clientAddresses.forEach((clientAddress) => {
+                        clientAddresses.push({
+                            clientAddressId: clientAddress.id,
+                            complement: clientAddress.complement,
+                            address: clientAddress.address.name,
+                            number: clientAddress.number,
+                            cep: clientAddress.address.cep,
+                            neighborhood: clientAddress.address.neighborhood
+                        })
+                        addressesES.push({
+                                id: clientAddress.address.id,
+                                companyId: clientAddress.address.companyId,
+                                name: clientAddress.address.name,
+                                neighborhood: clientAddress.address.neighborhood,
+                                city: clientAddress.address.city,
+                                state: clientAddress.address.state,
+                                cep: clientAddress.address.cep,
+                                dateUpdated: clientAddress.address.dateUpdated,
+                                dateCreated: clientAddress.address.dateCreated,
+                                status: clientAddress.address.status
+                        })
+                    })
+                    _.set(clientES, 'addresses', clientAddresses)
+                }
+
+                if(_.has(client, "clientPhones")){
+                    let clientPhones = []
+                     client.clientPhones.forEach((clientPhone) => {
+                        clientPhones.push({
+                            clientPhoneId: clientPhone.id,
+                            number: clientPhone.number
+                        })
+                    })
+                    _.set(clientES, 'phones', clientPhones)
+                }
+
+                return {client: clientES, addresses: addressesES}
+            })
+        },
+
+        /**
+         * Commit persistence
+         */
+        commit() {
+            console.log("Commit everything!")
+            this._transaction.commit()
+        },
+
+        /**
+         * Rollback persistence
+         */
+        rollback() {
+            console.log("Oh God, just rollback!")
+            this._transaction.rollback()
+            throw new Error()
+        }
+    }
+}}

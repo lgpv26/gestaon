@@ -46,7 +46,6 @@ const request = {
 */
 const _ = require('lodash')
 const sequelize = require('sequelize')
-const { MoleculerError } = require('moleculer').Errors
 
 module.exports = (server) => { 
     //PRIVATES
@@ -63,27 +62,39 @@ module.exports = (server) => {
             
                 let promises = []
                 if(_.has(this._request, "client")){
-                    promises.push(ctx.call("draft/request/persistence.setClient"))                        
-                      
+                    promises.push(ctx.call("draft/client/persistence.start", {
+                        client: this._request.client,
+                        transaction: this._transaction
+                    }))
                 }
-
-                Promise.all(promises).then((result) => {
-                    return ctx.call("draft/request/persistence.setElasticSearch", {
+                if(_.has(this._request, "order")){
+                    promises.push(ctx.call("draft/request/persistence.setOrder"))
+                }
+                
+                return Promise.all(promises).then((result) => {  
+                    return ctx.call("draft/request/persistence.commit").then(() => {
+                        return result
+                    })
+                    /*
+                    return ctx.call("draft/request/persistence.setES", {
                         data: result,
                         transaction: this._transaction
                     }).then(() => {
-                        return ctx.call("draft/request/persistence.commit")
+                        return ctx.call("draft/request/persistence.commit").then(() => {
+                            return result
+                        })
                     }).catch(() => {
-                        return ctx.call("draft/request/persistence.setElasticSearch", {
+                        return ctx.call("draft/request/persistence.setES", {
                             data: result,
                             transaction: null
                         }).then(() => {
                             return ctx.call("draft/request/persistence.rollback")
                         }).catch((err) => {
-                            console.log("Erro em: draft/request/persistence.setElasticSearch (catch para transaction)")
+                            console.log("Erro em: draft/request/persistence.setES (catch para transaction)")
                             return ctx.call("draft/request/persistence.rollback")
                         })
                     })
+                    */
                 }).catch((err) => {
                     return ctx.call("draft/request/persistence.rollback")                
                 })
@@ -96,227 +107,135 @@ module.exports = (server) => {
             })
         },
 
-        setClient(ctx) {
-            return ctx.call("draft/request/persistence.saveClient").then((client) => {
+        setOrder(ctx){
+            return ctx.call("draft/request/persistence.saveOrder").then((order) => {
                 
-                let clientPromisses = []
-                if(_.has(this._request.client, "clientAddresses")){
-                    clientPromisses.push(ctx.call("draft/request/persistence.setClientAddresses", {
+                let promisses = []
+                    
+                if(_.has(this._request.order, "orderProducts")){
+                    promisses.push(ctx.call("draft/request/persistence.setOrderProducts", {
                         data: {
-                            clientId: client.id
+                            requestOrderId: order.id
                         }
-                    }).then((clientAddresses) => {
-                        _.set(client, "clientAddresses", clientAddresses)
-                    })
-                )
+                    }))
                 }
-                if(_.has(this._request.client, "clientPhones")){
-                    clientPromisses.push(ctx.call("draft/request/persistence.setClientPhones", {
-                        data: {
-                            clientId: client.id
-                        }
-                    }).then((clientPhones) => {
-                        _.set(client, "clientPhones", clientPhones)
-                    })
-                )
-                }
-                
+
                 return Promise.all(clientPromisses).then(() => {
-                    
-                    return {client: client}
-                    
-                }).catch(() => {
-                    console.log("Erro em: draft/request/persistence.setClient")
-                    throw new MoleculerError
-                })           
-            }).catch((err) => {
-                console.log("Erro em: draft/request/persistence.saveClient", err)
-                throw new MoleculerError
-            }) 
+                    return ctx.call("draft/client/persistence.saveES", {
+                        transaction: this._transaction
+                    })
+                })
+
+            })
+
         },
-        /**
-         * @returns {Promise.<Object>} client 
-         */
-        saveClient(ctx){
-            if (this._request.client.id) { // update client
-                return ctx.call("data/client.update", {
-                    data: _.assign(this._request.client, {
-                        companyId: 1 // HARD CODED
-                    }),
+
+        setOrderProducts(ctx){
+            return ctx.call("data/request.setRequestOrderProducts", {
+                data: _.map(this._request.order.orderProducts, orderProduct => {
+                    return _.assign(orderProduct, {
+                        requestOrderId: ctx.params.data.requestOrderId,
+                    })
+                }),
+                transaction: this._transaction
+            }).then((orderProducts) => {
+                return orderProducts
+            })
+        },
+
+        saveOrder(ctx){
+            if (this._request.order.id) { // update order
+                return ctx.call("data/request.requestOrderUpdate", {
+                    data: this._request.order,
                     where: {
-                        id: this._request.client.id,
+                        id: this._request.order.id,
                         companyId: 1 // HARD CODED
                     },
                     transaction: this._transaction
-                }).then((client) => {
-                    return client
-                }).catch(() => {
-                    console.log("Erro em: data/client.update")
-                    throw new MoleculerError
+                }).then((requestOrder) => {
+                    return requestOrder
+                }).catch((err) => {
+                    console.log("Erro em: data/request.requestOrderUpdate")
+                    throw new Error(err)
                 })   
             }
-            else { // create client
-                return ctx.call("data/client.create", {
-                    data: _.assign(this._request.client, {
-                        companyId: 1 /// HARD CODED
-                    }),
+            else { // create order
+                return ctx.call("data/request.requestOrderCreate", {
+                    data: this._request.order,
                     transaction: this._transaction
-                }).then((client) => {
-                    return client
-                }).catch(() => {
-                    console.log("Erro em: data/client.create")
-                    throw new MoleculerError
+                }).then((requestOrder) => {
+                    return requestOrder
+                }).catch((err) => {
+                    console.log("Erro em: data/request.requestOrderCreate")
+                    throw new Error(err)
                 })   
             }
         },
 
-        setClientAddresses(ctx){
-            return ctx.call("data/client.setClientAddress", {
-                data: _.assign(this._request.client.clientAddresses, {
-                    clientId: ctx.params.data.clientId,
-                    companyId: 1 /// HARD CODED
-                }),
-                transaction: this._transaction
-            }).then((clientAddresses) => {
-                return clientAddresses
-            })
-        },
-
-        setClientPhones(ctx){
-            return ctx.call("data/client.saveClientPhones", {
-                data: _.assign(this._request.client.clientPhones, {
-                    clientId: ctx.params.data.clientId,
-                    companyId: 1 /// HARD CODED
-                }),
-                transaction: this._transaction
-            }).then((clientPhones) => {
-                return clientPhones
-            })
-        },
-        
-        setElasticSearch(ctx) {
+        setES(ctx) {
             ctx.params.data.forEach((data) => {
-                if (_.has(data, "client")) {
-                    return ctx.call("draft/request/persistence.setClientElasticSearch", {
-                        data: data.client,
+                if (_.has(data, "orderProducts")) {
+                    return ctx.call("draft/request/persistence.setProductES", {
+                        data: data.orderProducts,
                         transaction: ctx.params.transaction
-                    }).then((responseClient) => {
+                    }).then((responseProducts) => {
                         const esIndexPromises = []
-                        if (_.has(responseClient, "client")) {
-                                esIndexPromises.push(server.elasticSearch.index({
+                        responseProducts.products.forEach((product) => {
+                            esIndexPromises.push(server.elasticSearch.index({
                                     index: 'main',
-                                    type: 'client',
-                                    id: responseClient.client.id,
-                                    body: _.omit(responseClient.client, 'id')
+                                    type: 'product',
+                                    id: product.id,
+                                    body: _.omit(address, 'id')
                                 }, function (esErr, esRes, esStatus) {
                                     if (esErr) {
-                                        console.log("Erro em: draft/request/persistence.setElasticSearch (client)")
-                                        throw new MoleculerError
+                                        console.log("Erro em: draft/request/persistence.setES (product)")
+                                        throw new Error(esErr)
                                     }
                                 })
                             )
-                        }
-                        if (_.has(responseClient, "addresses")) {
-                            responseClient.addresses.forEach((address) => {
-                                esIndexPromises.push(server.elasticSearch.index({
-                                        index: 'main',
-                                        type: 'address',
-                                        id: address.id,
-                                        body: _.omit(address, 'id')
-                                    }, function (esErr, esRes, esStatus) {
-                                        if (esErr) {
-                                            console.log("Erro em: draft/request/persistence.setElasticSearch (address)")
-                                            throw new MoleculerError
-                                        }
-                                    })
-                                )
-                            })
-                        }
+                        })
                         return Promise.all(esIndexPromises)
-                    }).catch(() => {
-                        console.log("Erro em: draft/request/persistence.setElasticSearch (general)")
-                        throw new MoleculerError
+                    }).catch((err) => {
+                        console.log("Erro em: draft/request/persistence.setES (general)")
+                        throw new Error(err)
                     })
                 }
             })
         },
 
-        setClientElasticSearch(ctx){
-            return ctx.call("data/client.get", {
+        setProductES(ctx){
+             return ctx.call("data/request.getOrderProduct", {
                 where: {
-                    id: ctx.params.data.id
+                    id: parseInt(ctx.params.requestOrderId)
                 },
                 include: [{
-                    model: server.mysql.ClientPhone,
-                    as: 'clientPhones'
-                }, {
-                    model: server.mysql.ClientAddress,
-                    as: 'clientAddresses',
-                    include: [{
-                        model: server.mysql.Address,
-                        as: 'address'
-                    }]
-                }, {
-                    model: server.mysql.ClientCustomField,
-                    as: 'clientCustomFields',
-                    include: [{
-                        model: server.mysql.CustomField,
-                        as: 'customField'
-                    }]
-                }, {
-                    model: server.mysql.ClientGroup,
-                    as: 'clientGroup'
+                    model: server.mysql.Product,
+                    as: 'product'
                 }],
                 transaction: (ctx.params.transaction) ? ctx.params.transaction : null
-            }).then((client) => {
-                let addressesES = []
-                let clientES = {
-                    id: client.id,
-                    companyId: client.companyId,
-                    name: client.name,
-                    obs: client.obs,
-                    legalDocument: client.legalDocument
-                }
+            }).then((requestOrder) => {
+                let products = []
 
-                if(_.has(client, "clientAddresses")){
-                    let clientAddresses = []
-                     client.clientAddresses.forEach((clientAddress) => {
-                        clientAddresses.push({
-                            clientAddressId: clientAddress.id,
-                            complement: clientAddress.complement,
-                            address: clientAddress.address.name,
-                            number: clientAddress.number,
-                            cep: clientAddress.address.cep,
-                            neighborhood: clientAddress.address.neighborhood
-                        })
-                        addressesES.push({
-                                id: clientAddress.address.id,
-                                companyId: clientAddress.address.companyId,
-                                name: clientAddress.address.name,
-                                neighborhood: clientAddress.address.neighborhood,
-                                city: clientAddress.address.city,
-                                state: clientAddress.address.state,
-                                cep: clientAddress.address.cep,
-                                dateUpdated: clientAddress.address.dateUpdated,
-                                dateCreated: clientAddress.address.dateCreated,
-                                status: clientAddress.address.status
+                if(_.has(requestOrder, "product")){
+                    requestOrder.product.forEach((product) => {
+                        products.push({
+                            id: product.id,
+                            companyId: product.companyId,
+                            name: product.name,
+                            suppliers: [{
+                                supplierProductId: null,
+                                supplierId: null,
+                                name: 'SEM SUPPLIER CADASTRADO',
+                                obs: null,
+                                quantity: null,
+                                price: null
+                            }],
+                            dateUpdated: product.dateUpdated,
+                            dateCreated: product.dateCreated
                         })
                     })
-                    _.set(clientES, 'addresses', clientAddresses)
                 }
-
-                if(_.has(client, "clientPhones")){
-                    let clientPhones = []
-                     client.clientPhones.forEach((clientPhone) => {
-                        clientPhones.push({
-                            clientPhoneId: clientPhone.id,
-                            number: clientPhone.number
-                        })
-                    })
-                    _.set(clientES, 'phones', clientPhones)
-                }
-
-                return {client: clientES, addresses: addressesES}
+                return {products}
             })
         },
 
