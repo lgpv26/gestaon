@@ -164,6 +164,21 @@ module.exports = (server) => {
                 return clientPhones
             })
         },
+
+        setClientCustomFields(ctx){
+            return ctx.call("data/client.saveClientCustomFields", {
+                data: _.map(this._client.clientCustomFields, clientCustomField => {
+                    return _.assign(clientCustomField, {
+                        clientId: ctx.params.data.clientId,
+                    })
+                }),
+                clientId: ctx.params.data.clientId,
+                companyId: 1, /// HARD CODED
+                transaction: this._transaction
+            }).then((clientCustomFields) => {
+                return clientCustomFields
+            })
+        },
         
         saveES(ctx) {
             return ctx.call("draft/client/persistence.setES", {

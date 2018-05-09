@@ -22,7 +22,7 @@ module.exports = (server, restify) => {
                                                 "should": [
                                                     {
                                                         "multi_match": {
-                                                            "query": utils.removeDiacritics(req.params.q.trim()),
+                                                            "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
                                                                 "name"
                                                             ],
@@ -36,7 +36,7 @@ module.exports = (server, restify) => {
                                                             "path": "suppliers",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "suppliers.name",
                                                                         "suppliers.obs"
@@ -55,7 +55,7 @@ module.exports = (server, restify) => {
                                                 "should": [
                                                     {
                                                         "multi_match": {
-                                                            "query": utils.removeDiacritics(req.params.q.trim()),
+                                                            "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
                                                                 "name"
                                                             ],
@@ -70,7 +70,7 @@ module.exports = (server, restify) => {
                                                             "path": "suppliers",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "suppliers.name",
                                                                         "suppliers.obs"
@@ -88,7 +88,7 @@ module.exports = (server, restify) => {
                                                 "should": [
                                                     {
                                                         "multi_match": {
-                                                            "query": utils.removeDiacritics(req.params.q.trim()),
+                                                            "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
                                                                 "name"
                                                             ],
@@ -103,7 +103,7 @@ module.exports = (server, restify) => {
                                                             "path": "suppliers",
                                                             "query": {
                                                                 "multi_match": {
-                                                                    "query": utils.removeDiacritics(req.params.q.trim()),
+                                                                    "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
                                                                         "suppliers.name",
                                                                         "suppliers.obs"
@@ -121,7 +121,7 @@ module.exports = (server, restify) => {
                                     ],
                                     "filter": {
                                         "term": {
-                                            "companyId": req.params.companyId
+                                            "companyId": req.query.companyId
                                         }
                                     }
                                 }

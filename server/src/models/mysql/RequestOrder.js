@@ -1,11 +1,12 @@
 import Sequelize from 'sequelize'
+import _ from 'lodash'
 
 module.exports = {
     defineModel: (server) => {
         const modelName = 'RequestOrder';
         return {
             name: modelName,
-            instance: server.sequelize.define(modelName, {
+            instance: server.sequelize.define(_.camelCase(modelName), {
                 id: {
                     type: Sequelize.INTEGER,
                     primaryKey: true,
@@ -38,8 +39,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({RequestOrder,OrderProduct,Product}) => { 
-        RequestOrder.hasMany(OrderProduct, {as: 'orderProducts', foreignKey: 'requestOrderId'});
-        RequestOrder.belongsToMany(Product, {through: OrderProduct, as: 'products', foreignKey: 'requestOrderId'});
+    postSettings: ({RequestOrder,RequestOrderProduct,Product}) => { 
+        RequestOrder.hasMany(RequestOrderProduct, {as: 'requestOrderProducts', foreignKey: 'requestOrderId'});
+        RequestOrder.belongsToMany(Product, {through: RequestOrderProduct, as: 'products', foreignKey: 'requestOrderId'});
     }
 }

@@ -3,7 +3,14 @@ import _ from 'lodash'
 module.exports = (server) => { return {
     name: "data/request",
     actions: {
-        get(ctx) {
+        getOne(ctx) {
+            return server.mysql.Request.findOne({
+                where: ctx.params.where || {},
+                include: ctx.params.include || [],
+                transaction: ctx.params.transaction || null
+            }).then((request) => {
+                return JSON.parse(JSON.stringify(request))
+            })
         },
         /**
          * @param {Object} where, {Array} include
@@ -15,11 +22,39 @@ module.exports = (server) => { return {
                 include: ctx.params.include
             })
         },
-        create(ctx){
-
+        /**
+         * @param {Object} data, {Object} transaction
+         * @returns {Promise.<Object>} request 
+         */
+        create(ctx) {
+            return server.mysql.Request.create(ctx.params.data, {
+                transaction: ctx.params.transaction
+            }).then((request) => {
+                return JSON.parse(JSON.stringify(request))
+            }).catch(() => {
+                console.log("Nenhum registro encontrado. Create.")
+                throw new Error("Nenhum registro encontrado.")
+            })
         },
-        update(ctx){
-
+        /**
+         * @param {Object} data, {Object} where, {Object} transaction
+         * @returns {Promise.<Object>} request 
+         */
+        update(ctx) {
+            return server.mysql.Request.update(ctx.params.data, {
+                where: ctx.params.where || {},
+                transaction: ctx.params.transaction || null
+            }).then((updated) => {
+                if (parseInt(_.toString(updated)) < 1 ) {
+                    console.log("Nenhum registro encontrado. Update.")
+                    throw new Error("Nenhum registro encontrado.")
+                }
+                return server.mysql.Request.findById(ctx.params.data.id, {
+                        transaction: ctx.params.transaction
+                }).then((request) => {
+                    return JSON.parse(JSON.stringify(request))
+                })
+            })
         },
         remove(ctx){
 
@@ -29,7 +64,7 @@ module.exports = (server) => { return {
         // REQUEST ORDER //
         ///////////////////
         getRequestOrder(ctx){
-            return server.mysql.RequestOrder.findAll({
+            return server.mysql.RequestOrder.findOne({
                 where: ctx.params.where || {},
                 include: ctx.params.include || [],
                 transaction: ctx.params.transaction || null
@@ -79,19 +114,20 @@ module.exports = (server) => { return {
         setRequestOrderProducts(ctx) {
             return ctx.call("data/product.saveProducts", {
                 data: ctx.params.data,
-                companyId: ctx.params.data.companyId, 
+                companyId: ctx.params.companyId, 
                 transaction: ctx.params.transaction
             }).then((orderProductWithProduct) => {
-
+                
                  let orderProducts = _.map(orderProductWithProduct, orderProduct => {
                     return _.assign(orderProduct, {
                         productId: parseInt(orderProduct.product.id),
                     })
                 })
 
+                
                 return ctx.call("data/request.saveRequestOrderProducts", {
                     data: orderProducts,
-                    requestOrderId: parseInt(ctx.params.data.requestOrderId),
+                    requestOrderId: parseInt(ctx.params.requestOrderId),
                     transaction: ctx.params.transaction
                 }).then((orderProducts) => {
                     return orderProducts
@@ -99,6 +135,7 @@ module.exports = (server) => { return {
                     throw new Error("Nenhum registro encontrado.")
                 }) 
             }).catch((err) => {
+                //console.log('AQUI')  COMENTAR
                 throw new Error(err)                    
             })
         },
@@ -110,6 +147,7 @@ module.exports = (server) => { return {
             /*
             * Delete all client's clientAddress
             */ 
+           
             return server.mysql.RequestOrderProduct.destroy({
                 where: {
                     requestOrderId: ctx.params.requestOrderId
@@ -124,11 +162,13 @@ module.exports = (server) => { return {
                     if (!response) {
                         console.log('Registro não encontrado. data/request.saveRequestOrderProducts')
                         throw new Error("Nenhum registro encontrado.")
-                    }
+                    }                  
                     return response
                 }).catch((err) => {
                     console.log(err)
                 })
+            }).catch((err) => {
+                console.log(err)
             })
         },
 
@@ -161,6 +201,20 @@ module.exports = (server) => { return {
         },
 
         // request-timeline
+
+        /**
+         * @param {Object} where, {Array} include
+         * @returns {Promise.<Array>} requests
+         */
+        createTimeline(ctx){
+             return server.mysql.RequestTimeline.create(ctx.params.data, {
+                transaction: ctx.params.transaction
+            }).then((response) => {
+                return response
+            }).catch((err) => {
+                throw new Error("Erro timeline.")
+            })
+        },
 
         /**
          * @param {Object} where, {Array} include

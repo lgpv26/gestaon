@@ -169,6 +169,35 @@ module.exports = (server) => {
                         console.log(err)
                     })
                 })
+            },
+            /**
+             * @param {Object} data, {Int} clientId, {Object} transaction
+             * @returns {Promise.<Array>} clientCustomFields
+             */            
+            saveClientCustomFields(ctx) {
+                /*
+                * Delete all client's clientCustomFields
+                */ 
+                return server.mysql.ClientCustomField.destroy({
+                    where: {
+                        clientId: ctx.params.clientId
+                    },
+                    transaction: ctx.params.transaction
+                }).then(() => {
+                    return server.mysql.ClientCustomField.bulkCreate(ctx.params.data, {
+                        updateOnDuplicate:['clientId', 'customFieldId', 'value', 'dateUpdate', 'dateRemoved'],
+                        returning: true,
+                        transaction: ctx.params.transaction
+                    }).then((response) => {
+                        if (!response) {
+                            console.log('Registro não encontrado. data/client.saveClientCustomFields')
+                            throw new Error("Nenhum registro encontrado.")
+                        }
+                        return response
+                    }).catch((err) => {
+                        console.log(err)
+                    })
+                })
             }
         }
     }

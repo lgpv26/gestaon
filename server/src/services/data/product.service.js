@@ -22,6 +22,8 @@ module.exports = (server) => { return {
                     throw new Error("Nenhum registro encontrado.")
                 }
                 return JSON.parse(JSON.stringify(product))
+            }).catch((err) => {
+                throw new Error(err) // COMENTAR
             })
         },
         /**
@@ -42,6 +44,8 @@ module.exports = (server) => { return {
                 }).then((product) => {
                     return JSON.parse(JSON.stringify(product))
                 })
+            }).catch((err) => {
+                throw new Error(err) // COMENTAR
             })
         },
         remove(ctx){
@@ -56,13 +60,18 @@ module.exports = (server) => { return {
             ctx.params.data.forEach((orderProduct) => {
                 if (orderProduct.product.id) {
                     productsPromises.push(ctx.call("data/product.update", {
-                        data: orderProduct.product,
+                        data: _.assign(orderProduct.product, {
+                            companyId: ctx.params.companyId
+                        }),
                         where: {
                             id: orderProduct.product.id
                         },
                         transaction: ctx.params.transaction
                     }).then((product) => {
                         return _.assign(orderProduct, { product: product })
+                    }).catch((err) =>{
+                        //console.log(err) //comentar
+                        throw new Error(err)
                     })
                     )
                 }
@@ -74,6 +83,9 @@ module.exports = (server) => { return {
                         transaction: ctx.params.transaction
                     }).then((product) => {
                         return _.assign(orderProduct, { product: product })
+                    }).catch((err) =>{
+                        //console.log(err) // COMENTAR
+                        throw new Error(err)
                     })
                     )
                 }
@@ -81,6 +93,9 @@ module.exports = (server) => { return {
 
             return Promise.all(productsPromises).then((products) => {
                 return products
+            }).catch((err) => {
+                console.log('')
+                throw new Error(err)
             })
         }
     }

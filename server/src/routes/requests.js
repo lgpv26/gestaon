@@ -1,5 +1,6 @@
 const basePath = require('./../middlewares/base-path.middleware')
 const Controller = require('../models/Controller')
+const _ = require("lodash")
 
 module.exports = (server, restify) => {
 
@@ -67,7 +68,9 @@ module.exports = (server, restify) => {
 
     server.post('/requests/persistence', (req, res, next) => {
         return server.broker.call('draft/request/persistence.start', {
-            request: req.body
+            request: req.body,
+            userId: req.auth.id,
+            companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
         }).then((request) => {
             return res.send(200, request)
         }).catch((err) => {

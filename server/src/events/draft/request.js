@@ -22,6 +22,7 @@ module.exports = class Request extends Draft {
      */
     _setListeners() {
         const vm = this
+
         /**
          * @param {Object} evData = { clientId:Number, draftId:Number }
          */
