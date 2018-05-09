@@ -20,7 +20,7 @@
                                         <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address + ', ' + props.item.client.address.number"></span>
                                         <span class="detail__phones" v-if="props.item.client.phones.length > 0">
                                         <span v-for="(clientPhone, index) in props.item.client.phones"
-                                            v-html="((index === 0) ? '' : ', ') + clientPhone.ddd + clientPhone.number"></span>
+                                            v-html="((index === 0) ? '' : ', ') + clientPhone.number"></span>
                                         </span>
                                     </div>
                                     <div class="search-input__item" v-if="props.item.address">
@@ -73,7 +73,7 @@
     import DraftMixin from '../../DraftMixin'
     import ClientCustomFieldForm from './ClientCustomFieldsForm.vue'
     import ClientAddressForm from './ClientAddressForm.vue'
-    import ClientPhoneForm from './ClientPhoneForm.vue'
+    import ClientPhoneForm from './ClientPhonesForm.vue'
     import ClientGroupForm from './ClientGroupForm.vue'
     import SearchComponent from '@/components/Inputs/Search.vue'
     import ClientAddressTypesInput from './ClientAddressTypesInput.vue'
@@ -285,15 +285,6 @@
 </script>
 
 <style scoped>
-
-    .mini-circle {
-        flex-shrink: 0;
-        height: 4px;
-        width: 4px;
-        background-color: var(--font-color--secondary);
-        border-radius: 2px;
-        margin: 0 10px;
-    }
 
     /* search input */
 

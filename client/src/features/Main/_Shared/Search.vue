@@ -83,7 +83,7 @@
             }
         },
         computed: {
-            ...mapState('auth', ['company']),
+            ...mapState('auth', ['user','company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
             ...mapState('morph-screen', ['searchData']),
             showOnly(){
@@ -101,7 +101,7 @@
         },
         methods: {
             ...mapActions('morph-screen', ['createDraft']),
-            ...mapMutations('morph-screen', ['SET_MS', 'SHOW_MS', 'SET_SEARCH_DATA']),
+            ...mapMutations('morph-screen', ['ADD_DRAFT','SET_MS', 'SHOW_MS', 'SET_SEARCH_DATA']),
             ...mapActions('toast', ['showError']),
             cleanSearchData(){
                 console.log("Reset search data")
@@ -133,17 +133,7 @@
                 const vm = this;
                 if(!vm.isShowingMorphScreen){
                     const createDraftArgs = { body: {type: 'accounts'}, companyId: vm.company.id };
-                    vm.createDraft(createDraftArgs).then((response) => {
-                        vm.SET_SEARCH_DATA({
-                            text: vm.inputValue
-                        })
-                        vm.SET_MS({
-                            active: true,
-                            draft: response.data,
-                            params: {}
-                        });
-                        vm.SHOW_MS(true);
-                    });
+                    vm.createDraft(createDraftArgs)
                 } else {
                     this.SHOW_MS(false);
                 }
@@ -151,37 +141,20 @@
             addRequestDraft(){
                 const vm = this;
                 if(!vm.isShowingMorphScreen){
-                    const createDraftArgs = { body: {type: 'request'}, companyId: vm.company.id };
-                    vm.createDraft(createDraftArgs).then((response) => {
-                        vm.SET_SEARCH_DATA({
-                            text: vm.inputValue
-                        })
-                        vm.SET_MS({
-                            active: true,
-                            draft: response.data,
-                            params: {}
-                        });
-                        vm.SHOW_MS(true);
-                    });
+                    const createDraftArgs = { body: {
+                        type: 'request',
+                        createdBy: vm.user.id
+                    }, companyId: vm.company.id };
+                    vm.createDraft(createDraftArgs)
                 } else {
-                    this.SHOW_MS(false);
+                    this.SHOW_MS(false)
                 }
             },
             addExpenseDraft(){
                 const vm = this;
                 if(!vm.isShowingMorphScreen){
                     const createDraftArgs = { body: {type: 'expense'}, companyId: vm.company.id };
-                    vm.createDraft(createDraftArgs).then((response) => {
-                        vm.SET_SEARCH_DATA({
-                            text: vm.inputValue
-                        })
-                        vm.SET_MS({
-                            active: true,
-                            draft: response.data,
-                            params: {}
-                        });
-                        vm.SHOW_MS(true);
-                    });
+                    vm.createDraft(createDraftArgs)
                 } else {
                     this.SHOW_MS(false);
                 }
@@ -406,6 +379,33 @@
             },
             toggleSearch(){
                 this.isSearchActive = !this.isSearchActive;
+            }
+        },
+        created(){
+            const vm = this
+            /**
+             * On active step change
+             * @param {Object} ev = { success:Boolean, evData:Draft }
+             */
+            vm.$options.sockets['draft.create'] = (ev) => {
+                if (ev.success) {
+                    vm.ADD_DRAFT(ev.evData)
+                    setImmediate(() => {
+                        if (ev.evData.createdBy === vm.user.id) {
+                            vm.SET_SEARCH_DATA({
+                                text: vm.inputValue
+                            })
+                            vm.SET_MS({
+                                draftId: ev.evData.draftId,
+                                screen: {
+                                    active: true
+                                }
+                            })
+                            vm.SHOW_MS(true)
+                        }
+                    })
+                }
+                console.log("Received draft.create", ev)
             }
         }
     }

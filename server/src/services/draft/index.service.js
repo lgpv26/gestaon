@@ -2,6 +2,8 @@ import fs from 'fs'
 import _ from 'lodash'
 import path from 'path'
 
+import EventResponse from '~models/EventResponse'
+
 module.exports = (server) => { return {
     name: "draft",
     actions: {
@@ -35,6 +37,9 @@ module.exports = (server) => { return {
                     draft: {},
                     type: 'request',
                     isSingle: false
+                }).then((draft) => {
+                    server.io.to(`company/${ctx.params.data.companyId}`).emit('draft.create',new EventResponse(draft))
+                    return draft
                 })
             })
         },

@@ -2,20 +2,20 @@
     <div class="form__header summary">
         <div class="form-columns" style="flex-grow: 1;">
             <div class="form-column" style="flex-grow: 1; flex-basis: 70%; display: flex; flex-direction: row; justify-content: flex-start; align-items: center;">
-                <span style="margin-right: 8px;">{{ client.name }}</span>
-                <!--
-                <div v-if="selectedClientAddress">
-                    <span style="margin-right: 8px;">{{ shortenedClientAddress }}</span>
+                <span style="margin-right: 0">{{ client.name }}</span>
+                <div class="mini-circle"></div>
+                <div>
+                    <span style="margin-right: 8px;">RUA 28 de JUNHO, 1214</span>
                 </div>
-                <icon-edit style="width:10px;"></icon-edit>-->
+                <!--<icon-edit style="width:10px;"></icon-edit>-->
             </div>
-            <!--
-            <div class="form-column" v-if="selectedClientPhone">
+            <div class="form-column">
                 <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
                     <icon-phone class="icon--d-secondary" style="margin-right: 10px;"></icon-phone>
-                    <span style="white-space: nowrap;">{{ formatedClientPhone }}</span>
+                    <span style="white-space: nowrap;">(44) 99122-8686</span>
                 </a>
             </div>
+            <!--
             <div class="form-column" v-if="client.clientGroup">
                 <app-select class="form-group__header" title="Grupo de cliente"  v-model="client.clientGroup"
                             :verticalOffset="8" :items="clientGroups" :showInput="true" @change="commitSocketChanges('client.clientGroup')">
@@ -81,4 +81,12 @@
 </script>
 
 <style lang="scss">
+    .mini-circle {
+        flex-shrink: 0;
+        height: 4px;
+        width: 4px;
+        background-color: var(--font-color--secondary);
+        border-radius: 2px;
+        margin: 0 10px;
+    }
 </style>

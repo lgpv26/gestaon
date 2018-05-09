@@ -159,7 +159,12 @@
                     leave: true
                 });
                 setImmediate(() => {
-                    vm.SET_MS(_.assign({}, vm.activeMorphScreen, { active: false }));
+                    vm.SET_MS({
+                        draftId: vm.activeMorphScreen.draft.draftId,
+                        screen: {
+                            active: false
+                        }
+                    })
                     const title = _.first(this.$refs.morphScreenItems[activeScreenIndex].getElementsByClassName('option__title'));
                     anime({
                         targets: title,
@@ -254,7 +259,14 @@
                     setTimeout(() => {
                         /*vm.setLoadingText("Carregando rascunho...");
                         vm.startLoading();*/
-                        vm.SET_MS(_.assign({}, screen, { active: true }));
+
+                        vm.SET_MS({
+                            draftId: screen.draft.draftId,
+                            screen: {
+                                active: true
+                            }
+                        })
+
                         vm.isAnimating = false;
                     }, 300);
                 });
@@ -347,7 +359,12 @@
                 animation.finished.then(() => {
                     vm.SHOW_MS(false);
                     if(screen){
-                        vm.SET_MS_SCREEN(_.assign({}, screen, { active: false }));
+                        vm.SET_MS({
+                            draftId: screen.draft.draftId,
+                            screen: {
+                                active: false
+                            }
+                        })
                     }
                 });
             },

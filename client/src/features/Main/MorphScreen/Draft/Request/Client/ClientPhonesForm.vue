@@ -14,7 +14,10 @@
             <div class="dashed-line"></div>
             <ul class="content__list--mini">
                 <li class="list__item" v-for="(clientPhoneRow, index) in clientPhoneRows">
-                    <input type="text" placeholder="..." v-model="clientPhoneRow.name" @input="sync(clientPhoneRow.name, 'clientPhones[' + index + '].name')" class="input--borderless" />
+                    <div class="item__check item__icon" @click="select(clientPhoneRow)" style="cursor: pointer; margin-right: 8px;">
+                        <icon-check style="width: 16px;"></icon-check>
+                    </div>
+                    <input type="text" placeholder="APELIDO" v-model="clientPhoneRow.name" @input="sync(clientPhoneRow.name, 'clientPhones[' + index + '].name')" class="input--borderless" />
                     <div class="item__mini-circle"></div>
                     <app-mask :mask="['(##) ####-####','(##) #####-####']" ref="clientPhoneInput" v-model="clientPhoneRow.number"
                               @input.native="inputClientPhoneRowNumber($event, index)" placeholder="(##) #####-####" class="input--borderless"></app-mask>
@@ -77,6 +80,9 @@
                     number: ''
                 })
                 this.sync(this.clientPhones,'clientPhones')
+            },
+            select(clientPhone){
+                console.log("Select", clientPhone)
             }
         }
     }

@@ -11,7 +11,7 @@ module.exports = (server, restify) => {
     /* Users CRUD */
 
     server.get('/payment-methods', (req, res, next) => {
-        return server.broker.call('data/payment-method.list', {
+        return server.broker.call('data/payment-method.getList', {
             data: {
                 companyId: req.query.companyId
             }
@@ -23,7 +23,7 @@ module.exports = (server, restify) => {
     })
 
     server.get('/payment-methods/:id', (req, res, next) => {
-        return server.broker.call('data/payment-method.get', {
+        return server.broker.call('data/payment-method.getOne', {
             data: {
                 id: req.params.id,
                 companyId: req.query.companyId

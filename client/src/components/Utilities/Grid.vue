@@ -5,7 +5,7 @@
             <ul class="filter-menu">
                 <slot></slot>
             </ul>
-            <div class="items-list">
+            <div class="items-list" ref="itemsList">
                 <div class="items-list__columns">
                     <div class="column" :style="{ width: columnWidths[0] + 'px'}"></div>
                     <div class="column" v-for="(column, index) in columns" :style="{ width: columnWidths[index + 1] + 'px' }">
@@ -18,9 +18,9 @@
                             <tbody ref="tbody">
                                 <tr v-for="item in items">
                                     <td style="width: 30px;" ref="checkTdEl">
-                                        <div class="check"></div>
+                                        <div class="check" :class="{active: form.selectedIds.includes(item.id)}" @click="check(item.id)"></div>
                                     </td>
-                                    <td v-for="column in columns" :ref="column.name + 'TdEls'">
+                                    <td v-for="column in columns" :ref="column.name + 'TdEls'" @click="check(item.id)">
                                         {{ getItemColumnValue(item, column) }}
                                     </td>
                                 </tr>
@@ -53,7 +53,7 @@
 <script>
     import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
 
-    import utils from '../../../utils/index'
+    import utils from '../../utils/index'
     import moment from 'moment'
     import _ from 'lodash'
 
@@ -61,9 +61,12 @@
     import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 
     export default {
-        props: ['title', 'total', 'columns', 'items'],
+        props: ['value', 'title', 'total', 'columns', 'items'],
         data(){
             return {
+                form: {
+                    selectedIds: []
+                },
                 columnWidths: [],
                 rowHeight: 0,
                 scrollFillerHeight: 0,
@@ -71,6 +74,11 @@
                 scrollbarStopTimeout: null,
                 scrollbar: null,
                 resizeSensor: null
+            }
+        },
+        watch: {
+            value(selectedIds){
+                this.form.selectedIds = selectedIds
             }
         },
         computed: {
@@ -81,25 +89,46 @@
             }
         },
         methods: {
+            check(id){
+                const index = this.form.selectedIds.indexOf(id)
+                if(index !== -1){
+                    this.form.selectedIds.splice(index, 1)
+                }
+                else {
+                    this.form.selectedIds.push(id)
+                }
+                this.$emit('input', this.form.selectedIds)
+            },
+
             calculateScrollPosition(ev = false){
-                /*console.log(ev.offset.y, ev.limit.y)*/
-                let currentScrollPercentage
-                if(!ev) {
+
+                let currentScrollPercentage,
+                    visibleAreaHeight = 0,
+                    visibleItems = 0
+
+                if(this.$refs.scrollbar && this.$refs.scrollbar.clientHeight) {
+                    visibleAreaHeight = this.$refs.scrollbar.clientHeight
+                }
+                visibleItems = (visibleAreaHeight / 40)
+
+                if(!ev && this.$refs.table) {
                     currentScrollPercentage = 0
                     this.$refs.table.style.top = '0px'
                 }
                 else {
-                    currentScrollPercentage = ev.offset.y / ev.limit.y
-                    this.$refs.table.style.top = ev.offset.y + 'px'
+                    currentScrollPercentage = ev.offset.y / (ev.limit.y + visibleAreaHeight)
+                    if(this.$refs.table){
+                        this.$refs.table.style.top = ev.offset.y + 'px'
+                    }
                 }
+
                 const firstItemOnScreenPosition = this.total * currentScrollPercentage
-                const visibleAreaHeight = this.$refs.scrollbar.clientHeight
-                const visibleItems = (visibleAreaHeight / 40)
 
                 this.$emit('scroll', {
                     from: firstItemOnScreenPosition,
                     to: firstItemOnScreenPosition + visibleItems
                 })
+
                 setImmediate(() => {
                     this.calculateColumns()
                 })
@@ -108,17 +137,19 @@
             calculateColumns(){
                 this.columnWidths = []
                 const checkEl = _.first(this.$refs['checkTdEl'])
-                this.columnWidths.push(checkEl.clientWidth)
-                this.columns.forEach((column) => {
-                    const currentColumnEl = _.first(this.$refs[column.name + 'TdEls'])
-                    this.columnWidths.push(currentColumnEl.clientWidth)
-                })
+                if(checkEl){
+                    this.columnWidths.push(checkEl.clientWidth)
+                    this.columns.forEach((column) => {
+                        const currentColumnEl = _.first(this.$refs[column.name + 'TdEls'])
+                        this.columnWidths.push(currentColumnEl.clientWidth)
+                    })
+                }
             },
             calculateScrollFiller(){
                 this.scrollFillerHeight = this.total * 40
                 this.scrollbar.update(true)
             },
-            updateResizeListeners(){
+            setResizeListeners(){
                 const vm = this
                 setImmediate(() => {
                     if(this.resizeSensor) this.resizeSensor.detach()
@@ -140,10 +171,10 @@
                 }
                 vm.scrollbarStopTimeout = setTimeout(() => {
                     vm.calculateScrollPosition(ev)
-                }, 500)
+                }, 50)
             })
             this.calculateColumns()
-            this.updateResizeListeners()
+            this.setResizeListeners()
             this.calculateScrollFiller()
             this.calculateScrollPosition(false)
         }
@@ -178,6 +209,7 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
         padding-bottom: 20px;
     }
     ul.filter-menu li {
@@ -273,7 +305,6 @@
     }
 
     table tbody tr:hover .check {
-        border-color: var(--border-color--primary)
     }
 
     .check {
@@ -281,11 +312,21 @@
         height: 12px;
         border: 1px solid var(--font-color--7);
         border-radius: 100%;
+        background-color: var(--bg-color)
+    }
+
+    .check.active {
+        width: 12px;
+        height: 12px;
+        border: 1px solid var(--font-color--primary);
+        background-color: var(--bg-color--primary);
+        border-radius: 100%;
     }
 
     div.footer {
         padding: 40px 0;
         display: flex;
+        flex-shrink: 0;
         align-items: center;
         justify-content: center;
     }

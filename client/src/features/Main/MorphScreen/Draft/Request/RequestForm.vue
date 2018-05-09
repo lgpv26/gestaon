@@ -57,7 +57,7 @@
                 </div>
             </div>
         </div>
-        <div class="footer">
+        <div class="footer" v-if="activeStep === 'order' || activeStep === 'task'">
             <div class="left-side">
                 <table class="payment-methods" style="width: 100%; text-align: left;">
                     <thead>
@@ -106,8 +106,8 @@
             <a style="margin-right: 20px;" @click="$emit('close')">Voltar</a>
             <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
 
-            <a class="btn btn--primary persistence allowed" v-if="activeStep === 'client'" @click="persistenceClient(client)">Salvar Cliente</a>
-            <a class="btn btn--primary persistence allowed" v-else-if="activeStep !== 'client'">Salvar Pedido</a>
+            <a class="btn btn--primary persistence allowed" v-if="activeStep === 'client'" @click="persistenceClient({client,companyId: company.id})">Salvar Cliente</a>
+            <a class="btn btn--primary persistence allowed" v-else-if="activeStep !== 'client'" @click="persistence({request: form, companyId: company.id})">Salvar Pedido</a>
         </div>
     </div>
 </template>
@@ -161,6 +161,7 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapGetters('draft/request', ['isClientSummaryAvailable']),
             ...mapFields([
+                'form',
                 'form.activeStep',
                 'form.client',
                 'form.order.orderProducts',
@@ -171,7 +172,7 @@
             }),
         },
         methods: {
-            ...mapActions('draft/request', ['persistenceClient','setRequest','addOrderProduct','addRequestPaymentMethod']),
+            ...mapActions('draft/request', ['persistence','persistenceClient','setRequest','addOrderProduct','addRequestPaymentMethod']),
             ...mapActions('toast', ['showToast']),
             ...mapActions('loading', ['stopLoading']),
             changeStep(step){
@@ -202,6 +203,21 @@
         },
         created(){
             const vm = this
+
+            const emitData = {
+                draftId: this.activeMorphScreen.draft.draftId
+            }
+            console.log("Emitting to draft/request.load", emitData)
+            vm.$socket.emit('draft/request.load', emitData)
+
+            /**
+             * On active step change
+             * @param {Object} ev = { success:Boolean, evData:Draft }
+             */
+            vm.$options.sockets['draft/request.load'] = (ev) => {
+                console.log("Received draft/request.load", ev)
+            }
+
             PaymentMethodsAPI.getList({ companyId: this.company.id }).then(({data}) => {
                 vm.paymentMethodItems = _.map(data, (paymentMethod) => {
                     return {
@@ -224,7 +240,6 @@
 </script>
 
 <style lang="scss">
-
     .app-request-form {
         display: flex;
         flex: 1;

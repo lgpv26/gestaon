@@ -85,7 +85,6 @@
             attachPopper(){
                 this.destroyPopper()
                 this.popper = new Popper(this.$refs.triggerer, this.$refs.content, {
-                    offset: 100
                 })
             },
             destroyPopper(){

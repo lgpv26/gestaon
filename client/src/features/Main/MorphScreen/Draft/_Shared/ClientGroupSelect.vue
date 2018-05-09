@@ -4,26 +4,39 @@
             <slot></slot>
         </template>
         <template slot="content">
-            <div style="width: 200px;">
+            <div style="width: 240px;">
                 <h3>Grupo de clientes</h3>
                 <div v-for="item in items" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === item.value">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
-                        <div style="position: absolute; right: 0px; top: 0; cursor: pointer;">
-                            <icon-check></icon-check>
+                        <div style="position: absolute; right: 24px; top: 0; cursor: pointer; font-weight: bold;" @click="editing = false">
+                            voltar
+                        </div>
+                        <div style="position: absolute; right: 0; top: 0; cursor: pointer;">
+                            <icon-check style="height: 11px;"></icon-check>
                         </div>
                     </div>
                     <div v-else :class="{ active: value === item.value }" style="display: flex; flex-direction: row;">
-                        <span style="cursor: pointer;" @click="select(item)" @dblclick="edit(item)">{{ item.text }}</span>
+                        <span style="cursor: pointer;" @click="select(item)">{{ item.text }}</span>
                         <span class="push-both-sides"></span>
-                        <icon-check></icon-check>
+                        <a href="javascript:void(0)" style="margin-right: 3px;" @click="edit(item)">
+                            <icon-edit></icon-edit>
+                        </a>
                     </div>
                 </div>
-                <div style="margin-top: 20px; position: relative;">
+                <div style="margin-top: 20px; position: relative;" v-if="adding">
                     <input type="text" style="font-size: 12px;" v-model="inputValue" placeholder="ADICIONAR NOVO" />
-                    <div style="position: absolute; right: 0px; top: 0; cursor: pointer;" @click="save()">
-                        <icon-check></icon-check>
+                    <div style="position: absolute; right: 24px; top: 0; cursor: pointer; font-weight: bold;" @click="adding = false">
+                        voltar
                     </div>
+                    <div style="position: absolute; right: 0px; top: 0; cursor: pointer;" @click="save()">
+                        <icon-check style="height: 11px;"></icon-check>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; position: relative;" v-else>
+                    <a class="btn btn--primary btn--border-only" style="float: right;" @click="add()">
+                        Novo
+                    </a>
                 </div>
             </div>
         </template>
@@ -40,6 +53,7 @@
         props: ['value','items'],
         data(){
             return {
+                adding: false,
                 editing: false,
                 inputValue: null,
                 editForm: {
@@ -56,7 +70,12 @@
                 }
                 this.$emit('input', item.value)
             },
+            add(){
+                this.editing = false
+                this.adding = true
+            },
             edit(item){
+                this.adding = false
                 this.editing = item.value
                 this.editForm.name = item.text
             },
@@ -88,5 +107,11 @@
     }
     .active >>> .colorizable {
         fill: var(--font-color--primary)
+    }
+    .active span {
+        color: var(--font-color--primary)
+    }
+    svg >>> .colorizable {
+        fill: var(--font-color)
     }
 </style>

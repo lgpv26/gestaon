@@ -9,7 +9,7 @@ const state = () => ({
 
 const getters = {
     activeMorphScreen(state, getters){
-        return _.find(state.screens, { active: true });
+        return _.find(state.screens, { active: true })
     },
     tags(state, getters){
         if(state.searchData && state.searchData.tags && state.searchData.tags.length){
@@ -28,52 +28,31 @@ const mutations = {
         state.searchData = data
     },
     RESET(currentState){
-        const initialState = state();
+        const initialState = state()
         Object.keys(initialState).forEach(k => { currentState[k] = initialState[k] })
     },
     SET_ALL_MS_SCREENS(state, screenObj){
         state.screens.forEach((screen) => {
-            _.assign(screen, screenObj);
-        });
+            _.assign(screen, screenObj)
+        })
     },
     SHOW_MS(state, value){
         if(_.isObject(value)) {
-            const obj = value;
-            if(obj.show){
-                state.isShowing = true;
-            }
-            else {
-                state.isShowing = false;
-            }
+            state.isShowing = value.show
         }
         else {
-            state.isShowing = value;
+            state.isShowing = value
         }
     },
-    SET_MS(state, screenObj){
-        state.screens.forEach((screen) => {
-            screen.active = false;
-        });
-        let screen = _.find(state.screens, (screen) => {
-            if(screenObj.draft && screen.draft.draftId === screenObj.draft.draftId) return true;
-        });
-        if(screen){
-            delete screenObj.draft;
-            _.assign(screen, screenObj);
-        }
-    },
-    SHOW_DRAFT(state, value){
-        if(_.isObject(value)) {
-            const obj = value;
-            if(obj.show) {
-                state.isShowing = true;
-            }
-            else {
-                state.isShowing = false;
-            }
-        }
-        else {
-            state.isShowing = value;
+    SET_MS(state, {draftId = null, screen = {}}){
+        state.screens.forEach((stateScreen) => {
+            stateScreen.active = false
+        })
+        let stateScreen = _.find(state.screens, (stateScreen) => {
+            return stateScreen.draft.draftId === draftId
+        })
+        if(stateScreen){
+            _.assign(stateScreen, screen)
         }
     },
     ADD_DRAFT(state, draft){
@@ -81,13 +60,7 @@ const mutations = {
             draft,
             isPersisting: false,
             active: false
-        });
-    },
-    removeMorthScreen(state, index){
-        state.screen.splice(index, 1);
-    },
-    changeMorthScreen(state){
-
+        })
     }
 };
 
@@ -140,10 +113,7 @@ const actions = {
         });
     },
     createDraft(context, {body, companyId}){
-        return DraftsAPI.createOne(body, {companyId}).then((response) => {
-            context.commit('ADD_DRAFT', response.data);
-            return response;
-        });
+        return DraftsAPI.createOne(body, {companyId})
     }
 };
 

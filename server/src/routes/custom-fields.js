@@ -13,7 +13,7 @@ module.exports = (server, restify) => {
     /* Users CRUD */
 
     server.get('/custom-fields', (req, res, next) => {
-        return server.broker.call('data/custom-field.list', {
+        return server.broker.call('data/custom-field.getList', {
             data: {
                 companyId: req.query.companyId
             }
@@ -25,7 +25,7 @@ module.exports = (server, restify) => {
     })
 
     server.get('/custom-fields/:id', (req, res, next) => {
-        return server.broker.call('data/custom-field.get', {
+        return server.broker.call('data/custom-field.getOne', {
             data: {
                 id: req.params.id,
                 companyId: req.query.companyId

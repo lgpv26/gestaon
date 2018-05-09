@@ -92,7 +92,10 @@
                 formPath: 'request.client.clientAddressForm'
             }
         },
-        sockets: {
+        watch: {
+            addressCEP(cep){
+                this.$refs.cepInput.display = cep
+            }
         },
         computed: {
             ...mapState('auth', ['company']),

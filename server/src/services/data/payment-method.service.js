@@ -4,7 +4,7 @@ import {Op} from 'sequelize'
 module.exports = (server) => { return {
     name: "data/payment-method",
     actions: {
-        get(ctx) {
+        getOne(ctx) {
             return server.mysql.PaymentMethod.findOne({
                 where: {
                     id: ctx.params.data.id,
@@ -20,17 +20,21 @@ module.exports = (server) => { return {
          * @param {Object} where, {Array} include
          * @returns {Promise.<Array>} requests
          */
-        list(ctx){
+        getList(ctx){
             return server.mysql.PaymentMethod.findAll({
                 where: {
                     companyId: {
                         [Op.in]: [0,ctx.params.data.companyId]
                     }
                 }
+            }).then((data) => {
+                return JSON.parse(JSON.stringify(data))
             })
         },
         create(ctx){
-            return server.mysql.PaymentMethod.create(ctx.params.data)
+            return server.mysql.PaymentMethod.create(ctx.params.data).then((data) => {
+                return JSON.parse(JSON.stringify(data))
+            })
         },
         update(ctx){
             return server.mysql.PaymentMethod.update(ctx.params.data,{
@@ -44,7 +48,9 @@ module.exports = (server) => { return {
                         new Error("Nenhum registro encontrado.")
                     )
                 }
-                return server.mysql.PaymentMethod.findById(ctx.params.data.id)
+                return server.mysql.PaymentMethod.findById(ctx.params.data.id).then((data) => {
+                    return JSON.parse(JSON.stringify(data))
+                })
             });
         },
         remove(ctx){

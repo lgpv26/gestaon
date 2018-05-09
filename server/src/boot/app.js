@@ -85,6 +85,8 @@ di.server.broker.createService(require('../services/data/client.service')(di.ser
 di.server.broker.createService(require('../services/data/product.service')(di.server))
 di.server.broker.createService(require('../services/data/client-group.service')(di.server))
 di.server.broker.createService(require('../services/data/custom-field.service')(di.server))
+di.server.broker.createService(require('../services/data/account.service')(di.server))
+di.server.broker.createService(require('../services/data/promotion-channel.service')(di.server))
 di.server.broker.createService(require('../services/data/address.service')(di.server))
 di.server.broker.createService(require('../services/data/payment-method.service')(di.server))
 di.server.broker.createService(require('../services/draft/index.service')(di.server))

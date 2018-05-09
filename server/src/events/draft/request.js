@@ -25,6 +25,59 @@ module.exports = class Request extends Draft {
         /**
          * @param {Object} evData = { clientId:Number, draftId:Number }
          */
+        vm.socket.instance.on('draft/request.load', (evData) => {
+
+            const dataPromises = []
+
+
+            // call the service to get a client's data
+            dataPromises.push(vm.server.broker.call('data/client-group.getList', {
+                data: {
+                    companyId: vm.socket.activeCompany.id
+                }
+            }))
+
+            dataPromises.push(vm.server.broker.call('data/custom-field.getList', {
+                data: {
+                    companyId: vm.socket.activeCompany.id
+                }
+            }))
+
+            dataPromises.push(vm.server.broker.call('data/payment-method.getList', {
+                data: {
+                    companyId: vm.socket.activeCompany.id
+                }
+            }))
+
+            dataPromises.push(vm.server.broker.call('data/account.getList', {
+                data: {
+                    companyId: vm.socket.activeCompany.id
+                }
+            }))
+
+            dataPromises.push(vm.server.broker.call('data/promotion-channel.getList', {
+                data: {
+                    companyId: vm.socket.activeCompany.id
+                }
+            }))
+
+            Promise.all(dataPromises).then((dataPromises) => {
+                console.log("Everything gone alright")
+                vm.socket.instance.emit('draft/request.load', new EventResponse({
+                    clientGroups: dataPromises[0],
+                    customFields: dataPromises[1],
+                    paymentMethods: dataPromises[2],
+                    accounts: dataPromises[3],
+                    promotionChannels: dataPromises[4],
+                }))
+            })
+
+            /*vm.socket.instance.emit('draft/request.load', new EventResponse(client))*/
+        })
+
+        /**
+         * @param {Object} evData = { clientId:Number, draftId:Number }
+         */
         vm.socket.instance.on('draft/request.client.select', (evData) => {
             // call the service to get a client's data
             vm.server.broker.call('data/client.get', {
@@ -56,11 +109,6 @@ module.exports = class Request extends Draft {
             }).then((client) => {
                 vm.server.io.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.client.select', new EventResponse(client))
             })
-        })
-        /**
-         * @param {Object} evData = { draftId:Number }
-         */
-        vm.socket.instance.on('draft/request.client.reset', (evData) => {
         })
 
         /**

@@ -26,16 +26,15 @@ module.exports = (server, restify) => {
         server.broker.call("draft.create", {
             data: {
                 companyId: parseInt(req.query.companyId),
-                type: 'request',
-                createdBy: 1
+                type: req.body.type,
+                createdBy: req.body.createdBy
             }
         }).then((draft) => {
             return res.send(200, { data: draft })
         }).catch((err) => {
             return next(new HTTPError(err.message, 500))
         })
-    });
-
+    })
 
     server.patch('/drafts/:draftId', (req, res, next) => {
         const draftUpdate = _.assign(req.body, { draftId: parseInt(req.params.draftId) })

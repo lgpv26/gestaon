@@ -363,7 +363,6 @@
                     case "end":      color = "Orchid";     bgc = "MediumVioletRed"; break;
                     default: color = color;
                 }
-
                 if (typeof msg == "object") {
                     console.log(msg);
                 } else if (typeof color == "object") {
@@ -374,12 +373,12 @@
                 }
             },
             systemInitialized(){
-                const vm = this;
+                const vm = this
                 vm.$bus.$on('sound-play', () => {
                     new Howl({
                         src: [alarmSound]
                     }).play();
-                });
+                })
             }
         },
         created(){
@@ -387,33 +386,33 @@
 
             /* start socket.io */
 
-            const socket = io(config.socketServer + '?token=' + vm.token.accessToken);
-            localStorage.debug = false;
-            Vue.use(VueSocketio, socket);
+            const socket = io(config.socketServer + '?token=' + vm.token.accessToken)
+            localStorage.debug = false
+            Vue.use(VueSocketio, socket)
 
             /* if user disconnected / reconnected from socket server */
 
             socket.on('reconnect_attempt', (attemptNumber) => {
-                vm.setLoadingText("Tentando reconectar (" + attemptNumber + ").");
-                vm.startLoading();
-                console.log("Trying reconnection.");
+                vm.setLoadingText("Tentando reconectar (" + attemptNumber + ").")
+                vm.startLoading()
+                console.log("Trying reconnection.")
             });
 
             socket.on('disconnect', (reason) => {
-                vm.setLoadingText("Desconectado.");
-                vm.startLoading();
-                console.log("Disconnected from socket server. Reason: ", reason);
-            });
+                vm.setLoadingText("Desconectado.")
+                vm.startLoading()
+                console.log("Disconnected from socket server. Reason: ", reason)
+            })
 
             socket.on('reconnect', (reason) => {
                 vm.stopLoading();
-                console.log("Reconnected.");
-            });
+                console.log("Reconnected.")
+            })
 
             /* initialize the refresh token timer */
 
-            let accessTokenSecondsLeft = parseInt(moment.duration(moment(vm.token.accessTokenExpiresAt).diff(moment())).asSeconds());
-            let refreshTokenSecondsLeft = parseInt(moment.duration(moment(vm.token.refreshTokenExpiresAt).diff(moment())).asSeconds());
+            let accessTokenSecondsLeft = parseInt(moment.duration(moment(vm.token.accessTokenExpiresAt).diff(moment())).asSeconds())
+            let refreshTokenSecondsLeft = parseInt(moment.duration(moment(vm.token.refreshTokenExpiresAt).diff(moment())).asSeconds())
 
             new Promise((resolve, reject) => { // deal with user token issues
                 window.setAppLoadingText("Carregando sessão...");
@@ -498,7 +497,7 @@
                 vm.setSystemInitialized(true);
                 vm.$bus.$emit('system-initialized');
                 vm.systemInitialized();
-            });
+            })
 
         }
     }
@@ -512,8 +511,6 @@
         display: flex;
         position: fixed;
         flex-direction: row;
-        background: var(--bg-color--5);
-        transition: .3s all;
 
         -webkit-backface-visibility: hidden;
         -webkit-transform: translate3d(0, 0, 0);

@@ -1,25 +1,25 @@
 <template>
     <div style="display: flex; flex-grow: 1; flex-direction: column">
-        <app-client-address-form v-if="show" @save="onClientAddressFormSave($event)" @create="onClientAddressFormCreate($event)"></app-client-address-form>
+        <app-client-address-form v-if="show"></app-client-address-form>
         <!-- Show client address list -->
         <div class="form-group" v-else>
             <div class="form-group__header">
                 <span style="margin-right: 10px;">Selecione um local</span><icon-local></icon-local>
                 <span class="push-both-sides"></span>
-                <a class="btn btn--border-only" @click="addClientAddress()">Novo</a>
+                <a class="btn btn--border-only" @click="add()">Novo</a>
             </div>
             <div class="form-group__content">
                 <ul class="content__list">
                     <li class="list__item" v-for="clientAddress in clientAddresses" :class="{ active: false }">
-                                    <span style="cursor: pointer;" @click="onClientAddressSelected(clientAddress)">
-                                        {{ clientAddress.address.name }},
-                                        {{ clientAddress.number.toString().trim() || "SN" }}
-                                    </span>
+                        <span style="cursor: pointer;" @click="select(clientAddress)">
+                            {{ clientAddress.address.name }},
+                            {{ clientAddress.number.toString().trim() || "SN" }}
+                        </span>
                         <span class="push-both-sides"></span>
-                        <div class="item__check item__icon" @click="onClientAddressSelected(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                        <div class="item__check item__icon" @click="select(clientAddress)" style="cursor: pointer; margin-right: 10px;">
                             <icon-check style="width: 16px;"></icon-check>
                         </div>
-                        <div class="item__icon" @click="editClientAddress(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                        <div class="item__icon" @click="edit(clientAddress)" style="cursor: pointer; margin-right: 10px;">
                             <icon-edit></icon-edit>
                         </div>
                         <div class="item__icon" @click="removeClientAddress(clientAddress)" style="cursor: pointer;">
@@ -84,28 +84,17 @@
         },
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
-            ...mapActions('draft/request', ['setClientAddressForm','addClientAddress']),
-
-            onClientAddressFormSave(clientAddressForm){
-                const clientAddressIndex = _.findIndex(this.clientAddresses, { id: clientAddressForm.id })
-                if(clientAddressIndex !== -1){
-                    this.clientAddresses[clientAddressIndex] = clientAddressForm
-                    this.sync(
-                        this.clientAddresses,
-                        'clientAddresses',
-                        'request.client'
-                    )
-                }
-            },
-
-            onClientAddressFormCreate(clientAddressForm){
-            },
+            ...mapActions('draft/request', ['setClientAddressForm']),
 
             /**
              * Actions
              */
 
-            editClientAddress(clientAddress){
+            select(clientAddress){
+                console.log("Select", clientAddress)
+            },
+
+            edit(clientAddress){
                 this.setClientAddressForm(clientAddress)
                 this.show = true
                 this.syncMultiple(
@@ -118,7 +107,7 @@
                 )
             },
 
-            addClientAddress(){
+            add(){
                 this.show = true
                 this.sync(this.show, 'show')
             }

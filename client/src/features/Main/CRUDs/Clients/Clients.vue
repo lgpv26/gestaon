@@ -30,7 +30,7 @@
     import moment from 'moment';
     import _ from 'lodash';
 
-    import GridComponent from '../../../../components/Utilities/Grid/Grid.vue'
+    import GridComponent from '../../../../components/Utilities/Grid.vue'
 
     export default {
         components: {
@@ -12130,7 +12130,7 @@
             onGridScroll(ev){
                 this.items = []
                 let i = Math.ceil(ev.from)
-                while(i < Math.ceil(ev.to) + 5){
+                while(i < Math.ceil(ev.to) + 1){
                     if(this.databaseItems[i] !== undefined) {
                         this.items.push(this.databaseItems[i])
                     }

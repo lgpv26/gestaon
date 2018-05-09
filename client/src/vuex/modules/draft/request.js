@@ -1,7 +1,10 @@
-import Vue from 'vue'
 import _ from 'lodash'
+import utils from '@/utils/index'
 import { getField, updateField } from 'vuex-map-fields'
 import shortid from 'shortid'
+
+import ClientsAPI from '@/api/clients'
+import RequestsAPI from '@/api/requests'
 
 import {createClient} from '@/models/ClientModel'
 import {createClientAddress} from '@/models/ClientAddressModel'
@@ -157,8 +160,34 @@ const mutations = {
 /* actions */
 
 const clientActions = {
-    persistenceClient(context, client){
-        console.log(client)
+    persistenceClient(context, {client, companyId}){
+        client =  utils.removeReactivity(client)
+        ClientsAPI.persistence({
+            client: {
+                id: client.id,
+                name: client.name,
+                legalDocument: client.legalDocument,
+                clientGroupId: client.clientGroupId,
+                clientPhones: _.map(client.clientPhones, (clientPhone) => {
+                    if(!_.isNumber(clientPhone.id) && clientPhone.id.substring(0,4) === "tmp/"){
+                        clientPhone.id = null
+                    }
+                    return clientPhone
+                }),
+                clientAddresses: _.map(client.clientAddresses, (clientAddress) => {
+                    if(!_.isNumber(clientAddress.id) && clientAddress.id.substring(0,4) === "tmp/"){
+                        clientAddress.id = null
+                    }
+                    return clientAddress
+                })
+            }
+        },{
+            companyId
+        }).then((response) => {
+            console.log("SUCESSO", response)
+        }).catch((err) => {
+            console.log("ERRO", err)
+        })
     },
     setClient(context, client){
         context.commit('SET_CLIENT', client)
@@ -198,6 +227,25 @@ const orderActions = {
     },
 }
 const actions = {
+    persistence(context, {request, companyId}){
+        request =  utils.removeReactivity(request)
+        RequestsAPI.persistence({
+            order: {
+                orderProducts: _.map(request.order.orderProducts, (orderProduct) => {
+                    if(_.get(orderProduct, 'id', false) && !_.isNumber(orderProduct.id) && orderProduct.id.substring(0,4) === "tmp/"){
+                        orderProduct.id = null
+                    }
+                    return orderProduct
+                })
+            }
+        },{
+            companyId
+        }).then((response) => {
+            console.log("SUCESSO", response)
+        }).catch((err) => {
+            console.log("ERRO", err)
+        })
+    },
     setRequest(context, request){
         context.commit('SET_REQUEST', request || {})
         context.commit('SET_CLIENT', _.get(request, 'client', {}))

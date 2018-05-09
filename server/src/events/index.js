@@ -68,6 +68,10 @@ module.exports = class Events {
                     })
                     if(!socket.activeCompany) socket.activeCompany =  _.first(socket.user.companies)
 
+                    // join the user to its company events
+
+                    socket.instance.join('company/' + socket.activeCompany.id)
+
                     // for the current user, join him to his tracking devices
                     socket.user.companies.forEach((company) => {
                         this.server.mongodb.Device.find({
@@ -90,6 +94,14 @@ module.exports = class Events {
                 }
             })
             socket.instance.on('disconnect', () => {
+            })
+            socket.instance.on('join-company-room', (companyId) => {
+                // console.log(user.name + " joins device/" + deviceCode + ".")
+                socket.join('company/' + companyId)
+            })
+            socket.instance.on('leave-company-room', (companyId) => {
+                // console.log(user.name + " leaves device/" + deviceCode + ".")
+                socket.leave('company/' + companyId)
             })
             socket.instance.on('join-device-room', (deviceCode) => {
                 // console.log(user.name + " joins device/" + deviceCode + ".")

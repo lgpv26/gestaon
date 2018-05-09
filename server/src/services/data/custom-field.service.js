@@ -4,7 +4,7 @@ import {Op} from 'sequelize'
 module.exports = (server) => { return {
     name: "data/custom-field",
     actions: {
-        get(ctx) {
+        getOne(ctx) {
             return server.mysql.CustomField.findOne({
                 where: {
                     id: ctx.params.data.id,
@@ -12,25 +12,29 @@ module.exports = (server) => { return {
                         [Op.in]: [0,ctx.params.data.companyId]
                     }
                 }
-            }).then((customField) => {
-                return JSON.parse(JSON.stringify(customField))
+            }).then((data) => {
+                return JSON.parse(JSON.stringify(data))
             })
         },
         /**
          * @param {Object} where, {Array} include
          * @returns {Promise.<Array>} requests
          */
-        list(ctx){
+        getList(ctx){
             return server.mysql.CustomField.findAll({
                 where: {
                     companyId: {
                         [Op.in]: [0,ctx.params.data.companyId]
                     }
                 }
+            }).then((data) => {
+                return JSON.parse(JSON.stringify(data))
             })
         },
         create(ctx){
-            return server.mysql.CustomField.create(ctx.params.data)
+            return server.mysql.CustomField.create(ctx.params.data).then((data) => {
+                return JSON.parse(JSON.stringify(data))
+            })
         },
         update(ctx){
             return server.mysql.CustomField.update(ctx.params.data,{
@@ -38,11 +42,13 @@ module.exports = (server) => { return {
                     id: ctx.params.data.id,
                     companyId: ctx.params.data.companyId
                 }
-            }).then((customField) => {
-                if(!customField){
+            }).then((data) => {
+                if(!data){
                     throw new Error("Nenhum registro encontrado.")
                 }
-                return server.mysql.CustomField.findById(ctx.params.data.id)
+                return server.mysql.CustomField.findById(ctx.params.data.id).then((data) => {
+                    return JSON.parse(JSON.stringify(data))
+                })
             })
         },
         remove(ctx){
