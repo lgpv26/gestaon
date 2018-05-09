@@ -1,7 +1,7 @@
 <template>
     <div class="product-input">
         <app-search v-if="!_.get(value,'id',false)" ref="search" :items="search.items" :shouldStayOpen="search.isInputFocused" :query="search.query" :verticalOffset="5" :horizontalOffset="-20"
-                    @itemSelected="searchMethods().onSearchProductSelect($event)" >
+                    @itemSelected="searchMethods().searchProductSelected($event)" >
             <input type="text" class="search-input__field" placeholder="ENCONTRAR" v-model="product.name" ref="searchInput"
                    @keydown="searchMethods().onSearchValueUpdate()" @focus="search.isInputFocused = true" @blur="search.isInputFocused = false"
                    @input="searchMethods().onSearchInput()" />
@@ -87,16 +87,20 @@
                             q: vm.search.query,
                             companyId: vm.company.id
                         }).then(({data}) => {
-                            //vm.search.items = data
-                            vm.search.items = []
+                            vm.search.items = data
+                            /* vm.search.items = [] */
                             vm.$refs.search.search()
                         }).catch((err) => {
                             vm.search.items = []
                         })
                     },
-                    onSearchProductSelect(item) {
-                        console.log(item)
-                        vm.search.items = [];
+                    searchProductSelected(item) {
+                        ProductsAPI.getOne(item.productId, {
+                            companyId: vm.company.id
+                        }).then(({data}) => {
+                            vm.$emit('input', createProduct(data))
+                        })
+                        vm.search.items = []
                     },
                     onSearchValueUpdate() {
                         if (vm.search.commitTimeout) clearTimeout(vm.search.commitTimeout)
@@ -125,7 +129,9 @@
              * Actions
              */
 
-            resetOrderProductProduct(){}
+            resetOrderProductProduct(){
+                this.$emit('input', createProduct())
+            }
         }
     }
 </script>

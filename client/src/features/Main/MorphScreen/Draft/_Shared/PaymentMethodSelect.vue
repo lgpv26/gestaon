@@ -1,20 +1,21 @@
 <template>
     <app-popover>
         <template slot="triggerer">
-            <slot></slot>
+            <slot v-if="hasDefaultSlot"></slot>
+            <input v-else type="text" style="cursor: pointer;" :value="selectedPaymentMethodName" readonly />
         </template>
         <template slot="content">
             <div style="width: 200px;">
                 <h3>Meios de pagamento</h3>
-                <div v-for="item in items" class="item">
-                    <div style="margin-top: 10px; position: relative;" v-if="editing === item.value">
+                <div v-for="paymentMethod in paymentMethods" class="item">
+                    <div style="margin-top: 10px; position: relative;" v-if="editing === paymentMethod.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 0px; top: 0; cursor: pointer;">
                             <icon-check></icon-check>
                         </div>
                     </div>
-                    <div v-else :class="{ active: value === item.value }" style="display: flex; flex-direction: row;">
-                        <span style="cursor: pointer;" @click="select(item)" @dblclick="edit(item)">{{ item.text }}</span>
+                    <div v-else :class="{ active: value.id === paymentMethod.id }" style="display: flex; flex-direction: row;">
+                        <span style="cursor: pointer;" @click="select(paymentMethod)" @dblclick="edit(paymentMethod)">{{ paymentMethod.name }}</span>
                         <span class="push-both-sides"></span>
                         <icon-check></icon-check>
                     </div>
@@ -37,7 +38,7 @@
     import Vue from 'vue'
 
     export default {
-        props: ['value','items'],
+        props: ['value'],
         data(){
             return {
                 editing: false,
@@ -48,17 +49,28 @@
             }
         },
         computed: {
+            ...mapState('data/payment-methods', ['paymentMethods']),
+            hasDefaultSlot () {
+                return !!this.$slots.default
+            },
+            selectedPaymentMethodName(){
+                const selectedPaymentMethod = _.find(this.paymentMethods, {id: this.value.id})
+                if(selectedPaymentMethod){
+                    return selectedPaymentMethod.name
+                }
+                return '-- SELECIONAR --'
+            }
         },
         methods: {
-            select(item){
-                if(item.value !== this.value){
-                    this.$emit('change', item.value)
+            select(paymentMethod){
+                if(paymentMethod.id !== this.value.id){
+                    this.$emit('change', paymentMethod)
+                    this.$emit('input', paymentMethod)
                 }
-                this.$emit('input', item.value)
             },
-            edit(item){
-                this.editing = item.value
-                this.editForm.name = item.text
+            edit(paymentMethod){
+                this.editing = paymentMethod.id
+                this.editForm.name = paymentMethod.name
             },
             save(){
 

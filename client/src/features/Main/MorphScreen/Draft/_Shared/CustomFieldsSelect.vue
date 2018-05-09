@@ -6,15 +6,15 @@
         <template slot="content">
             <div style="width: 200px;">
                 <h3>Grupo de clientes</h3>
-                <div v-for="item in items" class="item">
-                    <div style="margin-top: 10px; position: relative;" v-if="editing === item.value">
+                <div v-for="customField in customFields" class="item">
+                    <div style="margin-top: 10px; position: relative;" v-if="editing === customField.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 0px; top: 0; cursor: pointer;">
                             <icon-check></icon-check>
                         </div>
                     </div>
-                    <div v-else :class="{ active: _.find(value, { id: item.value }) }" style="display: flex; flex-direction: row;">
-                        <span style="cursor: pointer;" @click="select(item)" @dblclick="edit(item)">{{ item.text }}</span>
+                    <div v-else :class="{ active: _.find(value, { id: customField.id }) }" style="display: flex; flex-direction: row;">
+                        <span style="cursor: pointer;" @click="select(customField)" @dblclick="edit(customField)">{{ customField.name }}</span>
                         <span class="push-both-sides"></span>
                         <icon-check></icon-check>
                     </div>
@@ -38,7 +38,7 @@
     import Vue from 'vue'
 
     export default {
-        props: ['value','items'],
+        props: ['value'],
         data(){
             return {
                 editing: false,
@@ -49,29 +49,27 @@
             }
         },
         computed: {
+            ...mapState('data/custom-fields', ['customFields']),
         },
         methods: {
-            haas(item){
-                return _.find(this.value, { id: item.value })
-            },
-            select(item){
+            select(customField){
                 const customFields = utils.removeReactivity(this.value)
-                if(_.find(customFields, {id: item.value})){
-                    const index = _.findIndex(customFields, {id: item.value})
+                if(_.find(customFields, {id: customField.id})){
+                    const index = _.findIndex(customFields, {id: customField.id})
                     customFields.splice(index, 1)
                 }
                 else {
                     customFields.push({
-                        id: item.value,
+                        id: customField.id,
                         value: ''
                     })
                 }
                 this.$emit('change', customFields)
                 this.$emit('input', customFields)
             },
-            edit(item){
-                this.editing = item.value
-                this.editForm.name = item.text
+            edit(customField){
+                this.editing = customField.id
+                this.editForm.name = customField.name
             },
             save(){
 

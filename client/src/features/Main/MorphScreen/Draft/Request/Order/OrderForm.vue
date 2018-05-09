@@ -3,75 +3,53 @@
             <div class="form__main-column" style="display: flex; flex-direction: column; margin-right: 10px;">
                 <div class="form-groups">
                     <app-order-products-form></app-order-products-form>
-                    <!--
-                    <div class="content__separator"></div>
-                    <table class="order-payment-method" style="width: 100%; text-align: left;">
-                        <thead>
-                        <tr>
-                            <th>Forma de pagamento</th>
-                            <th style="text-align: right; width: 120px;">Desc. Extra</th>
-                            <th style="text-align: right; width: 120px;">Total a pagar</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(orderPaymentMethod, index) in form.orderPaymentMethods" :key="orderPaymentMethod.id">
-                                <td><app-payment-method-input v-model="form.paymentMethodId" /></td>
-                                <td><money v-model="form.price" type="text" style="text-align: right;" /></td>
-                                <td><money v-model="form.price" type="text" style="text-align: right; color: var(--font-color--primary)" /></td>
-                                <td style="text-align: center; cursor: pointer; width: 30px; padding-right: 0;">
-                                    <div style="display: flex; flex-direction: row; margin-top: -4px;">
-                                        <div style="cursor: pointer; margin-top: -2px;" @click="removePaymentMethod(orderPaymentMethod.id)" v-if="form.orderPaymentMethods.length > 1">
-                                            <icon-remove></icon-remove>
-                                        </div>
-                                        <div style="cursor: not-allowed; opacity: .3; margin-top: -2px;" v-else>
-                                            <icon-remove></icon-remove>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colspan="1">
-                                    <a class="btn btn--border-only" @click="addPaymentMethod" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Incluir pagamento</a>
-                                </td>
-                                <td style="text-align: right; font-weight: 600;">Saldo</td>
-                                <td style="text-align: right; font-weight: 800; color: var(--font-color--secondary)">R$ XX,XX</td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    -->
                 </div>
                 <span class="push-both-sides"></span>
                 <div class="form-groups">
-                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
-                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
+                    <div class="form-group" style="flex-grow: 1; flex-direction: column; align-items: flex-start">
+                        <label style="font-weight: 600; font-size: 12px; margin-bottom: 5px;">
                             Canal de divulgação
                         </label>
                         <span class="push-both-sides"></span>
-                        <app-divulgation-channel-input></app-divulgation-channel-input>
+                        <app-promotion-channel-select v-model="promotionChannelId" @change="sync($event,'promotionChannelId')">
+                            <div class="select-triggerer">
+                                <span>{{ selectedPromotionChannelName }}</span>
+                                <icon-dropdown></icon-dropdown>
+                            </div>
+                        </app-promotion-channel-select>
                     </div>
-                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
-                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px; white-space: nowrap">
+                    <div class="form-group" style="flex-grow: 1; flex-direction: column; align-items: flex-start;">
+                        <label style="font-weight: 600; font-size: 12px; margin-bottom: 5px; white-space: nowrap">
                             Hora da entrega
                         </label>
-                        <app-datetime-selector class="input--borderless" v-model="datetime" :config="datetimeSelectorConfig" placeholder="..."></app-datetime-selector>
+                        <div class="input-container">
+                            <span v-if="useSuggestedDeadlineDatetime">{{ suggestedDeadlineDatetime }}</span>
+                            <app-datetime-selector class="input--borderless" v-model="deadlineDatetime" @input="inputDeadlineDatetime($event)"
+                                v-else :config="datetimeSelectorConfig" placeholder="..."></app-datetime-selector>
+                            <span class="push-both-sides"></span>
+                            <a href="javascript:void(0)" v-if="!useSuggestedDeadlineDatetime" style="white-space: nowrap; margin-left: 10px;" @click="toggleSuggestedTime">SUGERIDO</a>
+                            <a href="javascript:void(0)" v-else style="white-space: nowrap; margin-left: 10px;" @click="toggleSuggestedTime">AGENDADO</a>
+                        </div>
                     </div>
                 </div>
                 <div class="form-groups">
-                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
-                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
+                    <div class="form-group" style="flex-grow: 1; flex-direction: column; align-items: flex-start">
+                        <label style="font-weight: 600; font-size: 12px; margin-bottom: 5px;">
                             Observação do pedido
                         </label>
-                        <input type="text" style="width: initial;" class="input--borderless" placeholder="..."
-                               v-model="obs" @input="sync(obs,'obs','request')"/>
+                        <input type="text" style="width: initial;" class="input--borderless" placeholder="..." v-model="obs" @input="sync(obs,'obs','request')"/>
                     </div>
-                    <div class="form-group" style="flex-grow: 1; flex-direction: row;">
-                        <label style="margin-right: 10px; align-self: center; font-weight: 600; font-size: 12px;">
+                    <div class="form-group" style="flex-grow: 1; flex-direction: column; align-items: flex-start">
+                        <label style="font-weight: 600; font-size: 12px;">
                             Responsável
                         </label>
                         <span class="push-both-sides"></span>
-                        <app-employee-input></app-employee-input>
+                        <app-user-select v-model="responsibleUserId" @change="sync($event,'responsibleUserId','request')">
+                            <div class="select-triggerer">
+                                <span>{{ selectedResponsibleUserName }}</span>
+                                <icon-dropdown></icon-dropdown>
+                            </div>
+                        </app-user-select>
                     </div>
                 </div>
             </div>
@@ -157,12 +135,15 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash';
+    import moment from 'moment';
     import Highcharts from 'highcharts';
     import OrderProductsForm from './OrderProductsForm.vue';
     import EmployeeInput from './EmployeeInput.vue';
     import StorageInput from './StorageInput.vue';
-    import DivulgationChannelInput from './DivulgationChannelInput.vue'
     import DraftMixin from '../../DraftMixin'
+
+    import PromotionChannelSelectComponent from '../../_Shared/PromotionChannelSelect.vue'
+    import UserSelectComponent from '../../_Shared/UserSelect.vue'
 
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
@@ -175,7 +156,8 @@
         components: {
             'app-order-products-form': OrderProductsForm,
             'app-employee-input': EmployeeInput,
-            'app-divulgation-channel-input': DivulgationChannelInput
+            'app-promotion-channel-select': PromotionChannelSelectComponent,
+            'app-user-select': UserSelectComponent
         },
         mixins: [DraftMixin],
         data(){
@@ -184,26 +166,85 @@
                 productChart: null,
                 datetime: null,
                 datetimeSelectorConfig: {
-                    dateFormat: 'd/m/Y H:i',
+                    altInput: true,
+                    altFormat: 'd/m/Y H:i:S',
+                    dateFormat: 'Z',
                     locale: Portuguese,
                     time_24hr: true,
                     enableTime: true
                 },
-                formPath: 'request.order'
+                formPath: 'request.order',
             }
         },
         computed: {
+            ...mapState('data/promotion-channels', ['promotionChannels']),
+            ...mapState('data/users', ['users']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapFields([
+                'form.deadlineDatetime',
+                'form.useSuggestedDeadlineDatetime',
                 'form.obs',
-            ])
+                'form.order.promotionChannelId',
+                'form.responsibleUserId',
+            ]),
+            selectedPromotionChannelName(){
+                const promotionChannel = _.find(this.promotionChannels, {id: this.promotionChannelId})
+                if(promotionChannel){
+                    return promotionChannel.name
+                }
+                else {
+                    return "-- NENHUM --"
+                }
+            },
+            selectedResponsibleUserName(){
+                const responsibleUser = _.find(this.users, {id: this.responsibleUserId})
+                if(responsibleUser){
+                    return responsibleUser.name
+                }
+                else {
+                    return "-- NENHUM --"
+                }
+            },
+            suggestedDeadlineDatetime(){
+                const deadlineDatetime = moment(this.deadlineDatetime)
+                if(deadlineDatetime.isValid()){
+                    return deadlineDatetime.format("DD/MM/YYYY HH:mm:ss")
+                }
+                else {
+                    return "Carregando..."
+                }
+            }
         },
         methods: {
             activateTab(tab){
                 this.activeTab = tab;
+            },
+            inputDeadlineDatetime(value){
+                const deadlineDatetime = moment(value)
+                if(!this.useSuggestedDeadlineDatetime && deadlineDatetime.isValid()){
+                    this.sync(deadlineDatetime.toDate(), 'deadlineDatetime', 'request')
+                }
+            },
+            toggleSuggestedTime(){
+                if(this.useSuggestedDeadlineDatetime){
+                    this.useSuggestedDeadlineDatetime = false
+                    this.deadlineDatetime = null
+                    this.syncMultiple([
+                        { value: this.deadlineDatetime, path: 'deadlineDatetime', customBaseFormPath: 'request' },
+                        { value: this.useSuggestedDeadlineDatetime, path: 'useSuggestedDeadlineDatetime', customBaseFormPath: 'request' },
+                    ])
+                }
+                else {
+                    this.useSuggestedDeadlineDatetime = true
+                    this.syncMultiple([
+                        { value: null, path: 'deadlineDatetime', customBaseFormPath: 'request' },
+                        { value: this.useSuggestedDeadlineDatetime, path: 'useSuggestedDeadlineDatetime', customBaseFormPath: 'request' },
+                    ])
+                }
             }
         },
         mounted(){
+            const vm = this
             Highcharts.theme = {
                 colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066',
                     '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
@@ -396,9 +437,9 @@
                 textColor: '#C0C0C0',
                 contrastTextColor: '#F0F0F3',
                 maskColor: 'rgba(255,255,255,0.3)'
-            };
+            }
             Highcharts.setOptions(Highcharts.theme);
-            this.productChart = Highcharts.chart(this.$refs.productChart, {
+            vm.productChart = Highcharts.chart(vm.$refs.productChart, {
                 chart: {
                     height: 200
                 },
@@ -542,12 +583,51 @@
                         }]
                     }
                 ]
-            });
+            })
+            vm.suggestedTimeInterval = setInterval(() => {
+                if(vm.useSuggestedDeadlineDatetime){
+                    vm.deadlineDatetime = moment().add(20, 'minutes').toDate()
+                }
+            }, 1000)
+        },
+        beforeDestroy(){
+            if(this.suggestedTimeInterval){
+                clearInterval(this.suggestedTimeInterval)
+            }
         }
     }
 </script>
 
 <style lang="scss" scoped>
+
+    .select-triggerer {
+        cursor: pointer;
+        display: flex;
+        flex-direction: row;
+        position: relative;
+        height: 24px;
+        flex-grow: 1;
+        align-items: center;
+        justify-content: flex-end;
+        span {
+            padding-right: 20px;
+            color: var(--font-color--8)
+        }
+        svg {
+        }
+    }
+
+    .input-container {
+        display: flex;
+        flex-direction: row;
+        flex-grow: 1;
+        width: 100%;
+        align-items: center;
+    }
+
+    .input-container span {
+        color: var(--font-color--8)
+    }
 
     /**
     Main column

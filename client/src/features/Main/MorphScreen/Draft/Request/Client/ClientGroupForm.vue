@@ -1,11 +1,11 @@
 <template>
-    <app-client-group-select v-model="clientGroupId" :items="items" @change="change($event)">
+    <app-client-group-select v-model="clientGroupId" @change="change($event)">
         <div style="cursor: pointer; display: flex; flex-direction: row; align-items: center;" class="form-group">
             <div class="header__icon" style="margin-right: 8px;">
                 <icon-client-group style="position: relative; top: 2px;"></icon-client-group>
             </div>
             <span class="static" v-if="!selectedClientGroup">Grupo de cliente</span>
-            <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.text }}</span>
+            <span v-else style="color: var(--font-color--primary);">{{ selectedClientGroup.name }}</span>
             <span class="push-both-sides"></span>
             <icon-dropdown class="header__action-icon"></icon-dropdown>
         </div>
@@ -44,11 +44,12 @@
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company']),
+            ...mapState('data/client-groups', ['clientGroups']),
             ...mapFields([
                 'form.client.clientGroupId'
             ]),
             selectedClientGroup(){
-                return _.find(this.items, { value: this.clientGroupId })
+                return _.find(this.clientGroups, { id: this.clientGroupId })
             }
         },
         methods: {
@@ -57,17 +58,6 @@
                 this.clientGroupId = clientGroupId
                 this.sync(this.clientGroupId, 'clientGroupId')
             }
-        },
-        created(){
-            const vm = this
-            ClientGroupsAPI.getList({ companyId: this.company.id }).then(({data}) => {
-                vm.items = _.map(data, (clientGroup) => {
-                    return {
-                        value: clientGroup.id,
-                        text: clientGroup.name
-                    }
-                })
-            })
         }
     }
 </script>

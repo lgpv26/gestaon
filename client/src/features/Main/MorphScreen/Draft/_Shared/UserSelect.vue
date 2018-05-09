@@ -5,9 +5,9 @@
         </template>
         <template slot="content">
             <div style="width: 240px;">
-                <h3>Grupo de clientes</h3>
-                <div v-for="clientGroup in clientGroups" class="item">
-                    <div style="margin-top: 10px; position: relative;" v-if="editing === clientGroup.id">
+                <h3>Usuários</h3>
+                <div v-for="user in users" class="item">
+                    <div style="margin-top: 10px; position: relative;" v-if="editing === user.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 24px; top: 0; cursor: pointer; font-weight: bold;" @click="editing = false">
                             voltar
@@ -16,10 +16,10 @@
                             <icon-check style="height: 11px;"></icon-check>
                         </div>
                     </div>
-                    <div v-else :class="{ active: value === clientGroup.id }" style="display: flex; flex-direction: row;">
-                        <span style="cursor: pointer;" @click="select(clientGroup)">{{ clientGroup.name }}</span>
+                    <div v-else :class="{ active: value === user.id }" style="display: flex; flex-direction: row;">
+                        <span style="cursor: pointer;" @click="select(user)">{{ user.name }}</span>
                         <span class="push-both-sides"></span>
-                        <a href="javascript:void(0)" style="margin-right: 3px;" @click="edit(clientGroup)">
+                        <a href="javascript:void(0)" style="margin-right: 3px;" @click="edit(user)">
                             <icon-edit></icon-edit>
                         </a>
                     </div>
@@ -62,23 +62,23 @@
             }
         },
         computed: {
-            ...mapState('data/client-groups', ['clientGroups']),
+            ...mapState('data/users', ['users']),
         },
         methods: {
-            select(clientGroup){
-                if(clientGroup.id !== this.value){
-                    this.$emit('change', clientGroup.id)
+            select(user){
+                if(user.id !== this.value){
+                    this.$emit('change', user.id)
                 }
-                this.$emit('input', clientGroup.id)
+                this.$emit('input', user.id)
             },
             add(){
                 this.editing = false
                 this.adding = true
             },
-            edit(clientGroup){
+            edit(user){
                 this.adding = false
-                this.editing = clientGroup.id
-                this.editForm.name = clientGroup.name
+                this.editing = user.id
+                this.editForm.name = user.name
             },
             save(){
 

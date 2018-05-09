@@ -59,35 +59,7 @@
         </div>
         <div class="footer" v-if="activeStep === 'order' || activeStep === 'task'">
             <div class="left-side">
-                <table class="payment-methods" style="width: 100%; text-align: left;">
-                    <thead>
-                        <tr>
-                            <th>Forma de pagamento</th>
-                            <th style="text-align: left; width: 80px;">Parcela</th>
-                            <th style="text-align: left; width: 150px;">Vencimento</th>
-                            <th style="text-align: right; width: 150px;">Valores</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(requestPaymentMethodRow,index) in requestPaymentMethodRows">
-                            <td><app-payment-method-select :items="paymentMethodItems" v-model="requestPaymentMethodRow.id"><input type="text" readonly /></app-payment-method-select></td>
-                            <td>PARCELA</td>
-                            <td><input type="text" v-model="requestPaymentMethodRow.deadline" readonly /></td>
-                            <td><money type="text" v-model="requestPaymentMethodRow.amount" style="text-align: right;"></money></td>
-                            <td>
-                                <div style="cursor: pointer; margin-top: -1px;">
-                                    <icon-remove></icon-remove>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="5">
-                                <a class="btn btn--border-only" @click="add()" style="display: inline-flex; margin-top: 15px; padding: 0 7px; color: var(--font-color--d-secondary);">Adicionar pagamento</a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <app-payment-methods-form></app-payment-methods-form>
             </div>
             <span class="push-both-sides"></span>
             <div class="right-side">
@@ -106,8 +78,8 @@
             <a style="margin-right: 20px;" @click="$emit('close')">Voltar</a>
             <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
 
-            <a class="btn btn--primary persistence allowed" v-if="activeStep === 'client'" @click="persistenceClient({client,companyId: company.id})">Salvar Cliente</a>
-            <a class="btn btn--primary persistence allowed" v-else-if="activeStep !== 'client'" @click="persistence({request: form, companyId: company.id})">Salvar Pedido</a>
+            <a class="btn btn--primary persistence allowed" v-if="activeStep === 'client'" @click="persistClient({client,companyId: company.id})">Salvar Cliente</a>
+            <a class="btn btn--primary persistence allowed" v-else-if="activeStep !== 'client'" @click="persistRequest({request: form, companyId: company.id})">Salvar Pedido</a>
         </div>
     </div>
 </template>
@@ -118,8 +90,8 @@
     import utils from '@/utils/index'
     import _ from 'lodash'
     import DraftMixin from '../DraftMixin'
-    import PaymentMethodsAPI from '@/api/payment-methods'
-    import PaymentMethodSelectComponent from '../_Shared/PaymentMethodSelect.vue'
+
+    import PaymentMethodsForm from './PaymentMethodsForm.vue'
 
     import ClientForm from './Client/ClientForm.vue'
     import ClientSummary from './Client/ClientSummary.vue'
@@ -136,8 +108,8 @@
 
     export default {
         components: {
-            'app-payment-method-select': PaymentMethodSelectComponent,
             'app-client-summary': ClientSummary,
+            'app-payment-methods-form': PaymentMethodsForm,
             'app-client-form': ClientForm,
             'app-order-form': OrderForm,
             'app-task-form': TaskForm
@@ -147,7 +119,6 @@
             return {
                 scrollbar: null,
                 formPath: 'request',
-                paymentMethodItems: [],
                 datetimeSelectorConfig: {
                     dateFormat: 'd/m/Y H:i',
                     locale: Portuguese,
@@ -172,7 +143,7 @@
             }),
         },
         methods: {
-            ...mapActions('draft/request', ['persistence','persistenceClient','setRequest','addOrderProduct','addRequestPaymentMethod']),
+            ...mapActions('draft/request', ['runRequestPersistence','runClientPersistence','setRequest','setClient','addOrderProduct','addRequestPaymentMethod']),
             ...mapActions('toast', ['showToast']),
             ...mapActions('loading', ['stopLoading']),
             changeStep(step){
@@ -199,33 +170,21 @@
                 if(!this.requestPaymentMethods.length){
                     this.addRequestPaymentMethod()
                 }
-            }
-        },
-        created(){
-            const vm = this
-
-            const emitData = {
-                draftId: this.activeMorphScreen.draft.draftId
-            }
-            console.log("Emitting to draft/request.load", emitData)
-            vm.$socket.emit('draft/request.load', emitData)
-
-            /**
-             * On active step change
-             * @param {Object} ev = { success:Boolean, evData:Draft }
-             */
-            vm.$options.sockets['draft/request.load'] = (ev) => {
-                console.log("Received draft/request.load", ev)
-            }
-
-            PaymentMethodsAPI.getList({ companyId: this.company.id }).then(({data}) => {
-                vm.paymentMethodItems = _.map(data, (paymentMethod) => {
-                    return {
-                        value: paymentMethod.id,
-                        text: paymentMethod.name
+            },
+            persistClient(){
+                const vm = this
+                vm.runClientPersistence({
+                    client: vm.client,
+                    companyId: vm.company.id
+                }).then((client) => {
+                    const emitData = {
+                        draftId: vm.activeMorphScreen.draft.draftId,
+                        clientId: parseInt(client.id)
                     }
+                    console.log("Emitting draft/request.client.select", emitData)
+                    vm.$socket.emit('draft/request.client.select', emitData)
                 })
-            })
+            }
         },
         mounted(){
             this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {

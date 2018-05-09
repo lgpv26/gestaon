@@ -19,8 +19,30 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.get('/products', productsController.getAll);
-    server.get('/products/:id', productsController.getOne)
+    server.get('/products', (req, res, next) => {
+        return server.broker.call('data/product.getList', {
+            data: {
+                companyId: req.query.companyId
+            }
+        }).then((data) => {
+            return res.send(200, { data })
+        }).catch((err) => {
+            return next(err)
+        })
+    })
+
+    server.get('/products/:id', (req, res, next) => {
+        return server.broker.call('data/product.getOne', {
+            data: {
+                id: req.params.id,
+                companyId: req.query.companyId
+            }
+        }).then((data) => {
+            return res.send(200, { data })
+        }).catch((err) => {
+            return next(err)
+        })
+    })
 
     server.post('/products', (req, res, next) => {
         productsController.createOne(req).then((product) => {

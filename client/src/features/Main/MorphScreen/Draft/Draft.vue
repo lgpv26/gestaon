@@ -18,7 +18,7 @@
                 </ul>
             </div>
             <div class="header__actions">
-                <a @click="loadDraft()" style="margin-right: 20px; font-size: 34px; position: relative; top: 3px;"><i class="mi mi-refresh"></i></a>
+                <a @click="load()" style="margin-right: 20px; font-size: 34px; position: relative; top: 3px;"><i class="mi mi-refresh"></i></a>
                 <div class="actions__draft-menu" @click="leaveDraft()">
                     <div class="count">
                         <span>{{ screens.length }}</span>
@@ -39,6 +39,7 @@
     import moment from 'moment';
     import Clipboard from 'clipboard';
 
+    import DraftDependencyDataMixin from "./DraftDependencyDataMixin"
     import ClientForm from "./Client/ClientForm.vue";
     import RequestForm from "./Request/RequestForm.vue";
     import ExpenseForm from "./Expense/ExpenseForm.vue";
@@ -58,9 +59,10 @@
                 isPersisting: false,
                 persistingText: "Salvando...",
                 draft: null,
-                remountTimeout: null
+                loadPromises: []
             }
         },
+        mixins: [DraftDependencyDataMixin],
         props: ['details','screen'],
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen','tags']),
@@ -85,12 +87,63 @@
              * Component methods
              */
 
-            loadDraft(){
-                const emitData = {
+            load(){
+                const vm = this
+
+                // clean all promises and event listeners
+                vm.loadPromises = []
+                if(vm.$options.sockets['draft.load']){
+                    delete vm.$options.sockets['draft.load'] // remove previous set listener if existent
+                }
+                if(vm.$options.sockets['draft/' + this.activeMorphScreen.draft.type + '.load']){
+                    delete vm.$options.sockets['draft/' + this.activeMorphScreen.draft.type + '.load']  // remove previous set listener if existent
+                }
+
+                // push event listeners inside promises to resolve the draft load and the dependency data together
+                vm.loadPromises.push(new Promise((resolve, reject) => {
+                    /**
+                     * On active step change
+                     * @param {Object} ev = { success:Boolean, evData:Draft }
+                     */
+                    vm.$options.sockets['draft.load'] = (ev) => {
+                        console.log("Received draft.load", ev)
+                        if(ev.success){
+                            resolve(ev.evData)
+                        }
+                    }
+                }))
+                vm.loadPromises.push(new Promise((resolve, reject) => {
+                    /**
+                     * On active step change
+                     * @param {Object} ev = { success:Boolean, evData:Draft }
+                     */
+                    vm.$options.sockets['draft/' + this.activeMorphScreen.draft.type + '.load'] = (ev) => {
+                        console.log("Received draft/" + this.activeMorphScreen.draft.type + ".load", ev)
+                        if(ev.success){
+                            resolve(ev.evData)
+                        }
+                    }
+                }))
+
+                // verify if draft data and dependency data returned correctly through events
+                Promise.all(this.loadPromises).then(([draft,dependencyData]) => {
+                    vm.draft = draft
+                    vm['load' + _.upperFirst(_.camelCase(draft.type)) + 'DependencyData'](dependencyData)
+                    vm.$refs.draftRootComponent.loadData(draft.data)
+                })
+
+                // emit the event to load draft data and dependency data to the server
+                const emitDraftLoad = {
                     draftId: this.activeMorphScreen.draft.draftId
                 }
-                console.log("Emitting to draft.load", emitData)
-                this.$socket.emit('draft.load', emitData)
+                console.log("Emitting to draft.load", emitDraftLoad)
+                this.$socket.emit('draft.load', emitDraftLoad)
+
+                const emitDraftDependencyDataLoad = {
+                    draftId: this.activeMorphScreen.draft.draftId
+                }
+                console.log("Emitting to draft/" + this.activeMorphScreen.draft.type + ".load", emitDraftDependencyDataLoad)
+                this.$socket.emit("draft/" + this.activeMorphScreen.draft.type + ".load", emitDraftDependencyDataLoad)
             },
             leaveDraft(){
                 const emitData = {
@@ -105,27 +158,16 @@
         created(){
             const vm = this
             /**
-             * On active step change
-             * @param {Object} ev = { success:Boolean, evData:Draft }
-             */
-            vm.$options.sockets['draft.load'] = (ev) => {
-                console.log("Received draft.load", ev)
-                if(ev.success){
-                    vm.draft = ev.evData
-                    vm.$refs.draftRootComponent.loadData(ev.evData.data)
-                }
-            }
-            /**
              * Load draft again on reconnect
              */
             vm.$socket.on('reconnect', (reason) => {
-                vm.loadDraft()
+                vm.load()
             })
+            vm.load()
         },
         mounted(){
             const vm = this
             vm.clipboardInstance = new Clipboard('.copiable-content')
-            vm.loadDraft()
         }
     }
 </script>

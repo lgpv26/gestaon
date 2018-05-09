@@ -5,9 +5,9 @@
         </template>
         <template slot="content">
             <div style="width: 240px;">
-                <h3>Grupo de clientes</h3>
-                <div v-for="clientGroup in clientGroups" class="item">
-                    <div style="margin-top: 10px; position: relative;" v-if="editing === clientGroup.id">
+                <h3>Conta</h3>
+                <div v-for="account in accounts" class="item">
+                    <div style="margin-top: 10px; position: relative;" v-if="editing === account.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 24px; top: 0; cursor: pointer; font-weight: bold;" @click="editing = false">
                             voltar
@@ -16,10 +16,10 @@
                             <icon-check style="height: 11px;"></icon-check>
                         </div>
                     </div>
-                    <div v-else :class="{ active: value === clientGroup.id }" style="display: flex; flex-direction: row;">
-                        <span style="cursor: pointer;" @click="select(clientGroup)">{{ clientGroup.name }}</span>
+                    <div v-else :class="{ active: value === account.id }" style="display: flex; flex-direction: row;">
+                        <span style="cursor: pointer;" @click="select(account)">{{ account.name }}</span>
                         <span class="push-both-sides"></span>
-                        <a href="javascript:void(0)" style="margin-right: 3px;" @click="edit(clientGroup)">
+                        <a href="javascript:void(0)" style="margin-right: 3px;" @click="edit(account)">
                             <icon-edit></icon-edit>
                         </a>
                     </div>
@@ -62,23 +62,23 @@
             }
         },
         computed: {
-            ...mapState('data/client-groups', ['clientGroups']),
+            ...mapState('data/accounts', ['accounts']),
         },
         methods: {
-            select(clientGroup){
-                if(clientGroup.id !== this.value){
-                    this.$emit('change', clientGroup.id)
+            select(account){
+                if(account.id !== this.value){
+                    this.$emit('change', account.id)
                 }
-                this.$emit('input', clientGroup.id)
+                this.$emit('input', account.id)
             },
             add(){
                 this.editing = false
                 this.adding = true
             },
-            edit(clientGroup){
+            edit(account){
                 this.adding = false
-                this.editing = clientGroup.id
-                this.editForm.name = clientGroup.name
+                this.editing = account.id
+                this.editForm.name = account.name
             },
             save(){
 

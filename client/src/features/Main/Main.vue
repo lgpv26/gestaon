@@ -280,9 +280,6 @@
             ...mapActions('toast', [
                 'showToast', 'showError'
             ]),
-            ...mapActions('data/payment-methods', {
-                loadAllPayments: 'loadAll'
-            }),
             onFilter(type){
                 switch(type){
                     case 'usersInCharge':
@@ -484,7 +481,6 @@
                     });
                 });
             }).then(() => {
-                vm.loadAllPayments({ companyId: vm.company.id })
                 vm.loadAllUsers({ companyId: vm.company.id })
                 return vm.loadMorphScreenData(vm.company.id).catch((err) => {
                     console.log("The current user doesn't have any drafts created.");

@@ -1,7 +1,7 @@
 <template>
     <div class="form-group">
         <app-custom-field-select v-model="clientCustomFields" :items="items" @change="change($event)">
-            <div style="cursor: pointer; display: flex; flex-direction: row; align-items: center;">
+            <div style="cursor: pointer; display: flex; flex-direction: row; align-items: center; flex-grow: 1;">
                 <div class="header__icon" style="margin-right: 8px;">
                     <icon-client-details style="position: relative; top: 2px;"></icon-client-details>
                 </div>
@@ -38,7 +38,7 @@
 
     import DraftMixin from '../../DraftMixin'
 
-    import CustomFieldSelect from '../../_Shared/CustomFieldSelect.vue'
+    import CustomFieldSelect from '../../_Shared/CustomFieldsSelect.vue'
 
     const { mapFields, mapMultiRowFields } = createHelpers({
         getterType: 'draft/request/getField',

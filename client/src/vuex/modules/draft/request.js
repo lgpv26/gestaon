@@ -6,6 +6,8 @@ import shortid from 'shortid'
 import ClientsAPI from '@/api/clients'
 import RequestsAPI from '@/api/requests'
 
+import {createRequest} from '@/models/RequestModel'
+
 import {createClient} from '@/models/ClientModel'
 import {createClientAddress} from '@/models/ClientAddressModel'
 import {createClientAddressForm} from '@/models/ClientAddressFormModel'
@@ -21,6 +23,8 @@ import {createPaymentMethod} from '@/models/PaymentMethodModel'
 const state = {
     form: {
         activeStep: null,
+        useSuggestedDeadlineDatetime: false,
+        deadlineDatetime: null,
         obs: '',
         client: {
             id: '',
@@ -46,11 +50,14 @@ const state = {
             clientPhones: []
         },
         order: {
-            orderProducts: []
+            orderProducts: [],
+            promotionChannelId: null
         },
         task: {
         },
-        requestPaymentMethods: []
+        requestPaymentMethods: [],
+        accountId: null,
+        responsibleUserId: null
     }
 }
 
@@ -134,7 +141,7 @@ const orderMutations = {
 }
 const mutations = {
     SET_REQUEST(state, request = {}){
-        state.form.activeStep = _.get(request, 'activeStep', null)
+        _.assign(state.form, createRequest(request))
     },
     ADD_REQUEST_PAYMENT_METHOD(state, requestPaymentMethod = {}){
         requestPaymentMethod.id = 'tmp/' + shortid.generate()
@@ -160,9 +167,9 @@ const mutations = {
 /* actions */
 
 const clientActions = {
-    persistenceClient(context, {client, companyId}){
+    runClientPersistence(context, {client, companyId}){
         client =  utils.removeReactivity(client)
-        ClientsAPI.persistence({
+        return ClientsAPI.persistence({
             client: {
                 id: client.id,
                 name: client.name,
@@ -183,10 +190,6 @@ const clientActions = {
             }
         },{
             companyId
-        }).then((response) => {
-            console.log("SUCESSO", response)
-        }).catch((err) => {
-            console.log("ERRO", err)
         })
     },
     setClient(context, client){
@@ -227,7 +230,7 @@ const orderActions = {
     },
 }
 const actions = {
-    persistence(context, {request, companyId}){
+    runRequestPersistence(context, {request, companyId}){
         request =  utils.removeReactivity(request)
         RequestsAPI.persistence({
             order: {

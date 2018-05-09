@@ -62,18 +62,22 @@ module.exports = class Request extends Draft {
                 }
             }))
 
+            dataPromises.push(vm.server.broker.call('data/user.getList', {
+                data: {
+                    companyId: vm.socket.activeCompany.id
+                }
+            }))
+
             Promise.all(dataPromises).then((dataPromises) => {
-                console.log("Everything gone alright")
                 vm.socket.instance.emit('draft/request.load', new EventResponse({
                     clientGroups: dataPromises[0],
                     customFields: dataPromises[1],
                     paymentMethods: dataPromises[2],
                     accounts: dataPromises[3],
                     promotionChannels: dataPromises[4],
+                    users: dataPromises[5]
                 }))
             })
-
-            /*vm.socket.instance.emit('draft/request.load', new EventResponse(client))*/
         })
 
         /**

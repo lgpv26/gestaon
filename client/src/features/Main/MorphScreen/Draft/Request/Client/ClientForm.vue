@@ -207,12 +207,10 @@
                     },
                     searchClientSelected(searchItem) {
                         vm.search.items = []
-
                         const emitData = {
                             draftId: vm.activeMorphScreen.draft.draftId,
                             clientId: parseInt(searchItem.client.id)
                         }
-
                         console.log("Emitting draft/request.client.select", emitData)
                         vm.$socket.emit('draft/request.client.select', emitData)
                     },

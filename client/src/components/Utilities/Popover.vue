@@ -108,6 +108,11 @@
 </script>
 
 <style scoped>
+    .popover-triggerer {
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
     .hidden {
         display: none
     }
