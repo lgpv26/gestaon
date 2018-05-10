@@ -65,7 +65,7 @@ module.exports = {
 
         Client.hasMany(ClientPhone, {as: 'clientPhones', foreignKey: 'clientId'});
 
-        Client.belongsTo(ClientGroup, {as: 'clientGroup'});
+        Client.belongsTo(ClientGroup, {as: 'clientGroup', foreignKey: 'clientGroupId'});
         
         Client.hasMany(ClientCustomField, {as: 'clientCustomFields', foreignKey: 'clientId'});
         Client.belongsToMany(CustomField, { through: ClientCustomField, as: 'customFields', foreignKey: 'clientId' });

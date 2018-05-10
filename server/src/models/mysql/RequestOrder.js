@@ -12,6 +12,10 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
+                promotionChannelId: {
+                    type: Sequelize.INTEGER,
+                    default: null
+                },
                 obs: {
                     type: Sequelize.STRING,
                     set(val) {
@@ -39,8 +43,10 @@ module.exports = {
             })
         }
     },
-    postSettings: ({RequestOrder,RequestOrderProduct,Product}) => { 
-        RequestOrder.hasMany(RequestOrderProduct, {as: 'requestOrderProducts', foreignKey: 'requestOrderId'});
-        RequestOrder.belongsToMany(Product, {through: RequestOrderProduct, as: 'products', foreignKey: 'requestOrderId'});
+    postSettings: ({RequestOrder,RequestOrderProduct,Product, PromotionChannel}) => { 
+        RequestOrder.hasMany(RequestOrderProduct, {as: 'requestOrderProducts', foreignKey: 'requestOrderId'})
+        RequestOrder.belongsToMany(Product, {through: RequestOrderProduct, as: 'products', foreignKey: 'requestOrderId'})
+
+        RequestOrder.belongsTo(PromotionChannel, {as: 'promotionChannel', foreignKey: 'promotionChannelId'})
     }
 }

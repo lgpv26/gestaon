@@ -144,85 +144,12 @@ module.exports = (server) => {
                         requestId: request.id,
                         triggeredBy: this._userId,
                         companyId: this._companyId,
-                        userId: this._userId,
+                        userId: (this._request.responsibleUserId) ? this._request.responsibleUserId : this._userId,
                         status: 'pending'
                     },
                     transaction: this._transaction
-                }).then((request) => {
-                    return ctx.call("data/request.getOne", {
-                        where: {
-                            id: request.id,
-                            companyId: this._companyId
-                        },
-                        include: [{
-                            model: server.mysql.RequestTimeline,
-                            as: "requestTimeline",
-                            include: [{
-                                model: server.mysql.User,
-                                as: "triggeredByUser",
-                            },{
-                                model: server.mysql.User,
-                                as: "user",
-                            }]
-                        },
-                        {
-                            model: server.mysql.RequestClientPhone,
-                            as: "requestClientPhones",
-                                include: [{
-                                    model: server.mysql.ClientPhone,
-                                    as: "clientPhone",
-                                }]
-                            }, {
-                            model: server.mysql.RequestClientAddress,
-                            as: "requestClientAddresses",
-                                include: [{
-                                    model: server.mysql.ClientAddress,
-                                    as: "clientAddress",
-                                    include:[{
-                                        model: server.mysql.Address,
-                                        as: "address"
-                                    }]
-                                }]
-                            },{
-                            model: server.mysql.Client,
-                            as: "client",
-                                include: [{
-                                    model: server.mysql.ClientPhone,
-                                    as: 'clientPhones'
-                                }, {
-                                    model: server.mysql.ClientAddress,
-                                    as: 'clientAddresses',
-                                    include: [{
-                                        model: server.mysql.Address,
-                                        as: 'address'
-                                    }]
-                                }, {
-                                    model: server.mysql.ClientCustomField,
-                                    as: 'clientCustomFields',
-                                    include: [{
-                                        model: server.mysql.CustomField,
-                                        as: 'customField'
-                                    }]
-                                }, {
-                                    model: server.mysql.ClientGroup,
-                                    as: 'clientGroup'
-                                }]
-                        }, {
-                        model: server.mysql.RequestOrder,
-                        as: "requestOrder",
-                            include: [{
-                                model: server.mysql.RequestOrderProduct,
-                                as: 'requestOrderProducts',
-                                include: [{
-                                    model: server.mysql.Product,
-                                    as: 'product'
-                                }]
-                            }]
-                        }],
-                        transaction: this._transaction
-                    }).then((request) => {
-                        return request
-                    })
+                }).then(() => {
+                    return request
                 }).catch((err) => {
                     return new EventResponse(err)
                 })            

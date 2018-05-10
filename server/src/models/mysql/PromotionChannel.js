@@ -41,6 +41,7 @@ module.exports = {
             })
         }
     },
-    postSettings: ({}) => {
+    postSettings: ({PromotionChannel, RequestOrder}) => {
+        PromotionChannel.hasMany(RequestOrder, {as: 'requestOrders', foreignKey: 'promotionChannelId'})
     }
 };

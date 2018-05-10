@@ -170,6 +170,7 @@ module.exports = (server) => {
                 data: _.map(this._client.clientCustomFields, clientCustomField => {
                     return _.assign(clientCustomField, {
                         clientId: ctx.params.data.clientId,
+                        customFieldId: clientCustomField.id
                     })
                 }),
                 clientId: ctx.params.data.clientId,
