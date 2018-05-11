@@ -32,6 +32,7 @@ import App from './App.vue'
 
 /* App imports */
 
+import utils from './utils/index'
 import routes from './routes'
 import store from './vuex/store'
 
@@ -42,6 +43,8 @@ import _ from 'lodash'
 
 /* Set Vue */
 Vue.set(Vue.prototype, '_', _)
+Vue.set(Vue.prototype, 'utils', utils)
+Vue.set(Vue.prototype, 'moment', moment)
 
 /* Resource Configs */
 

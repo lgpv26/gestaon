@@ -1,5 +1,5 @@
 <template>
-    <div class="tracker-controls" :class="{dark: this.customMapTheme}">
+    <div class="tracker-controls" v-if="false" :class="{dark: this.customMapTheme}">
         <ul>
             <li @click="toggleCustomMapTheme()" v-tippy="{ position: 'left', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }" :title="'Inverter cores do mapa'" :class="{dark: this.customMapTheme}"><i class="mi mi-invert-colors"></i></li>
         </ul>

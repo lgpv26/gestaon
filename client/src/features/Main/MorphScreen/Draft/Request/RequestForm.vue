@@ -65,7 +65,12 @@
             <div class="right-side">
                 <div class="subtotal-container">
                     <span>Total a pagar</span>
-                    <h3>R$ 0,00</h3>
+                    <div class="amounts">
+                        <h3 class="current" :class="{ left: totalLeftToPay < totalToPay, exact: totalLeftToPay === totalToPay, over: totalLeftToPay > totalToPay }">
+                            {{ formatedTotalLeftToPay }}
+                        </h3>
+                        <h3 class="total">/ {{ formatedTotalToPay }}</h3>
+                    </div>
                 </div>
                 <div class="subtotal-icon">
                     <icon-log></icon-log>
@@ -135,12 +140,35 @@
                 'form',
                 'form.activeStep',
                 'form.client',
+                'form.order',
                 'form.order.orderProducts',
                 'form.requestPaymentMethods'
             ]),
             ...mapMultiRowFields({
                 requestPaymentMethodRows: 'form.requestPaymentMethods'
             }),
+            totalToPay(){
+                return _.sumBy(this.orderProducts, (orderProduct) => {
+                    return (orderProduct.unitPrice - orderProduct.unitDiscount) * orderProduct.quantity
+                })
+            },
+            totalLeftToPay(){
+                return _.sumBy(this.requestPaymentMethods, (requestPaymentMethod) => {
+                    return requestPaymentMethod.amount
+                })
+            },
+            formatedTotalToPay(){
+                const sum = _.sumBy(this.orderProducts, (orderProduct) => {
+                    return (orderProduct.unitPrice - orderProduct.unitDiscount) * orderProduct.quantity
+                })
+                return utils.formatMoney(sum, 2,'R$ ','.',',')
+            },
+            formatedTotalLeftToPay(){
+                const sum = _.sumBy(this.requestPaymentMethods, (requestPaymentMethod) => {
+                    return requestPaymentMethod.amount
+                })
+                return utils.formatMoney(sum, 2,'R$ ','.',',')
+            }
         },
         methods: {
             ...mapActions('draft/request', ['runRequestPersistence','runClientPersistence','setRequest','setClient','addOrderProduct','addRequestPaymentMethod']),
@@ -183,6 +211,15 @@
                     }
                     console.log("Emitting draft/request.client.select", emitData)
                     vm.$socket.emit('draft/request.client.select', emitData)
+                })
+            },
+            persistRequest(){
+                const vm = this
+                vm.runRequestPersistence({
+                    request: vm.form,
+                    companyId: vm.company.id
+                }).then((response) => {
+                    console.log("Sucesso")
                 })
             }
         },
@@ -227,14 +264,33 @@
                 }
             }
             .right-side {
-                width: 200px;
                 display: flex;
                 flex-direction: row;
                 .subtotal-container {
                     text-align: right;
                     flex: 1;
-                    h3 {
-                        font-size: 40px;
+                    .amounts {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-end;
+                        h3.current {
+                            font-size: 40px;
+                            white-space: nowrap;
+                        }
+                        h3.left {
+                            color: var(--font-color--terciary)
+                        }
+                        h3.exact {
+                            color: var(--font-color--secondary)
+                        }
+                        h3.over {
+                            color: var(--font-color--terciary)
+                        }
+                        h3.total {
+                            margin-left: 10px;
+                            font-size: 15px;
+                            white-space: nowrap;
+                        }
                     }
                 }
                 .subtotal-icon {

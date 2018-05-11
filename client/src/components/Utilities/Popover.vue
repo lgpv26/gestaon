@@ -1,6 +1,6 @@
 <template>
     <div class="popover-component" style="flex-grow: 1;">
-        <div ref="content" :style="style" class="popover-content popover-shadow" :class="{hidden: !visible && !forceVisible}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
+        <div ref="content" :style="style" class="popover-content popover-shadow" :class="{hidden: !visible && !forceVisible, 'content-padding': config.contentPadding}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
             <slot name="content">
             </slot>
         </div>
@@ -26,6 +26,14 @@
             trigger: {
                 default: 'click',
                 type: String
+            },
+            config: {
+                default: () => {
+                    return {
+                        contentPadding: true
+                    }
+                },
+                type: Object
             }
         },
         data(){
@@ -34,7 +42,6 @@
                     position: 'absolute',
                     zIndex: 99999999,
                     backgroundColor: 'var(--bg-color--2)',
-                    padding: '15px 20px',
                     borderRadius: '5px'
                 },
                 visible: false,
@@ -118,5 +125,9 @@
     }
     .visible {
         display: block!important
+    }
+
+    .content-padding {
+        padding: 15px 20px;
     }
 </style>

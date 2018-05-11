@@ -33,24 +33,45 @@ module.exports = (server, restify) => {
     })
 
     server.get('/clients', clientsController.getAll);
+
     server.get('/clients/:id', (req, res, next) => {
-        const controller = new Controller({
-            request: {
-                id: (req.params.id) ? req.params.id : null,
-                companyId: (req.query.companyId) ? req.query.companyId : null
-            }
+        return server.broker.call('data/client.get', {
+            where: {
+                companyId: req.query.companyId,
+                id: req.params.id
+            },
+            include: [{
+                model: server.mysql.ClientPhone,
+                as: 'clientPhones'
+            }, {
+                model: server.mysql.ClientAddress,
+                as: 'clientAddresses',
+                include: [{
+                    model: server.mysql.Address,
+                    as: 'address'
+                }]
+            }, {
+                model: server.mysql.ClientCustomField,
+                as: 'clientCustomFields',
+                include: [{
+                    model: server.mysql.CustomField,
+                    as: 'customField'
+                }]
+            }, {
+                model: server.mysql.ClientGroup,
+                as: 'clientGroup'
+            }]
+        }).then((data) => {
+            return res.send(200, { data })
         })
-        clientsController.getOne(controller).then((client) => {
-            return res.send(200, { data: client })
-        }).catch((err) => {
-            console.log('catch da rota do client', err)
-        })
-    });
+    })
+
     server.post('/clients', (req, res, next) => {
         clientsController.createOne().then(() => {
 
         })
     });
+
     server.patch('/clients/:id', clientsController.updateOne);
 
     // CLIENTS GROUP //

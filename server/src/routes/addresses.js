@@ -15,8 +15,13 @@ module.exports = (server, restify) => {
 
     /*server.get('/addresses', addressesController.getAll);*/
     server.get('/addresses/:id', (req, res, next) => {
-        addressesController.getOne(req).then((address) => {
-            return res.send(200, {data: address})
+        return server.broker.call('data/address.get', {
+            data: {
+                companyId: req.query.companyId,
+                id: req.params.id
+            }
+        }).then((data) => {
+            return res.send(200, { data })
         })
     })
     /*server.post('/addresses', addressesController.createOne);

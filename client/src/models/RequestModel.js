@@ -6,7 +6,7 @@ export class RequestModel {
         activeStep = null,
         responsibleUserId = null,
         accountId = null,
-        useSuggestedDeadlineDatetime = false,
+        useSuggestedDeadlineDatetime = true,
         deadlineDatetime = null,
         requestPaymentMethods = [],
         obs = '',

@@ -180,7 +180,7 @@
     .ag-search .search-input__result-box {
         flex-shrink: 0;
         transition: .0s opacity;
-        width: 420px;
+        width: 320px;
         position: absolute;
         z-index: 99999;
         background-color: var(--bg-color--2);

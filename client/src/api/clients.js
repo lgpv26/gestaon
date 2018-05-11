@@ -8,8 +8,8 @@ export default {
     createOne(body){
         return Vue.http.post(config.apiBaseUrl + '/clients', body).then((response) => response.json())
     },
-    getOne(clientId){
-        return Vue.http.get(config.apiBaseUrl + '/clients/' + clientId).then((response) => response.json())
+    getOne(id, params = {}){
+        return Vue.http.get(config.apiBaseUrl + '/clients/' + id, { params }).then((response) => response.json())
     },
     updateOne(clientId, body){
         return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId, body).then((response) => response.json())

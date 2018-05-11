@@ -617,6 +617,7 @@ export default {
             center: {lat: -50.75011771290449, lng: -4.639371646119175},
             backgroundColor: '#2A2B33',
             disableDefaultUI: true,
+            gestureHandling: 'greedy',
             mapTypeControlOptions: {
                 mapTypeIds: ['roadmap', 'satellite', 'hybrid', 'terrain', 'light', 'dark']
             },

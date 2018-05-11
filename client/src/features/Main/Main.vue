@@ -1,5 +1,6 @@
 <template>
-    <div class="body">
+    <div class="body" v-if="system.initialized">
+        <app-caller-id></app-caller-id>
         <app-morph-screen></app-morph-screen>
         <app-modals></app-modals>
         <app-device-details-window></app-device-details-window>
@@ -22,20 +23,26 @@
                     <nav class="main-menu">
                         <ul>
                             <!-- <router-link to="/dashboard" exact tag="li"><i class="mi mi-dashboard"></i></router-link> -->
-                            <router-link to="/dashboard" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimento'">
+                            <router-link to="/dashboard" exact tag="li" :title="'Dashboard'"
+                                v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
                                 <menu-icon-dashboard class="icon"></menu-icon-dashboard>
                             </router-link>
-                            <router-link to="/clients" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Ligações #Clientes'">
-                                <menu-icon-sale class="icon"></menu-icon-sale>
-                            </router-link>
+                            <!--
                             <router-link to="/requests" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimentos'">
                                 <menu-icon-sale class="icon"></menu-icon-sale>
                             </router-link>
                             <router-link to="/test" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Teste'">
                                 <menu-icon-sale class="icon"></menu-icon-sale>
                             </router-link>
-                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Caixa / conferência'">
-                                <menu-icon-cash-check class="icon"></menu-icon-cash-check></li>
+                            -->
+                            <router-link to="/clients" exact tag="li" :title="'Ligações'"
+                                v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
+                                <menu-icon-phone class="icon"></menu-icon-phone>
+                            </router-link>
+                            <router-link to="/clients" exact tag="li" :title="'Atendimentos / Pedidos'"
+                                v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
+                                <menu-icon-cash-check class="icon"></menu-icon-cash-check></router-link>
+                            <!--
                             <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Financeiro'">
                                 <menu-icon-finance class="icon"></menu-icon-finance></li>
                             <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Nota fiscal'">
@@ -48,6 +55,7 @@
                                 <menu-icon-phone class="icon"></menu-icon-phone></li>
                             <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Rastreamento'">
                                 <menu-icon-track class="icon"></menu-icon-track></li>
+                            -->
                         </ul>
                     </nav>
                     <span class="push-both-sides"></span>
@@ -136,7 +144,8 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import { MorphScreen } from "./MorphScreen/index";
-    import Search from "./_Shared/Search.vue";
+    import SearchComponent from "./_Shared/Search.vue";
+    import CallerIDComponent from "./_Shared/CallerID.vue";
     import ActiveRequestCard from "./Dashboard/RequestBoard/ActiveRequestCard.vue";
     import Modals from "./Dashboard/Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
@@ -166,7 +175,8 @@
             "app-dropdown-menu": DropdownMenuComponent,
             "app-device-details-window": DeviceDetails,
             "app-map-context-menu": MapContextMenu,
-            "app-search": Search
+            "app-search": SearchComponent,
+            "app-caller-id": CallerIDComponent,
         },
         data(){
             return {
@@ -233,7 +243,7 @@
             }
         },
         computed: {
-            ...mapState(['app']),
+            ...mapState(['app', 'system']),
             ...mapState('auth', ['user','token','company']),
             ...mapState('data/users', ['users']),
             ...mapState('morph-screen', ['screens']),

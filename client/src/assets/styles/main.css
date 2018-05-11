@@ -394,6 +394,10 @@ li.router-link-active svg.icon {
     /* color: var(--font-color--10) */
 }
 
+.tippy-popper {
+    z-index: 999999999;
+}
+
 .tippy-popper[x-placement^=top] .tippy-tooltip.erp-theme .tippy-arrow {
     border-top-color: var(--bg-color--primary)
 }

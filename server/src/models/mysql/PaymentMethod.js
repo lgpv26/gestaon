@@ -35,6 +35,10 @@ module.exports = {
                     type: Sequelize.INTEGER,
                     default: 0
                 },
+                hasDeadline: {
+                    type: Sequelize.INTEGER,
+                    default: 0
+                },
                 dateUpdated: {
                     type: Sequelize.DATE,
                     default: null

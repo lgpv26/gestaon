@@ -232,7 +232,7 @@ const orderActions = {
 const actions = {
     runRequestPersistence(context, {request, companyId}){
         request =  utils.removeReactivity(request)
-        RequestsAPI.persistence({
+        return RequestsAPI.persistence({
             order: {
                 orderProducts: _.map(request.order.orderProducts, (orderProduct) => {
                     if(_.get(orderProduct, 'id', false) && !_.isNumber(orderProduct.id) && orderProduct.id.substring(0,4) === "tmp/"){
