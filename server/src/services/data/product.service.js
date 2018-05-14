@@ -96,7 +96,9 @@ module.exports = (server) => { return {
                 else {
                     productsPromises.push(ctx.call("data/product.create", {
                         data: _.assign(orderProduct.product, {
-                            companyId: ctx.params.companyId
+                            companyId: ctx.params.companyId,
+                            price: orderProduct.unitPrice,
+                            quantity: orderProduct.quantity
                         }),
                         transaction: ctx.params.transaction
                     }).then((product) => {

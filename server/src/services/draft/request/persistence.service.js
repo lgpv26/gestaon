@@ -1,51 +1,6 @@
-/*
-const request = {
-    client: {
-        id: 7,
-        name: 'MAILON RUAN DE LIMA',
-        legalDocument: '06941033908',
-        clientAddresses: [ 
-            {
-                "id" : 41,
-                "complement" : "CASA",
-                "number" : 70,
-                "address" : {
-                    "id" : 50594,
-                    "name" : "RUA ONESIO FRANCISCO DE FARIAS",
-                    "cep" : "87140000",
-                    "neighborhood" : "CENTRO",
-                    "city" : "PAIÇANDU",
-                    "state" : "PR"
-                }
-            },
-            selectedTypeIds: [  // <--- still needs implementation 
-                {
-                    id: '', 
-                    name: ''
-                }
-            ]
-        }],
-        clientPhones : [ 
-            {
-                "id" : '', <-- if there is id update, if there isn't create
-                "clientId" : '',
-                "number" : ',
-                "name" : ',
-                "dateUpdated" : '',
-                "dateCreated" : '',
-                "dateRemoved" : 'null',
-                "status" : ''
-            }
-        ]
-    },
-    order: {
-    },
-    task: {
-    }
-}
-*/
 const _ = require('lodash')
 const sequelize = require('sequelize')
+import moment from 'moment'
 import EventResponse from '~server/models/EventResponse'
 
 module.exports = (server) => { 
@@ -59,98 +14,192 @@ module.exports = (server) => {
     return {
     name: "draft/request/persistence",
     actions: {
+        /**
+         * @param {Object} request, {Int} companyId, {Int} userId
+         * @returns {Promise.<object>} request
+         */   
         start(ctx){
-            //SET
+            //SET PRIVATES
             this._request = ctx.params.request
-            this._companyId = ctx.params.companyId,
+            this._companyId = ctx.params.companyId
             this._userId = ctx.params.userId
+           
+            return ctx.call("draft/request/persistence.checkTempIds").then(() => {
+             //START 
+                return ctx.call("draft/request/persistence.setTransaction").then(() => {
+                    let promises = []
 
-            //START
-
-            return ctx.call("draft/request/persistence.setTransaction").then(() => {
-                let promises = []
-                
-                if(_.has(this._request, "client")){
-                    promises.push(ctx.call("draft/client/persistence.start", {
-                        client: this._request.client,
-                        transaction: this._transaction
-                    }).then((client) => {
-                        return {client}
-                    }).catch((err) => {
-                        //console.log(err) // COMENTAR
-                        throw new Error(err)
-                    }))
-                }
-                if(_.has(this._request, "order")){
-                    promises.push(ctx.call("draft/request/persistence.setOrder").then((order) => {
-                        return {order}
-                    }).catch((err) => {
-                        //console.log('AQUI') comentar
-                        throw new Error(err)
-                    }))
-                }
-                
-                return Promise.all(promises).then((result) => {
-                    const client = _.find(result, 'client')
-                    const order = _.find(result, 'order')
-                    const task = _.find(result, 'task')
-
-                    return ctx.call("draft/request/persistence.setRequest", {
-                        data: {
+                    //SAVE INITIAL CLIENT 
+                    if(_.has(this._request, "client")){
+                        promises.push(ctx.call("draft/client/persistence.start", {
+                            client: this._request.client,
                             companyId: this._companyId,
-                            userId: this._userId,
-                            clientId: (client) ? _.get(client, 'client.id') : null,
-                            requestOrderId: (order) ? _.get(order, 'order.id') : null,
-                            taskId: (task) ? _.get(task, 'task.id') : null
-                        },
-                        transaction: this._transaction
-                    }).then((request) => {  
-                        return ctx.call("draft/request/persistence.commit").then(() => {
-                            //console.log(result)
-                            return new EventResponse(request) 
+                            transaction: this._transaction
+                        }).then((client) => {
+                            return {client}
                         }).catch((err) => {
-                            //console.log(err) // COMENTAR
+                            console.log("Erro em: draft/client/persistence.start")
+                            throw new Error(err)
+                        }))
+                    }
+                    //SAVE INITIAL REQUEST ORDER 
+                    if(_.has(this._request, "order")){
+                        promises.push(ctx.call("draft/request/persistence.setOrder").then((order) => {
+                            return {order}
+                        }).catch((err) => {
+                            console.log("Erro em: draft/request/persistence.setOrder")
+                            throw new Error(err)
+                        }))
+                    }
+                    
+                    return Promise.all(promises).then((result) => {
+                        // SET RESULT'S PROMISES
+                        const client = _.find(result, 'client')
+                        const order = _.find(result, 'order')
+                        const task = _.find(result, 'task')
+                        
+                        // SET REQUEST'S DATA
+                        return ctx.call("draft/request/persistence.setRequest", {
+                            data: {
+                                companyId: this._companyId,
+                                userId: this._userId,
+                                clientId: (client) ? _.get(client, 'client.id') : null,
+                                requestOrderId: (order) ? _.get(order, 'order.id') : null,
+                                taskId: (task) ? _.get(task, 'task.id') : null,
+                                deadlineDatetime: (this._request.deadlineDatetime) ? moment(this._request.deadlineDatetime).format("YYYY-MM-DD HH:mm:ss") : moment().add(20, 'm').format("YYYY-MM-DD HH:mm:ss"),
+                                obs: (this._request.obs) ? this._request.obs : null
+                            },
+                            transaction: this._transaction
+                        }).then((request) => {
+                            return ctx.call("draft/request/persistence.createCard", {
+                                data: request,
+                                transaction: this._transaction
+                            }).then(() => {
+                                ctx.call("draft/request/persistence.commit").then(() => {
+                                    return new EventResponse(request)
+                                }).catch((err) => {
+                                    console.log("Erro em: draft/request/persistence.commit")
+                                    return ctx.call("draft/request/persistence.rollback").then(() => {
+                                        return new EventResponse(err)
+                                    }) 
+                                })
+                            }).catch((err) => {
+                                console.log("Erro em: draft/request/persistence.createCard")
+                                return ctx.call("draft/request/persistence.rollback").then(() => {
+                                    return new EventResponse(err)
+                                }) 
+                            })                            
+                        }).catch((err) => {
+                            console.log("Erro em: draft/request/persistence.setRequest")
                             return ctx.call("draft/request/persistence.rollback").then(() => {
                                 return new EventResponse(err)
-                            })
+                            })         
                         })
                     }).catch((err) => {
-                        // console.log(err) COMENTAR
+                        console.log("Erro em: draft/request/persistence.setRequest")
                         return ctx.call("draft/request/persistence.rollback").then(() => {
                             return new EventResponse(err)
-                        })           
+                        })      
                     })
-                }).catch((err) => {
-                    //console.log(err) // COMENTAR
-                    return ctx.call("draft/request/persistence.rollback").then(() => {
-                        return new EventResponse(err)
-                    })           
                 })
+            }).catch((err) => {
+                console.log("Erro em: draft/request/persistence.removeTempIds")
+                return ctx.call("draft/request/persistence.rollback").then(() => {
+                    return new EventResponse(err)
+                })      
             })
         },
-
+        /**
+         * @returns {Promise} set transaction
+         */ 
         setTransaction() {
             return server.sequelize.transaction().then((transaction) => {
                 this._transaction = transaction
             })
         },
 
+        createCard(ctx) {
+            return ctx.call("data/request.getOne", {
+                where: {
+                    id: ctx.params.data.id
+                },
+                include: [{
+                    model: server.mysql.Client,
+                    as: 'client'
+                }, {
+                    model: server.mysql.RequestTimeline,
+                    as: "requestTimeline",
+                    include: [{
+                        model: server.mysql.User,
+                        as: "triggeredByUser",
+                    }, {
+                        model: server.mysql.User,
+                        as: "user",
+                    }]
+                }],
+                transaction: ctx.params.transaction
+            }).then((request) => {
+                return ctx.call("request-board.consultSectionOne", {
+                    where: {
+                        companyId: request.companyId
+                    },
+                    companyId: request.companyId
+                }).then((section) => {
+                    let maxCard = _.maxBy(section.cards, (card) => {
+                        return card.position
+                    })
+                    let maxCardPosition = 65535
+                    if (maxCard) maxCardPosition += maxCard.position
+                    return ctx.call("request-board.createCard", {
+                        section: section,
+                        data: {
+                            requestId: request.id,
+                            position: maxCardPosition,
+                            section: section.id,
+                            createdBy: _.first(request.requestTimeline).triggeredBy,
+                            companyId: request.companyId
+                        },
+                        request: request
+                    }).then((card) => {
+                        return card
+                    })
+                })
+            }).catch((err) => {
+                console.log(err)
+            })
+        },
+
+
         setRequest(ctx){
             return ctx.call("draft/request/persistence.saveRequest",{
                 data: ctx.params.data
             }).then((request) => {
-                return ctx.call("data/request.createTimeline", {
-                    data: {
-                        requestId: request.id,
-                        triggeredBy: this._userId,
-                        companyId: this._companyId,
-                        userId: (this._request.responsibleUserId) ? this._request.responsibleUserId : this._userId,
-                        status: 'pending'
-                    },
-                    transaction: this._transaction
-                }).then(() => {
+                let promises = []
+                promises.push(ctx.call("data/request.createTimeline", {
+                        data: {
+                            requestId: request.id,
+                            triggeredBy: this._userId,
+                            companyId: this._companyId,
+                            userId: (this._request.responsibleUserId) ? this._request.responsibleUserId : this._userId,
+                            status: 'pending'
+                        },
+                        transaction: this._transaction
+                    })
+                )
+
+                if(this._request.requestPaymentMethods){
+                    promises.push(ctx.call("data/request.setPaymentMethods", {
+                            data: this._request.requestPaymentMethods,
+                            requestId: request.id,
+                            transaction: this._transaction
+                        })
+                    )
+                }
+
+                return Promise.all(promises).then(() => {
                     return request
                 }).catch((err) => {
+                    console.log("Erro em: data/request.setRequest - PROMISE ALL")
                     return new EventResponse(err)
                 })            
             })
@@ -162,7 +211,7 @@ module.exports = (server) => {
                     data: ctx.params.data,
                     where: {
                         id: this._request.id,
-                        companyId: 1 // HARD CODED
+                        companyId: this._companyId
                     },
                     transaction: this._transaction
                 }).then((request) => {
@@ -198,7 +247,7 @@ module.exports = (server) => {
                     }).then((orderProducts) => {
                         _.set(order, "orderProducts", orderProducts)
                     }).catch((err) => {
-                        //console.log('AQUI') COMENTAR
+                        console.log("Erro em: draft/request/persistence.setOrderProducts")
                         throw new Error(err)
                     })
                 )
@@ -210,27 +259,107 @@ module.exports = (server) => {
                         transaction: this._transaction
                     }).then(() => {
                         return order
-                    })                    
+                    }).catch((err) => {
+                        console.log("Erro em: draft/request/persistence.saveES")
+                        throw new Error(err)
+                    })
                 })
             })
         },
 
-        setOrderProducts(ctx){
-            return ctx.call("data/request.setRequestOrderProducts", {
-                data: _.map(this._request.order.orderProducts, orderProduct => {
-                    return _.assign(orderProduct, {
-                        requestOrderId: ctx.params.data.requestOrderId,
+        checkTempIds(ctx){
+            let removeTemps = []
+            if(_.has(this._request, "client")){
+                if(_.has(this._request, "client.clientAddresses")){
+                    removeTemps.push(ctx.call("draft/request/persistence.removeTempIds", {
+                            path: 'client.clientAddresses'
+                        })
+                    )
+                }
+                if(_.has(this._request, "client.clientPhones")){
+                    removeTemps.push(ctx.call("draft/request/persistence.removeTempIds", {
+                            path: 'client.clientPhones'
+                        })
+                    )
+                }
+                if(_.has(this._request, "client.clientCustomFields")){
+                    removeTemps.push(ctx.call("draft/request/persistence.removeTempIds", {
+                            path: 'client.clientCustomFields'
+                        })
+                    )
+                }
+            }
+            if(_.has(this._request, "order")){
+                if(_.has(this._request, "order.orderProducts")){
+                    removeTemps.push(ctx.call("draft/request/persistence.removeTempIds", {
+                            path: 'order.orderProducts'
+                        })
+                    )
+                }
+            }
+            if(_.has(this._request, "requestPaymentMethods")){
+                removeTemps.push(ctx.call("draft/request/persistence.removeTempIds", {
+                        path: 'requestPaymentMethods'
                     })
-                }),
-                companyId: 1, // HARD CODED
-                requestOrderId: ctx.params.data.requestOrderId,
-                transaction: this._transaction
-            }).then((orderProducts) => {
-                return orderProducts
+                )
+            }
+            return Promise.all(removeTemps).then(() => {
+                return true
             }).catch((err) => {
-                // console.log('AQUI') COMENTAR
+                console.log("Erro em: draft/request/persistence.checkTempIds")
                 throw new Error(err)
             })
+        },
+
+        removeTempIds(ctx){
+            let newValue = []
+            _.map(_.get(this._request, ctx.params.path), (obj) => {
+                if(_.get(obj, 'id', false) && !_.isNumber(obj.id) && obj.id.substring(0,4) === "tmp/"){
+                    obj.id = null
+                }
+                newValue.push(obj)
+            })
+            return _.set(this._request, ctx.params.path, newValue)
+        },
+
+        setOrderProducts(ctx){
+            return ctx.call("draft/request/persistence.validValues").then(() => {
+                return ctx.call("data/request.setRequestOrderProducts", {
+                    data: _.map(this._request.order.orderProducts, orderProduct => {
+                        return _.assign(orderProduct, {
+                            requestOrderId: ctx.params.data.requestOrderId,
+                        })
+                    }),
+                    companyId: this._companyId, 
+                    requestOrderId: ctx.params.data.requestOrderId,
+                    transaction: this._transaction
+                }).then((orderProducts) => {
+                    return orderProducts
+                }).catch((err) => {
+                    console.log("Erro em: data/request.setRequestOrderProducts")
+                    throw new Error(err)
+                })
+            }).catch((err) => {
+                console.log("Erro em: draft/request/persistence.validValues")
+                throw new Error(err)
+            })
+        },
+
+        validValues(ctx){
+            let valueOrder = null
+            let valuePayments = null
+            this._request.order.orderProducts.forEach((orderProduct) => {
+                valueOrder += orderProduct.quantity * (orderProduct.unitPrice - orderProduct.unitDiscount)
+            })
+            this._request.requestPaymentMethods.forEach((paymentMethods) => {
+                valuePayments += paymentMethods.amount
+            })
+            if(valueOrder === valuePayments){
+                return true
+            }
+            else{
+                throw new Error('Valores incompativeis')
+            }
         },
 
         saveOrder(ctx){
@@ -239,7 +368,7 @@ module.exports = (server) => {
                     data: this._request.order,
                     where: {
                         id: this._request.order.id,
-                        companyId: 1 // HARD CODED
+                        companyId: this._companyId
                     },
                     transaction: this._transaction
                 }).then((requestOrder) => {
@@ -328,6 +457,9 @@ module.exports = (server) => {
                     })
                 }
                 return {products}
+            }).catch((err) => {
+                console.log("Erro em: data/request.getRequestOrder")
+                throw new Error(err)
             })
         },
 

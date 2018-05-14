@@ -6,16 +6,24 @@ module.exports = (server) => {
     let _client = null
     let _transaction = null
     let _saveInRequest = null
+    let _companyId = null
 
     return {
     name: "draft/client/persistence",
     actions: {
+        /**
+         * @param {Object} client, {Int} companyId, {Object} transaction (optional)
+         * @returns {Promise.<object>} client
+         */    
         start(ctx){
+            //SET PRIVATES
             this._client = ctx.params.client
             this._transaction = ctx.params.transaction || null
+            this._companyId = ctx.params.companyId
 
             return ctx.call("draft/client/persistence.setTransaction").then(() => {
-            
+                
+                //SAVE INITIAL CLIENT 
                 return ctx.call("draft/client/persistence.saveClient").then((client) => {
                 
                     let clientPromisses = []
@@ -40,7 +48,6 @@ module.exports = (server) => {
                         })
                     )
                     }
-    
                     if(_.has(this._client, "clientCustomFields")){
                         clientPromisses.push(ctx.call("draft/client/persistence.setClientCustomFields", {
                             data: {
@@ -84,13 +91,15 @@ module.exports = (server) => {
                         throw new Error("Nenhum registro encontrado.")
                     })           
                 }).catch((err) => {
-                    console.log("Erro em: draft/client/persistence.saveClient", err)
+                    console.log(err, "Erro em: draft/client/persistence.saveClient")
                     return ctx.call("draft/client/persistence.rollback")
                 }) 
             })
         },
-
-        setTransaction(ctx) {
+        /**
+         * @returns {Promise} set transaction
+         */ 
+        setTransaction() {
             if(!this._transaction){
                 return server.sequelize.transaction().then((transaction) => {
                     this._transaction = transaction
@@ -103,17 +112,18 @@ module.exports = (server) => {
         },
 
         /**
-         * @returns {Promise.<Object>} client 
-         */
+         * SAVE (create or update) INITIAL DATA CLIENT
+         * @returns {Promise.<object>} client
+         */    
         saveClient(ctx){
             if (this._client.id) { // update client
                 return ctx.call("data/client.update", {
                     data: _.assign(this._client, {
-                        companyId: 1 // HARD CODED
+                        companyId: this._companyId
                     }),
                     where: {
                         id: this._client.id,
-                        companyId: 1 // HARD CODED
+                        companyId: this._companyId 
                     },
                     transaction: this._transaction
                 }).then((client) => {
@@ -126,7 +136,7 @@ module.exports = (server) => {
             else { // create client
                 return ctx.call("data/client.create", {
                     data: _.assign(this._client, {
-                        companyId: 1 /// HARD CODED
+                        companyId: this._companyId
                     }),
                     transaction: this._transaction
                 }).then((client) => {
@@ -137,19 +147,25 @@ module.exports = (server) => {
                 })   
             }
         },
-
+        /**
+         * set data and call service data/client.setClientAddresses to save data
+         * @returns {Promise.<array>} clientAddresses
+         */   
         setClientAddresses(ctx){
             return ctx.call("data/client.setClientAddresses", {
                 data: _.assign(this._client.clientAddresses, {
                     clientId: ctx.params.data.clientId,
-                    companyId: 1 /// HARD CODED
+                    companyId: this._companyId
                 }),
                 transaction: this._transaction
             }).then((clientAddresses) => {
                 return clientAddresses
             })
         },
-
+        /**
+         * set data and call service data/client.saveClientPhones to save data
+         * @returns {Promise.<array>} clientPhones
+         */   
         setClientPhones(ctx){
             return ctx.call("data/client.saveClientPhones", {
                 data: _.map(this._client.clientPhones, clientPhone => {
@@ -158,13 +174,16 @@ module.exports = (server) => {
                     })
                 }),
                 clientId: ctx.params.data.clientId,
-                companyId: 1, /// HARD CODED
+                companyId: this._companyId,
                 transaction: this._transaction
             }).then((clientPhones) => {
                 return clientPhones
             })
         },
-
+        /**
+         * set data and call service data/client.saveClientCustomFields to save data
+         * @returns {Promise.<array>} clientCustomFields
+         */  
         setClientCustomFields(ctx){
             return ctx.call("data/client.saveClientCustomFields", {
                 data: _.map(this._client.clientCustomFields, clientCustomField => {
@@ -174,13 +193,17 @@ module.exports = (server) => {
                     })
                 }),
                 clientId: ctx.params.data.clientId,
-                companyId: 1, /// HARD CODED
+                companyId: this._companyId,
                 transaction: this._transaction
             }).then((clientCustomFields) => {
                 return clientCustomFields
             })
         },
-        
+        /**
+         * save in ES client's data
+         * @param {Object} transaction (optional)
+         * @returns {Promise.<array>} saves ES
+         */ 
         saveES(ctx) {
             return ctx.call("draft/client/persistence.setES", {
                 transaction: ctx.params.transaction
@@ -222,7 +245,11 @@ module.exports = (server) => {
                 throw new Error(err)
             })                
         },
-
+        /**
+         * set data to ES 
+         * @param {Object} transaction (optional)
+         * @returns {Promise.<object>} client and addresses
+         */ 
         setES(ctx){
             return ctx.call("data/client.get", {
                 where: {
@@ -296,6 +323,18 @@ module.exports = (server) => {
                         })
                     })
                     _.set(clientES, 'phones', clientPhones)
+                }
+
+                if(_.has(client, "clientCustomFields")){
+                    let clientCustomFields = []
+                     client.clientCustomFields.forEach((clientCustomField) => {
+                        clientCustomFields.push({
+                            clientCustomFieldId: clientCustomField.id,
+                            documentType: clientCustomField.customField.name, 
+                            documentValue: clientCustomField.value
+                        })
+                    })
+                    _.set(clientES, 'customFields', clientCustomFields)
                 }
 
                 return {client: clientES, addresses: addressesES}

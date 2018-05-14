@@ -171,6 +171,92 @@ module.exports = (server) => { return {
                 console.log(err)
             })
         },
+        /**
+         * @param {Object} data, {Object} requestId, {Object} transaction (optional)
+         * @returns {Promise.<Array>} paymentMethods 
+         */
+        setPaymentMethods(ctx) {
+            let paymentMethodsPromises = []
+            ctx.params.data.forEach((paymentMethod) => {
+                if (paymentMethod.id) {
+                    paymentMethodsPromises.push(ctx.call("data/request.paymentMethodUpdate", {
+                        data: _.assign(paymentMethod, {
+                            requestId: ctx.params.requestId
+                        }),
+                        where: {
+                            id: paymentMethod.id
+                        },
+                        transaction: ctx.params.transaction 
+                    }).then((paymentMethod) => {
+                        return paymentMethod
+                    }).catch((err) =>{
+                        //console.log(err) //comentar
+                        throw new Error(err)
+                    })
+                    )
+                }
+                else {
+                    paymentMethodsPromises.push(ctx.call("data/request.paymentMethodCreate", {
+                        data: _.assign(paymentMethod, {
+                            requestId: ctx.params.requestId
+                        }),
+                        transaction: ctx.params.transaction || null
+                    }).then((paymentMethod) => {
+                        return paymentMethod
+                    }).catch((err) =>{
+                        //console.log(err) // COMENTAR
+                        throw new Error(err)
+                    })
+                    )
+                }
+            })
+            return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
+                return paymentMethods
+            }).catch((err) => {
+                console.log('')
+                throw new Error(err)
+            })
+        },
+
+        /**
+         * @param {Object} data, {Object} transaction
+         * @returns {Promise.<Object>} paymentMethod
+         */
+        paymentMethodCreate(ctx){
+            return server.mysql.RequestPaymentMethod.create(ctx.params.data, {
+                transaction: ctx.params.transaction || null
+            }).then((paymentMethod) => {
+                if(!paymentMethod){
+                    console.log("Nenhum registro encontrado. Create.")
+                    throw new Error("Nenhum registro encontrado.")
+                }
+                return JSON.parse(JSON.stringify(paymentMethod))
+            }).catch((err) => {
+                throw new Error(err) // COMENTAR
+            })
+        },
+        /**
+         * @param {Object} where, {Object} transaction
+         * @returns {Promise.<Object>} paymentMethod
+         */
+        paymentMethodUpdate(ctx){
+            return server.mysql.RequestPaymentMethod.update(ctx.params.data, {
+                where: ctx.params.where || {},
+                transaction: ctx.params.transaction || null
+            }).then((paymentMethodUpdate) => {
+                if(parseInt(_.toString(paymentMethodUpdate)) < 1 ){
+                    console.log("Nenhum registro encontrado. Update.")
+                    throw new Error("Nenhum registro encontrado.")
+                }
+                return server.mysql.RequestPaymentMethod.findById(ctx.params.data.id, {
+                    transaction: ctx.params.transaction
+                }).then((paymentMethod) => {
+                    return JSON.parse(JSON.stringify(paymentMethod))
+                })
+            }).catch((err) => {
+                throw new Error(err) // COMENTAR
+            })
+        },
 
         /**
          * @param {Object} where, {Array} include

@@ -38,6 +38,9 @@ module.exports = {
                         this.setDataValue('taskId', (val == '' | val == null) ? null : val);
                     }
                 },
+                deadlineDatetime: {
+                    type: Sequelize.DATE
+                },
                 obs: {
                     type: Sequelize.STRING,
                     set(val) {
@@ -66,13 +69,16 @@ module.exports = {
     },
 
     postSettings: ({Request,Company,Client,RequestOrder,RequestClientPhone,RequestClientAddress,RequestTimeline,
-        ClientPhone,ClientAddress}) => {
+        ClientPhone,ClientAddress,RequestPaymentMethod, PaymentMethod}) => {
 
         Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
         Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
         Request.belongsTo(RequestOrder, {as: 'requestOrder', foreignKey: 'requestOrderId'})
 
-        Request.hasMany(RequestTimeline, {as: 'requestTimeline', foreignKey: 'requestId'});
+        Request.hasMany(RequestTimeline, {as: 'requestTimeline', foreignKey: 'requestId'})
+
+        Request.hasMany(RequestPaymentMethod, {as: 'requestPaymentMethods', foreignKey: 'requestId'})
+        Request.belongsToMany(PaymentMethod, {through: RequestPaymentMethod, as: 'paymentMethod', foreignKey: 'requestId'})
 
         Request.hasMany(RequestClientPhone, {as: 'requestClientPhones', foreignKey: 'requestId'});
         Request.belongsToMany(ClientPhone, { through: RequestClientPhone, as: 'clientPhones', foreignKey: 'requestId' });

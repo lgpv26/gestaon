@@ -57,6 +57,7 @@ module.exports = (server) => {
                     }).then((client) => {
                         return JSON.parse(JSON.stringify(client))
                     })
+                }).catch((err) => {
                 })
             },
             remove(ctx) {
@@ -94,7 +95,8 @@ module.exports = (server) => {
                             addressId: parseInt(result.address.id),
                             name: (result.name) ? result.name : null,
                             number: (result.number) ? result.number : null,
-                            complement: (result.complement) ? result.complement : null
+                            complement: (result.complement) ? result.complement : null,
+                            type: [1,3,5]
                         })
                     })
 
@@ -112,37 +114,92 @@ module.exports = (server) => {
                 })
             },
             /**
-             * @param {Object} data, {Int} clientId, {Object} transaction
+             * @param {Object} data, {Object} transaction
+             * @returns {Promise.<Object>} address
+             */
+            clientAddressCreate(ctx){
+                return server.mysql.ClientAddress.create(ctx.params.data, {
+                    transaction: ctx.params.transaction
+                }).then((clientAddress) => {
+                    if(!clientAddress){
+                        console.log("Nenhum registro encontrado. Create.")
+                        throw new Error("Nenhum registro encontrado.")
+                    }
+                    return JSON.parse(JSON.stringify(clientAddress))
+                })
+            },
+            /**
+             * @param {Object} where, {Object} transaction
+             * @returns {Promise.<Object>} addresses
+             */
+            clientAddressUpdate(ctx){
+                return server.mysql.ClientAddress.update(ctx.params.data, {
+                    where: ctx.params.where || {},
+                    paranoid: false,
+                    transaction: ctx.params.transaction
+                }).then((clientAddressUpdate) => {
+                    if(parseInt(_.toString(clientAddressUpdate)) < 1 ){
+                        console.log("Nenhum registro encontrado. Update. clientAddressUpdate")
+                        throw new Error("Nenhum registro encontrado.")
+                    }
+                    return server.mysql.ClientAddress.findById(ctx.params.data.id, {
+                        transaction: ctx.params.transaction
+                    }).then((ClientAddress) => {
+                        return JSON.parse(JSON.stringify(ClientAddress))
+                    })
+                })
+            },
+            /**
+             * @param {Object} data, {Int} clientId, {Object} transaction (optional)
              * @returns {Promise.<Array>} clientAddresses
              */            
             saveClientAddresses(ctx) {
                 /*
                 * Delete all client's clientAddress
                 */ 
-                return server.mysql.ClientAddress.destroy({
-                    where: {
-                        clientId: ctx.params.clientId
-                    },
-                    transaction: ctx.params.transaction
+               return server.mysql.ClientAddress.destroy({
+                where: {
+                    clientId: ctx.params.clientId
+                },
+                transaction: ctx.params.transaction || null
                 }).then(() => {
-                    return server.mysql.ClientAddress.bulkCreate(ctx.params.data, {
-                        updateOnDuplicate: ['clientId', 'addressId', 'name', 'number', 'complement', 'dateUpdate', 'dateRemoved', 'status'],
-                        returning: true,
-                        transaction: ctx.params.transaction
-                    }).then((response) => {
-                        if (!response) {
-                            console.log('Registro não encontrado. data/client.saveClientAddresses')
-                            throw new Error("Nenhum registro encontrado.")
+                    let clientAddressesPromises = []
+                    ctx.params.data.forEach((clientAddress) => {
+                        if (clientAddress.id) {
+                            clientAddressesPromises.push(ctx.call("data/client.clientAddressUpdate", {
+                                data: _.assign(clientAddress, {
+                                    dateRemoved: null
+                                }),
+                                where: {
+                                    id: clientAddress.id
+                                },
+                                transaction: ctx.params.transaction
+                            }).then((clientAddressUpdate) => {
+                                return _.assign(clientAddressUpdate, { type: clientAddress.type })
+                            })
+                            )
                         }
-                       return response
+                        else {
+                            clientAddressesPromises.push(ctx.call("data/client.clientAddressCreate", {
+                                data: clientAddress,
+                                transaction: ctx.params.transaction
+                            }).then((clientAddressCreate) => {
+                                return _.assign(clientAddressCreate, { type: clientAddress.type })
+                            })
+                            )
+                        }
+                    })
+
+                    return Promise.all(clientAddressesPromises).then((clientAddresses) => {
+                        return clientAddresses
                     }).catch((err) => {
-                        console.log(err)
+                        console.log(err)  
                     })
                 })
             },
 
              /**
-             * @param {Object} data, {Int} clientId, {Object} transaction
+             * @param {Object} data, {Int} clientId, {Object} transaction (optional)
              * @returns {Promise.<Array>} clientPhones
              */            
             saveClientPhones(ctx) {
@@ -153,7 +210,7 @@ module.exports = (server) => {
                     where: {
                         clientId: ctx.params.clientId
                     },
-                    transaction: ctx.params.transaction
+                    transaction: ctx.params.transaction || null
                 }).then(() => {
                     return server.mysql.ClientPhone.bulkCreate(ctx.params.data, {
                         updateOnDuplicate: ['clientId', 'name', 'number', 'dateUpdated', 'dateRemoved', 'status'],
@@ -171,7 +228,7 @@ module.exports = (server) => {
                 })
             },
             /**
-             * @param {Object} data, {Int} clientId, {Object} transaction
+             * @param {Object} data, {Int} clientId, {Object} transaction (optional)
              * @returns {Promise.<Array>} clientCustomFields
              */            
             saveClientCustomFields(ctx) {
@@ -182,7 +239,7 @@ module.exports = (server) => {
                     where: {
                         clientId: ctx.params.clientId
                     },
-                    transaction: ctx.params.transaction
+                    transaction: ctx.params.transaction || null
                 }).then(() => {
                     return server.mysql.ClientCustomField.bulkCreate(ctx.params.data, {
                         updateOnDuplicate:['clientId', 'customFieldId', 'value', 'dateUpdate', 'dateRemoved'],

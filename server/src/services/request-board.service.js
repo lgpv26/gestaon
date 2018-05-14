@@ -113,22 +113,48 @@ module.exports = (server) => { return {
                 })
             })
         },
+        consultSectionOne(ctx){
+            return server.mongodb.Section.findOne(ctx.params.where)
+                .sort({ position: 1 }).then((section) => {
+                    if (!section) {
+                        return ctx.call("request-board.createSection", {
+                            data: {
+                                companyId: ctx.params.companyId
+                            }
+                        }).then((section) => {
+                            return section
+                        })
+                    }
+                    else {
+                        return section
+                    }
+                }).catch((err) => {
+                    return err
+                })
+        },
         /**
          * Create a section associated to the company request-board
          * @param {Number} data.companyId
          * @returns {Promise.<Object>} section
          */
         createSection(ctx){
-            return server.mongodb.Section.findOne({}, {}, { sort: { position : -1 } }, function(err, lastSection) {
-                let position = config.requestBoard.defaultPosition
-                if(lastSection) position += lastSection.position
-                return server.mongodb.Section.create({
-                    companyId: ctx.params.data.companyId,
-                    position
-                }).then((section) => {
-                    server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionCreate', new EventResponse(section))
-                    return section
+            return new Promise((resolve, reject) => {
+                server.mongodb.Section.findOne({}, {}, { sort: { position : -1 } }, function(err, lastSection) {
+                    let position = config.requestBoard.defaultPosition
+                    if(lastSection) position += lastSection.position
+                    server.mongodb.Section.create({
+                        companyId: ctx.params.data.companyId,
+                        position
+                    }).then((section) => {
+                        server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionCreate', new EventResponse(section))
+                        resolve(section)
+                    }).catch((err) => {
+                        console.log('Erro create section, erro:', err)
+                        reject()
+                    })
                 })
+            }).then((section) => {
+                return section
             })
         },
         /**
@@ -211,6 +237,34 @@ module.exports = (server) => { return {
             })
         },
         createCard(ctx){
+            //requestId
+            //position
+            //sectionId
+            return server.mongodb.Card.create(ctx.params.data).then((card) => {
+                //card = _.assignIn(card, { createdBy: controller.request.user.name }) // change createdBy to user name for emit to all users
+
+                // check socket connections and emit 
+                server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('cardCreated', {
+                    data: card, sectionId: ctx.params.section.id
+                })
+                card = card.toJSON()
+                card.request = ctx.params.request
+                ctx.call("request-board.saveCardInSection", {
+                    sectionId: ctx.params.section.id,
+                    cardId: card.id
+                }).then((section) => {
+                    server.io.sockets.emit('requestBoardCardCreate', {
+                        data: {
+                            card,
+                            section
+                        }
+                    })
+                    return card
+                })
+            }).catch((err) => {
+                console.log(err)
+                return err
+            });
         },
         /**
          * Remove a section associated to the company request-board
@@ -266,6 +320,16 @@ module.exports = (server) => { return {
             }
         },
         removeCard(ctx){
+        },
+        saveCardInSection(ctx){
+            return ctx.call("request-board.consultSectionOne", {
+                where: {
+                    _id: ctx.params.sectionId
+                }
+            }).then((section) => {
+                section.cards.push(ctx.params.cardId)
+                return section.save()
+            })
         }
     },
     methods: {
