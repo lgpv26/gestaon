@@ -78,6 +78,9 @@ module.exports = (server, restify) => {
             console.log('forgot password endpoint called');
         },
         me: (req, res, next) => {
+            if(req.query.fcmToken){
+                console.log("Token", req.query.fcmToken)
+            }
             server.mysql.User.findOne({
                 where: {
                     id: req.auth.id,
@@ -111,6 +114,24 @@ module.exports = (server, restify) => {
                 }
                 return res.send(200, {
                     data: user
+                });
+            });
+        },
+        fcm: (req, res, next) => {
+            return server.mysql.UserAccessToken.update({
+                fcmToken: req.body.fcmToken
+            },{
+                where: {
+                    accessToken: req.query.token
+                }
+            }).then((userAccessToken) => {
+                if(!userAccessToken){
+                    return next(
+                        new restify.ResourceNotFoundError("Nenhum registro encontrado.")
+                    );
+                }
+                return res.send(200, {
+                    data: userAccessToken
                 });
             });
         },

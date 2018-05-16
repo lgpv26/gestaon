@@ -70,6 +70,8 @@
     import _ from 'lodash';
     import markjs from 'mark.js';
 
+    import {createRequest} from '@/models/RequestModel'
+
     export default {
         components: {
             'app-search': SearchComponent,
@@ -124,11 +126,43 @@
             addRequestDraft(){
                 const vm = this;
                 if(!vm.isShowingMorphScreen){
-                    const createDraftArgs = { body: {
-                        type: 'request',
-                        createdBy: vm.user.id
-                    }, companyId: vm.company.id }
-                    vm.createDraft(createDraftArgs)
+                    const createDraftArgs = {
+                        body: {
+                            type: 'request',
+                            createdBy: vm.user.id,
+                            data: {}
+                        },
+                        companyId: vm.company.id
+                    }
+                    if(vm.selectedClient){
+                        // default
+                        createDraftArgs.body.data = {
+                            request: createRequest({
+                                activeStep: 'client',
+                                client: vm.selectedClient || {}
+                            })
+                        }
+                        // select first address and phone
+                        if(vm.selectedClient.clientAddresses.length){
+                            createDraftArgs.body.data.request.clientAddressId = vm.selectedClient.clientAddresses[0].id
+                        }
+                        if(vm.selectedClient.clientPhones.length){
+                            createDraftArgs.body.data.request.clientPhoneId = vm.selectedClient.clientPhones[0].id
+                        }
+                        //if two of them are selected, go directly to order tab
+                        if(_.get(createDraftArgs, 'body.data.request.clientAddressId', null) && _.get(createDraftArgs,'body.data.request.clientPhoneId', null)){
+                            createDraftArgs.body.data.request.activeStep = 'order'
+                        }
+                    }
+                    else if(vm.selectedAddress){
+                        createDraftArgs.body.data = {
+                            request: createRequest({
+                                activeStep: 'client',
+                                client: vm.selectedClient || {}
+                            })
+                        }
+                    }
+                    vm.createDraft(JSON.parse(JSON.stringify(createDraftArgs)))
                 } else {
                     this.SHOW_MS(false)
                 }

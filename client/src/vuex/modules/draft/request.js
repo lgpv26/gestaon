@@ -1,3 +1,5 @@
+import Vue from 'vue'
+
 import _ from 'lodash'
 import utils from '@/utils/index'
 import { getField, updateField } from 'vuex-map-fields'
@@ -56,6 +58,8 @@ const state = {
         task: {
         },
         requestPaymentMethods: [],
+        clientAddressId: null,
+        clientPhoneId: null,
         accountId: null,
         responsibleUserId: null
     }
@@ -79,7 +83,7 @@ const getters = {
 
 const clientMutations = {
     SET_CLIENT(state, client = {}){
-        _.assign(state.form.client,createClient(client))
+        state.form.client = _.assign(state.form.client,createClient(client))
     },
     ADD_CLIENT_ADDRESS(state, clientAddress = {}){
         clientAddress.id = 'tmp/' + shortid.generate()
@@ -89,6 +93,12 @@ const clientMutations = {
         const clientAddressIndex = _.findIndex(state.form.client.clientAddresses, { id: clientAddress.id })
         if(clientAddressIndex !== -1 && clientAddress.id){
             state.form.client.clientAddresses[clientAddressIndex] = _.assign(state.form.client.clientAddresses[clientAddressIndex], createClientAddress(clientAddress))
+        }
+    },
+    REMOVE_CLIENT_ADDRESS(state, clientAddressId){
+        const index = _.findIndex(state.form.client.clientAddresses, {id: clientAddressId})
+        if(index !== -1){
+            state.form.client.clientAddresses.splice(index, 1)
         }
     },
     SET_CLIENT_ADDRESS_FORM(state, clientAddressForm = {}){
@@ -120,7 +130,7 @@ const clientMutations = {
 }
 const orderMutations = {
     SET_ORDER(state, order = {}){
-        _.assign(state.form.order,createOrder(order))
+        state.form.order = _.assign(state.form.order,createOrder(order))
     },
     ADD_ORDER_PRODUCT(state, orderProduct = {}){
         orderProduct.id = 'tmp/' + shortid.generate()
@@ -135,13 +145,14 @@ const orderMutations = {
     SET_ORDER_PRODUCT_PRODUCT(state, {orderProductId,product}){
         const orderProduct = _.find(state.form.order.orderProducts, {id: orderProductId})
         if(orderProduct){
-            _.assign(orderProduct.product,createProduct(product))
+            orderProduct.product = _.assign(orderProduct.product,createProduct(product))
         }
     }
 }
 const mutations = {
     SET_REQUEST(state, request = {}){
-        _.assign(state.form, createRequest(request))
+        state.form = _.assign(state.form, createRequest(request))
+        console.log(state.form)
     },
     ADD_REQUEST_PAYMENT_METHOD(state, requestPaymentMethod = {}){
         requestPaymentMethod.id = 'tmp/' + shortid.generate()
@@ -156,7 +167,7 @@ const mutations = {
     SET_REQUEST_PAYMENT_METHOD_PAYMENT_METHOD(state, {requestPaymentMethodId,paymentMethod}){
         const requestPaymentMethod = _.find(state.form.requestPaymentMethods, {id: requestPaymentMethodId})
         if(requestPaymentMethod){
-            _.assign(requestPaymentMethod.paymentMethod,createPaymentMethod(paymentMethod))
+            requestPaymentMethod.paymentMethod = _.assign(requestPaymentMethod.paymentMethod,createPaymentMethod(paymentMethod))
         }
     },
     ...clientMutations,
@@ -175,6 +186,7 @@ const clientActions = {
                 name: client.name,
                 legalDocument: client.legalDocument,
                 clientGroupId: client.clientGroupId,
+                clientCustomFields: client.clientCustomFields,
                 clientPhones: _.map(client.clientPhones, (clientPhone) => {
                     if(!_.isNumber(clientPhone.id) && clientPhone.id.substring(0,4) === "tmp/"){
                         clientPhone.id = null
@@ -202,12 +214,16 @@ const clientActions = {
     saveClientAddress(context, clientAddress){
         context.commit('SAVE_CLIENT_ADDRESS', clientAddress)
     },
+    removeClientAddress(context, clientPhoneId){
+        context.commit('REMOVE_CLIENT_ADDRESS', clientPhoneId)
+    },
     setClientAddressForm(context, clientAddressForm){
         context.commit('SET_CLIENT_ADDRESS_FORM', clientAddressForm)
     },
     setClientAddressFormAddress(context, clientAddressFormAddress = {}){
         context.commit('SET_CLIENT_ADDRESS_FORM_ADDRESS', clientAddressFormAddress)
     },
+
     addClientPhone(context, clientPhone){
         context.commit('ADD_CLIENT_PHONE', clientPhone)
     },
@@ -232,16 +248,56 @@ const orderActions = {
 const actions = {
     runRequestPersistence(context, {request, companyId}){
         request =  utils.removeReactivity(request)
-        return RequestsAPI.persistence({
+        const client = request.client
+        const order = request.order
+        const sendData = {
+            clientPhoneId: request.clientPhoneId,
+            clientAddressId: request.clientAddressId,
+            client: {
+                id: client.id,
+                name: client.name,
+                legalDocument: client.legalDocument,
+                clientGroupId: client.clientGroupId,
+                clientCustomFields: client.clientCustomFields,
+                clientPhones: _.map(client.clientPhones, (clientPhone) => {
+                    if(!_.isNumber(clientPhone.id) && clientPhone.id.substring(0,4) === "tmp/"){
+                        clientPhone.id = null
+                    }
+                    return clientPhone
+                }),
+                clientAddresses: _.map(client.clientAddresses, (clientAddress) => {
+                    if(!_.isNumber(clientAddress.id) && clientAddress.id.substring(0,4) === "tmp/"){
+                        clientAddress.id = null
+                    }
+                    return clientAddress
+                })
+            },
             order: {
-                orderProducts: _.map(request.order.orderProducts, (orderProduct) => {
+                promotionChannelId: order.promotionChannelId,
+                orderProducts: _.map(order.orderProducts, (orderProduct) => {
                     if(_.get(orderProduct, 'id', false) && !_.isNumber(orderProduct.id) && orderProduct.id.substring(0,4) === "tmp/"){
                         orderProduct.id = null
                     }
                     return orderProduct
                 })
-            }
-        },{
+            },
+            requestPaymentMethods: _.map(request.requestPaymentMethods, (requestPaymentMethod) => {
+                if(_.get(requestPaymentMethod, 'id', false) && !_.isNumber(requestPaymentMethod.id) && requestPaymentMethod.id.substring(0,4) === "tmp/"){
+                    requestPaymentMethod.id = null
+                }
+                if(_.has(requestPaymentMethod,'paymentMethod')){
+                    if(requestPaymentMethod.paymentMethod.id){
+                        requestPaymentMethod = _.assign(requestPaymentMethod, { paymentMethodId: requestPaymentMethod.paymentMethod.id })
+                    }
+                    _.unset(requestPaymentMethod, 'nextInstallments')
+                    _.unset(requestPaymentMethod, 'paymentMethod')
+                }
+                return requestPaymentMethod
+            }),
+            deadlineDatetime: ((request.useSuggestedDeadlineDatetime) ?  null : request.deadlineDatetime ),
+            obs: request.obs
+        }
+        return RequestsAPI.persistence(sendData, {
             companyId
         }).then((response) => {
             console.log("SUCESSO", response)
@@ -252,7 +308,6 @@ const actions = {
     setRequest(context, request){
         context.commit('SET_REQUEST', request || {})
         context.commit('SET_CLIENT', _.get(request, 'client', {}))
-        context.commit('SET_CLIENT_ADDRESS_FORM', _.get(request, 'client.clientAddressForm', {}))
         context.commit('SET_ORDER', _.get(request, 'order', {}))
     },
     addRequestPaymentMethod(context, requestPaymentMethod){

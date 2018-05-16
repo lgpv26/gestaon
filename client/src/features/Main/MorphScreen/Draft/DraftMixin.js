@@ -50,9 +50,15 @@ export default {
             console.log("Emitting to draft.setData", emitData)
             this.$socket.emit('draft.setData', emitData)
         },
-        syncKeyRemove(key, path){
-            if(this.formPath){
+        syncKeyRemove(key, path, customBaseFormPath = null){
+            const baseFormPath = customBaseFormPath || this.formPath
+            if(!baseFormPath){
                 path = this.formPath + '.' + path
+            }
+            else {
+                if(baseFormPath !== '.'){
+                    path = baseFormPath + '.' + path
+                }
             }
             const emitData = {
                 draftId: this.activeMorphScreen.draft.draftId,

@@ -142,7 +142,12 @@
     }
     .payment-method {
         .actions {
-            display: flex; flex-direction: row; align-items: center; justify-content: center; padding-bottom: 0;
+            height: auto;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 0;
         }
     }
 </style>

@@ -23,6 +23,10 @@ module.exports = (server, restify) => {
 
     server.get('/me', authGuard, usersController.me);
 
+    /* Save FCM token to current accessToken */
+
+    server.post('/users/fcm', authGuard, usersController.fcm);
+
     /* Auth Guard for /users route prefix */
 
     server.use(basePath('/users', authGuard));

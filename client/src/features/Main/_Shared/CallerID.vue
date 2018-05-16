@@ -20,7 +20,7 @@
                         <div class="client new-client" v-if="!call.clients.length">
                             Cliente novo
                         </div>
-                        <a href="javascript:void(0)" class="start-service" style="float: right">Iniciar atendimento</a>
+                        <a href="javascript:void(0)" class="start-service" style="float: right" @click="createRequestDraft(call)">Iniciar atendimento</a>
                     </div>
                 </div>
             </div>
@@ -30,9 +30,14 @@
 
 <script>
     import _ from 'lodash'
+    import shortid from 'shortid'
+
+    import ClientsAPI from '@/api/clients'
 
     import { mapActions, mapState } from 'vuex'
     import Scrollbar from 'smooth-scrollbar'
+
+    import {createRequest} from '@/models/RequestModel'
 
     export default {
         components: {
@@ -44,13 +49,60 @@
             }
         },
         computed: {
-            ...mapState('auth', ['company']),
+            ...mapState('auth', ['user','company']),
             ...mapState('caller-id', ['calls'])
         },
         methods: {
+            ...mapActions('morph-screen', ['createDraft']),
             ...mapActions('caller-id', ['setCall','loadCalls']),
             openCallerID(){
                 this.open = !this.open
+            },
+            createRequestDraft(call){
+                if(!call.clients.length){
+                    this.createRequestDraftToNewClient(call)
+                }
+                else {
+                    ClientsAPI.getOne(_.first(call.clients).id, {
+                        companyId: this.company.id
+                    }).then(({data}) => {
+                        this.createRequestDraftExistentClient(call, data)
+                    })
+                }
+            },
+            createRequestDraftToNewClient(call){
+                const createDraftArgs = { body: {
+                    type: 'request',
+                    createdBy: this.user.id,
+                    data: {
+                        request: createRequest({
+                            activeStep: 'client',
+                            client: {
+                                clientPhones: [
+                                    {
+                                        id: 'tmp/' + shortid.generate(),
+                                        name: "PRINCIPAL",
+                                        number: call.number
+                                    }
+                                ]
+                            }
+                        })
+                    }
+                }, companyId: this.company.id }
+                this.createDraft(createDraftArgs)
+            },
+            createRequestDraftExistentClient(call, client){
+                const createDraftArgs = { body: {
+                    type: 'request',
+                    createdBy: this.user.id,
+                    data: {
+                        request: createRequest({
+                            activeStep: 'order',
+                            client
+                        })
+                    }
+                }, companyId: this.company.id }
+                this.createDraft(createDraftArgs)
             }
         },
         created(){

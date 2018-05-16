@@ -22,6 +22,7 @@ di.setSequelize()
 di.setVersion()
 di.setOAuth2()
 di.setMoleculer()
+di.setFCM()
 
 // configure CORS
 const cors = corsMiddleware({
@@ -80,6 +81,7 @@ const connectToMySQL = new Promise((resolve, reject) => {
 // load services (Moleculer)
 di.server.broker.createService(require('../services/auth.service')(di.server))
 di.server.broker.createService(require('../services/request-board.service')(di.server))
+di.server.broker.createService(require('../services/push-notification.service')(di.server))
 di.server.broker.createService(require('../services/data/user.service')(di.server))
 di.server.broker.createService(require('../services/data/call.service')(di.server))
 di.server.broker.createService(require('../services/data/request.service')(di.server))

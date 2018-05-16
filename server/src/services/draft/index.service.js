@@ -34,7 +34,7 @@ module.exports = (server) => { return {
                     draftId: draftId,
                     companyId: ctx.params.data.companyId,
                     createdBy: ctx.params.data.createdBy,
-                    draft: {},
+                    data: ctx.params.data.data,
                     type: 'request',
                     isSingle: false
                 }).then((draft) => {

@@ -13,8 +13,8 @@
         <div class="form-group__content" v-if="_.isArray(clientPhoneRows) && clientPhoneRows.length > 0">
             <div class="dashed-line"></div>
             <ul class="content__list--mini">
-                <li class="list__item" v-for="(clientPhoneRow, index) in clientPhoneRows">
-                    <div class="item__check item__icon" @click="select(clientPhoneRow)" style="cursor: pointer; margin-right: 8px;">
+                <li class="list__item" v-for="(clientPhoneRow, index) in clientPhoneRows" :class="{active: clientPhoneId === clientPhoneRow.id}">
+                    <div class="item__check item__icon" @click="select(clientPhoneRow.id)" style="cursor: pointer; margin-right: 8px;">
                         <icon-check style="width: 16px;"></icon-check>
                     </div>
                     <input type="text" placeholder="APELIDO" v-model="clientPhoneRow.name" @input="sync(clientPhoneRow.name, 'clientPhones[' + index + '].name')" class="input--borderless" />
@@ -60,7 +60,10 @@
             ...mapMultiRowFields({
                 clientPhoneRows: 'form.client.clientPhones'
             }),
-            ...mapFields(['form.client.clientPhones']),
+            ...mapFields([
+                'form.clientPhoneId',
+                'form.client.clientPhones'
+            ]),
         },
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
@@ -73,6 +76,10 @@
             remove(clientPhoneId, index){
                 this.removeClientPhone(clientPhoneId)
                 this.syncKeyRemove(index, 'clientPhones')
+                if(this.clientPhoneId === clientPhoneId){
+                    this.clientPhoneId = null
+                    this.sync(null, 'clientPhoneId', 'request')
+                }
             },
             add(){
                 this.addClientPhone({
@@ -81,9 +88,10 @@
                 })
                 this.sync(this.clientPhones,'clientPhones')
             },
-            select(clientPhone){
-                console.log("Select", clientPhone)
-            }
+            select(clientPhoneId){
+                this.clientPhoneId = clientPhoneId
+                this.sync(clientPhoneId,'clientPhoneId','request')
+            },
         }
     }
 </script>

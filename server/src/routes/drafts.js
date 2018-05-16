@@ -27,6 +27,7 @@ module.exports = (server, restify) => {
             data: {
                 companyId: parseInt(req.query.companyId),
                 type: req.body.type,
+                data: req.body.data || {},
                 createdBy: req.body.createdBy
             }
         }).then((draft) => {

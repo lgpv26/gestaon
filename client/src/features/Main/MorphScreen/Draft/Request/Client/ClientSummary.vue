@@ -1,18 +1,18 @@
 <template>
     <div class="form__header summary">
-        <div class="form-columns" style="flex-grow: 1;">
-            <div class="form-column" style="flex-grow: 1; flex-basis: 70%; display: flex; flex-direction: row; justify-content: flex-start; align-items: center;">
+        <div class="form-columns" style="flex-grow: 1; justify-content: flex-end">
+            <div class="form-column" style="flex-grow: 1; flex-basis: 70%; display: flex; flex-direction: row; justify-content: flex-start; align-items: center;" v-if="selectedClientAddress">
                 <span style="margin-right: 0">{{ client.name }}</span>
                 <div class="mini-circle"></div>
                 <div>
-                    <span style="margin-right: 8px;">RUA 28 de JUNHO, 1214</span>
+                    <span style="margin-right: 8px;">{{ selectedClientAddress.address.name + ', ' + selectedClientAddress.number }}</span>
                 </div>
                 <!--<icon-edit style="width:10px;"></icon-edit>-->
             </div>
-            <div class="form-column">
+            <div class="form-column" v-if="selectedClientPhoneNumber">
                 <a class="btn btn--border-only" style="height: auto; padding: 5px 8px;">
                     <icon-phone class="icon--d-secondary" style="margin-right: 10px;"></icon-phone>
-                    <span style="white-space: nowrap;">(44) 99122-8686</span>
+                    <span style="white-space: nowrap;">{{ selectedClientPhoneNumber }}</span>
                 </a>
             </div>
             <!--
@@ -69,8 +69,30 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapFields([
                 'form.activeStep',
-                'form.client'
-            ])
+                'form.client',
+                'form.clientAddressId',
+                'form.clientPhoneId',
+                'form.client.clientAddresses',
+                'form.client.clientPhones',
+            ]),
+            selectedClientAddress(){
+                if(this.clientAddressId){
+                    const clientAddress = _.find(this.clientAddresses, { id: this.clientAddressId })
+                    if(clientAddress){
+                        return clientAddress
+                    }
+                }
+                return null
+            },
+            selectedClientPhoneNumber(){
+                if(this.clientPhoneId){
+                    const clientPhone = _.find(this.clientPhones, { id: this.clientPhoneId })
+                    if(clientPhone){
+                        return utils.formatPhone(clientPhone.number)
+                    }
+                }
+                return null
+            }
         },
         methods: {
             ...mapActions('draft/request', []),

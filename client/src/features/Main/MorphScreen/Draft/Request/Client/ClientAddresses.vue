@@ -10,19 +10,19 @@
             </div>
             <div class="form-group__content">
                 <ul class="content__list">
-                    <li class="list__item" v-for="clientAddress in clientAddresses" :class="{ active: false }">
-                        <span style="cursor: pointer;" @click="select(clientAddress)">
+                    <li class="list__item" v-for="(clientAddress, index) in clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
+                        <span style="cursor: pointer;" @click="select(clientAddress.id)">
                             {{ clientAddress.address.name }},
                             {{ clientAddress.number.toString().trim() || "SN" }}
                         </span>
                         <span class="push-both-sides"></span>
-                        <div class="item__check item__icon" @click="select(clientAddress)" style="cursor: pointer; margin-right: 10px;">
+                        <div class="item__check item__icon" @click="select(clientAddress.id)" style="cursor: pointer; margin-right: 10px;">
                             <icon-check style="width: 16px;"></icon-check>
                         </div>
                         <div class="item__icon" @click="edit(clientAddress)" style="cursor: pointer; margin-right: 10px;">
                             <icon-edit></icon-edit>
                         </div>
-                        <div class="item__icon" @click="removeClientAddress(clientAddress)" style="cursor: pointer;">
+                        <div class="item__icon" @click="remove(clientAddress.id, index)" style="cursor: pointer;">
                             <icon-remove></icon-remove>
                         </div>
                     </li>
@@ -77,21 +77,25 @@
             ...mapState('auth', ['company']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapFields([
+                'form',
+                'form.clientAddressId',
                 'form.client.clientAddressForm',
                 'form.client.clientAddressForm.show'
             ]),
             ...mapMultiRowFields(['form.client.clientAddresses']),
         },
         methods: {
+            ...mapMutations('draft/request', ['showToast', 'showError']),
             ...mapActions('toast', ['showToast', 'showError']),
-            ...mapActions('draft/request', ['setClientAddressForm']),
+            ...mapActions('draft/request', ['setClientAddressForm','removeClientAddress']),
 
             /**
              * Actions
              */
 
-            select(clientAddress){
-                console.log("Select", clientAddress)
+            select(clientAddressId){
+                this.clientAddressId = clientAddressId
+                this.sync(clientAddressId,'clientAddressId','request')
             },
 
             edit(clientAddress){
@@ -110,6 +114,15 @@
             add(){
                 this.show = true
                 this.sync(this.show, 'show')
+            },
+
+            remove(clientAddressId, index){
+                this.removeClientAddress(clientAddressId)
+                this.syncKeyRemove(index, 'clientAddresses', 'request.client')
+                if(this.clientAddressId === clientAddressId){
+                    console.log("Deve remover o selected tmb")
+                    this.syncKeyRemove(null, 'clientAddressId', 'request')
+                }
             }
         }
     }

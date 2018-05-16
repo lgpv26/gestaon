@@ -39,7 +39,7 @@
                             <span v-if="activeStep !== 'order'">Incluir uma <span style="color: var(--secondary-color)">venda</span> neste atendimento</span>
                             <span class="push-both-sides"></span>
                             <h3 :class="{active: activeStep === 'order'}">Venda</h3>
-                            <app-switch style="float: right;" :value="activeStep === 'order'" @changed="changeStep('order')"></app-switch>
+                            <app-switch style="float: right;" :value="activeStep === 'order'" :disabled="!isOrderFormAllowed" @changed="changeStep('order')"></app-switch>
                         </div>
                     </form>
                     <div class="separator"></div>
@@ -138,6 +138,8 @@
             ...mapGetters('draft/request', ['isClientSummaryAvailable']),
             ...mapFields([
                 'form',
+                'form.clientAddressId',
+                'form.clientPhoneId',
                 'form.activeStep',
                 'form.client',
                 'form.order',
@@ -147,6 +149,12 @@
             ...mapMultiRowFields({
                 requestPaymentMethodRows: 'form.requestPaymentMethods'
             }),
+            isOrderFormAllowed(){
+                if(!this.client.name || (this.client.id && this.clientAddressId && this.clientPhoneId)){
+                    return true
+                }
+                return false
+            },
             totalToPay(){
                 return _.sumBy(this.orderProducts, (orderProduct) => {
                     return (orderProduct.unitPrice - orderProduct.unitDiscount) * orderProduct.quantity

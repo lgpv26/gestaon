@@ -24,10 +24,10 @@ module.exports = {
                     type: TIMESTAMP
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE
+                    type: TIMESTAMP
                 },
                 dateCreated: {
-                    type: Sequelize.DATE
+                    type: TIMESTAMP
                 }
             }, {
                 tableName: "user_refresh_token",

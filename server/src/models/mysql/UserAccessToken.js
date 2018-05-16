@@ -2,14 +2,17 @@ import Sequelize from 'sequelize'
 
 module.exports = {
     defineModel: (server) => {
-        const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize);
-        const modelName = 'UserAccessToken';
+        const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize)
+        const modelName = 'UserAccessToken'
         return {
             name: modelName,
             instance: server.sequelize.define(modelName, {
                 accessToken: {
                     type: Sequelize.STRING,
                     primaryKey: true
+                },
+                fcmToken: {
+                    type: Sequelize.STRING
                 },
                 appId: {
                     type: Sequelize.STRING
@@ -24,10 +27,10 @@ module.exports = {
                     type: TIMESTAMP
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE
+                    type: TIMESTAMP
                 },
                 dateCreated: {
-                    type: Sequelize.DATE
+                    type: TIMESTAMP
                 }
             }, {
                 tableName: "user_access_token",

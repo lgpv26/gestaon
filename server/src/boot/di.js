@@ -26,6 +26,12 @@ module.exports = class DependencyInjection {
         return this.server.io
     }
 
+    setFCM(){
+        const FCM = require('fcm-push')
+        this.server.fcm = new FCM('AAAAZ0yr-pI:APA91bGSFvvNFBC3wL0fkyjtrZYu592dvCU10-6tqMTm2-5PZLUQcksnhZ8LYU0LaVxEgREU3FVxPh2_BOzt-mFkZ1nXgU5UcG8p838HiUSSYPDMkTVypS3EC37JIhcLI6XOL5GllczZ')
+        return this.server.fcm
+    }
+
     setY(){
     }
 

@@ -89,7 +89,6 @@
     export default {
         components: {
             'app-search': SearchComponent,
-            'app-client-address-form': ClientAddressForm,
             'app-client-address-types-input': ClientAddressTypesInput,
             'app-client-phone-form': ClientPhoneForm,
             'app-client-group-form': ClientGroupForm,
@@ -169,6 +168,8 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('auth', ['user','company']),
             ...mapFields([
+                'form.clientAddressId',
+                'form.clientPhoneId',
                 'form.client',
                 'form.client.id',
                 'form.client.name',
@@ -245,14 +246,25 @@
              */
 
             changeClient(){
+                this.clientPhoneId = null
+                this.clientAddressId = null
                 this.setClient({})
                 Vue.nextTick(() => {
-                    this.syncMultiple(_.map(this.client, (v, k) => {
+                    const clientObjMapping = _.map(this.client, (v, k) => {
                         return {
                             value: v,
                             path: k
                         }
-                    }))
+                    })
+                    clientObjMapping.push({
+                        value: null,
+                        path: 'clientPhoneId',
+                        customBaseFormPath: 'request'
+                    }, {
+                        value: null,
+                        path: 'clientAddressId',
+                        customBaseFormPath: 'request'
+                    })
                 })
             }
 
