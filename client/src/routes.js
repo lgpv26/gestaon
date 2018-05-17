@@ -4,6 +4,7 @@ const MainRoute = () => import('./features/Main/Main.vue');
 const DashboardRoute = () => import('./features/Main/Dashboard/Dashboard.vue');
 const TestRoute = () => import('./features/Main/Test/Test.vue');
 const ClientsRoute = () => import('./features/Main/CRUDs/Clients/Clients.vue');
+const CashierBalancingRoute = () => import('./features/Main/CRUDs/CashierBalancing/CashierBalancing.vue');
 const RequestsRoute = () => import('./features/Main/CRUDs/Requests/Requests.vue');
 const CompaniesRoute = () => import('./features/Main/Companies/Companies.vue');
 
@@ -12,14 +13,14 @@ export default [
         path: '/login',
         component: LoginRoute,
         meta: {
-            title: 'Login - Agiliza ERP'
+            title: 'Login - GestaON'
         }
     },
     {
         path: '/register',
         component: RegisterRoute,
         meta: {
-            title: 'Criar nova conta - Agiliza ERP'
+            title: 'Criar nova conta - GestaON'
         }
     },
     {
@@ -31,35 +32,42 @@ export default [
                 name: 'dashboard',
                 component: DashboardRoute,
                 meta: {
-                    title: 'Painel de pedidos - Agiliza ERP'
+                    title: 'Painel de pedidos - GestaON'
                 }
             },
             {
                 path: 'clients',
                 component: ClientsRoute,
                 meta: {
-                    title: 'Clientes - Agiliza ERP'
+                    title: 'Clientes - GestaON'
+                }
+            },
+            {
+                path: 'cashier-balancing',
+                component: CashierBalancingRoute,
+                meta: {
+                    title: 'Caixa / Fechamento diário - GestaON'
                 }
             },
             {
                 path: 'test',
                 component: TestRoute,
                 meta: {
-                    title: 'Testes - Agiliza ERP'
+                    title: 'Testes - GestaON'
                 }
             },
             {
                 path: 'requests',
                 component: RequestsRoute,
                 meta: {
-                    title: 'Atendimentos - Agiliza ERP'
+                    title: 'Atendimentos - GestaON'
                 }
             },
             {
                 path: 'companies',
                 component: CompaniesRoute,
                 meta: {
-                    title: 'Empresas - Agiliza ERP'
+                    title: 'Empresas - GestaON'
                 }
             },
             {
