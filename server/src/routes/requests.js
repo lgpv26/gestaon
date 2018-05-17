@@ -66,10 +66,11 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.post('/requests/persistence', (req, res, next) => {
+    server.post('/requests/persistence/:draftId', (req, res, next) => {
         return server.broker.call('draft/request/persistence.start', {
             request: req.body,
             userId: req.auth.id,
+            draftId: req.params.draftId,
             companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
         }).then((request) => {
             return res.send(200, request)

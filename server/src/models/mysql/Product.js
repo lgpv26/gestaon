@@ -53,10 +53,10 @@ module.exports = {
             })
         }
     },
-    postSettings: ({ Product, OrderProduct, RequestOrder, Supplier, SupplierProduct }) => {
+    postSettings: ({ Product, RequestOrderProduct, RequestOrder, Supplier, SupplierProduct }) => {
         Product.hasMany(SupplierProduct, {as: 'productSuppliers', foreignKey: 'productId'});
 
-        Product.belongsToMany(RequestOrder, {through: OrderProduct, as: 'productOrders', foreignKey: 'productId'});
+        Product.belongsToMany(RequestOrder, {through: RequestOrderProduct, as: 'requestOroductOrders', foreignKey: 'productId'});
         Product.belongsToMany(Supplier, {through: SupplierProduct, as: 'suppliers', foreignKey: 'productId'});
     }
 }

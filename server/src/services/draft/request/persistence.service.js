@@ -25,7 +25,7 @@ module.exports = (server) => {
             this._request = ctx.params.request
             this._companyId = ctx.params.companyId
             this._userId = ctx.params.userId
-            this._draftId = ctx.params.request.draftId
+            this._draftId = ctx.params.draftId
            
             return ctx.call("draft/request/persistence.checkTempIds").then(() => {
              //START 
@@ -515,7 +515,8 @@ module.exports = (server) => {
                 return ctx.call("draft.remove", {
                     data: {
                         draftId: this._draftId,
-                        companyId: this._companyId
+                        companyId: this._companyId,
+                        emittedBy: this._userId
                     }
                 }).then(() => {
                     console.log("Remove draft!")

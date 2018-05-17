@@ -59,7 +59,10 @@ module.exports = (server) => { return {
                 draftId: ctx.params.data.draftId,
                 companyId: ctx.params.data.companyId
             }).then((draft) => {
-                server.io.in(`company/${ctx.params.data.companyId}`).emit('draft.remove',new EventResponse(ctx.params.data.draftId))
+                server.io.in(`company/${ctx.params.data.companyId}`).emit('draft.remove',new EventResponse({
+                    draftId: parseInt(ctx.params.data.draftId),
+                    emittedBy: parseInt(ctx.params.data.emittedBy)
+                }))
                 return true
             }).catch((err) => {
                 console.log("ERRO: Remove draft - draft.remove")

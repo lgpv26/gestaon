@@ -259,32 +259,14 @@ const actions = {
                 legalDocument: client.legalDocument,
                 clientGroupId: client.clientGroupId,
                 clientCustomFields: client.clientCustomFields,
-                clientPhones: _.map(client.clientPhones, (clientPhone) => {
-                    if(!_.isNumber(clientPhone.id) && clientPhone.id.substring(0,4) === "tmp/"){
-                        clientPhone.id = null
-                    }
-                    return clientPhone
-                }),
-                clientAddresses: _.map(client.clientAddresses, (clientAddress) => {
-                    if(!_.isNumber(clientAddress.id) && clientAddress.id.substring(0,4) === "tmp/"){
-                        clientAddress.id = null
-                    }
-                    return clientAddress
-                })
+                clientPhones: client.clientPhones,
+                clientAddresses: client.clientAddresses
             },
             order: {
                 promotionChannelId: order.promotionChannelId,
-                orderProducts: _.map(order.orderProducts, (orderProduct) => {
-                    if(_.get(orderProduct, 'id', false) && !_.isNumber(orderProduct.id) && orderProduct.id.substring(0,4) === "tmp/"){
-                        orderProduct.id = null
-                    }
-                    return orderProduct
-                })
+                orderProducts: order.orderProducts
             },
             requestPaymentMethods: _.map(request.requestPaymentMethods, (requestPaymentMethod) => {
-                if(_.get(requestPaymentMethod, 'id', false) && !_.isNumber(requestPaymentMethod.id) && requestPaymentMethod.id.substring(0,4) === "tmp/"){
-                    requestPaymentMethod.id = null
-                }
                 if(_.has(requestPaymentMethod,'paymentMethod')){
                     if(requestPaymentMethod.paymentMethod.id){
                         requestPaymentMethod = _.assign(requestPaymentMethod, { paymentMethodId: requestPaymentMethod.paymentMethod.id })
@@ -295,7 +277,8 @@ const actions = {
                 return requestPaymentMethod
             }),
             deadlineDatetime: ((request.useSuggestedDeadlineDatetime) ?  null : request.deadlineDatetime ),
-            obs: request.obs
+            obs: request.obs,
+            responsibleUserId: request.responsibleUserId
         }
         return RequestsAPI.persistence(sendData, {
             companyId
