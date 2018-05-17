@@ -32,7 +32,7 @@ module.exports = {
         host: 'localhost',
         dbName: 'gestaon-dev',
         user: 'root',
-        password: '140992'
+        password: 'atrroot'
     },
     mongoDb: {
         host: 'localhost',
@@ -57,6 +57,6 @@ module.exports = {
         {name: 'osmand', port: 6055, debug: false}
     ],
     redis: {
-        active: true
+        active: false
     }
 };

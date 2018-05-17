@@ -39,7 +39,7 @@
                                 v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
                                 <menu-icon-phone class="icon"></menu-icon-phone>
                             </router-link>
-                            <router-link to="/clients" exact tag="li" :title="'Atendimentos / Pedidos'"
+                            <router-link to="/cashier-balancing" exact tag="li" :title="'Caixa / Fechamento diário'"
                                 v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
                                 <menu-icon-cash-check class="icon"></menu-icon-cash-check></router-link>
                             <!--

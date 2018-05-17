@@ -1,51 +1,29 @@
 <template>
-    <div class="page--crud">
-        <div>
-            <h3 class="title">{{ title }}</h3>
-            <ul class="filter-menu">
-                <slot></slot>
-            </ul>
-            <div class="items-list" ref="itemsList">
-                <div class="items-list__columns">
-                    <div class="column" :style="{ width: columnWidths[0] + 'px'}"></div>
-                    <div class="column" v-for="(column, index) in columns" :style="{ width: columnWidths[index + 1] + 'px' }">
-                        {{ column.text }}
-                    </div>
-                </div>
-                <div class="items-list__container" ref="scrollbar">
-                    <div class="container__scroll-filler" ref="scrollFiller" :style="{height: scrollFillerHeight + 'px'}">
-                        <table ref="table">
-                            <tbody ref="tbody">
-                                <tr v-for="item in items">
-                                    <td style="width: 30px;" ref="checkTdEl">
-                                        <div class="check" :class="{active: form.selectedIds.includes(item.id)}" @click="check(item.id)"></div>
-                                    </td>
-                                    <td v-for="column in columns" :ref="column.name + 'TdEls'" @click="check(item.id)">
-                                        {{ getItemColumnValue(item, column) }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="items-list" ref="itemsList">
+        <div class="items-list__columns">
+            <div class="column" :style="{ width: columnWidths[0] + 'px'}"></div>
+            <div class="column" v-for="(column, index) in columns" :style="{ width: columnWidths[index + 1] + 'px' }">
+                {{ column.text }}
             </div>
-            <div class="footer">
-                <div class="left-side">
-                    <span>Com selecionado:</span>
-                    <a>Imprimir recibo</a>
-                    <div class="dot-separator"></div>
-                    <a>Emitir nota fiscal</a>
-                    <div class="dot-separator"></div>
-                    <a>Abrir em detalhe</a>
-                </div>
-                <span class="push-both-sides"></span>
-                <div class="right-side">
-                    <span>Exportar relatório:</span>
-                    <a>Analítico</a>
-                    <div class="dot-separator primary"></div>
-                    <a>Sintético</a>
-                </div>
+        </div>
+        <div class="items-list__container" ref="scrollbar">
+            <div class="container__scroll-filler" ref="scrollFiller" :style="{height: scrollFillerHeight + 'px'}">
+                <table ref="table">
+                    <tbody ref="tbody">
+                        <tr v-for="item in items">
+                            <td style="width: 30px;" ref="checkTdEl">
+                                <div class="check" :class="{active: form.selectedIds.includes(item.id)}" @click="check(item.id)"></div>
+                            </td>
+                            <td v-for="column in columns" :ref="column.name + 'TdEls'" @click="check(item.id)">
+                                {{ getItemColumnValue(item, column) }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
+        <div class="items-list--summary" v-if="hasDefaultSlot">
+            <slot></slot>
         </div>
     </div>
 </template>
@@ -61,7 +39,7 @@
     import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 
     export default {
-        props: ['value', 'title', 'total', 'columns', 'items'],
+        props: ['value', 'total', 'columns', 'items'],
         data(){
             return {
                 form: {
@@ -82,6 +60,9 @@
             }
         },
         computed: {
+            hasDefaultSlot(){
+                return !!this.$slots.default
+            },
             getItemColumnValue(){
                 return (item, column) => {
                     return item[column.name]
@@ -182,73 +163,11 @@
 </script>
 
 <style scoped>
-
-    .page--crud {
-        display: flex;
-        flex-grow: 1;
-        justify-content: center;
-        background-color: var(--bg-color--7)
-    }
-    .page--crud > div {
-        width: 96%;
-        text-align: center;
-        padding-top: 40px;
-        display: flex;
-        flex-direction: column;
-    }
-    .page--crud > div > h3 {
-        padding-bottom: 30px;
-    }
-    h3.title {
-        font-size: 16px;
-        text-transform: uppercase;
-        color: var(--font-color--7)
-    }
-    ul.filter-menu {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        padding-bottom: 20px;
-    }
-    ul.filter-menu li {
-        margin: 0 5px;
-    }
-    ul.filter-menu li a {
-        height: 32px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--font-color--7)
-    }
-    ul.filter-menu li a .primary {
-        color: var(--font-color--primary);
-        font-weight: 600;
-    }
-    ul.filter-menu li a .dot-separator.primary {
-        background-color: var(--border-color--primary)
-    }
-    ul.filter-menu li a .secondary {
-        color: var(--font-color--secondary);
-        font-weight: 600;
-    }
-    ul.filter-menu li a .dot-separator.secondary {
-        background-color: var(--border-color--secondary)
-    }
-    ul.filter-menu li a .terciary {
-        color: var(--font-color--terciary);
-        font-weight: 600;
-    }
-    ul.filter-menu li a .dot-separator.terciary {
-        background-color: var(--border-color--terciary)
-    }
-
     div.items-list {
         display: flex;
         flex-grow: 1;
         background-color: var(--bg-color);
-        padding: 20px;
+        padding: 0 0 20px;
         border-radius: 5px;
         flex-direction: column;
     }
@@ -260,10 +179,10 @@
     div.items-list .items-list__columns {
         display: flex;
         flex-direction: row;
-        height: 20px;
         flex-shrink: 0;
         margin-bottom: 10px;
         align-items: center;
+        padding: 20px 20px 0 20px;
     }
 
     div.items-list .items-list__columns .column {
@@ -271,6 +190,10 @@
         font-weight: 600;
         color: var(--font-color--2);
         text-transform: uppercase;
+    }
+
+    div.items-list .items-list__container{
+        margin: 0 20px 0 20px;
     }
 
     div.items-list table {
@@ -323,51 +246,14 @@
         border-radius: 100%;
     }
 
-    div.footer {
-        padding: 40px 0;
+    div.items-list .items-list--summary {
         display: flex;
+        flex-direction: row;
+        flex-grow: 1;
         flex-shrink: 0;
-        align-items: center;
-        justify-content: center;
+        padding: 20px 20px 0;
+        border-top: 1px solid var(--bg-color--8);
+        margin-top: 20px;
     }
 
-    div.footer a {
-        text-transform: uppercase;
-    }
-
-    div.footer span {
-        font-weight: 600;
-    }
-
-    div.footer .left-side {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        padding-left: 20px;
-    }
-
-    div.footer .left-side > * {
-        margin: 0 5px;
-    }
-
-    div.footer .right-side {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        padding-right: 20px;
-    }
-
-    div.footer .right-side > * {
-        margin: 0 5px;
-    }
-
-    div.footer .right-side > *:last-child {
-        margin: 0 0 0 5px;
-    }
-
-    div.footer .right-side a {
-        color: var(--font-color--7);
-    }
 </style>
