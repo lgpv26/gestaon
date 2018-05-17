@@ -257,35 +257,50 @@ module.exports = (server) => { return {
                 throw new Error(err) // COMENTAR
             })
         },
-
-        /**
-         * @param {Object} where, {Array} include
-         * @returns {Promise.<Array>} requests
-         */
-        setRequestClientAddresses(ctx){
-
-        },
-
         // request-client-address
-
         /**
-         * @param {Object} where, {Array} include
+         * @param {Object} data, {Int} requestId, {Object} transaction
          * @returns {Promise.<Array>} requests
          */
         setRequestClientAddresses(ctx){
-
+            return server.mysql.RequestClientAddress.destroy({
+                where: {
+                    requestId: ctx.params.requestId
+                },
+                transaction: ctx.params.transaction
+            }).then(() => {
+                return server.mysql.RequestClientAddress.bulkCreate(ctx.params.data, {
+                    updateOnDuplicate: ['requestId', 'clientAddressId', 'type', 'dateUpdated', 'dateRemoved', 'status'],
+                    transaction: ctx.params.transaction
+                }).then((response) => {
+                    return response
+                }).catch((error) => {
+                    return error
+                })
+            })
         },
-
         // request-client-phone
-
         /**
-         * @param {Object} where, {Array} include
-         * @returns {Promise.<Array>} requests
+         * @param {Object} data, {Int} requestId, {Object} transaction
+         * @returns {Promise.<Array>} requestClientPhones
          */
         setRequestClientPhones(ctx){
-
+            return server.mysql.RequestClientPhone.destroy({
+                where: {
+                    requestId: ctx.params.requestId
+                },
+                transaction: ctx.params.transaction
+            }).then(() => {
+                return server.mysql.RequestClientPhone.bulkCreate(ctx.params.data, {
+                    updateOnDuplicate: ['requestId', 'clientPhoneId', 'type', 'dateUpdated', 'dateRemoved', 'status'],
+                    transaction: ctx.params.transaction
+                }).then((response) => {
+                    return response
+                }).catch((error) => {
+                    return error
+                })
+            })
         },
-
         // request-timeline
 
         /**

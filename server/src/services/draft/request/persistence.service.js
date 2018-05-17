@@ -11,6 +11,8 @@ module.exports = (server) => {
     let _companyId = null
     let _userId = null
 
+    let _draftId = null
+
     return {
     name: "draft/request/persistence",
     actions: {
@@ -23,6 +25,7 @@ module.exports = (server) => {
             this._request = ctx.params.request
             this._companyId = ctx.params.companyId
             this._userId = ctx.params.userId
+            this._draftId = ctx.params.request.draftId
            
             return ctx.call("draft/request/persistence.checkTempIds").then(() => {
              //START 
@@ -36,6 +39,7 @@ module.exports = (server) => {
                             companyId: this._companyId,
                             transaction: this._transaction
                         }).then((client) => {
+                            _.set(this._request, 'client', client)
                             return {client}
                         }).catch((err) => {
                             console.log("Erro em: draft/client/persistence.start")
@@ -75,8 +79,8 @@ module.exports = (server) => {
                                 data: request,
                                 transaction: this._transaction
                             }).then(() => {
-                                ctx.call("draft/request/persistence.commit").then(() => {
-                                    return new EventResponse(request)
+                                return ctx.call("draft/request/persistence.commit").then(() => {
+                                    return new EventResponse(request)                        
                                 }).catch((err) => {
                                     console.log("Erro em: draft/request/persistence.commit")
                                     return ctx.call("draft/request/persistence.rollback").then(() => {
@@ -166,9 +170,9 @@ module.exports = (server) => {
                 })
             }).catch((err) => {
                 console.log(err)
+                throw new Error(err)
             })
         },
-
 
         setRequest(ctx){
             return ctx.call("draft/request/persistence.saveRequest",{
@@ -196,13 +200,40 @@ module.exports = (server) => {
                     )
                 }
 
+                if(this._request.clientAddressId){
+                    const clientAddressSelect = _.find(this._request.client.clientAddresses, 'select')
+                    promises.push(ctx.call("data/request.setRequestClientAddresses", {
+                            data: [_.assign({clientAddressId: clientAddressSelect.id,
+                                requestId: request.id
+                            })],
+                            requestId: request.id,
+                            transaction: this._transaction
+                        })
+                    )
+                }
+
+                if(this._request.clientPhoneId){
+                    const clientPhoneSelect = _.find(this._request.client.clientPhones, 'select')
+                    promises.push(ctx.call("data/request.setRequestClientPhones", {
+                            data: [_.assign({clientPhoneId: clientPhoneSelect.id,
+                                requestId: request.id
+                            })],
+                            requestId: request.id,
+                            transaction: this._transaction
+                        })
+                    )
+                }
+
                 return Promise.all(promises).then(() => {
                     return request
                 }).catch((err) => {
                     console.log("Erro em: data/request.setRequest - PROMISE ALL")
-                    return new EventResponse(err)
-                })            
-            })
+                    throw new Error(err)
+                })         
+            }).catch((err) => {
+                console.log(err, "Erro em: data/request.saveRequest")
+                throw new Error(err)
+            })  
         },
 
         saveRequest(ctx){
@@ -272,13 +303,15 @@ module.exports = (server) => {
             if(_.has(this._request, "client")){
                 if(_.has(this._request, "client.clientAddresses")){
                     removeTemps.push(ctx.call("draft/request/persistence.removeTempIds", {
-                            path: 'client.clientAddresses'
+                            path: 'client.clientAddresses',
+                            select: 'clientAddressId'
                         })
                     )
                 }
                 if(_.has(this._request, "client.clientPhones")){
                     removeTemps.push(ctx.call("draft/request/persistence.removeTempIds", {
-                            path: 'client.clientPhones'
+                            path: 'client.clientPhones',
+                            select: 'clientPhoneId'
                         })
                     )
                 }
@@ -314,8 +347,16 @@ module.exports = (server) => {
         removeTempIds(ctx){
             let newValue = []
             _.map(_.get(this._request, ctx.params.path), (obj) => {
+                if(ctx.params.select && _.has(this._request, ctx.params.select)){
+                    if(obj.id === _.get(this._request, ctx.params.select)){
+                        obj.select = true
+                    }
+                    else{
+                        obj.select = false
+                    }                        
+                }
                 if(_.get(obj, 'id', false) && !_.isNumber(obj.id) && obj.id.substring(0,4) === "tmp/"){
-                    obj.id = null
+                    obj.id = null              
                 }
                 newValue.push(obj)
             })
@@ -466,9 +507,21 @@ module.exports = (server) => {
         /**
          * Commit persistence
          */
-        commit() {
-            console.log("Commit everything!")
-            this._transaction.commit()
+        commit(ctx) {
+            console.log("Commiting...")
+            this._transaction.commit().then(() => {
+                console.log("Commit everything!")
+                console.log("Removing draft...")
+                return ctx.call("draft.remove", {
+                    data: {
+                        draftId: this._draftId,
+                        companyId: this._companyId
+                    }
+                }).then(() => {
+                    console.log("Remove draft!")
+                    return true
+                })
+            })
         },
 
         /**

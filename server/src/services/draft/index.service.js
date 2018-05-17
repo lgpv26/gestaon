@@ -58,11 +58,13 @@ module.exports = (server) => { return {
             return server.mongodb.Draft.remove({
                 draftId: ctx.params.data.draftId,
                 companyId: ctx.params.data.companyId
-            }, (err, data) => {
-                return {
-                    removedDraftId: ctx.params.data.draftId
-                }
-            });
+            }).then((draft) => {
+                server.io.in(`company/${ctx.params.data.companyId}`).emit('draft.remove',new EventResponse(ctx.params.data.draftId))
+                return true
+            }).catch((err) => {
+                console.log("ERRO: Remove draft - draft.remove")
+                throw new Error(err)
+            })
         }
     }
 }}

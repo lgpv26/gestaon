@@ -21,11 +21,11 @@ module.exports = (server) => {
             this._transaction = ctx.params.transaction || null
             this._companyId = ctx.params.companyId
 
+
             return ctx.call("draft/client/persistence.setTransaction").then(() => {
                 
                 //SAVE INITIAL CLIENT 
                 return ctx.call("draft/client/persistence.saveClient").then((client) => {
-                
                     let clientPromisses = []
                     
                     if(_.has(this._client, "clientAddresses")){
@@ -53,9 +53,12 @@ module.exports = (server) => {
                             data: {
                                 clientId: client.id
                             }
+                        }).then((clientCustomFields) => {
+                            _.set(client, "clientCustomFields", clientCustomFields)
                         })
                     )
                     }
+                    
 
                     this._client = client
                     
@@ -86,13 +89,18 @@ module.exports = (server) => {
                                 return ctx.call("draft/client/persistence.rollback")
                             })
                         })
-                    }).catch(() => {
+                    }).catch((err) => {
                         console.log("Erro em: draft/client/persistence.setClient")
                         throw new Error("Nenhum registro encontrado.")
                     })           
                 }).catch((err) => {
                     console.log(err, "Erro em: draft/client/persistence.saveClient")
-                    return ctx.call("draft/client/persistence.rollback")
+                    if(_saveInRequest) {
+                        throw new Error(err)
+                    }
+                    else{
+                        return ctx.call("draft/client/persistence.rollback")
+                    }
                 }) 
             })
         },
@@ -174,7 +182,6 @@ module.exports = (server) => {
                     })
                 }),
                 clientId: ctx.params.data.clientId,
-                companyId: this._companyId,
                 transaction: this._transaction
             }).then((clientPhones) => {
                 return clientPhones

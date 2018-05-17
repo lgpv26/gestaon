@@ -31,8 +31,8 @@ module.exports = {
         dialect: 'mysql',
         host: 'localhost',
         dbName: 'gestaon-dev',
-        user: 'thyoity',
-        password: 'atrroot'
+        user: 'root',
+        password: '140992'
     },
     mongoDb: {
         host: 'localhost',

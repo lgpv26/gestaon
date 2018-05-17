@@ -1,11 +1,12 @@
 import Sequelize from 'sequelize'
+import _ from 'lodash'
 
 module.exports = {
     defineModel: (server) => {
         const modelName = 'DeviceSetting';
         return {
             name: modelName,
-            instance: server.sequelize.define('deviceSetting', {
+            instance: server.sequelize.define(_.camelCase(modelName), {
                 deviceId: {
                     type: Sequelize.INTEGER,
                     primaryKey: true

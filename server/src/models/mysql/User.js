@@ -1,14 +1,14 @@
 import Sequelize from 'sequelize'
+import _ from 'lodash'
 
 const bcrypt = require('bcryptjs');
-const _ = require('lodash');
 
 module.exports = {
     defineModel: (server) => {
         const modelName = 'User';
         return {
             name: modelName,
-            instance: server.sequelize.define(modelName, {
+            instance: server.sequelize.define(_.camelCase(modelName), {
                 id: {
                     type: Sequelize.INTEGER,
                     primaryKey: true,

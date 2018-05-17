@@ -56,6 +56,8 @@ module.exports = (server) => {
                             transaction: ctx.params.transaction
                     }).then((client) => {
                         return JSON.parse(JSON.stringify(client))
+                    }).catch((err) => {
+                        console.log('erro consult by id - client service update')
                     })
                 }).catch((err) => {
                 })
@@ -96,7 +98,8 @@ module.exports = (server) => {
                             name: (result.name) ? result.name : null,
                             number: (result.number) ? result.number : null,
                             complement: (result.complement) ? result.complement : null,
-                            type: [1,3,5]
+                            type: [1,3,5],
+                            select: result.select
                         })
                     })
 
@@ -175,7 +178,7 @@ module.exports = (server) => {
                                 },
                                 transaction: ctx.params.transaction
                             }).then((clientAddressUpdate) => {
-                                return _.assign(clientAddressUpdate, { type: clientAddress.type })
+                                return _.assign(clientAddressUpdate, { type: clientAddress.type, select: clientAddress.select })
                             })
                             )
                         }
@@ -184,7 +187,7 @@ module.exports = (server) => {
                                 data: clientAddress,
                                 transaction: ctx.params.transaction
                             }).then((clientAddressCreate) => {
-                                return _.assign(clientAddressCreate, { type: clientAddress.type })
+                                return _.assign(clientAddressCreate, { type: clientAddress.type, select: clientAddress.select })
                             })
                             )
                         }
@@ -197,33 +200,88 @@ module.exports = (server) => {
                     })
                 })
             },
-
-             /**
+            /**
+             * @param {Object} data, {Object} transaction
+             * @returns {Promise.<Object>} clientPhone
+             */
+            clientPhoneCreate(ctx){
+                return server.mysql.ClientPhone.create(ctx.params.data, {
+                    transaction: ctx.params.transaction
+                }).then((clientPhone) => {
+                    if(!clientPhone){
+                        console.log("Nenhum registro encontrado. Create clientPhone.")
+                        throw new Error("Nenhum registro encontrado.")
+                    }
+                    return JSON.parse(JSON.stringify(clientPhone))
+                })
+            },
+            /**
+             * @param {Object} where, {Object} transaction
+             * @returns {Promise.<Object>} clientPhone
+             */
+            clientPhoneUpdate(ctx){
+                return server.mysql.ClientPhone.update(ctx.params.data, {
+                    where: ctx.params.where || {},
+                    paranoid: false,
+                    transaction: ctx.params.transaction
+                }).then((clientPhoneUpdate) => {
+                    if(parseInt(_.toString(clientPhoneUpdate)) < 1 ){
+                        console.log("Nenhum registro encontrado. Update. clientPhone")
+                        throw new Error("Nenhum registro encontrado.")
+                    }
+                    return server.mysql.ClientPhone.findById(ctx.params.data.id, {
+                        transaction: ctx.params.transaction
+                    }).then((clientPhone) => {
+                        return JSON.parse(JSON.stringify(clientPhone))
+                    })
+                })
+            },
+            /**
              * @param {Object} data, {Int} clientId, {Object} transaction (optional)
              * @returns {Promise.<Array>} clientPhones
              */            
             saveClientPhones(ctx) {
                 /*
-                * Delete all client's clientPhones
+                * Delete all client's clientPhone
                 */ 
-                return server.mysql.ClientPhone.destroy({
-                    where: {
-                        clientId: ctx.params.clientId
-                    },
-                    transaction: ctx.params.transaction || null
+               return server.mysql.ClientPhone.destroy({
+                where: {
+                    clientId: ctx.params.clientId
+                },
+                transaction: ctx.params.transaction || null
                 }).then(() => {
-                    return server.mysql.ClientPhone.bulkCreate(ctx.params.data, {
-                        updateOnDuplicate: ['clientId', 'name', 'number', 'dateUpdated', 'dateRemoved', 'status'],
-                        returning: true,
-                        transaction: ctx.params.transaction
-                    }).then((response) => {
-                        if (!response) {
-                            console.log('Registro não encontrado. data/client.saveClientPhones')
-                            throw new Error("Nenhum registro encontrado.")
+                    let clientPhonesPromises = []
+                    ctx.params.data.forEach((clientPhone) => {
+                        if (clientPhone.id) {
+                            clientPhonesPromises.push(ctx.call("data/client.clientPhoneUpdate", {
+                                data: _.assign(clientPhone, {
+                                    dateRemoved: null
+                                }),
+                                where: {
+                                    id: clientPhone.id
+                                },
+                                transaction: ctx.params.transaction
+                            }).then((clientPhoneUpdate) => {
+                                return _.assign(clientPhoneUpdate, { select: clientPhone.select })
+                            })
+                            )
                         }
-                        return response
+                        else {
+                            clientPhonesPromises.push(ctx.call("data/client.clientPhoneCreate", {
+                                data: clientPhone,
+                                transaction: ctx.params.transaction
+                            }).then((clientPhoneCreate) => {
+                                return _.assign(clientPhoneCreate, { select: clientPhone.select })
+                            })
+                            )
+                        }
+                    })
+
+                    return Promise.all(clientPhonesPromises).then((clientPhones) => {
+                        return clientPhones
                     }).catch((err) => {
-                        console.log(err)
+                        console.log("Erro em: data/client.saveClientPhones - Promise ALL")
+                        throw new Error(err)
                     })
                 })
             },

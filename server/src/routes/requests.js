@@ -78,4 +78,8 @@ module.exports = (server, restify) => {
         })
     })
 
+    server.post('/requests/recoverance', (req, res, next) => {
+        return server.broker.call('draft/request/recoverance.start')
+    })
+
 }

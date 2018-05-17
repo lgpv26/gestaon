@@ -1,4 +1,5 @@
 import Sequelize from 'sequelize'
+import _ from 'lodash'
 
 module.exports = {
     defineModel: (server) => {
@@ -6,7 +7,7 @@ module.exports = {
         const modelName = 'UserRefreshToken';
         return {
             name: modelName,
-            instance: server.sequelize.define(modelName, {
+            instance: server.sequelize.define(_.camelCase(modelName), {
                 refreshToken: {
                     type: Sequelize.STRING,
                     primaryKey: true
