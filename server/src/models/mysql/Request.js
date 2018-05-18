@@ -41,6 +41,10 @@ module.exports = {
                 deadlineDatetime: {
                     type: Sequelize.DATE
                 },
+                isScheduled: {
+                    type: Sequelize.BOOLEAN,
+                    defaultValue: false
+                },
                 obs: {
                     type: Sequelize.STRING,
                     set(val) {

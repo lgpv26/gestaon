@@ -170,7 +170,7 @@ module.exports = (server) => {
 
             if(_.has(ctx.params.request, "deadlineDatetime")){
                 _.set(request, 'deadlineDatetime', ctx.params.request.deadlineDatetime)
-                _.set(request, 'useSuggestedDeadlineDatetime', (ctx.params.request.useSuggestedDeadlineDatetime) ? true : false )
+                _.set(request, 'useSuggestedDeadlineDatetime', ctx.params.request.isScheduled)
             }
 
             if(_.has(ctx.params.request, "requestClientPhones")){

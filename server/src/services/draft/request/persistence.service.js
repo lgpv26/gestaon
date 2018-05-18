@@ -71,6 +71,7 @@ module.exports = (server) => {
                                 requestOrderId: (order) ? _.get(order, 'order.id') : null,
                                 taskId: (task) ? _.get(task, 'task.id') : null,
                                 deadlineDatetime: (this._request.deadlineDatetime) ? moment(this._request.deadlineDatetime).format("YYYY-MM-DD HH:mm:ss") : moment().add(20, 'm').format("YYYY-MM-DD HH:mm:ss"),
+                                isScheduled: (this._request.deadlineDatetime) ? true : false,
                                 obs: (this._request.obs) ? this._request.obs : null
                             },
                             transaction: this._transaction
