@@ -3,6 +3,7 @@ import _ from 'lodash'
 
 module.exports = {
     defineModel: (server) => {
+        const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize);
         const modelName = 'RequestOrderProduct';
         return {
             name: modelName,
@@ -28,13 +29,13 @@ module.exports = {
                     default: 0
                 },
                 dateUpdated: {
-                    type: Sequelize.DATE
+                    type: TIMESTAMP
                 },
                 dateCreated: {
-                    type: Sequelize.DATE
+                    type: TIMESTAMP
                 },
                 dateRemoved: {
-                    type: Sequelize.DATE
+                    type: TIMESTAMP
                 }
             }, {
                 tableName: 'request_order_product',
