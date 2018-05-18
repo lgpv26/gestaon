@@ -239,7 +239,9 @@ module.exports = (server) => {
         saveRequest(ctx){
             if (this._request.id) { // update request
                 return ctx.call("data/request.update", {
-                    data: ctx.params.data,
+                    data: _.assign(ctx.params.data, {
+                        id: this._request.id
+                    }),
                     where: {
                         id: this._request.id,
                         companyId: this._companyId
@@ -408,8 +410,7 @@ module.exports = (server) => {
                 return ctx.call("data/request.requestOrderUpdate", {
                     data: this._request.order,
                     where: {
-                        id: this._request.order.id,
-                        companyId: this._companyId
+                        id: this._request.order.id
                     },
                     transaction: this._transaction
                 }).then((requestOrder) => {

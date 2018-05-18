@@ -1,5 +1,5 @@
 module.exports = (server) => { return {
-    name: "draft/request/recoverance",
+    name: "draft/client/recoverance",
     actions: {
         start(){
 

@@ -4,20 +4,257 @@ import moment from 'moment'
 import EventResponse from '~server/models/EventResponse'
 
 module.exports = (server) => { 
-    //PRIVATES
-    let _request = null
-    let _transaction = null
 
+    //PRIVATES
+    let _requestId = null
     let _companyId = null
     let _userId = null
 
-    let _draftId = null
+    let _request = {}
 
     return {
-    name: "draft/request/persistence",
+    name: "draft/request/recoverance",
     actions: {
         start(ctx){
-           console.log('aqui')
+
+            //SET PRIVATES
+            this._requestId = ctx.params.requestId
+            this._companyId = ctx.params.companyId
+            this._userId = ctx.params.userId
+            this._request = {}
+
+            return server.broker.call('draft/request/recoverance.consultRequest').then((request) => {
+                let promises = []
+
+                //console.log(request)
+
+                
+                promises.push(ctx.call("draft/request/recoverance.setRequest", {
+                    request: request
+                }).then((request) => {
+                    this._request = request
+                }).catch((err) => {
+                    console.log("Erro em: draft/request/recoverance.setClient")
+                    throw new Error(err)
+                }))
+                
+                if(_.has(request, "client")){
+                    promises.push(ctx.call("draft/request/recoverance.setClient", {
+                        client: request.client
+                    }).then((client) => {
+                        _.set(this._request, 'client', client)
+                    }).catch((err) => {
+                        console.log("Erro em: draft/request/recoverance.setClient")
+                        throw new Error(err)
+                    }))
+                }
+
+                if(_.has(request, "requestOrder")){
+                    promises.push(ctx.call("draft/request/recoverance.setOrder", {
+                        order: request.requestOrder
+                    }).then((order) => {
+                        _.set(this._request, 'order', order)
+                    }).catch((err) => {
+                        console.log("Erro em: draft/request/recoverance.setClient")
+                        throw new Error(err)
+                    }))
+                }
+
+                if(_.has(request, "requestPaymentMethods")){
+                    promises.push(ctx.call("draft/request/recoverance.setRequestPaymentMethods", {
+                        requestPaymentMethods: request.requestPaymentMethods
+                    }).then((requestPaymentMethods) => {
+                        _.set(this._request, 'requestPaymentMethods', requestPaymentMethods)
+                    }).catch((err) => {
+                        console.log("Erro em: draft/request/recoverance.setClient")
+                        throw new Error(err)
+                    }))
+                }
+
+                return Promise.all(promises).then(() => {
+                    return ctx.call("draft.create", {
+                        data: {
+                            createdBy: this._userId,
+                            companyId: this._companyId,
+                            data: { 
+                                request: this._request 
+                            }
+                        }
+                    }).then(() => {
+                        return new EventResponse('Success')
+                    }).catch((err) => {
+                        console.log("Erro em: draft/request/recoverance.consultRequest")
+                        return new EventResponse(err)
+                    })
+                })
+            }).catch((err) => {
+                console.log("Erro em: draft/request/recoverance.consultRequest")
+                throw new Error(err)
+            })
+        
         },
+
+        consultRequest(ctx) {
+            return ctx.call("data/request.getOne", {
+                where: {
+                    id: this._requestId,
+                    companyId: this._companyId
+                },
+                include: [
+                    {
+                        model: server.mysql.RequestTimeline,
+                        as: "requestTimeline"
+                    },
+                    {
+                        model: server.mysql.RequestClientPhone,
+                        as: "requestClientPhones"
+                    },{
+                        model: server.mysql.RequestClientAddress,
+                        as: "requestClientAddresses"
+                    },{
+                        model: server.mysql.Client,
+                        as: "client",
+                        include: [{
+                            model: server.mysql.ClientPhone,
+                            as: 'clientPhones'
+                        }, {
+                            model: server.mysql.ClientAddress,
+                            as: 'clientAddresses',
+                            include: [{
+                                model: server.mysql.Address,
+                                as: 'address'
+                            }]
+                        }, {
+                            model: server.mysql.ClientCustomField,
+                            as: 'clientCustomFields',
+                            include: [{
+                                model: server.mysql.CustomField,
+                                as: 'customField'
+                            }]
+                        }, {
+                            model: server.mysql.ClientGroup,
+                            as: 'clientGroup'
+                        }]
+                    },{
+                        model: server.mysql.RequestPaymentMethod,
+                        as: "requestPaymentMethods",
+                        include: [{
+                            model: server.mysql.PaymentMethod,
+                            as: 'paymentMethod'
+                        }]
+                    },{
+                        model: server.mysql.RequestOrder,
+                        as: "requestOrder",
+                        include: [{
+                            model: server.mysql.RequestOrderProduct,
+                            as: 'requestOrderProducts',
+                            include: [{
+                                model: server.mysql.Product,
+                                as: 'product'
+                            }]
+                        }]
+                    }
+                ]
+            }).then((request) => {
+                return request
+            }).catch((err) => {
+                console.log("Erro em: draft/request/recoverance.consultRequest")
+                throw new Error(err)
+            })
+        },
+        setRequest(ctx){
+            let request = {}
+
+            _.set(request, 'activeStep', (ctx.params.request.requestOrder) ? 'order' : 'client' )
+            _.set(request, 'obs', ctx.params.request.obs)
+
+            if(_.has(ctx.params.request, "deadlineDatetime")){
+                _.set(request, 'deadlineDatetime', ctx.params.request.deadlineDatetime)
+                _.set(request, 'useSuggestedDeadlineDatetime', (ctx.params.request.useSuggestedDeadlineDatetime) ? true : false )
+            }
+
+            if(_.has(ctx.params.request, "requestClientPhones")){
+                _.set(request, 'clientPhoneId', _.get(_.first(ctx.params.request.requestClientPhones), 'clientPhoneId'))
+            }
+
+            if(_.has(ctx.params.request, "requestClientAddresses")){
+                _.set(request, 'clientAddressId', _.get(_.first(ctx.params.request.requestClientAddresses), 'clientAddressId'))
+            }
+
+            if(_.has(ctx.params.request, "requestTimeline")){
+                _.set(request, 'responsibleUserId', _.get(_.first(ctx.params.request.requestTimeline), 'userId'))
+            }
+
+            return request
+
+        },
+        setClient(ctx){
+            const client = ctx.params.client
+            let omit = ['companyId', 'dateUpdated', 'dateCreated', 'dateRemoved']
+
+            if(_.has(client, "clientPhones")){
+                client.clientPhones.forEach((clientPhone, index) => {
+                    omit.push('clientPhones[' + index + '].dateUpdated', 'clientPhones[' + index + '].dateCreated', 'clientPhones[' + index + '].dateRemoved')
+                })
+            }
+            if(_.has(client, "clientAddresses")){
+                client.clientAddresses.forEach((clientAddress, index) => {
+                    omit.push('clientAddresses[' + index + '].dateUpdated', 'clientAddresses[' + index + '].dateCreated', 'clientAddresses[' + index + '].dateRemoved')
+                })
+            }
+            if(_.has(client, "clientCustomFields")){
+                client.clientCustomFields.forEach((clientCustomField, index) => {
+                    omit.push('clientCustomFields[' + index + '].dateUpdated', 'clientCustomFields[' + index + '].dateCreated', 'clientCustomFields[' + index + '].dateRemoved')
+                })
+            }
+            if(_.has(client, "clientGroup")){
+                omit.push('clientGroup')
+            }
+            _.set(client, 'clientAddressForm', {
+                "id" : null,
+                    "show" : false,
+                    "complement" : "",
+                    "number" : "",
+                    "address" : {
+                        "id" : null,
+                        "name" : "",
+                        "cep" : "",
+                        "neighborhood" : "",
+                        "city" : "",
+                        "state" : ""
+                    }
+            })
+
+            return _.omit(client, omit)            
+        },
+        setOrder(ctx){
+            let order = ctx.params.order
+
+            let omit = ['status', 'dateUpdated', 'dateCreated', 'dateRemoved', 'obs', 'requestOrderProducts']
+
+            if(_.has(order, "requestOrderProducts")){
+                _.set(order, 'orderProducts', _.map(order.requestOrderProducts, (requestOrderProduct) => {
+                        _.unset(requestOrderProduct, 'requestOrderId')
+                        _.unset(requestOrderProduct, 'productId')
+                        _.unset(requestOrderProduct, 'dateUpdated')
+                        _.unset(requestOrderProduct, 'dateCreated')
+                        _.unset(requestOrderProduct, 'dateRemoved')
+                        return requestOrderProduct
+                    })
+                )
+            }
+            return _.omit(order, omit)
+        },
+        setRequestPaymentMethods(ctx){        
+            return _.map(ctx.params.requestPaymentMethods, (requestPaymentMethod) => {
+                _.unset(requestPaymentMethod, 'paymentMethodId')
+                _.unset(requestPaymentMethod, 'requestId')
+                _.unset(requestPaymentMethod, 'dateUpdated')
+                _.unset(requestPaymentMethod, 'dateCreated')
+                _.unset(requestPaymentMethod, 'dateRemoved')
+                return requestPaymentMethod
+            })
+        },
+    
     }
 }}

@@ -79,8 +79,16 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.post('/requests/recoverance', (req, res, next) => {
-        return server.broker.call('draft/request/recoverance.start')
+    server.post('/requests/recoverance/:id', (req, res, next) => {
+        return server.broker.call('draft/request/recoverance.start',{
+            requestId: req.params.id,
+            userId: req.auth.id,
+            companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
+        }).then((request) => {
+            return res.send(200, request)
+        }).catch((err) => {
+            console.log(err)
+        })
     })
 
 }
