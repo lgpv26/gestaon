@@ -49,8 +49,10 @@ module.exports = {
             })
         }
     },
-    postSettings: ({RequestPaymentMethod, Request, PaymentMethod}) => {
-        RequestPaymentMethod.belongsTo(Request, {as: 'request', foreignKey: 'requestId'});
-        RequestPaymentMethod.belongsTo(PaymentMethod, {as: 'paymentMethod', foreignKey: 'paymentMethodId'});
+    postSettings: ({RequestPaymentMethod, Request, PaymentMethod, RequestPaymentTransaction}) => {
+        RequestPaymentMethod.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
+        RequestPaymentMethod.belongsTo(PaymentMethod, {as: 'paymentMethod', foreignKey: 'paymentMethodId'})
+
+        RequestPaymentMethod.hasMany(RequestPaymentTransaction, {as: 'requestPaymentTransactions', foreignKey: 'requestPaymentId'})
     }
-};
+}

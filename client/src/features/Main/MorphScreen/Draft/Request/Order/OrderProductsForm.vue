@@ -14,7 +14,7 @@
                 </thead>
                 <tbody>
                 <tr v-for="(orderProductRow, index) in orderProductRows" :key="orderProductRow.id">
-                    <td><app-product-input v-model="orderProductRow.product" @input="inputOrderProductRowProduct(index)"></app-product-input></td>
+                    <td><app-product-input v-model="orderProductRow.product" @input="inputOrderProductRowProduct($event,index)"></app-product-input></td>
                     <td class="content-size"><input v-model="orderProductRow.quantity" @input="inputOrderProductRow($event,'quantity',index)" type="text" style="text-align: center;" /></td>
                     <td><money v-model="orderProductRow.unitPrice" @input.native="inputOrderProductRow($event,'unitPrice',index)" type="text" style="text-align: right;"></money></td>
                     <td><money v-model="orderProductRow.unitDiscount" @input.native="inputOrderProductRow($event,'unitDiscount',index)" type="text" style="text-align: right;"></money></td>
@@ -98,8 +98,23 @@
                     this.sync(this.orderProducts[index][field],'orderProducts[' + index + '].' + field)
                 }
             },
-            inputOrderProductRowProduct(index){
-                this.sync(this.orderProducts[index].product,'orderProducts[' + index + '].product')
+            inputOrderProductRowProduct(product,index){
+                this.orderProductRows[index].unitPrice = product.price
+                this.orderProductRows[index].quantity = 1
+                this.syncMultiple([
+                    {
+                        value: this.orderProducts[index].unitPrice,
+                        path: 'orderProducts[' + index + '].unitPrice'
+                    },
+                    {
+                        value: this.orderProducts[index].quantity,
+                        path: 'orderProducts[' + index + '].quantity'
+                    },
+                    {
+                        value: this.orderProducts[index].product,
+                        path: 'orderProducts[' + index + '].product'
+                    }
+                ])
             },
             add(){
                 this.addOrderProduct()

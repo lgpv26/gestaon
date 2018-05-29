@@ -30,6 +30,14 @@ const mutations = {
 }
 
 const actions = {
+    loadAll(context, { companyId }){
+        return PromotionChannelsAPI.getList({
+            companyId: companyId
+        }).then((result) => {
+            context.commit('SET_ALL', result.data)
+            return result
+        })
+    },
     setPromotionChannels(context, promotionChannels){
         context.commit('SET_ALL', promotionChannels)
     },

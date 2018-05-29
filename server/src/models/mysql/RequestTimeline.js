@@ -28,6 +28,9 @@ module.exports = {
                     type: Sequelize.STRING,
                     default: null
                 },
+                action: {
+                    type: Sequelize.STRING
+                },
                 dateUpdated: {
                     type: TIMESTAMP
                 },

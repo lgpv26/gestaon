@@ -1,7 +1,10 @@
 import _ from 'lodash'
+import moment from 'moment'
 import {Op} from 'sequelize'
 import EventResponse from '~server/models/EventResponse'
 import config from '~config'
+
+import { base64encode, base64decode } from 'nodejs-base64'
 
 module.exports = (server) => { return {
     name: "request-board",
@@ -12,11 +15,44 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} sections
          */
         load(ctx){
+
+            const searchObj = {
+                dateCreated: null
+            }
+
+            if(_.get(ctx.params,'data.filter',false)){
+                _.assign(searchObj,JSON.parse(base64decode(ctx.params.data.filter)))
+            }
+
+            const where = {}
+
+            // set date created
+
+            if(_.get(searchObj,'dateCreated',false)){
+                _.assign(where, {
+                    createdAt: {
+                        "$gte": moment(searchObj.dateCreated).startOf("day").toDate(),
+                        "$lte": moment(searchObj.dateCreated).endOf("day").toDate()
+                    }
+                })
+            }
+            else {
+                _.assign(where, {
+                    createdAt: {
+                        "$gte": moment().startOf("day").toDate(),
+                        "$lte": moment().endOf("day").toDate()
+                    }
+                })
+            }
+
             return server.mongodb.Section.find({}, null, {
                 sort: {
                     position: 1
                 }
-            }).populate('cards').exec().then((sections) => {
+            }).populate({
+                path: 'cards',
+                match: where
+            }).exec().then((sections) => {
                 const cardsRequestsIds = []
                 // get all requestIds to consult mysql just once
                 sections.forEach((section) => {
@@ -96,6 +132,13 @@ module.exports = (server) => { return {
                                     model: server.mysql.Product,
                                     as: 'product'
                                 }]
+                            }]
+                        },{
+                            model: server.mysql.RequestPaymentMethod,
+                            as: "requestPaymentMethods",
+                            include: [{
+                                model: server.mysql.PaymentMethod,
+                                as: 'paymentMethod'
                             }]
                         }
                     ]
@@ -276,47 +319,51 @@ module.exports = (server) => { return {
             const vm = this
             switch(ctx.params.data.location){
                 case "first":
-                    return server.mongodb.Card.findOne({ section: ctx.params.data.toSection}, {}, { sort: { position: 1 } }, function(err, firstCard) {
-                        console.log('firstCard', firstCard.position)
+                    return server.mongodb.Card.findOne({ section: ctx.params.data.toSection}, {}, { sort: { position: 1 } }).exec().then((firstCard) => {
                         let position = firstCard.position / 2
-                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then(() => {
-                            server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardMove', {
-                                data: { location: 'first' }
-                            })
+                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then((card) => {
+                            return {
+                                location: 'first',
+                                card: card
+                            }
                         })
                     })
-                    break;
+                break;
                 case "last":
-                    return server.mongodb.Card.findOne({ section: ctx.params.data.toSection }, {}, { sort: { position: -1 } }, function(err, lastCard) {
+                    return server.mongodb.Card.findOne({ section: ctx.params.data.toSection }, {}, { sort: { position: -1 } }).exec().then((lastCard) => {
                         let position = config.requestBoard.defaultPosition
                         if(lastCard) position += lastCard.position
-                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then(() => {
-                            server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardMove', {
-                                data: { location: 'last' }
-                            })
+                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then((card) => {
+                            return {
+                                location: 'last',
+                                card: card
+                            }
                         })
                     })
-                    break;
+                break;
                 case "middle":
-                    server.mongodb.Card.find({ section: ctx.params.data.toSection, _id: { $in: [ctx.params.data.prevCard, ctx.params.data.nextCard] } }, function(err, prevAndNextCard) {
-                        prevAndNextCard.sort(function(a, b){return b.position - a.position})
+                    return server.mongodb.Card.find({ section: ctx.params.data.toSection, _id: { $in: [ctx.params.data.prevCard, ctx.params.data.nextCard] }}).then((prevAndNextCard) => {
+                        prevAndNextCard.sort((a, b) => {
+                            return b.position - a.position
+                        })
                         const position = ( prevAndNextCard[0].position + prevAndNextCard[1].position ) / 2
-                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then(() => {
-                            server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardMove', {
-                                data: { location: 'middle' }
-                            })
+                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then((card) => {
+                            return {
+                                location: 'middle',
+                                card: card
+                            }
                         })
                     })
-                    break;
+                break;
                 case "last-and-only":
-                    console.log("last-and-only")
                     let position = config.requestBoard.defaultPosition
-                    return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then(() => {
-                        server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardMove', {
-                            data: { location: 'last-and-only' }
-                        })
+                    return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then((card) => {
+                        return {
+                            location: 'last-and-only',
+                            card: card
+                        }
                     })
-                    break;
+                break;
             }
         },
         removeCard(ctx){
@@ -357,8 +404,11 @@ module.exports = (server) => { return {
                             toSection.cards.push(card._id)
                             return toSection.save()
                         })
-                        return Promise.all([removeCardFromPrevSection, addCardToNextSection])
+                        return Promise.all([removeCardFromPrevSection, addCardToNextSection]).then(() => {
+                            return card
+                        })
                     }
+                    return card
                 })
             })
         }

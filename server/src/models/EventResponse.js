@@ -1,6 +1,6 @@
 module.exports = class EventResponse {
 
-    constructor(data, message = false){
+    constructor(data, message = false, options = {}){
         this.setEventResponse(data, message)
     }
 

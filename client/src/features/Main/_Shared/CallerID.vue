@@ -1,10 +1,10 @@
 <template>
     <div id="caller-id" :class="{ open }">
-        <div class="opener" @click="openCallerID()">
+        <div class="opener" @click="toggleCallerID()">
             <icon-phone></icon-phone>
         </div>
         <div class="container">
-            <div class="header" @click="openCallerID()">
+            <div class="header" @click="toggleCallerID()">
                 <h3>Últimas 10 ligações</h3>
             </div>
             <div ref="scrollbar">
@@ -20,7 +20,7 @@
                         <div class="client new-client" v-if="!call.clients.length">
                             Cliente novo
                         </div>
-                        <a href="javascript:void(0)" class="start-service" style="float: right" @click="createRequestDraft(call)">Iniciar atendimento</a>
+                        <a href="javascript:void(0)" v-if="canCreateDraft" class="start-service" style="float: right" @click="createRequestDraft(call)">Iniciar atendimento</a>
                     </div>
                 </div>
             </div>
@@ -34,7 +34,7 @@
 
     import ClientsAPI from '@/api/clients'
 
-    import { mapActions, mapState } from 'vuex'
+    import { mapGetters, mapActions, mapState } from 'vuex'
     import Scrollbar from 'smooth-scrollbar'
 
     import {createRequest} from '@/models/RequestModel'
@@ -50,23 +50,38 @@
         },
         computed: {
             ...mapState('auth', ['user','company']),
-            ...mapState('caller-id', ['calls'])
+            ...mapState('caller-id', ['calls']),
+            ...mapState('morph-screen', ['isShowing']),
+            ...mapGetters('morph-screen', ['activeMorphScreen']),
+            canCreateDraft(){
+                return !this.activeMorphScreen && !this.isShowing
+            }
         },
         methods: {
             ...mapActions('morph-screen', ['createDraft']),
             ...mapActions('caller-id', ['setCall','loadCalls']),
-            openCallerID(){
+            ...mapActions('toast',['showToast']),
+            toggleCallerID(){
                 this.open = !this.open
             },
             createRequestDraft(call){
-                if(!call.clients.length){
-                    this.createRequestDraftToNewClient(call)
+                if(this.canCreateDraft) {
+                    if (!call.clients.length) {
+                        this.createRequestDraftToNewClient(call)
+                    }
+                    else {
+                        ClientsAPI.getOne(_.first(call.clients).id, {
+                            companyId: this.company.id
+                        }).then(({data}) => {
+                            this.createRequestDraftExistentClient(call, data)
+                        })
+                    }
+                    this.toggleCallerID()
                 }
                 else {
-                    ClientsAPI.getOne(_.first(call.clients).id, {
-                        companyId: this.company.id
-                    }).then(({data}) => {
-                        this.createRequestDraftExistentClient(call, data)
+                    this.showToast({
+                        type: 'error',
+                        message: "Você só pode iniciar um atendimento a partir da tela inicial."
                     })
                 }
             },
@@ -97,11 +112,30 @@
                     createdBy: this.user.id,
                     data: {
                         request: createRequest({
-                            activeStep: 'order',
+                            activeStep: 'client',
                             client
                         })
                     }
                 }, companyId: this.company.id }
+
+                // select first address and phone
+                if(client.clientAddresses.length){
+                    createDraftArgs.body.data.request.clientAddressId = client.clientAddresses[0].id
+                }
+                if(client.clientPhones.length){
+                    const clientPhoneIndex = _.findIndex(client.clientPhones, {number: call.number})
+                    if(clientPhoneIndex !== -1){
+                        createDraftArgs.body.data.request.clientPhoneId = client.clientPhones[clientPhoneIndex].id
+                    }
+                    else {
+                        createDraftArgs.body.data.request.clientPhoneId = client.clientPhones[0].id
+                    }
+                }
+                //if two of them are selected, go directly to order tab
+                if(_.get(createDraftArgs, 'body.data.request.clientAddressId', null) && _.get(createDraftArgs,'body.data.request.clientPhoneId', null)){
+                    createDraftArgs.body.data.request.activeStep = 'order'
+                }
+
                 this.createDraft(createDraftArgs)
             }
         },
@@ -201,9 +235,10 @@
                         color: var(--font-color--7)
                     }
                     div.client {
-                        margin: 10px 0;
+                        margin: 10px 0 0;
                     }
                     a.start-service {
+                        margin-top: 10px;
                         color: var(--font-color--primary)
                     }
                     a.start-service:hover {

@@ -16,7 +16,7 @@
                     </div>
                 </div>
                 <div class="container__items" v-show="items && items.length > 0">
-                    <h3>{{ (title) ? title : 'SELECIONE' }}</h3>
+                    <h3 style="text-align: left;">{{ (title) ? title : 'SELECIONE' }}</h3>
                     <div class="items__item" v-for="item in items" @click="itemSelected(item)">
                         <slot name="item" :text="item.text" :active="(!multiple && item.value === value) || (multiple && value.length && value[value.indexOf(item.value)])"></slot>
                         <span class="push-both-sides"></span>
@@ -162,7 +162,7 @@
         width: 240px;
         position: absolute;
         z-index: 99999;
-        background-color: var(--bg-color);
+        background-color: var(--bg-color--2);
         padding: 20px;
         border-radius: 10px;
         cursor: initial;
@@ -176,13 +176,15 @@
         right: 8px;
         width: 15px;
         height: 15px;
+        padding: 0;
         display: flex;
         font-size: 10px;
         justify-content: center;
         align-items: center;
         border-radius: 100%;
         line-height: 100%;
-        background-color: var(--bg-color--7)
+        background-color: var(--bg-color--7);
+        color: var(--font-color);
     }
     .ag-select-input .container__section {
         margin-bottom: 10px;

@@ -19,7 +19,7 @@
                     <input type="text" placeholder="..." v-model="clientCustomFieldRow.value"
                            @input="inputClientCustomFieldRowValue(index, clientCustomFieldRow.value)" class="input--borderless" />
                     <span class="push-both-sides"></span>
-                    <a href="javascript:void(0)" @click="remove(index)">
+                    <a href="javascript:void(0)" @click="remove(clientCustomFieldRow.id,index)">
                         <icon-remove style="flex-shrink: 0;"></icon-remove>
                     </a>
                 </li>
@@ -79,8 +79,10 @@
         },
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
-            remove(index){
-
+            ...mapActions('draft/request', ['removeClientCustomField']),
+            remove(clientCustomFieldId, index){
+                this.removeClientCustomField(clientCustomFieldId)
+                this.syncKeyRemove(index, 'clientCustomFields')
             },
             inputClientCustomFieldRowValue(rowIndex, value){
                 this.sync(value,'clientCustomFields[' + rowIndex + '].value')

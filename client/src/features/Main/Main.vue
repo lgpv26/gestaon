@@ -20,44 +20,7 @@
                             </app-dropdown-menu>
                         </div>
                     </header>
-                    <nav class="main-menu">
-                        <ul>
-                            <!-- <router-link to="/dashboard" exact tag="li"><i class="mi mi-dashboard"></i></router-link> -->
-                            <router-link to="/dashboard" exact tag="li" :title="'Dashboard'"
-                                v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
-                                <menu-icon-dashboard class="icon"></menu-icon-dashboard>
-                            </router-link>
-                            <!--
-                            <router-link to="/requests" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Atendimentos'">
-                                <menu-icon-sale class="icon"></menu-icon-sale>
-                            </router-link>
-                            <router-link to="/test" exact tag="li" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Teste'">
-                                <menu-icon-sale class="icon"></menu-icon-sale>
-                            </router-link>
-                            -->
-                            <router-link to="/clients" exact tag="li" :title="'Ligações'"
-                                v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
-                                <menu-icon-phone class="icon"></menu-icon-phone>
-                            </router-link>
-                            <router-link to="/cashier-balancing" exact tag="li" :title="'Caixa / Fechamento diário'"
-                                v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
-                                <menu-icon-cash-check class="icon"></menu-icon-cash-check></router-link>
-                            <!--
-                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Financeiro'">
-                                <menu-icon-finance class="icon"></menu-icon-finance></li>
-                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Nota fiscal'">
-                                <menu-icon-nfe class="icon"></menu-icon-nfe></li>
-                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Estoque'">
-                                <menu-icon-stock class="icon"></menu-icon-stock></li>
-                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Relatórios'">
-                                <menu-icon-chart class="icon"></menu-icon-chart></li>
-                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Lalala'">
-                                <menu-icon-phone class="icon"></menu-icon-phone></li>
-                            <li v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }"  :title="'Rastreamento'">
-                                <menu-icon-track class="icon"></menu-icon-track></li>
-                            -->
-                        </ul>
-                    </nav>
+                    <app-menu></app-menu>
                     <span class="push-both-sides"></span>
                     <div class="sidebar-widgets">
                     </div>
@@ -65,56 +28,7 @@
                 <div class="main-column">
                     <header class="main-column__header">
                         <div class="header__container" v-if="$route.name === 'dashboard'">
-                            <div class="container__request-board">
-                                <app-datetime-picker class="request-board__filter  filter--date" :offset="{ bottom: 15 }">
-                                    <div class="filter-item__target">
-                                        <span class="target__title">Data</span>
-                                        <div class="target__amount">
-                                            <div></div>
-                                            <span>05</span>
-                                        </div>
-                                    </div>
-                                </app-datetime-picker>
-                                <app-select class="request-board__filter filter--type" :sections="requestBoardFilter.type"  :verticalOffset="15">
-                                    <div class="filter-item__target">
-                                        <span class="target__title">Tipo</span>
-                                    </div>
-                                    <template slot="section" slot-scope="sectionProps">
-                                        <h3>{{ sectionProps.text }}</h3>
-                                    </template>
-                                    <template slot="item" slot-scope="itemProps">
-                                        <span>{{itemProps.text }}</span>
-                                    </template>
-                                </app-select>
-                                <app-select class="request-board__filter filter--users-in-charge" v-model="requestBoardFilter.form.usersInCharge"
-                                    @unselect="onFilter('usersInCharge')" @select="onFilter('usersInCharge')" :multiple="true" :items="requestBoardFilter.users" :verticalOffset="15">
-                                    <div class="filter-item__target">
-                                        <span class="target__title">Responsável</span>
-                                        <div class="target__amount">
-                                            <div></div>
-                                            <span>05</span>
-                                        </div>
-                                    </div>
-                                    <template slot="item" slot-scope="itemProps">
-                                        <span>{{itemProps.text }}</span>
-                                    </template>
-                                </app-select>
-                                <app-select class="request-board__filter filter--filter" :sections="requestBoardFilter.filter" :verticalOffset="15">
-                                    <div class="filter-item__target">
-                                        <span class="target__title">Filtro</span>
-                                        <div class="target__amount">
-                                            <div></div>
-                                            <span>05</span>
-                                        </div>
-                                    </div>
-                                    <template slot="section" slot-scope="sectionProps">
-                                        <h3>{{ sectionProps.text }}</h3>
-                                    </template>
-                                    <template slot="item" slot-scope="itemProps">
-                                        <span>{{itemProps.text }}</span>
-                                    </template>
-                                </app-select>
-                            </div>
+                            <app-request-board-filter></app-request-board-filter>
                         </div>
                         <div class="header__container" v-else>
                             <div class="container__title">
@@ -144,8 +58,10 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import { MorphScreen } from "./MorphScreen/index";
+    import RequestBoardFilterComponent from "./Dashboard/RequestBoard/RequestBoardFilter.vue";
     import SearchComponent from "./_Shared/Search.vue";
     import CallerIDComponent from "./_Shared/CallerID.vue";
+    import MenuComponent from "./_Shared/Menu.vue";
     import ActiveRequestCard from "./Dashboard/RequestBoard/ActiveRequestCard.vue";
     import Modals from "./Dashboard/Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
@@ -176,55 +92,14 @@
             "app-device-details-window": DeviceDetails,
             "app-map-context-menu": MapContextMenu,
             "app-search": SearchComponent,
+            "app-menu": MenuComponent,
             "app-caller-id": CallerIDComponent,
+            "app-request-board-filter": RequestBoardFilterComponent,
         },
         data(){
             return {
                 accessTokenExpirationTimer: null,
                 showSettings: false,
-                requestBoardFilter: {
-                    users: [],
-                    filter: [
-                        {
-                            text: "Status",
-                            items: [
-                                { text: "Pendente" },
-                                { text: "Em andamento" }
-                            ]
-                        },
-                        {
-                            text: "Canal",
-                            items: [
-                                { text: "Tele-entrega" },
-                                { text: "Comércio" },
-                                { text: "WhatsApp" },
-                                { text: "Tele-marketing" },
-                            ]
-                        },
-                    ],
-                    type: [
-                        {
-                            text: "Tipo de cliente",
-                            items: [
-                                { text: "Todos" },
-                                { text: "Varejo Disk" },
-                                { text: "Atacado" },
-                                { text: "Venda Automática" }
-                            ]
-                        },
-                        {
-                            text: "Tipo de operação",
-                            items: [
-                                { text: "Todos" },
-                                { text: "Tarefa" },
-                                { text: "Orçamento" }
-                            ]
-                        },
-                    ],
-                    form: {
-                        usersInCharge: []
-                    }
-                },
                 menuList: [
                     {text: 'Add. empresa', type: 'system', action: this.addCompany, onlyAdmin: true},
                     {text: 'Configurações', type: 'system', action: this.toggleSettings, onlyAdmin: false},
@@ -232,20 +107,9 @@
                 ]
             }
         },
-        watch: {
-            users(newData){
-                this.requestBoardFilter.users = _.map(utils.removeReactivity(newData), (user) => {
-                    return {
-                        text: user.name,
-                        value: user.id
-                    }
-                })
-            }
-        },
         computed: {
             ...mapState(['app', 'system']),
             ...mapState('auth', ['user','token','company']),
-            ...mapState('data/users', ['users']),
             ...mapState('morph-screen', ['screens']),
             shortCompanyName(){
                 if(_.has(this.company, 'name')){
@@ -267,7 +131,6 @@
         },
         methods: {
             ...mapMutations(['setApp','setSystemInitialized']),
-            ...mapMutations('request-board', ['SET_FILTER']),
             ...mapMutations('morph-screen', ['SHOW_MS', 'SET_ALL_MS_SCREENS']),
             ...mapActions('auth', {
                 logoutAction: 'logout',
@@ -277,6 +140,15 @@
             }),
             ...mapActions('data/users', {
                 loadAllUsers: 'loadAll'
+            }),
+            ...mapActions('data/client-groups',{
+                'loadAllClientGroups': 'loadAll'
+            }),
+            ...mapActions('data/payment-methods',{
+                'loadAllPaymentMethods': 'loadAll'
+            }),
+            ...mapActions('data/promotion-channels',{
+                'loadAllPromotionChannels': 'loadAll'
             }),
             ...mapActions('loading', [
                 'setLoadingText','startLoading', 'stopLoading'
@@ -290,16 +162,6 @@
             ...mapActions('toast', [
                 'showToast', 'showError'
             ]),
-            onFilter(type){
-                switch(type){
-                    case 'usersInCharge':
-                        this.SET_FILTER({
-                            type: 'usersInCharge',
-                            data: this.requestBoardFilter.form.usersInCharge
-                        })
-                        break;
-                }
-            },
             logout(){
                 const vm = this;
                 clearInterval(vm.accessTokenExpirationTimer);
@@ -491,10 +353,14 @@
                     });
                 });
             }).then(() => {
-                vm.loadAllUsers({ companyId: vm.company.id })
-                return vm.loadMorphScreenData(vm.company.id).catch((err) => {
-                    console.log("The current user doesn't have any drafts created.");
-                });
+                /* load company data */
+                return Promise.all([
+                    vm.loadAllUsers({ companyId: vm.company.id }),
+                    vm.loadAllClientGroups({ companyId: vm.company.id }),
+                    vm.loadAllPaymentMethods({ companyId: vm.company.id }),
+                    vm.loadAllPromotionChannels({ companyId: vm.company.id }),
+                    vm.loadMorphScreenData(vm.company.id)
+                ])
             }).then(() => {
                 if(window.isAppLoading()) {
                     window.removeAppLoading();
@@ -627,47 +493,6 @@
         font-size: 14px;
     }
 
-    .left-column nav.main-menu ul {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .left-column nav.main-menu ul li {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 48px;
-        cursor: pointer;
-        color: #CCC;
-        border-bottom: 1px solid var(--bg-color--5);
-        font-size: 18px;
-        text-align: center;
-    }
-
-    .left-column nav.main-menu ul li.logout-from-app {
-        color: #D46C63;
-    }
-
-    .left-column nav.main-menu ul li:hover {
-        background: var(--bg-color--4);
-    }
-
-    .left-column nav.main-menu ul li.router-link-active {
-        background: var(--bg-color--9);
-    }
-
-    .left-column nav.main-menu ul li.router-link-active .fill {
-        fill: var(--font-color--10);
-    }
-
-    .left-column nav.main-menu ul li.router-link-active .fill--primary {
-        fill: var(--font-color--secondary);
-    }
-
-    .left-column nav.main-menu ul li:last-child {
-        border-bottom: 0 none;
-    }
-
     .left-column div.sidebar-widgets {
         border-top: 1px solid #292929;
     }
@@ -692,35 +517,6 @@
         box-shadow: var(--main-header-shadow);
         align-items: center;
         padding: 0 10px;
-    }
-
-    .main-column__header .container__request-board {
-        display: flex;
-        flex-direction: row;
-        min-height: 60px;
-        align-items: center;
-    }
-
-    .main-column__header .container__request-board .request-board__filter.filter--type .target__title {
-        margin-right: 0;
-    }
-
-    .main-column__header .container__request-board .request-board__filter {
-        display: flex;
-        flex-direction: row;
-        height: 32px;
-        cursor: pointer;
-        padding: 0 0 0 10px;
-    }
-
-    .main-column__header .container__request-board .request-board__filter:first-child {
-        padding-left: 0;
-    }
-
-    .main-column__header .container__request-board .request-board__filter h3 {
-        color: var(--secondary-color--d);
-        margin-bottom: 8px;
-        text-transform: uppercase;
     }
 
     .main-column__header .header__draft-menu {
@@ -751,58 +547,6 @@
         font-size: 10px;
         font-weight: 800;
         color: var(--font-color--10);
-    }
-
-    .request-board__filter .filter-item__target {
-        background-color: var(--bg-color);
-        display: flex;
-        flex-direction: row;
-        height: 32px;
-        padding: 0 20px;
-        border-radius: 20px;
-        border: 1px solid var(--bg-color--10);
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-
-    .filter-item__target .target__title {
-        margin-right: 8px;
-        font-weight: 600;
-        color: var(--base-color--d)
-    }
-
-    .filter-item__target .target__amount {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-    }
-
-    .filter-item__target .target__amount > div {
-        width: 3px;
-        height: 3px;
-        border-radius: 3px;
-        margin-right: 2px;
-        background-color: var(--secondary-color);
-    }
-
-    .filter-item__target .target__amount > span {
-        color: var(--secondary-color);
-        font-weight: bold;
-    }
-
-    .filter--filter .filter-item__target .target__amount > div {
-        background-color: var(--terciary-color);
-    }
-    .filter--filter .filter-item__target .target__amount > span {
-        color: var(--terciary-color);
-    }
-
-    .filter--date .filter-item__target .target__amount > div {
-        background-color: var(--primary-color);
-    }
-    .filter--date .filter-item__target .target__amount > span {
-        color: var(--primary-color);
     }
 
     .main-column__header .container__title {

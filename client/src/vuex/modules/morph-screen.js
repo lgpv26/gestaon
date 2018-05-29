@@ -60,18 +60,26 @@ const mutations = {
             isPersisting: false,
             active: false
         })
+    },
+    REMOVE_DRAFT(state, draftId){
+        const screenIndex = _.findIndex(state.screens, (stateScreen) => {
+            return stateScreen.draft.draftId === draftId
+        })
+        if(screenIndex !== -1){
+            state.screens.splice(screenIndex, 1)
+        }
     }
 };
 
 const actions = {
     loadMorphScreenData(context, companyId){
         return DraftsAPI.getAll({companyId}).then((response) => {
-            context.commit('RESET');
+            context.commit('RESET')
             response.data.forEach((draft) => {
-                context.commit('ADD_DRAFT', draft);
-            });
+                context.commit('ADD_DRAFT', draft)
+            })
             return response;
-        });
+        })
     },
     createDraft(context, {body, companyId}){
         return DraftsAPI.createOne(body, {companyId})

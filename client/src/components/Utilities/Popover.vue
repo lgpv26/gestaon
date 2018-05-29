@@ -1,10 +1,10 @@
 <template>
-    <div class="popover-component" style="flex-grow: 1;">
-        <div ref="content" :style="style" class="popover-content popover-shadow" :class="{hidden: !visible && !forceVisible, 'content-padding': config.contentPadding}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
+    <div class="popover-component">
+        <div ref="content" :style="[contentDefaultStyle, contentStyle]" class="popover-content popover-shadow" :class="{hidden: !visible && !forceVisible, 'content-padding': config.contentPadding}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
             <slot name="content">
             </slot>
         </div>
-        <div ref="triggerer" class="popover-triggerer" @click="onTriggererClick()" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
+        <div ref="triggerer" :style="[triggererDefaultStyle, triggererStyle]" class="popover-triggerer" @click="onTriggererClick()" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
             <slot name="triggerer">
             </slot>
         </div>
@@ -27,6 +27,18 @@
                 default: 'click',
                 type: String
             },
+            contentStyle: {
+                default: () => {
+                    return {}
+                },
+                type: Object
+            },
+            triggererStyle: {
+                default: () => {
+                    return {}
+                },
+                type: Object
+            },
             config: {
                 default: () => {
                     return {
@@ -38,7 +50,10 @@
         },
         data(){
             return {
-                style: {
+                triggererDefaultStyle: {
+
+                },
+                contentDefaultStyle: {
                     position: 'absolute',
                     zIndex: 99999999,
                     backgroundColor: 'var(--bg-color--2)',
@@ -66,6 +81,15 @@
                 }
             },
             onTriggererClick(){
+                const contents = document.querySelectorAll('div.popover-content')
+                _.forEach(contents, (content) => {
+                    if(content === this.$refs.content){
+                        content.style.zIndex = 99999999
+                    }
+                    else {
+                        content.style.zIndex = 99999998
+                    }
+                })
                 this.openPopover()
             },
             onBodyClick(ev){

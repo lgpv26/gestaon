@@ -60,11 +60,12 @@ module.exports = class RequestBoard {
             })
         })
 
-        this.socket.instance.on('request-board:load', () => {
+        this.socket.instance.on('request-board:load', (evData) => {
             vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/request-board') // subscribe the user to its request-board company channel
             vm.server.broker.call('request-board.load', {
                 data: {
-                    companyId: vm.socket.activeCompany.id
+                    filter: evData.filter || {},
+                    companyId: vm.socket.activeCompany.id,
                 }
             }).then((sections) => {
                 vm.socket.instance.emit('requestBoardLoad', new EventResponse({sections}))
@@ -133,11 +134,17 @@ module.exports = class RequestBoard {
                 data: {
                     location: evData.location,
                     companyId: vm.socket.activeCompany.id,
+                    fromSection: evData.fromSection,
                     toSection: evData.toSection,
-                    cardId: evData.cardId
+                    cardId: evData.cardId,
+                    prevCard: evData.prevCard,
+                    nextCard: evData.nextCard
                 }
+            }).then((cardMoveData) => {
+                vm.socket.instance.emit('requestBoardCardUpdate', new EventResponse(cardMoveData.card))
+                vm.socket.instance.broadcast.to('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardCardMove', new EventResponse(cardMoveData))
             }).catch((err) => {
-                vm.socket.instance.emit('requestBoardSectionCreate', new EventResponse(err))
+                vm.socket.instance.emit('requestBoardCardMove', new EventResponse(err))
                 console.log(err)
             })
         })
@@ -149,46 +156,85 @@ module.exports = class RequestBoard {
             return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
                 return card
             }).then((card) => {
-                return new Promise((resolve, reject) => {
-                    const controller = new Controller({
-                        request: {
-                            id: card.requestId,
-                            companyId: card.companyId
+                return vm.server.broker.call('data/request.getOne', {
+                    where: {
+                        id: parseInt(card.requestId),
+                        companyId: parseInt(card.companyId)
+                    },
+                    include: [
+                        {
+                            model: vm.server.mysql.RequestTimeline,
+                            as: "requestTimeline"
+                        },
+                        {
+                            model: vm.server.mysql.RequestClientPhone,
+                            as: "requestClientPhones"
+                        },{
+                            model: vm.server.mysql.RequestClientAddress,
+                            as: "requestClientAddresses"
+                        },{
+                            model: vm.server.mysql.Client,
+                            as: "client",
+                            include: [{
+                                model: vm.server.mysql.ClientPhone,
+                                as: 'clientPhones'
+                            }, {
+                                model: vm.server.mysql.ClientAddress,
+                                as: 'clientAddresses',
+                                include: [{
+                                    model: vm.server.mysql.Address,
+                                    as: 'address'
+                                }]
+                            }, {
+                                model: vm.server.mysql.ClientCustomField,
+                                as: 'clientCustomFields',
+                                include: [{
+                                    model: vm.server.mysql.CustomField,
+                                    as: 'customField'
+                                }]
+                            }, {
+                                model: vm.server.mysql.ClientGroup,
+                                as: 'clientGroup'
+                            }]
+                        },{
+                            model: vm.server.mysql.RequestPaymentMethod,
+                            as: "requestPaymentMethods",
+                            include: [{
+                                model: vm.server.mysql.PaymentMethod,
+                                as: 'paymentMethod'
+                            }]
+                        },{
+                            model: vm.server.mysql.RequestOrder,
+                            as: "requestOrder",
+                            include: [{
+                                model: vm.server.mysql.RequestOrderProduct,
+                                as: 'requestOrderProducts',
+                                include: [{
+                                    model: vm.server.mysql.Product,
+                                    as: 'product'
+                                }]
+                            }]
                         }
+                    ]
+                }).then((request) => {
+                    request.requestTimeline.sort((a,b) => {
+                        return b.id - a.id
                     })
-                    this.requestsController.getOne(controller).then((request) => {
-                        const statusController = new Controller({
-                            request: {
-                                request: request,
-                                data: {
-                                    status: evData.status,
-                                    triggeredBy: vm.socket.user.id
-                                }
-                            }
-                        })
-
-                        this.requestTimelineController.changeStatus(statusController).then((response) => {
-                            const data = {
-                                success: true,
-                                data: {
-                                    cardId: evData.cardId,
-                                    requestTimelineItem: response
-                                }
-                            }
-                            resolve(data)
-                        }).catch((err) => {
-                            const error = {
-                                success: false,
-                                message: "Não é possivel alterar o status do pedido!",
-                                errorCode: "ERROR"
-                            }
-                            reject(error)
-                        })
+                    return vm.server.broker.call('data/request.createTimeline', {
+                        data: {
+                            requestId: request.id,
+                            triggeredBy: vm.socket.user.id,
+                            companyId: card.companyId,
+                            action: 'status_change',
+                            userId: _.first(request.requestTimeline).userId,
+                            status: evData.status
+                        }
+                    }).then((requestTimelineItem) => {
+                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeStatus', new EventResponse({
+                            cardId: evData.cardId,
+                            requestTimelineItem
+                        }))
                     })
-                }).then((data) => {
-                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeStatus', data)
-                }).catch((err) => {
-                    vm.server.io.in('company/' + activeCompanyUserId + '/request-board').emit('requestBoardRequestTimelineChangeStatus', err)
                 })
             })
         })
@@ -200,47 +246,88 @@ module.exports = class RequestBoard {
             return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
                 return card
             }).then((card) => {
-                return new Promise((resolve, reject) => {
-                    const controller = new Controller({
-                        request: {
-                            id: card.requestId,
-                            companyId: card.companyId
+                return vm.server.broker.call('data/request.getOne', {
+                    where: {
+                        id: parseInt(card.requestId),
+                        companyId: parseInt(card.companyId)
+                    },
+                    include: [
+                        {
+                            model: vm.server.mysql.RequestTimeline,
+                            as: "requestTimeline"
+                        },
+                        {
+                            model: vm.server.mysql.RequestClientPhone,
+                            as: "requestClientPhones"
+                        },{
+                            model: vm.server.mysql.RequestClientAddress,
+                            as: "requestClientAddresses"
+                        },{
+                            model: vm.server.mysql.Client,
+                            as: "client",
+                            include: [{
+                                model: vm.server.mysql.ClientPhone,
+                                as: 'clientPhones'
+                            }, {
+                                model: vm.server.mysql.ClientAddress,
+                                as: 'clientAddresses',
+                                include: [{
+                                    model: vm.server.mysql.Address,
+                                    as: 'address'
+                                }]
+                            }, {
+                                model: vm.server.mysql.ClientCustomField,
+                                as: 'clientCustomFields',
+                                include: [{
+                                    model: vm.server.mysql.CustomField,
+                                    as: 'customField'
+                                }]
+                            }, {
+                                model: vm.server.mysql.ClientGroup,
+                                as: 'clientGroup'
+                            }]
+                        },{
+                            model: vm.server.mysql.RequestPaymentMethod,
+                            as: "requestPaymentMethods",
+                            include: [{
+                                model: vm.server.mysql.PaymentMethod,
+                                as: 'paymentMethod'
+                            }]
+                        },{
+                            model: vm.server.mysql.RequestOrder,
+                            as: "requestOrder",
+                            include: [{
+                                model: vm.server.mysql.RequestOrderProduct,
+                                as: 'requestOrderProducts',
+                                include: [{
+                                    model: vm.server.mysql.Product,
+                                    as: 'product'
+                                }]
+                            }]
                         }
+                    ]
+                }).then((request) => {
+                    request.requestTimeline.sort((a,b) => {
+                        return b.id - a.id
                     })
-                    this.requestsController.getOne(controller).then((request) => {
-                        const statusController = new Controller({
-                            request: {
-                                request: request,
-                                data: {
-                                    userId: evData.userId,
-                                    triggeredBy: vm.socket.user.id
-                                },
-                                companyId: vm.socket.activeCompany.id
-                            }
-                        })
-
-                        this.requestTimelineController.changeUser(statusController).then((response) => {
-                            const data = {
-                                success: true,
-                                data: {
-                                    cardId: evData.cardId,
-                                    requestTimelineItem: response
-                                }
-                            }
-                            resolve(data)
-                        }).catch((err) => {
-                            const error = {
-                                success: false,
-                                message: "Não é possivel alterar o usuario do pedido!",
-                                errorCode: "ERROR"
-                            }
-                            reject(error)
-                        })
+                    console.log(request.requestTimeline)
+                    return vm.server.broker.call('data/request.createTimeline', {
+                        data: {
+                            requestId: request.id,
+                            triggeredBy: vm.socket.user.id,
+                            companyId: card.companyId,
+                            action: 'user_change',
+                            userId: evData.userId,
+                            status: _.first(request.requestTimeline).status
+                        }
+                    }).then((requestTimelineItem) => {
+                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', new EventResponse({
+                            cardId: evData.cardId,
+                            requestTimelineItem
+                        }))
                     })
-                }).then((data) => {
-                    vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', data)
                 }).catch((err) => {
-                    vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', err)
+                    console.log("Erro", err)
                 })
             })
         })

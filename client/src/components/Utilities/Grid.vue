@@ -1,5 +1,11 @@
 <template>
     <div class="items-list" ref="itemsList">
+        <div class="items-loading" v-if="internalLoading || loading">
+            Carregando lista... Aguarde...
+        </div>
+        <div class="no-results" v-if="!items.length">
+            Ops... Nenhum registro encontrado... Tente com outra combinação do(s) filtro(s).
+        </div>
         <div class="items-list__columns">
             <div class="column" :style="{ width: columnWidths[0] + 'px'}"></div>
             <div class="column" v-for="(column, index) in columns" :style="{ width: columnWidths[index + 1] + 'px' }">
@@ -10,12 +16,18 @@
             <div class="container__scroll-filler" ref="scrollFiller" :style="{height: scrollFillerHeight + 'px'}">
                 <table ref="table">
                     <tbody ref="tbody">
-                        <tr v-for="item in items">
+                        <tr v-for="item in items" :class="{active: _.find(form.selectedItems, { id: item.id })}">
                             <td style="width: 30px;" ref="checkTdEl">
-                                <div class="check" :class="{active: form.selectedIds.includes(item.id)}" @click="check(item.id)"></div>
+                                <div class="check" :class="{active: _.find(form.selectedItems, { id: item.id })}" @click="check(item)"></div>
                             </td>
-                            <td v-for="column in columns" :ref="column.name + 'TdEls'" @click="check(item.id)">
-                                {{ getItemColumnValue(item, column) }}
+                            <td v-for="column in columns" :ref="column.name + 'TdEls'">
+                                <div v-if="!_.has(column,'html')" class="column-row" @click="check(item)">
+                                    {{ getItemColumnValue(item, column) }}
+                                </div>
+                                <div v-else style="display: flex;">
+                                    <slot :name="column.name" v-bind:item="item">
+                                    </slot>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -39,11 +51,12 @@
     import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 
     export default {
-        props: ['value', 'total', 'columns', 'items'],
+        props: ['value', 'total', 'columns', 'items', 'loading'],
         data(){
             return {
+                internalLoading: false,
                 form: {
-                    selectedIds: []
+                    selectedItems: []
                 },
                 columnWidths: [],
                 rowHeight: 0,
@@ -55,8 +68,11 @@
             }
         },
         watch: {
-            value(selectedIds){
-                this.form.selectedIds = selectedIds
+            total(){
+                this.calculateScrollFiller()
+            },
+            value(selectedItems){
+                this.form.selecteditems = selectedItems
             }
         },
         computed: {
@@ -70,15 +86,15 @@
             }
         },
         methods: {
-            check(id){
-                const index = this.form.selectedIds.indexOf(id)
-                if(index !== -1){
-                    this.form.selectedIds.splice(index, 1)
+            check(item){
+                const selectedItemIndex = _.findIndex(this.form.selectedItems, { id: item.id })
+                if(selectedItemIndex !== -1){
+                    this.form.selectedItems.splice(selectedItemIndex, 1)
                 }
                 else {
-                    this.form.selectedIds.push(id)
+                    this.form.selectedItems.push(item)
                 }
-                this.$emit('input', this.form.selectedIds)
+                this.$emit('input', this.form.selectedItems)
             },
 
             calculateScrollPosition(ev = false){
@@ -110,9 +126,9 @@
                     to: firstItemOnScreenPosition + visibleItems
                 })
 
-                setImmediate(() => {
+                setTimeout(() => {
                     this.calculateColumns()
-                })
+                }, 100)
 
             },
             calculateColumns(){
@@ -147,10 +163,12 @@
                 alwaysShowTracks: true
             })
             this.scrollbar.addListener((ev) => {
+                vm.internalLoading = true
                 if(vm.scrollbarStopTimeout){
                     clearTimeout(vm.scrollbarStopTimeout)
                 }
                 vm.scrollbarStopTimeout = setTimeout(() => {
+                    vm.internalLoading = false
                     vm.calculateScrollPosition(ev)
                 }, 50)
             })
@@ -163,6 +181,29 @@
 </script>
 
 <style scoped>
+    div.items-loading {
+        position: absolute;
+        z-index: 2;
+        top: 5px;
+        right: 5px;
+        padding: 5px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(20,20,20,.5);
+    }
+
+    div.no-results {
+        position: absolute;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-color);
+    }
+
     div.items-list {
         display: flex;
         flex-grow: 1;
@@ -170,6 +211,7 @@
         padding: 0 0 20px;
         border-radius: 5px;
         flex-direction: column;
+        position: relative;
     }
 
     div.items-list .container__scroll-filler {
@@ -186,6 +228,7 @@
     }
 
     div.items-list .items-list__columns .column {
+        white-space: nowrap;
         text-align: left;
         font-weight: 600;
         color: var(--font-color--2);
@@ -219,6 +262,16 @@
         color: var(--font-color--7);
     }
 
+    table tbody td .column-row {
+        display: flex;
+        height: 100%;
+        align-items: center;
+    }
+
+    table tbody tr.active .column-row {
+        color: var(--font-color--primary)
+    }
+
     table tbody tr:hover {
         cursor: pointer;
     }
@@ -249,7 +302,6 @@
     div.items-list .items-list--summary {
         display: flex;
         flex-direction: row;
-        flex-grow: 1;
         flex-shrink: 0;
         padding: 20px 20px 0;
         border-top: 1px solid var(--bg-color--8);

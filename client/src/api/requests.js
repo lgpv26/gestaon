@@ -2,8 +2,11 @@ import Vue from "vue"
 import config from '../config'
 
 export default {
-    persistence(body, params = {}){
-        return Vue.http.post(config.apiBaseUrl + '/requests/persistence', body, { params }).then((response) => response.json())
+    persistence(draftId, body, params = {}){
+        return Vue.http.post(config.apiBaseUrl + '/requests/persistence/' + draftId, body, { params }).then((response) => response.json())
+    },
+    recoverance(id, params = {}){
+        return Vue.http.post(config.apiBaseUrl + '/requests/recoverance/' + id, {}, { params }).then((response) => response.json())
     },
     getOne(id, params = {}){
         return Vue.http.get(config.apiBaseUrl + '/requests/' + id, { params }).then((response) => response.json());

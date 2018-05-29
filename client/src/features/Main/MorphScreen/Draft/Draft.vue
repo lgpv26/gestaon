@@ -28,7 +28,7 @@
             </div>
         </div>
         <span v-show="!draft">Carregando...</span>
-        <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent" @close="$emit('closeMorphScreen')"></component>
+        <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent" @close="$emit('closeMorphScreen', $event)"></component>
     </div>
 </template>
 

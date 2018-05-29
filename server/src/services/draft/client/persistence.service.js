@@ -74,7 +74,8 @@ module.exports = (server) => {
                                     return this._client
                                 })
                             }
-                        }).catch(() => {
+                        }).catch((err) => {
+                            console.log("Errooo 123", err)
                             return ctx.call("draft/client/persistence.saveES", {
                                 transaction: null
                             }).then(() => {

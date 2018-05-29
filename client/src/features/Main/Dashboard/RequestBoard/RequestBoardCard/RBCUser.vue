@@ -26,13 +26,16 @@
             ...mapState('data/users', ['users']),
         },
         watch: {
-            users(){
-                this.userList = this.users.map((user) => {
-                    return {
-                        value: user.id,
-                        text: user.name
-                    }
-                })
+            users: {
+                handler(){
+                    this.userList = this.users.map((user) => {
+                        return {
+                            value: user.id,
+                            text: user.name
+                        }
+                    })
+                },
+                immediate: true
             }
         },
         methods: {

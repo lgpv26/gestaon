@@ -391,7 +391,7 @@ li.router-link-active svg.icon {
 }
 
 .tippy-tooltip.erp-theme .tippy-content * {
-    /* color: var(--font-color--10) */
+    color: var(--font-color--10)
 }
 
 .tippy-popper {

@@ -18,6 +18,9 @@ module.exports = {
                 companyId: {
                     type: Sequelize.INTEGER
                 },
+                userId: {
+                    type: Sequelize.INTEGER
+                },
                 clientId: {
                     type: Sequelize.INTEGER,
                     allowNull: true,
@@ -60,6 +63,9 @@ module.exports = {
                 },
                 dateRemoved: {
                     type: TIMESTAMP
+                },
+                status: {
+                    type: Sequelize.ENUM('pending','finished')
                 }
             }, {
                 tableName: "request",
