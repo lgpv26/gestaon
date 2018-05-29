@@ -1,46 +1,112 @@
 <template>
     <div class="request-board-card">
+        <div class="request-board-card__loading" v-if="loading">
+            <span>Carregando...</span>
+        </div>
         <div class="request-board-card__container">
-            <h3 class="card__client-name" data-card-tippy v-tippy="RBCClientTippyOptions">{{ card.request.client.name }}</h3>
+            <div class="card__header">
+                <app-popover :contentStyle="popoverContentStyle">
+                    <template slot="triggerer">
+                        <h3 class="card__client-name">{{ card.request.client.name }}</h3>
+                    </template>
+                    <template slot="content">
+                        <app-rbc-client id="rbc-client" :card="card"></app-rbc-client>
+                    </template>
+                </app-popover>
+                <app-popover :contentStyle="popoverContentStyle">
+                    <template slot="triggerer">
+                        <h3 class="card__order">{{ utils.formatMoney(orderSubtotal, 2,'R$ ','.',',') }}</h3>
+                    </template>
+                    <template slot="content">
+                        <app-rbc-order id="rbc-order" :card="card"></app-rbc-order>
+                    </template>
+                </app-popover>
+
+            </div>
             <h3 class="card__task" v-if="hasTaskInstruction">{{ card.request.task.text }}</h3>
             <h3 class="card__task--add" v-else @click="onAddTaskClick()">+ Incluir Tarefa ou Anotação</h3>
             <div class="card__middle">
                 <div class="card__timer">
                     <div class="timer__objects">
                         <div class="objects__timer">
-                            <span class="timer__hours">{{ hours }}</span>
-                            <span class="timer__minutes">{{ minutes }}</span>
-                            <request-board-icon-timer></request-board-icon-timer>
+                            <app-popover :contentStyle="popoverContentStyle" :triggererStyle="{justifyContent: 'center'}">
+                                <template slot="triggerer">
+                                    <span class="timer__hours">{{ moment(card.request.dateCreated).format("HH") }}</span>
+                                    <span class="timer__minutes">{{ moment(card.request.dateCreated).format("mm") }}</span>
+                                    <request-board-icon-timer></request-board-icon-timer>
+                                </template>
+                                <template slot="content">
+                                    <app-rbc-progress :card="card" :requestTimelineItem="createdRequestTimelineItem"></app-rbc-progress>
+                                </template>
+                            </app-popover>
                         </div>
                         <div class="objects__timeline">
-                            <div class="timeline__progress" v-for="(requestTimelineItem, index) in requestTimeline"
-                                 ref="requestTimelineProgressEls" data-card-tippy v-tippy="getRBCProgressTippyOptions(requestTimelineItem.data.id)">
-                                <span class="progress__progress" >{{ timeUntilNow }}</span>
+                            <div class="timeline__progress--current" v-if="!deadline.isOver" :style="{left: current.left + 'px'}">
+                                <span class="progress__progress">{{ current.time }}</span>
                                 <request-board-icon-progress-shield></request-board-icon-progress-shield>
                             </div>
+                            <div class="timeline__progress" v-for="(inProgressRequestTimelineItem, index) in inProgressRequestTimeline"
+                                :style="{left: inProgressRequestTimelineItem.left + 'px'}">
+                                <app-popover :contentStyle="popoverContentStyle" :triggererStyle="{justifyContent: 'center'}">
+                                    <template slot="triggerer">
+                                        <span class="progress__progress">{{ inProgressRequestTimelineItem.timeUntilNow }}</span>
+                                        <request-board-icon-progress-shield></request-board-icon-progress-shield>
+                                    </template>
+                                    <template slot="content">
+                                        <app-rbc-progress :card="card" :requestTimelineItem="inProgressRequestTimelineItem"></app-rbc-progress>
+                                    </template>
+                                </app-popover>
+                            </div>
                         </div>
-                        <div class="objects__deadline" ref="deadline" data-card-tippy v-tippy="RBCDeadlineTippyOptions">
-                            <span class="deadline__time">{{ (timeUntilNow < settings.deadlineInMinutes) ? settings.deadlineInMinutes : timeUntilNow }}</span>
-                            <span class="deadline__label">min</span>
+                        <div class="objects__deadline" ref="deadline" :class="{ over: deadline.isOver }">
+                            <app-popover :contentStyle="popoverContentStyle" :triggererStyle="{justifyContent: 'center'}">
+                                <template slot="triggerer">
+                                    <span class="deadline__time">{{ deadline.time }}</span>
+                                    <span class="deadline__label">min</span>
+                                </template>
+                                <template slot="content">
+                                    <app-rbc-deadline :card="card" :deadline="deadline" :overDeadlineRequestTimeline="overDeadlineRequestTimeline"></app-rbc-deadline>
+                                </template>
+                            </app-popover>
                         </div>
                     </div>
                     <div class="timer__line"></div>
                 </div>
             </div>
             <div class="card__footer">
-                <span class="footer__location" ref="footerLocation" data-card-tippy v-tippy="RBCLocationTippyOptions">
-                    <request-board-icon-location></request-board-icon-location> 4,3 km
-                </span>
+                <app-popover :contentStyle="popoverContentStyle">
+                    <template slot="triggerer">
+                        <span class="footer__location" ref="footerLocation">
+                            <request-board-icon-location></request-board-icon-location> Local
+                        </span>
+                    </template>
+                    <template slot="content">
+                        <app-rbc-location id="rbc-location" :card="card"></app-rbc-location>
+                    </template>
+                </app-popover>
                 <span class="push-both-sides"></span>
-                <a class="footer__status ignore" v-tippy="RBCStatusTippyOptions"><request-board-icon-status></request-board-icon-status> {{ status }}</a>
-                <a class="footer__responsible-user ignore" v-tippy="RBCUserTippyOptions"><request-board-icon-flag></request-board-icon-flag> {{ responsibleUserName }}</a>
+                <app-popover :contentStyle="dropdownMenuPopoverContentStyle">
+                    <template slot="triggerer">
+                        <a class="footer__status ignore"><request-board-icon-status></request-board-icon-status> {{ status }}</a>
+                    </template>
+                    <template slot="content">
+                        <app-rbc-status id="rbc-status" :cardId="card.id" v-model="form.status"></app-rbc-status>
+                    </template>
+                </app-popover>
+                <app-popover :contentStyle="dropdownMenuPopoverContentStyle">
+                    <template slot="triggerer">
+                        <a class="footer__responsible-user ignore"><request-board-icon-flag></request-board-icon-flag> {{ responsibleUserName }}</a>
+                    </template>
+                    <template slot="content">
+                        <app-rbc-user id="rbc-user" :cardId="card.id" v-model="form.responsibleUserId"></app-rbc-user>
+                    </template>
+                </app-popover>
             </div>
-            <app-rbc-location id="rbc-location"></app-rbc-location>
-            <app-rbc-client id="rbc-client"></app-rbc-client>
-            <app-rbc-progress v-for="(requestTimelineItem, index) in requestTimeline" :key="requestTimelineItem.data.id" :id="'rbc-progress' + '-' + requestTimelineItem.data.id"></app-rbc-progress>
-            <app-rbc-progress id="rbc-deadline"></app-rbc-progress>
-            <app-rbc-status id="rbc-status" :cardId="card.id" v-model="form.status"></app-rbc-status>
-            <app-rbc-user id="rbc-user" :cardId="card.id" v-model="form.userId"></app-rbc-user>
+            <!--
+            <app-rbc-progress v-for="(requestTimelineItem, index) in requestTimeline" :key="requestTimelineItem.data.id"
+            :card="card" :requestTimelineItem="requestTimelineItem"
+            :id="'rbc-progress' + '-' + requestTimelineItem.data.id"></app-rbc-progress>
+            -->
         </div>
     </div>
 </template>
@@ -56,7 +122,9 @@
 
     import RBCLocation from './RequestBoardCard/RBCLocation.vue'
     import RBCClient from './RequestBoardCard/RBCClient.vue'
+    import RBCOrder from './RequestBoardCard/RBCOrder.vue'
     import RBCProgress from './RequestBoardCard/RBCProgress.vue'
+    import RBCDeadline from './RequestBoardCard/RBCDeadline.vue'
     import RBCStatus from './RequestBoardCard/RBCStatus.vue'
     import RBCUser from './RequestBoardCard/RBCUser.vue'
 
@@ -65,109 +133,78 @@
         components: {
             'app-rbc-location': RBCLocation,
             'app-rbc-client': RBCClient,
+            'app-rbc-order': RBCOrder,
             'app-rbc-progress': RBCProgress,
+            'app-rbc-deadline': RBCDeadline,
             'app-rbc-status': RBCStatus,
             'app-rbc-user': RBCUser
         },
         watch: {
             'card.request.requestTimeline': {
-                handler(newValue, oldValue){
-                    this.setForm()
-                    this.recalculateTimeline(newValue)
+                handler(requestTimeline){
+                    const sortedRequestTimeline = _.sortBy(requestTimeline, (requestTimelineItem) => {
+                        return requestTimelineItem.dateCreated
+                    })
+                    const lastRequestTimelineItem = _.last(sortedRequestTimeline)
+                    console.log(lastRequestTimelineItem)
+                    this.form.status = lastRequestTimelineItem.status
+                    this.form.responsibleUserId = lastRequestTimelineItem.userId
                 },
+                immediate: true,
                 deep: true
             }
         },
 
         sockets: {
-            requestBoardRequestTimelineChangeUser(evData){
-                if(evData.success && evData.data.cardId === this.card.id){
-                    console.log("Received requestBoardRequestTimelineChangeUser", evData)
+            requestBoardRequestTimelineChangeUser(ev){
+                if(ev.success && ev.evData.cardId === this.card.id){
+                    console.log("Received requestBoardRequestTimelineChangeUser", ev.evData)
+                    const card = utils.removeReactivity(this.card)
+                    card.request.requestTimeline.push(ev.evData.requestTimelineItem)
+                    this.updateCard({
+                        cardId: this.card.id,
+                        card
+                    })
                 }
             },
-            requestBoardRequestTimelineChangeStatus(evData){
-                if(evData.success && evData.data.cardId === this.card.id){
-                    console.log("Received requestBoardRequestTimelineChangeStatus", evData)
+            requestBoardRequestTimelineChangeStatus(ev){
+                if(ev.success && ev.evData.cardId === this.card.id){
+                    console.log("Received requestBoardRequestTimelineChangeStatus", ev.evData)
+                    const card = utils.removeReactivity(this.card)
+                    card.request.requestTimeline.push(ev.evData.requestTimelineItem)
+                    this.updateCard({
+                        cardId: this.card.id,
+                        card
+                    })
                 }
             }
         },
         data(){
             return {
+                loading: true,
                 form: {
                     status: null,
-                    userId: null
+                    responsibleUserId: null
                 },
-                timeUntilNow: '?',
-                requestTimeline: [],
-                requestTimelineInterval: null,
-                RBCStatusTippyOptions: {
-                    html: '#rbc-status',
-                    trigger: 'mouseenter',
-                    hideOnClick: false,
-                    placement: 'bottom-start',
-                    theme: 'erp-dark',
-                    interactive: true,
-                    reactive : true,
-                    duration: 100,
-                    inertia: true,
-                    arrow: true,
-                    animation: 'perspective'
+                inProgressRequestTimeline: [],
+                overDeadlineRequestTimeline: [],
+                current: {
+                    time: null
                 },
-                RBCUserTippyOptions: {
-                    html: '#rbc-user',
-                    trigger: 'mouseenter',
-                    hideOnClick: false,
-                    placement: 'bottom-start',
-                    theme: 'erp-dark',
-                    interactive: true,
-                    reactive : true,
-                    duration: 100,
-                    inertia: true,
-                    arrow: true,
-                    animation: 'perspective'
-                },
-                RBCLocationTippyOptions: {
-                    html: '#rbc-location',
-                    delay: 500,
-                    hideOnClick: false,
-                    placement: 'top-start',
-                    theme: 'erp',
-                    interactive: true,
-                    reactive : true,
-                    duration: 100,
-                    inertia: true,
-                    arrow: true,
-                    animation: 'perspective'
-                },
-                RBCClientTippyOptions: {
-                    html: '#rbc-client',
-                    delay: 500,
-                    hideOnClick: false,
-                    placement: 'bottom',
-                    theme: 'erp',
-                    interactive: true,
-                    reactive : true,
-                    duration: 100,
-                    inertia: true,
-                    arrow: true,
-                    animation: 'perspective'
-                },
-                RBCDeadlineTippyOptions: {
-                    html: '#rbc-deadline',
-                    delay: 500,
-                    hideOnClick: false,
-                    placement: 'bottom-end',
-                    theme: 'erp',
-                    interactive: true,
-                    reactive : true,
-                    duration: 100,
-                    inertia: true,
-                    arrow: true,
-                    animation: 'perspective',
-                    distance: 0
+                deadline: {
+                    isOver: false,
+                    time: null
                 },
                 settings: {
                     deadlineInMinutes: 30
+                },
+                popoverContentStyle: {
+                    'background-color': 'var(--bg-color--primary)',
+                    'padding': '8px 12px'
+                },
+                dropdownMenuPopoverContentStyle: {
+                    'background-color': 'var(--bg-color--2)',
+                    'padding': '8px 12px'
                 }
             }
         },
@@ -176,11 +213,15 @@
             hasTaskInstruction(){
                 return _.has(this.card, 'request.task.text')
             },
-            hours(){
-                return moment(this.card.request.dateCreated).format("HH")
+            orderSubtotal(){
+                return _.sumBy(this.card.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                    return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
+                })
             },
-            minutes(){
-                return moment(this.card.request.dateCreated).format("mm")
+            createdRequestTimelineItem(){
+                return {
+                    data: _.find(this.card.request.requestTimeline, {action:'create'})
+                }
             },
             status(){
                 switch(this.form.status){
@@ -202,7 +243,7 @@
             },
             responsibleUserName(){
                 const responsibleUser = _.find(this.users, {
-                    id: this.form.userId
+                    id: this.form.responsibleUserId
                 })
                 if(responsibleUser)
                     return responsibleUser.name
@@ -211,122 +252,114 @@
             }
         },
         methods: {
-            setForm(){
-                this.form.userId = _.last(this.card.request.requestTimeline).userId
-                this.form.status = _.last(this.card.request.requestTimeline).status
-            },
-            recalculateTimeline(requestTimeline){
-                this.requestTimeline = _.map(requestTimeline, (data) => {
-                    return {
-                        data
-                    }
-                })
-                this.requestTimeline = _.sortBy(this.requestTimeline, function(requestTimelineItem) {
-                    return requestTimelineItem.data.dateCreated;
-                })
-            },
-            onAddTaskClick(){
-                console.log(this.card)
-            },
-            getRBCProgressTippyOptions(requestTimelineId){
-                return {
-                    html: '#rbc-progress-' + requestTimelineId,
-                    delay: 500,
-                    hideOnClick: false,
-                    placement: 'bottom',
-                    theme: 'erp',
-                    interactive: true,
-                    reactive : true,
-                    duration: 100,
-                    inertia: true,
-                    arrow: true,
-                    animation: 'perspective'
-                }
-            }
+            ...mapActions('request-board',['updateCard']),
+
         },
         mounted(){
             const vm = this
-            vm.setForm()
-            vm.recalculateTimeline(vm.card.request.requestTimeline)
+            setTimeout(() => {
+                vm.loading = false;
+            }, 1000)
             vm.requestTimelineInterval = setInterval(() => {
-                vm.requestTimeline.forEach((requestTimelineItem, index) => {
-                    const requestTimelineProgressEl = vm.$refs.requestTimelineProgressEls[index]
-                    const lastRequestTimelineItem = _.last(vm.requestTimeline)
-                    if(lastRequestTimelineItem.data.id === requestTimelineItem.data.id){ // if this is the current time object
-                        if(lastRequestTimelineItem.data.status !== 'finished') {
-                            const startDate = moment(vm.card.request.dateCreated)
-                            const endDate = moment(vm.card.request.dateCreated).add(vm.settings.deadlineInMinutes, 'm')
-                            const nowDate = moment()
-                            const diffUntilNowInSec = moment.duration(nowDate.diff(startDate)).asSeconds()
-                            const total = moment.duration(endDate.diff(startDate)).asSeconds()
-                            const percentage = (diffUntilNowInSec/total) * 100;
-                            let leftInPxs = 200 // max left in pixels, of the progress bar
-                            if (percentage < 100) {
-                                leftInPxs = (leftInPxs * percentage) / 100
-                                requestTimelineProgressEl.style.left = leftInPxs + 'px'
-                                requestTimelineProgressEl.classList.remove('timeline__progress')
-                                requestTimelineProgressEl.classList.add('timeline__progress--current')
-                                requestTimelineProgressEl.style.visibility = 'initial'
-                            }
-                            else { // if over 100%
-                                requestTimelineProgressEl.style.visibility = 'hidden'
-                                const deadlineEl = vm.$refs.deadline
-                                deadlineEl.classList.add('over')
-                            }
-                            const diffUntilNowInMin = Math.floor(diffUntilNowInSec / 60)
-                            if (diffUntilNowInMin > 99) {
-                                vm.timeUntilNow = "99+"
-                            } else {
-                                vm.timeUntilNow = diffUntilNowInMin
-                            }
-                        }
-                        else { // if finished
-                            const startDate = moment(vm.card.request.dateCreated)
-                            const endDate = moment(vm.card.request.dateCreated).add(vm.settings.deadlineInMinutes, 'm')
-                            const nowDate = moment(lastRequestTimelineItem.data.dateCreated)
-                            const diffUntilNowInSec = moment.duration(nowDate.diff(startDate)).asSeconds()
-                            const total = moment.duration(endDate.diff(startDate)).asSeconds()
-                            const percentage = (diffUntilNowInSec/total) * 100;
-                            let leftInPxs = 200 // max left in pixels, of the progress bar
 
-                            requestTimelineProgressEl.style.visibility = 'hidden'
-                            const deadlineEl = vm.$refs.deadline
-                            const diffUntilNowInMin = Math.floor(diffUntilNowInSec / 60)
-                            if(diffUntilNowInMin > vm.settings.deadlineInMinutes){
-                                deadlineEl.classList.add('over')
-                            }
-                            else {
-                                deadlineEl.classList.add('in-time')
-                            }
-                            if (diffUntilNowInMin > 99) {
-                                vm.timeUntilNow = "99+"
-                            } else {
-                                vm.timeUntilNow = diffUntilNowInMin
-                            }
-                        }
-                    }
-                    else {
-                        if(index > 0) { // don't first first item in timeline, created when the card is created
-                            if (requestTimelineProgressEl.classList.contains('timeline__progress--current')) {
-                                requestTimelineProgressEl.classList.remove('timeline__progress--current')
-                                requestTimelineProgressEl.classList.add('timeline__progress')
-                            }
-                            requestTimelineProgressEl.style.visibility = 'initial'
-                            const startDate = moment(vm.card.request.dateCreated)
-                            const endDate = moment(requestTimelineItem.data.dateCreated).add(vm.settings.deadlineInMinutes, 'm')
-                            const nowDate = moment(requestTimelineItem.data.dateCreated)
-                            const diffUntilNowInSec = moment.duration(nowDate.diff(startDate)).asSeconds()
-                            const total = moment.duration(endDate.diff(startDate)).asSeconds()
-                            const percentage = (diffUntilNowInSec / total) * 100;
-                            let leftInPxs = 200 // max left in pixels, of the progress bar
-                            if (percentage < 100) {
-                                leftInPxs = (leftInPxs * percentage) / 100
-                                requestTimelineProgressEl.style.left = leftInPxs + 'px'
-                            }
-                        }
+                const startDate = moment(vm.card.request.dateCreated)
+                const deadlineDatetime = moment(vm.card.request.deadlineDatetime)
+                const nowDate = moment()
+
+                // mapping and filtering
+                vm.inProgressRequestTimeline = _.map(_.filter(vm.card.request.requestTimeline, (requestTimelineItem) => {
+                    // if(requestTimelineItem.action === 'create') return false
+                    const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
+                    /*const diffUntilTimelineItemInSec = moment.duration(requestTimelineItemDate.diff(startDate)).asSeconds()
+                    const diffUntilNowInSec = moment.duration(deadlineDatetime.diff(nowDate)).asSeconds()*/
+
+                    const deadlineToTimelineItemInSec = moment.duration(deadlineDatetime.diff(requestTimelineItemDate)).asSeconds()
+
+                    return (deadlineToTimelineItemInSec > 0) && (requestTimelineItem.action !== 'create') && (requestTimelineItem.status !== 'finished')
+                }), (requestTimelineItem, index) => {
+
+                    const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
+                    const deadlineToStartInSec = moment.duration(deadlineDatetime.diff(startDate)).asSeconds()
+                    const deadlineToTimelineItemInSec = moment.duration(deadlineDatetime.diff(requestTimelineItemDate)).asSeconds()
+                    const startToTimelineItemInSec = deadlineToStartInSec - deadlineToTimelineItemInSec
+
+                    const percentage = (startToTimelineItemInSec / deadlineToStartInSec) * 100
+                    const maxWidthInPxs = 200 // max width in pixels, of the progress bar
+                    const leftInPxs = (maxWidthInPxs * percentage) / 100
+
+                    let timeUntilNow = Math.floor(startToTimelineItemInSec / 60)
+                    if(timeUntilNow < 0) timeUntilNow = 0
+
+                    return {
+                        timeUntilNow: timeUntilNow,
+                        left: leftInPxs,
+                        data: requestTimelineItem
                     }
                 })
-            }, 300)
+
+                vm.overDeadlineRequestTimeline = _.filter(vm.card.request.requestTimeline, (requestTimelineItem) => {
+                    // if(requestTimelineItem.action === 'create') return false
+                    const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
+
+                    const deadlineToTimelineItemInSec = moment.duration(deadlineDatetime.diff(requestTimelineItemDate)).asSeconds()
+
+                    return (deadlineToTimelineItemInSec <= 0) || (requestTimelineItem.status === 'finished')
+                })
+
+                const deadlineToNowInSec = moment.duration(deadlineDatetime.diff(nowDate)).asSeconds()
+                if(deadlineToNowInSec <= 0){
+                    this.deadline.isOver = true
+                    const overTime = Math.floor(Math.abs(deadlineToNowInSec) / 60)
+                    if(overTime > 99){
+                        this.deadline.time = '+99'
+                    }
+                    else {
+                        this.deadline.time = overTime
+                    }
+                }
+                else {
+                    const deadlineToStartInSec = moment.duration(deadlineDatetime.diff(startDate)).asSeconds()
+                    this.deadline.isOver = false
+                    this.deadline.time = Math.floor(Math.abs(deadlineToStartInSec) / 60)
+                }
+
+                if(!this.deadline.isOver){
+                    const deadlineToStartInSec = moment.duration(deadlineDatetime.diff(startDate)).asSeconds()
+
+                    const startToNowInSec = deadlineToStartInSec - deadlineToNowInSec
+
+                    const startToNowInMin = Math.floor(Math.abs(startToNowInSec) / 60)
+
+                    const percentage = (startToNowInSec / deadlineToStartInSec) * 100
+                    const maxWidthInPxs = 200 // max width in pixels, of the progress bar
+                    const leftInPxs = (maxWidthInPxs * percentage) / 100
+
+                    this.current = {
+                        time: startToNowInMin,
+                        left: leftInPxs
+                    }
+                }
+
+                /*
+                // putting in created date order
+                vm.inProgressRequestTimeline = _.sortBy(vm.inProgressRequestTimeline, function(requestTimelineItem) {
+                    return requestTimelineItem.data.dateCreated;
+                })
+                vm.overDeadlineRequestTimeline = _.sortBy(vm.overDeadlineRequestTimeline, function(requestTimelineItem) {
+                    return requestTimelineItem.data.dateCreated;
+                })
+
+                if(!vm.overDeadlineRequestTimeline.length){ // this means that there is an active progressing request timeline item
+                    const lastIndex = vm.inProgressRequestTimeline.length -1
+                    vm.inProgressRequestTimeline[lastIndex].current = true
+                }
+
+                if(vm.card.request.id === 26){
+                    console.log(vm.inProgressRequestTimeline,vm.overDeadlineRequestTimeline)
+                }
+                */
+
+            }, 1000)
         },
         beforeDestroy(){
             clearInterval(this.requestTimelineInterval)
@@ -339,6 +372,7 @@
         display: flex;
         background: var(--bg-color--2);
         box-shadow: var(--card-shadow);
+        position: relative;
     }
 
     .request-board-card__container {
@@ -348,6 +382,32 @@
         padding: 10px;
         text-align: center;
         max-width: 100%;
+    }
+
+    .request-board-card__loading {
+        transition: 1s all;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-color--2);
+        position: absolute;
+        z-index: 5;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .request-board-card .card__header {
+        display: flex;
+        flex-direction: row;
+        justify-content: center
+    }
+
+    .request-board-card .card__header h3.card__order {
+        font-size: 14px;
+        margin-left: 5px;
+        color: var(--font-color--primary)
     }
 
     .request-board-card h3.card__client-name {
@@ -443,7 +503,6 @@
         position: absolute;
         left: 0; /* and goes until 199px */
         display: flex;
-        visibility: hidden;
         align-items: center;
         justify-content: center;
         z-index: 1;
@@ -496,19 +555,18 @@
         border: 2px solid var(--font-color--2);
         border-radius: 5px;
         background: var(--bg-color);
-        align-items: center;
         justify-content: center;
         display: flex;
     }
 
     .card__middle .deadline__time {
+        top: 9px;
         font-weight: 600;
         position: absolute;
-        margin-top: -6px;
         color: var(--font-color--d-secondary);
     }
     .card__middle .deadline__label {
-        margin-top: 6px;
+        top: 24px;
         position: absolute;
         font-size: 12px;
         color: var(--font-color--d-secondary);

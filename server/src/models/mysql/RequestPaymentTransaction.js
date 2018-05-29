@@ -4,7 +4,7 @@ import _ from 'lodash'
 module.exports = {
     defineModel: (server) => {
         const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize);
-        const modelName = 'Account';
+        const modelName = 'RequestPaymentTransaction';
         return {
             name: modelName,
             instance: server.sequelize.define(_.camelCase(modelName), {
@@ -13,19 +13,14 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
-                companyId: {
+                requestPaymentId: {
                     type: Sequelize.INTEGER
                 },
-                name: {
-                    type: Sequelize.STRING,
-                    allowNull: false,
-                    set(val) {
-                        this.setDataValue('name', (val === '' || val === null) ? null : val.toUpperCase().trim());
-                    }
+                transactionId: {
+                    type: Sequelize.INTEGER
                 },
-                balance: {
-                    type: Sequelize.DECIMAL(10,2),
-                    default: 0
+                action: {
+                    type: Sequelize.STRING
                 },
                 dateUpdated: {
                     type: TIMESTAMP
@@ -37,7 +32,7 @@ module.exports = {
                     type: TIMESTAMP
                 }
             }, {
-                tableName: 'account',
+                tableName: "request_payment_transaction",
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -47,7 +42,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Account, Transaction}) => {
-        Account.hasMany(Transaction, {as: 'transactions', foreignKey: 'accountId'})
+    postSettings: ({RequestPaymentTransaction,RequestPaymentMethod,Transaction}) => {
+        RequestPaymentTransaction.belongsTo(RequestPaymentMethod, {as: 'requestPayment', foreignKey: 'requestPaymentId'})
+        RequestPaymentTransaction.belongsTo(Transaction, {as: 'transaction', foreignKey: 'transactionId'})
     }
-};
+}

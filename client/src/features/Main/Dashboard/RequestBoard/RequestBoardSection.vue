@@ -109,7 +109,9 @@
         },
         methods: {
             ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', ['REAPLY_FILTERS','RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','REMOVE_SECTION','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
+            ...mapMutations('request-board', [
+                'REAPLY_FILTERS','RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','REMOVE_SECTION','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS'
+            ]),
 
             /* Sections */
 
@@ -203,6 +205,7 @@
                 this.REAPLY_FILTERS()
             },
             emitCardPositionChange(toSection, card, toIndex, fromIndex = null){
+                const fromSection = card.sectionId
                 const prevCard = toSection.cards[toIndex - 1]
                 const currCard = toSection.cards[toIndex]
                 const nextCard = toSection.cards[toIndex + 1]
@@ -210,46 +213,54 @@
                 let position
 
                 if (nextCard && prevCard) {
-                    console.log("middle", nextCard)
-                    this.$socket.emit('request-board:card-move', {
+                    const emitData = {
                         cardId: card.id,
                         location: 'middle',
+                        fromSection: fromSection,
                         toSection: toSection.id,
                         prevCard: prevCard.id,
                         nextCard: nextCard.id
-                    })
+                    }
+                    console.log("middle", emitData)
+                    this.$socket.emit('request-board:card-move', emitData)
                 }
                 // is first
                 else if (nextCard && !prevCard) {
-                    console.log("first")
-                    this.$socket.emit('request-board:card-move', {
+                    const emitData = {
                         cardId: currCard.id,
+                        location: 'first',
+                        fromSection: fromSection,
                         toSection: toSection.id,
                         prevCard: null,
-                        nextCard: nextCard.id,
-                        location: 'first'
-                    })
+                        nextCard: nextCard.id
+                    }
+                    console.log("first", emitData)
+                    this.$socket.emit('request-board:card-move', emitData)
                 }
                 // is last or is the only card
                 else if (!nextCard && prevCard) {
-                    console.log("last")
-                    this.$socket.emit('request-board:card-move', {
+                    const emitData = {
                         cardId: currCard.id,
+                        location: 'last',
+                        fromSection: fromSection,
                         toSection: toSection.id,
                         prevCard: prevCard.id,
-                        nextCard: null,
-                        location: 'last'
-                    })
+                        nextCard: null
+                    }
+                    console.log("last", emitData)
+                    this.$socket.emit('request-board:card-move', emitData)
                 }
                 else if (!nextCard && !prevCard) {
-                    console.log("last and only")
-                    this.$socket.emit('request-board:card-move', {
+                    const emitData = {
                         cardId: currCard.id,
+                        fromSection: fromSection,
                         toSection: toSection.id,
                         prevCard: null,
                         nextCard: null,
                         location: 'last-and-only'
-                    })
+                    }
+                    console.log("last and only", emitData)
+                    this.$socket.emit('request-board:card-move', emitData)
                 }
             }
         },

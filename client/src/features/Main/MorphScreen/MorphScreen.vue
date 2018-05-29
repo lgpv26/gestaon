@@ -12,7 +12,7 @@
                 </div>
                 <transition name="fade">
                     <div class="morph-screen__container" v-if="screen.active" ref="container">
-                        <app-draft :details="getDraftDetails(screen.draft)" :screen="screen" @closeDraft="closeDraft()" @closeMorphScreen="closeMorphScreen(screen)"></app-draft>
+                        <app-draft :details="getDraftDetails(screen.draft)" :screen="screen" @closeDraft="closeDraft()" @closeMorphScreen="closeMorphScreen($event)"></app-draft>
                     </div>
                 </transition>
             </div>
@@ -55,7 +55,7 @@
         sockets: {
             draftCreated(socketData){
                 if(socketData.emittedBy !== this.user.id){
-                    this.ADD_DRAFT(socketData.data);
+                    this.ADD_DRAFT(socketData.data)
                 }
             }
         },
@@ -67,7 +67,7 @@
             ])
         },
         methods: {
-            ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS','SHOW_MS', 'ADD_DRAFT']),
+            ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS','SHOW_MS', 'ADD_DRAFT', 'REMOVE_DRAFT']),
             ...mapActions('morph-screen', ['createMorphScreen']),
             ...mapActions('loading', ['startLoading','setLoadingText']),
 
@@ -316,17 +316,18 @@
 
             /**
              * If screen param is defined, close the draftScreen too
-             * @param screen
+             * @param options:Object
              */
-            closeMorphScreen(screen){
+            closeMorphScreen(options = {}){
                 const vm = this;
-                if(screen) {
+                const screen = _.get(options,'screen', false)
+                /*if(screen) {
                     vm.$socket.emit('draft:presence', {
                         draftId: vm.activeMorphScreen.draft.draftId,
                         userId: vm.user.id,
                         leave: true
                     });
-                }
+                }*/
                 vm.contentEl.classList.remove('unfocused');
                 const animation = anime.timeline().add({
                     targets: vm.contentEl,
@@ -357,7 +358,7 @@
                     })
                 }
                 animation.finished.then(() => {
-                    vm.SHOW_MS(false);
+                    vm.SHOW_MS(false)
                     if(screen){
                         vm.SET_MS({
                             draftId: screen.draft.draftId,
@@ -365,8 +366,11 @@
                                 active: false
                             }
                         })
+                        if(_.get(options,'remove',false)){
+                            vm.REMOVE_DRAFT(screen.draft.draftId)
+                        }
                     }
-                });
+                })
             },
 
             /**
@@ -385,6 +389,17 @@
                     vm.$refs.morphScreenItems[activeScreenIndex].style.height = windowHeight + 'px';
                 }
             },
+        },
+        created(){
+            const vm = this
+            vm.$options.sockets['draft.remove'] = (ev) => {
+                console.log("Received draft.remove", ev)
+                if(ev.success){
+                    if(ev.evData.emittedBy !== vm.user.id){
+                        vm.REMOVE_DRAFT(ev.evData.draftId)
+                    }
+                }
+            }
         },
         mounted(){
             this.contentEl = document.getElementById('content');

@@ -12,7 +12,9 @@
                     </div>
                 </div>
             </div>
+            <!--
             <app-bottom-panel :map.sync="map"></app-bottom-panel>
+            -->
         </div>
     </div>
 </template>

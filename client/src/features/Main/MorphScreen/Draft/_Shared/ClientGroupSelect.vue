@@ -1,5 +1,5 @@
 <template>
-    <app-popover>
+    <app-popover :style="{'flex-grow': 1}">
         <template slot="triggerer">
             <slot></slot>
         </template>

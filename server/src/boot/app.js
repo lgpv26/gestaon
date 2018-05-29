@@ -82,6 +82,8 @@ const connectToMySQL = new Promise((resolve, reject) => {
 di.server.broker.createService(require('../services/auth.service')(di.server))
 di.server.broker.createService(require('../services/request-board.service')(di.server))
 di.server.broker.createService(require('../services/push-notification.service')(di.server))
+di.server.broker.createService(require('../services/cashier-balancing.service')(di.server))
+
 di.server.broker.createService(require('../services/data/user.service')(di.server))
 di.server.broker.createService(require('../services/data/call.service')(di.server))
 di.server.broker.createService(require('../services/data/request.service')(di.server))

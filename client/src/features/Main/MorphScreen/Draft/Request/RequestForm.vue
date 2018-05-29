@@ -219,15 +219,21 @@
                     }
                     console.log("Emitting draft/request.client.select", emitData)
                     vm.$socket.emit('draft/request.client.select', emitData)
+                    console.log("Cliente persistido com sucesso!")
                 })
             },
             persistRequest(){
                 const vm = this
                 vm.runRequestPersistence({
+                    draftId: vm.activeMorphScreen.draft.draftId,
                     request: vm.form,
                     companyId: vm.company.id
                 }).then((response) => {
-                    console.log("Sucesso")
+                    console.log("Pedido persistido com sucesso!")
+                    vm.$emit('close', {
+                        screen: vm.activeMorphScreen,
+                        remove: true
+                    })
                 })
             }
         },

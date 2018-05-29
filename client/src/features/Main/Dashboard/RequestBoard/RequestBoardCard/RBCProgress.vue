@@ -1,15 +1,28 @@
 <template>
     <div>
-        <div class="rgbc-progress">
-            <div class="tooltip-content">
-                <span>Pedido 12548 | 10 min</span>
-                <span>Tarefa 12548 | 3 min</span>
-                <span>Pendente por Gisele | Base</span>
+        <div class="rbc-progress">
+            <div class="tooltip-content" v-if="requestTimelineItemData">
+                <div v-if="requestTimelineItemData.action === 'create'" style="display: flex; flex-direction: column;">
+                    <span>{{ _.find(users, {id: requestTimelineItemData.triggeredBy}).name }} criou o pedido</span>
+                    <span>Responsável: {{ _.find(users, {id: requestTimelineItemData.userId}).name }}</span>
+                    <span>---</span>
+                    <span>Pedido {{ card.request.id }} | Venda: {{ card.request.requestOrder.id }}</span>
+                </div>
+                <div v-else>
+                    <span v-if="requestTimelineItemData.action === 'user_change'">{{ _.find(users, {id: requestTimelineItemData.triggeredBy}).name }} mudou o responsável</span>
+                    <span v-else-if="requestTimelineItemData.action === 'status_change'">{{ _.find(users, {id: requestTimelineItemData.triggeredBy}).name }} mudou o status</span>
+                    <span v-if="requestTimelineItemData.action === 'user_change'">
+                    para {{ _.find(users, {id: requestTimelineItemData.userId}).name }}
+                </span>
+                    <span v-if="requestTimelineItemData.action === 'status_change'">
+                    para {{ requestTimelineItemData.status }}
+                </span>
+                </div>
             </div>
             <div class="tooltip-actions">
                 <a>Editar <icon-edit></icon-edit></a>
                 <span class="push-both-sides"></span>
-                <span>2 minutos</span>
+                <timeago :since="requestTimelineItemData.dateCreated" style="color: var(--font-color--9)" :auto-update="60"></timeago>
             </div>
         </div>
     </div>
@@ -18,23 +31,47 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import Vue from 'vue'
-    import _ from 'lodash';
+    import _ from 'lodash'
     import utils from '@/utils'
+    import moment from 'moment'
 
     export default {
-        props: ['card'],
+        props: ['card','requestTimelineItem'],
         data(){
             return {}
         },
+        computed: {
+            ...mapState('data/users', ['users']),
+            requestTimeDiffInMinutes(){
+                const startDate = moment(this.card.request.dateCreated)
+                const nowDate = moment(this.requestTimelineItemData.dateCreated)
+                const diffUntilNowInSec = moment.duration(nowDate.diff(startDate)).asSeconds()
+                return Math.floor(diffUntilNowInSec / 60)
+            },
+            orderTimeDiffInMinutes(){
+                const startDate = moment(this.card.request.requestOrder.dateCreated)
+                const nowDate = moment(this.requestTimelineItemData.dateCreated)
+                const diffUntilNowInSec = moment.duration(nowDate.diff(startDate)).asSeconds()
+                return Math.floor(diffUntilNowInSec / 60)
+            },
+            requestTimelineItemData(){
+                if(_.get(this.requestTimelineItem, 'data', false)){
+                    return this.requestTimelineItem.data
+                }
+            }
+        },
         methods: {
         },
+        mounted(){
+        }
     }
 </script>
 
 <style scoped>
-    .rgbc-progress {
+    .rbc-progress {
         display: flex;
         flex-direction: column;
+        color: var(--font-color--10)
     }
     .tooltip-content {
         display: flex;

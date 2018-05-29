@@ -31,6 +31,14 @@ const mutations = {
 }
 
 const actions = {
+    loadAll(context, { companyId }){
+        return PaymentMethodsAPI.getList({
+            companyId: companyId
+        }).then((result) => {
+            context.commit('SET_ALL', result.data)
+            return result
+        })
+    },
     setPaymentMethods(context, paymentMethods){
         context.commit('SET_ALL', paymentMethods)
     },

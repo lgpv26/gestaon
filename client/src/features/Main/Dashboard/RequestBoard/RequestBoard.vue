@@ -18,10 +18,17 @@
     import DraggableComponent from 'vuedraggable';
     import Scrollbar from 'smooth-scrollbar';
     import Vue from 'vue'
-    import _ from 'lodash';
+    import _ from 'lodash'
+    import moment from 'moment'
     import utils from '@/utils'
+    import { createHelpers } from 'vuex-map-fields'
 
     import RequestBoardSection from './RequestBoardSection.vue'
+
+    const { mapFields, mapMultiRowFields } = createHelpers({
+        getterType: 'request-board/getField',
+        mutationType: 'request-board/updateField',
+    })
 
     export default {
         components: {
@@ -49,6 +56,10 @@
             }
         },
         computed: {
+            ...mapFields([
+                'filters',
+                'filters.dateCreated',
+            ]),
             ...mapState(['mainContentArea']),
             ...mapState('auth', ['user', 'token', 'company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
@@ -61,6 +72,13 @@
                     this.updateScrolls()
                 },
                 deep: true
+            },
+            filters: {
+                handler(newFilterValue){
+                    const filterData = utils.removeReactivity(newFilterValue)
+                    this.load(newFilterValue)
+                },
+                deep: true
             }
         },
         sockets: {
@@ -71,6 +89,7 @@
                     ev.evData.sections.forEach((section) => {
                         vm.ADD_SECTION(section)
                     })
+                    this.REAPLY_FILTERS()
                 }
                 else {
                     console.log("ERROR", ev.error)
@@ -114,26 +133,38 @@
             requestBoardCardCreate(request){
                 console.log("Received requestBoardCardCreate", request)
                 const card = request.data.card
-                this.ADD_REQUEST(card)
+                const start = moment(this.dateCreated).startOf("day")
+                const finish = moment(this.dateCreated).endOf("day")
+                if(moment(card.createdAt).isBetween(start, finish, null, '[]')){
+                    this.ADD_REQUEST(card)
+                }
             },
-            requestBoardCardMove(response){
-                console.log("Received requestBoardCardMove", response)
-
-                /*const section = response.data.section
-                this.SET_SECTION({
-                    sectionId: section.id,
-                    section: {
-                        position: section.position
-                    }
-                })
-                Vue.nextTick(() => {
-                    this.SORT_SECTIONS()
-                })*/
+            requestBoardCardUpdate(ev){
+                console.log("Received requestBoardCardUpdate", ev)
+                if(ev.success){
+                    this.updateCard({
+                        cardId: ev.evData.id,
+                        card: ev.evData
+                    })
+                }
+            },
+            requestBoardCardMove(ev){
+                console.log("Received requestBoardCardMove", ev)
+                if(ev.success){
+                    this.moveCard(ev.evData.card)
+                }
             },
         },
         methods: {
             ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', ['SORT_SECTIONS','RESET_REQUESTS','REMOVE_SECTION','ADD_SECTION','SET_SECTIONS','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS']),
+            ...mapMutations('request-board', [
+                'REAPLY_FILTERS','SORT_SECTIONS',
+                'REMOVE_SECTION','ADD_SECTION','SET_SECTIONS','SET_SECTION',
+                'RESET_REQUESTS','ADD_REQUEST','SET_SECTION_REQUESTS','MOVE_CARD'
+            ]),
+            ...mapActions('request-board', [
+                'moveCard','updateCard'
+            ]),
 
             /* Sections */
 
@@ -201,6 +232,13 @@
                 viewport.style.display = 'initial';
             },
 
+            load(filterData = {}){
+                this.SET_SECTIONS([])
+                this.$socket.emit('request-board:load', {
+                    filter: btoa(JSON.stringify(filterData))
+                })
+            },
+
             /* In-component utilities */
 
             updateScrolls(){
@@ -212,10 +250,7 @@
             }
         },
         mounted(){
-            const vm = this
-            this.SET_SECTIONS([])
-            console.log("Request Board")
-            this.$socket.emit('request-board:load')
+            this.load()
         }
     }
 </script>

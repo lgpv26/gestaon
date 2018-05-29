@@ -72,7 +72,8 @@ module.exports = (server) => {
                                 taskId: (task) ? _.get(task, 'task.id') : null,
                                 deadlineDatetime: (this._request.deadlineDatetime) ? moment(this._request.deadlineDatetime).format("YYYY-MM-DD HH:mm:ss") : moment().add(20, 'm').format("YYYY-MM-DD HH:mm:ss"),
                                 isScheduled: (this._request.deadlineDatetime) ? true : false,
-                                obs: (this._request.obs) ? this._request.obs : null
+                                obs: (this._request.obs) ? this._request.obs : null,
+                                status: (this._request.status) ? this._request.status : 'pending'
                             },
                             transaction: this._transaction
                         }).then((request) => {
@@ -129,17 +130,75 @@ module.exports = (server) => {
                     id: ctx.params.data.id
                 },
                 include: [{
-                    model: server.mysql.Client,
-                    as: 'client'
-                }, {
                     model: server.mysql.RequestTimeline,
                     as: "requestTimeline",
                     include: [{
                         model: server.mysql.User,
                         as: "triggeredByUser",
-                    }, {
+                    },{
                         model: server.mysql.User,
                         as: "user",
+                    }]
+                },
+                {
+                    model: server.mysql.RequestClientPhone,
+                    as: "requestClientPhones",
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: "clientPhone",
+                    }]
+                },{
+                    model: server.mysql.RequestClientAddress,
+                    as: "requestClientAddresses",
+                    include: [{
+                        model: server.mysql.ClientAddress,
+                        as: "clientAddress",
+                        include:[{
+                            model: server.mysql.Address,
+                            as: "address"
+                        }]
+                    }]
+                },{
+                    model: server.mysql.Client,
+                    as: "client",
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: 'clientPhones'
+                    }, {
+                        model: server.mysql.ClientAddress,
+                        as: 'clientAddresses',
+                        include: [{
+                            model: server.mysql.Address,
+                            as: 'address'
+                        }]
+                    }, {
+                        model: server.mysql.ClientCustomField,
+                        as: 'clientCustomFields',
+                        include: [{
+                            model: server.mysql.CustomField,
+                            as: 'customField'
+                        }]
+                    }, {
+                        model: server.mysql.ClientGroup,
+                        as: 'clientGroup'
+                    }]
+                },{
+                    model: server.mysql.RequestOrder,
+                    as: "requestOrder",
+                    include: [{
+                        model: server.mysql.RequestOrderProduct,
+                        as: 'requestOrderProducts',
+                        include: [{
+                            model: server.mysql.Product,
+                            as: 'product'
+                        }]
+                    }]
+                },{
+                    model: server.mysql.RequestPaymentMethod,
+                    as: "requestPaymentMethods",
+                    include: [{
+                        model: server.mysql.PaymentMethod,
+                        as: 'paymentMethod'
                     }]
                 }],
                 transaction: ctx.params.transaction
@@ -185,6 +244,7 @@ module.exports = (server) => {
                             requestId: request.id,
                             triggeredBy: this._userId,
                             companyId: this._companyId,
+                            action: 'create',
                             userId: (this._request.responsibleUserId) ? this._request.responsibleUserId : this._userId,
                             status: 'pending'
                         },

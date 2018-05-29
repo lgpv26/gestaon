@@ -19,6 +19,7 @@
     "howler": "^2.0.5",
     "in-view": "^0.6.1",
     "izitoast": "^1.1.1",
+    "js-base64": "^2.4.5",
     "mark.js": "^8.11.0",
     "marker-animate-unobtrusive": "^0.2.8",
     "marker-with-label": "^1.0.1",

@@ -126,6 +126,13 @@ const clientMutations = {
         if(index !== -1){
             state.form.client.clientPhones.splice(index, 1)
         }
+    },
+
+    REMOVE_CLIENT_CUSTOM_FIELD(state, clientCustomFieldId){
+        const index = _.findIndex(state.form.client.clientCustomFields, {id: clientCustomFieldId})
+        if(index !== -1){
+            state.form.client.clientCustomFields.splice(index, 1)
+        }
     }
 }
 const orderMutations = {
@@ -187,18 +194,8 @@ const clientActions = {
                 legalDocument: client.legalDocument,
                 clientGroupId: client.clientGroupId,
                 clientCustomFields: client.clientCustomFields,
-                clientPhones: _.map(client.clientPhones, (clientPhone) => {
-                    if(!_.isNumber(clientPhone.id) && clientPhone.id.substring(0,4) === "tmp/"){
-                        clientPhone.id = null
-                    }
-                    return clientPhone
-                }),
-                clientAddresses: _.map(client.clientAddresses, (clientAddress) => {
-                    if(!_.isNumber(clientAddress.id) && clientAddress.id.substring(0,4) === "tmp/"){
-                        clientAddress.id = null
-                    }
-                    return clientAddress
-                })
+                clientPhones: client.clientPhones,
+                clientAddresses: client.clientAddresses
             }
         },{
             companyId
@@ -229,6 +226,9 @@ const clientActions = {
     },
     removeClientPhone(context, clientPhoneId){
         context.commit('REMOVE_CLIENT_PHONE', clientPhoneId)
+    },
+    removeClientCustomField(context, clientCustomFieldId){
+        context.commit('REMOVE_CLIENT_CUSTOM_FIELD', clientCustomFieldId)
     }
 }
 const orderActions = {
@@ -246,7 +246,7 @@ const orderActions = {
     },
 }
 const actions = {
-    runRequestPersistence(context, {request, companyId}){
+    runRequestPersistence(context, {draftId, request, companyId}){
         request =  utils.removeReactivity(request)
         const client = request.client
         const order = request.order
@@ -277,10 +277,10 @@ const actions = {
                 return requestPaymentMethod
             }),
             deadlineDatetime: ((request.useSuggestedDeadlineDatetime) ?  null : request.deadlineDatetime ),
-            obs: request.obs,
-            responsibleUserId: request.responsibleUserId
+            responsibleUserId: request.responsibleUserId,
+            obs: request.obs
         }
-        return RequestsAPI.persistence(sendData, {
+        return RequestsAPI.persistence(draftId, sendData, {
             companyId
         }).then((response) => {
             console.log("SUCESSO", response)

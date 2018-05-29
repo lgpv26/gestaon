@@ -265,6 +265,7 @@
                         path: 'clientAddressId',
                         customBaseFormPath: 'request'
                     })
+                    this.syncMultiple(clientObjMapping)
                 })
             }
 
