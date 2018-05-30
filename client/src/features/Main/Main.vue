@@ -141,6 +141,9 @@
             ...mapActions('data/users', {
                 loadAllUsers: 'loadAll'
             }),
+            ...mapActions('data/accounts', {
+                loadAllAccounts: 'loadAll'
+            }),
             ...mapActions('data/client-groups',{
                 'loadAllClientGroups': 'loadAll'
             }),
@@ -359,6 +362,7 @@
                     vm.loadAllClientGroups({ companyId: vm.company.id }),
                     vm.loadAllPaymentMethods({ companyId: vm.company.id }),
                     vm.loadAllPromotionChannels({ companyId: vm.company.id }),
+                    vm.loadAllAccounts({ companyId: vm.company.id }),
                     vm.loadMorphScreenData(vm.company.id)
                 ])
             }).then(() => {

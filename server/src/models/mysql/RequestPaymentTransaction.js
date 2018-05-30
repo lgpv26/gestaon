@@ -22,6 +22,9 @@ module.exports = {
                 action: {
                     type: Sequelize.STRING
                 },
+                settledDatetime: {
+                    type: TIMESTAMP
+                },
                 dateUpdated: {
                     type: TIMESTAMP
                 },

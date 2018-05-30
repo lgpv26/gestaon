@@ -10,7 +10,8 @@
                         <div class="dot-separator primary" v-if="selectedDays" style="margin: 0 10px;"></div>
                         <span class="primary" v-if="selectedDays">{{ selectedDays }} dia(s)</span>
                     </a>
-                    <app-datetime-selector ref="createdDateSelector" class="input--borderless" v-model="form.dateCreated[0]" @on-change="onFilterChange($event)" @input="onCreatedDateChange($event)" :config="filterDatetimeSelectorConfig" placeholder="..."></app-datetime-selector>
+                    <app-datetime-selector ref="createdDateSelector" class="input--borderless" :value="form.dateCreated[0]"
+                           @input="onCreatedDateChange($event)" :config="filterDatetimeSelectorConfig" placeholder="..."></app-datetime-selector>
                 </li>
                 <li>
                     <app-select v-model="form.clientGroup" :items="selectClientGroups" :multiple="true" :verticalOffset="5" title="Grupo do cliente"
@@ -105,11 +106,18 @@
                     <h3>15 min</h3>
                 </div>
                 -->
-                <template slot="actions" slot-scope="slotProps">
-                    <a href="javascript:void(0)" :class="{active: slotProps.item.paid}" style="width: 32px; margin-right: 10px;">
+                <template slot="paid" slot-scope="slotProps">
+                    <a href="javascript:void(0)" :class="{active: slotProps.item.paid}" style="width: 32px;">
                         <icon-check></icon-check>
                     </a>
-                    <a href="javascript:void(0)" style="width: 32px; margin-right: 10px;">
+                </template>
+                <template slot="settled" slot-scope="slotProps">
+                    <a href="javascript:void(0)" :class="{active: slotProps.item.settled}" style="width: 50px;">
+                        <icon-check></icon-check>
+                    </a>
+                </template>
+                <template slot="actions" slot-scope="slotProps">
+                    <a href="javascript:void(0)" style="width: 32px;">
                         <icon-edit></icon-edit>
                     </a>
                 </template>
@@ -121,15 +129,37 @@
                 <span class="push-both-sides"></span>
                 <div class="right-side">
                     <div class="group">
-                        <span>No horário:</span>
-                        <app-datetime-selector class="input--borderless" v-model="deadlineDatetime" :config="datetimeSelectorConfig" placeholder="..."
-                        @input="inputDeadlineDatetime($event)"></app-datetime-selector>
-                    </div>
-                    <div class="group">
                         <span>Com selecionados:</span>
-                        <a>Marcar como pago</a>
+                        <app-select v-model="form.action" :items="selectActions" title="Conta">
+                            <a href="javascript:void(0)" v-if="!form.action">-- Selecione --</a>
+                            <a href="javascript:void(0)" v-else>{{ _.find(selectActions, {value: form.action}).text }}</a>
+                            <template slot="section" slot-scope="sectionProps">
+                                <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
+                            </template>
+                            <template slot="item" slot-scope="itemProps">
+                                <span>{{itemProps.text }}</span>
+                            </template>
+                        </app-select>
                     </div>
-                    <a class="btn btn--primary">Confirmar</a>
+                    <div class="group" v-if="form.action === 'settled'">
+                        <span>No horário:</span>
+                        <app-datetime-selector class="input--borderless" v-model="form.settledDatetime" :config="datetimeSelectorConfig" placeholder="HORÁRIO ATUAL"></app-datetime-selector>
+                        <a href="javascript:void(0)" v-if="form.settledDatetime" @click="form.settledDatetime = null"><icon-remove></icon-remove></a>
+                    </div>
+                    <div class="group" v-if="form.action === 'settled'">
+                        <span>Conta:</span>
+                        <app-select v-model="form.account" :items="selectAccounts" title="Conta">
+                            <a href="javascript:void(0)" v-if="!form.account">-- Selecione --</a>
+                            <a href="javascript:void(0)" v-else>{{ _.find(accounts, {id: form.account}).name }}</a>
+                            <template slot="section" slot-scope="sectionProps">
+                                <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
+                            </template>
+                            <template slot="item" slot-scope="itemProps">
+                                <span>{{itemProps.text }}</span>
+                            </template>
+                        </app-select>
+                    </div>
+                    <a class="btn btn--primary" @click="submit()">Confirmar</a>
                 </div>
             </div>
         </div>
@@ -187,13 +217,27 @@
                         name: 'status'
                     },
                     {
+                        text: 'Pago',
+                        name: 'paid',
+                        html: true
+                    },
+                    {
+                        text: 'Acert.',
+                        name: 'settled',
+                        html: true
+                    },
+                    {
                         text: 'Ações',
                         name: 'actions',
-                        html: `<icon-status style="margin-right: 10px;"></icon-status>`
+                        html: true
                     }
                 ],
                 form: {
+                    account: null,
+                    action: null,
+                    settledDatetime: null,
                     dateCreated: [[]],
+                    dateCreatedToSend: [[]],
                     clientGroup: [],
                     paymentMethod: [],
                     responsibleUser: [],
@@ -201,7 +245,6 @@
                 },
                 loadingList: true,
                 selectedDays: 0,
-                deadlineDatetime: null,
                 datetimeSelectorConfig: {
                     altInput: true,
                     altFormat: 'd/m/Y H:i:S',
@@ -225,6 +268,7 @@
         computed: {
             ...mapState('auth',['company']),
             ...mapState('data/users',['users']),
+            ...mapState('data/accounts',['accounts']),
             ...mapState('data/client-groups',['clientGroups']),
             ...mapState('data/payment-methods',['paymentMethods']),
             selectedItemsTotalAmount(){
@@ -267,13 +311,34 @@
                         text: 'FINALIZADO'
                     }
                 ]
-            }
+            },
+            selectAccounts(){
+                return _.map(this.accounts, (account) => {
+                    return {
+                        value: account.id,
+                        text: account.name
+                    }
+                })
+            },
+            selectActions(){
+                return [
+                    {
+                        text: 'Marcar como pago',
+                        value: 'paid'
+                    },
+                    {
+                        text: 'Marcar como acertado',
+                        value: 'settled'
+                    }
+                ]
+            },
         },
         methods: {
             onGridInput(ev){
                 console.log(ev)
             },
             onFilterChange(ev){
+                this.selectedItems = []
                 this.applyFilter()
             },
             onGridScroll(ev){
@@ -284,13 +349,23 @@
             },
             onCreatedDateChange(value){
                 const values = value.split(" ")
+
                 if(values.length > 1){
+
                     value = [_.first(values),_.last(values)]
+
+                    this.form.dateCreatedToSend = value
                     this.selectedDays = moment(value[1]).diff(moment(value[0]), 'days') + 1
                 }
                 else if(value.trim() !== ''){
+                    this.form.dateCreatedToSend = value
                     this.selectedDays = 1
                 }
+                else {
+                    this.form.dateCreatedToSend = [[]]
+                    this.selectedDays = 0
+                }
+                this.onFilterChange()
             },
             getStatus(status){
                 switch(status){
@@ -335,6 +410,15 @@
                 this.loadingList = true
                 CashierBalancingAPI.getList(requestParams).then(({data}) => {
                     this.items = _.map(data.list.rows, (row) => {
+                        let settled = false
+                        if(row.requestPaymentTransactions.length) {
+                            row.requestPaymentTransactions.sort((a, b) => {
+                                return new Date(a.dateCreated) - new Date(b.dateCreated)
+                            })
+                            if(_.last(row.requestPaymentTransactions).action === 'settle.origin' || _.last(row.requestPaymentTransactions).action === 'settle.destination'){
+                                settled = true
+                            }
+                        }
                         return {
                             id: row.id,
                             amount: row.amount,
@@ -344,6 +428,7 @@
                             name: row.request.client.name,
                             clientGroup: row.request.client.clientGroup.name,
                             paymentMethod: row.paymentMethod.name,
+                            settled,
                             requestId: row.requestId,
                             status: this.getStatus(row.request.status)
                         }
@@ -358,17 +443,23 @@
             },
             applyFilter(params = {}){
                 const filterData = utils.removeReactivity(this.form)
-                if(!filterData.dateCreated[0] || !filterData.dateCreated[0].length){
+                if(!filterData.dateCreatedToSend[0] || !filterData.dateCreatedToSend[0].length){
                     _.assign(filterData,{
                         dateCreated: null
                     })
                 }
+                else if(!_.isArray(filterData.dateCreatedToSend)){
+                    _.assign(filterData,{
+                        dateCreated: filterData.dateCreatedToSend
+                    })
+                }
                 else {
-                    const values = filterData.dateCreated[0].split(" ")
+                    const values = filterData.dateCreatedToSend
                     if(values.length > 1){
                         filterData.dateCreated = [[_.first(values),_.last(values)]]
                     }
                 }
+
                 if(!filterData.clientGroup.length){
                     _.assign(filterData,{
                         clientGroup: null
@@ -390,12 +481,38 @@
                     })
                 }
 
-                this.selectedItems = []
-
                 this.search(filterData,params)
-
-                /*const base64DecodedFilterData = atob(base64EncodedFilterData)
-                console.log(JSON.parse(base64DecodedFilterData))*/
+            },
+            submit(){
+                if(this.form.action === 'paid'){
+                    CashierBalancingAPI.markAsPaid({
+                        requestPaymentIds: _.map(this.selectedItems, (selectedItem) => {
+                            return selectedItem.id
+                        }),
+                        accountId: this.form.account
+                    }, {
+                        companyId: this.company.id
+                    }).then((res) => {
+                        this.selectedItems = []
+                        this.applyFilter()
+                        console.log("OK")
+                    })
+                }
+                else if(this.form.action === 'settled'){
+                    CashierBalancingAPI.markAsSettled({
+                        settledDatetime: this.form.settledDatetime,
+                        requestPaymentIds: _.map(this.selectedItems, (selectedItem) => {
+                            return selectedItem.id
+                        }),
+                        accountId: this.form.account
+                    }, {
+                        companyId: this.company.id
+                    }).then((res) => {
+                        this.selectedItems = []
+                        this.applyFilter()
+                        console.log("OK")
+                    })
+                }
             }
         }
     }

@@ -95,6 +95,7 @@ di.server.broker.createService(require('../services/data/account.service')(di.se
 di.server.broker.createService(require('../services/data/promotion-channel.service')(di.server))
 di.server.broker.createService(require('../services/data/address.service')(di.server))
 di.server.broker.createService(require('../services/data/payment-method.service')(di.server))
+di.server.broker.createService(require('../services/data/transaction.service')(di.server))
 
 di.server.broker.createService(require('../services/draft/index.service')(di.server))
 

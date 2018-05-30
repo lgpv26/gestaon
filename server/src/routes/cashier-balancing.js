@@ -1,4 +1,5 @@
 const basePath = require('./../middlewares/base-path.middleware')
+import _ from 'lodash'
 
 module.exports = (server, restify) => {
 
@@ -18,6 +19,31 @@ module.exports = (server, restify) => {
                 limit: req.query.limit || 20,
                 companyId: req.query.companyId
             }
+        }).then((data) => {
+            return res.send(200, { data })
+        }).catch((err) => {
+            return next(err)
+        })
+    })
+
+    server.post('/cashier-balancing/mark-as-paid', (req, res, next) => {
+        return server.broker.call('cashier-balancing.markAsPaid', {
+            data: _.assign({
+                companyId: parseInt(req.query.companyId)
+            }, req.body)
+        }).then((data) => {
+            return res.send(200, { data })
+        }).catch((err) => {
+            return next(err)
+        })
+    })
+
+    server.post('/cashier-balancing/mark-as-settled', (req, res, next) => {
+        return server.broker.call('cashier-balancing.markAsSettled', {
+            data: _.assign({
+                createdById: parseInt(req.auth.id),
+                companyId: parseInt(req.query.companyId)
+            }, req.body)
         }).then((data) => {
             return res.send(200, { data })
         }).catch((err) => {

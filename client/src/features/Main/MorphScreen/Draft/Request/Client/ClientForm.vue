@@ -280,14 +280,35 @@
             vm.$options.sockets['draft/request.client.select'] = (ev) => {
                 console.log("Received draft/request.client.select", ev)
                 if (ev.success) {
+                    if(_.get(ev.evData, 'clientAddresses', []).length){
+                        this.clientAddressId = _.last(ev.evData.clientAddresses).id
+                    }
+                    if(_.get(ev.evData, 'clientPhones', []).length){
+                        this.clientPhoneId = _.last(ev.evData.clientPhones).id
+                    }
                     vm.setClient(ev.evData)
                     Vue.nextTick(() => {
-                        vm.syncMultiple(_.map(vm.client, (v, k) => {
+                        const clientObjMapping = _.map(vm.client, (v, k) => {
                             return {
                                 value: v,
                                 path: k
                             }
-                        }))
+                        })
+                        if(_.get(ev.evData, 'clientAddresses', []).length){
+                            clientObjMapping.push({
+                                value: this.clientAddressId,
+                                path: 'clientAddressId',
+                                customBaseFormPath: 'request'
+                            })
+                        }
+                        if(_.get(ev.evData, 'clientPhones', []).length){
+                            clientObjMapping.push({
+                                value: this.clientPhoneId,
+                                path: 'clientPhoneId',
+                                customBaseFormPath: 'request'
+                            })
+                        }
+                        vm.syncMultiple(clientObjMapping)
                     })
                 }
             }

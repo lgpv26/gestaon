@@ -31,6 +31,14 @@ const mutations = {
 }
 
 const actions = {
+    loadAll(context, { companyId }){
+        return AccountsAPI.getList({
+            companyId: companyId
+        }).then((result) => {
+            context.commit('SET_ALL', result.data)
+            return result
+        })
+    },
     setAccounts(context, accounts){
         context.commit('SET_ALL', accounts)
     },

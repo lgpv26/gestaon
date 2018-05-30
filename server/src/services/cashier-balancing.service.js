@@ -15,8 +15,6 @@ module.exports = (server) => { return {
          */
         getList(ctx){
 
-            console.log(ctx.params)
-
             const searchObj = {
                 requestId: null,
                 dateCreated: null,
@@ -158,7 +156,19 @@ module.exports = (server) => { return {
                     {
                         model: server.mysql.PaymentMethod,
                         as: 'paymentMethod'
+                    },
+                    {
+                        model: server.mysql.RequestPaymentTransaction,
+                        as: 'requestPaymentTransactions',
+                        include: [{
+                            model: server.mysql.Transaction,
+                            as: 'transaction'
+                        }]
                     }
+                ],
+                distinct: 'id',
+                order: [
+                    ['id', 'ASC'],
                 ],
                 limit: parseInt(ctx.params.data.limit),
                 offset: parseInt(ctx.params.data.offset),
@@ -185,6 +195,8 @@ module.exports = (server) => { return {
                 ]
             }))
 
+
+
             return Promise.all(promises).then(([list, totalAmount]) => {
                 return {
                     list,
@@ -193,5 +205,141 @@ module.exports = (server) => { return {
             })
 
         },
+        markAsPaid(ctx){
+            return server.mysql.RequestPaymentMethod.findAll({
+                include: [
+                    {
+                        model: server.mysql.Request,
+                        as: 'request',
+                        where: {
+                            companyId: {
+                                [Op.in]: [ctx.params.data.companyId]
+                            }
+                        }
+                    }
+                ],
+                where: {
+                    id: {
+                        [Op.in]: ctx.params.data.requestPaymentIds
+                    },
+                    paid: false
+                }
+            }).then((requestPaymentMethods) => {
+                const promises = _.map(requestPaymentMethods, (requestPaymentMethod) => {
+                    return requestPaymentMethod.update({
+                        paid: true,
+                        paidDatetime: new Date(),
+                    },{
+                        returning: true,
+                        plain: true
+                    })
+                })
+                return Promise.all(promises)
+            })
+        },
+        markAsSettled(ctx){
+            console.log(ctx.params.data)
+
+            return server.mysql.RequestPaymentMethod.findAll({
+                include: [
+                    {
+                        model: server.mysql.Request,
+                        as: 'request',
+                        include: [
+                            {
+                                model: server.mysql.User,
+                                as: 'responsibleUser'
+                            }
+                        ],
+                        where: {
+                            companyId: {
+                                [Op.in]: [ctx.params.data.companyId]
+                            }
+                        }
+                    },
+                    {
+                        model: server.mysql.RequestPaymentTransaction,
+                        as: 'requestPaymentTransactions'
+                    }
+                ],
+                where: {
+                    id: {
+                        [Op.in]: ctx.params.data.requestPaymentIds
+                    }
+                }
+            }).then((requestPaymentMethods) => {
+                let requestPaymentsToMarkAsSettled = _.filter(requestPaymentMethods, (requestPaymentMethod) => {
+                    requestPaymentMethod.requestPaymentTransactions.sort(function(a, b) { return new Date(a.dateCreated) - new Date(b.dateCreated) })
+                    if(!requestPaymentMethod.requestPaymentTransactions.length){
+                        return true
+                    }
+                    return _.last(requestPaymentMethod.requestPaymentTransactions).action !== 'settle.origin' && _.last(requestPaymentMethod.requestPaymentTransactions) !== 'settle.destination'
+                })
+
+                const transactionPromises = []
+                const accountBalances = {}
+
+                _.forEach(requestPaymentsToMarkAsSettled, (requestPaymentToMarkAsSettled) => {
+                    const iterationPromises = []
+                    iterationPromises.push(ctx.call('data/transaction.create', {
+                        data: {
+                            amount: Math.abs(requestPaymentToMarkAsSettled.amount),
+                            createdById: ctx.params.data.createdById,
+                            accountId: ctx.params.data.accountId,
+                            companyId: ctx.params.data.companyId,
+                            description: 'Adição do valor do acerto de contas na conta de destino',
+                        }
+                    }).then((transaction) => {
+                        return server.mysql.Account.findById(ctx.params.data.accountId).then((account) => {
+                            if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
+                            accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                            return server.mysql.RequestPaymentTransaction.create({
+                                requestPaymentId: requestPaymentToMarkAsSettled.id,
+                                transactionId: transaction.id,
+                                settledDatetime: ctx.params.data.settledDatetime || new Date(),
+                                action: 'settle.destination'
+                            })
+                        })
+                    }))
+                    iterationPromises.push(ctx.call('data/transaction.create', {
+                        data: {
+                            amount: -Math.abs(requestPaymentToMarkAsSettled.amount),
+                            createdById: ctx.params.data.createdById,
+                            accountId: requestPaymentToMarkAsSettled.request.responsibleUser.accountId,
+                            companyId: ctx.params.data.companyId,
+                            description: 'Remoção do valor do acerto de contas na conta de origem',
+                        }
+                    }).then((transaction) => {
+                        return server.mysql.Account.findById(requestPaymentToMarkAsSettled.request.responsibleUser.accountId).then((account) => {
+                            if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
+                            accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                            return server.mysql.RequestPaymentTransaction.create({
+                                requestPaymentId: requestPaymentToMarkAsSettled.id,
+                                transactionId: transaction.id,
+                                settledDatetime: ctx.params.data.settledDatetime || new Date(),
+                                action: 'settle.origin'
+                            })
+                        })
+                    }))
+                    transactionPromises.push(
+                        Promise.all(iterationPromises)
+                    )
+                })
+
+                return Promise.all(transactionPromises).then((res) => {
+                    const updateAccountBalancesPromise = []
+                    _.forEach(_.keys(accountBalances),(accountId) => {
+                        updateAccountBalancesPromise.push(server.mysql.Account.update({
+                            balance: accountBalances[accountId]
+                        }, {
+                            where: {
+                                id: parseInt(accountId)
+                            }
+                        }))
+                    })
+                    return Promise.all(updateAccountBalancesPromise)
+                })
+            })
+        }
     }
 }}

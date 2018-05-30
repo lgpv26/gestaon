@@ -19,6 +19,9 @@ module.exports = {
                     type: Sequelize.INTEGER,
                     defaultValue: null
                 },
+                accountId: {
+                    type: Sequelize.INTEGER
+                },
                 name: {
                     type: Sequelize.STRING,
                     allowNull: false,
@@ -90,11 +93,12 @@ module.exports = {
             })
         };
     },
-    postSettings({User, CompanyUser, Company, UserAccessToken, UserRefreshToken, Request,RequestTimeline}){
+    postSettings({User, CompanyUser, Company, UserAccessToken, UserRefreshToken, Request, Account, RequestTimeline}){
         User.belongsToMany(Company, {through: CompanyUser, as: 'companies', foreignKey: 'userId'});
         User.hasMany(CompanyUser, {as: 'userCompanies', foreignKey: 'userId'});
         User.hasMany(UserAccessToken, {as: 'userAccessTokens', foreignKey: 'userId'});
         User.hasMany(UserRefreshToken, {as: 'userRefreshTokens', foreignKey: 'userId'});
+        User.belongsTo(Account, {as: 'account', foreignKey: 'accountId'});
         User.queryMappings = {
             companies: {
                 model: CompanyUser

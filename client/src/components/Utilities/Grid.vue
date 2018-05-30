@@ -16,9 +16,9 @@
             <div class="container__scroll-filler" ref="scrollFiller" :style="{height: scrollFillerHeight + 'px'}">
                 <table ref="table">
                     <tbody ref="tbody">
-                        <tr v-for="item in items" :class="{active: _.find(form.selectedItems, { id: item.id })}">
+                        <tr v-for="(item, index) in items" :class="{active: form.selectedItemIds.includes(item.id)}">
                             <td style="width: 30px;" ref="checkTdEl">
-                                <div class="check" :class="{active: _.find(form.selectedItems, { id: item.id })}" @click="check(item)"></div>
+                                <div class="check" :class="{active: form.selectedItemIds.includes(item.id)}" @click="check(item)"></div>
                             </td>
                             <td v-for="column in columns" :ref="column.name + 'TdEls'">
                                 <div v-if="!_.has(column,'html')" class="column-row" @click="check(item)">
@@ -56,7 +56,8 @@
             return {
                 internalLoading: false,
                 form: {
-                    selectedItems: []
+                    selectedItems: [],
+                    selectedItemIds: []
                 },
                 columnWidths: [],
                 rowHeight: 0,
@@ -72,7 +73,10 @@
                 this.calculateScrollFiller()
             },
             value(selectedItems){
-                this.form.selecteditems = selectedItems
+                this.form.selectedItems = selectedItems
+                this.form.selectedItemIds = _.map(selectedItems, (selectedItem) => {
+                    return selectedItem.id
+                })
             }
         },
         computed: {
@@ -128,7 +132,7 @@
 
                 setTimeout(() => {
                     this.calculateColumns()
-                }, 100)
+                }, 200)
 
             },
             calculateColumns(){

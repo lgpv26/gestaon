@@ -30,6 +30,9 @@ module.exports = {
                     type: Sequelize.BOOLEAN,
                     default: false
                 },
+                paidDatetime: {
+                    type: TIMESTAMP
+                },
                 dateUpdated: {
                     type: TIMESTAMP
                 },

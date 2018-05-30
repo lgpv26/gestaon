@@ -71,6 +71,7 @@
     import markjs from 'mark.js';
 
     import {createRequest} from '@/models/RequestModel'
+    import {createClientAddressForm} from '@/models/ClientAddressFormModel'
 
     export default {
         components: {
@@ -158,7 +159,12 @@
                         createDraftArgs.body.data = {
                             request: createRequest({
                                 activeStep: 'client',
-                                client: vm.selectedClient || {}
+                                client: {
+                                    clientAddressForm: createClientAddressForm({
+                                        show: true,
+                                        address: vm.selectedAddress
+                                    })
+                                }
                             })
                         }
                     }
