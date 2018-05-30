@@ -33,7 +33,7 @@ module.exports = (server) => { return {
          */
         create(ctx){
             return server.mysql.Transaction.create(ctx.params.data, {
-                transaction: ctx.params.transaction
+                transaction: ctx.params.transaction || null
             }).then((transaction) => {
                 if(!transaction){
                     console.log("Nenhum registro encontrado. Create.")
@@ -51,7 +51,7 @@ module.exports = (server) => { return {
         update(ctx){
             return server.mysql.Transaction.update(ctx.params.data, {
                 where: ctx.params.where || {},
-                transaction: ctx.params.transaction
+                transaction: ctx.params.transaction || null
             }).then((transactionUpdate) => {
                 if(parseInt(_.toString(transactionUpdate)) < 1 ){
                     console.log("Nenhum registro encontrado. Update.")

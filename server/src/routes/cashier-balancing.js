@@ -29,7 +29,8 @@ module.exports = (server, restify) => {
     server.post('/cashier-balancing/mark-as-paid', (req, res, next) => {
         return server.broker.call('cashier-balancing.markAsPaid', {
             data: _.assign({
-                companyId: parseInt(req.query.companyId)
+                companyId: parseInt(req.query.companyId),
+                createdById: parseInt(req.auth.id)
             }, req.body)
         }).then((data) => {
             return res.send(200, { data })

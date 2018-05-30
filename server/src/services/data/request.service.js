@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import moment from 'moment'
 
 module.exports = (server) => { return {
     name: "data/request",
@@ -177,17 +178,20 @@ module.exports = (server) => { return {
          */
         setPaymentMethods(ctx) {
             let paymentMethodsPromises = []
+            let paymentsPaids = []
             ctx.params.data.forEach((paymentMethod) => {
                 if (paymentMethod.id) {
                     paymentMethodsPromises.push(ctx.call("data/request.paymentMethodUpdate", {
                         data: _.assign(paymentMethod, {
-                            requestId: ctx.params.requestId
+                            requestId: ctx.params.requestId,
+                            paidDatetime: (paymentMethod.paid) ? moment() : null
                         }),
                         where: {
                             id: paymentMethod.id
                         },
                         transaction: ctx.params.transaction 
                     }).then((paymentMethod) => {
+                        if(paymentMethod.paid) paymentsPaids.push(paymentMethod.id)
                         return paymentMethod
                     }).catch((err) =>{
                         //console.log(err) //comentar
@@ -198,10 +202,12 @@ module.exports = (server) => { return {
                 else {
                     paymentMethodsPromises.push(ctx.call("data/request.paymentMethodCreate", {
                         data: _.assign(paymentMethod, {
-                            requestId: ctx.params.requestId
+                            requestId: ctx.params.requestId,
+                            paidDatetime: (paymentMethod.paid) ? moment() : null
                         }),
                         transaction: ctx.params.transaction || null
                     }).then((paymentMethod) => {
+                        if(paymentMethod.paid) paymentsPaids.push(paymentMethod.id)
                         return paymentMethod
                     }).catch((err) =>{
                         //console.log(err) // COMENTAR
@@ -211,9 +217,24 @@ module.exports = (server) => { return {
                 }
             })
             return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
-                return paymentMethods
+                if(paymentsPaids.length){
+                    return ctx.call("cashier-balancing.markAsPaid", {
+                        data: {
+                            requestPaymentIds: paymentsPaids,
+                            companyId: ctx.params.companyId,
+                            createdById: ctx.params.createdById
+                        },
+                        persistence: true,
+                        transaction: ctx.params.transaction || null
+                    }).then(() => {
+                        return paymentMethods
+                    })
+                }
+                else {
+                    return paymentMethods
+                }
             }).catch((err) => {
-                console.log('')
+                console.log('Erro payment methods em request service')
                 throw new Error(err)
             })
         },
@@ -308,9 +329,8 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} requests
          */
         createTimeline(ctx){
-            console.log("Caiu no createTimeline")
              return server.mysql.RequestTimeline.create(ctx.params.data, {
-                transaction: ctx.params.transaction
+                transaction: ctx.params.transaction || null
             }).then((response) => {
                 return response
             }).catch((err) => {

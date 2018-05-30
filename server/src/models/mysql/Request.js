@@ -5,7 +5,7 @@ import _ from 'lodash'
 
 module.exports = {
     defineModel: (server) => {
-        const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize);
+        const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize, {warnings: false});
         const modelName = 'Request';
         return {
             name: modelName,

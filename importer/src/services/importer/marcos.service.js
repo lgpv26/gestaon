@@ -59,7 +59,7 @@ module.exports = (server) => {
                         base: baseClients
                     }).then((clients) => {
 
-                        let limitPerConsult = 15
+                        let limitPerConsult = 50
                         let initialOffset = 0
                         let limitReached = false
 

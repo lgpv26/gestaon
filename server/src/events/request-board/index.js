@@ -220,20 +220,35 @@ module.exports = class RequestBoard {
                     request.requestTimeline.sort((a,b) => {
                         return b.id - a.id
                     })
-                    return vm.server.broker.call('data/request.createTimeline', {
-                        data: {
-                            requestId: request.id,
-                            triggeredBy: vm.socket.user.id,
-                            companyId: card.companyId,
-                            action: 'status_change',
-                            userId: _.first(request.requestTimeline).userId,
-                            status: evData.status
-                        }
-                    }).then((requestTimelineItem) => {
-                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeStatus', new EventResponse({
-                            cardId: evData.cardId,
-                            requestTimelineItem
-                        }))
+                    return vm.server.sequelize.transaction().then((transaction) => {
+                        return vm.server.broker.call('data/request.update', {
+                            data: {
+                                status: evData.status
+                            },
+                            where: {
+                                id: request.id
+                            },
+                            transaction: transaction
+                        }).then(() => {                           
+                            return vm.server.broker.call('data/request.createTimeline', {
+                                data: {
+                                    requestId: request.id,
+                                    triggeredBy: vm.socket.user.id,
+                                    companyId: card.companyId,
+                                    action: 'status_change',
+                                    userId: _.first(request.requestTimeline).userId,
+                                    status: evData.status
+                                },
+                                transaction: transaction
+                            }).then((requestTimelineItem) => {
+                                transaction.commit().then(() => {
+                                    vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeStatus', new EventResponse({
+                                        cardId: evData.cardId,
+                                        requestTimelineItem
+                                    }))
+                                })                                
+                            })
+                        })
                     })
                 })
             })
@@ -310,24 +325,38 @@ module.exports = class RequestBoard {
                     request.requestTimeline.sort((a,b) => {
                         return b.id - a.id
                     })
-                    console.log(request.requestTimeline)
-                    return vm.server.broker.call('data/request.createTimeline', {
-                        data: {
-                            requestId: request.id,
-                            triggeredBy: vm.socket.user.id,
-                            companyId: card.companyId,
-                            action: 'user_change',
-                            userId: evData.userId,
-                            status: _.first(request.requestTimeline).status
-                        }
-                    }).then((requestTimelineItem) => {
-                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', new EventResponse({
-                            cardId: evData.cardId,
-                            requestTimelineItem
-                        }))
+                    return vm.server.sequelize.transaction().then((transaction) => {
+                        return vm.server.broker.call('data/request.update', {
+                            data: {
+                                userId: evData.userId
+                            },
+                            where: {
+                                id: request.id
+                            },
+                            transaction: transaction
+                        }).then(() => {
+                        return vm.server.broker.call('data/request.createTimeline', {
+                            data: {
+                                requestId: request.id,
+                                triggeredBy: vm.socket.user.id,
+                                companyId: card.companyId,
+                                action: 'user_change',
+                                userId: evData.userId,
+                                status: _.first(request.requestTimeline).status
+                            },
+                            transaction: transaction
+                        }).then((requestTimelineItem) => {
+                            transaction.commit().then(() => {
+                                    vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', new EventResponse({
+                                        cardId: evData.cardId,
+                                        requestTimelineItem
+                                    }))
+                                })
+                            })
+                        })
+                    }).catch((err) => {
+                        console.log("Erro", err)
                     })
-                }).catch((err) => {
-                    console.log("Erro", err)
                 })
             })
         })

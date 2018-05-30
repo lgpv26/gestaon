@@ -5,7 +5,12 @@ import EventResponse from '~server/models/EventResponse'
 import config from '~config'
 import { base64encode, base64decode } from 'nodejs-base64'
 
-module.exports = (server) => { return {
+module.exports = (server) => { 
+    //PRIVATES
+    let _transaction = null
+    let _saveInRequest = null
+
+    return {
     name: "cashier-balancing",
     actions: {
         /**
@@ -206,140 +211,249 @@ module.exports = (server) => { return {
 
         },
         markAsPaid(ctx){
-            return server.mysql.RequestPaymentMethod.findAll({
-                include: [
-                    {
-                        model: server.mysql.Request,
-                        as: 'request',
-                        where: {
-                            companyId: {
-                                [Op.in]: [ctx.params.data.companyId]
-                            }
-                        }
-                    }
-                ],
-                where: {
-                    id: {
-                        [Op.in]: ctx.params.data.requestPaymentIds
+            this._transaction = ctx.params.transaction || null
+
+            return ctx.call("cashier-balancing.setTransaction").then(() => {
+                return server.mysql.RequestPaymentMethod.findAll({
+                    where: {
+                        id: {
+                            [Op.in]: ctx.params.data.requestPaymentIds
+                        },
+                        paid: (ctx.params.persistence) ? true : false
                     },
-                    paid: false
-                }
-            }).then((requestPaymentMethods) => {
-                const promises = _.map(requestPaymentMethods, (requestPaymentMethod) => {
-                    return requestPaymentMethod.update({
-                        paid: true,
-                        paidDatetime: new Date(),
-                    },{
-                        returning: true,
-                        plain: true
+                    include: [
+                        {
+                            model: server.mysql.Request,
+                            as: 'request',
+                            where: {
+                                companyId: {
+                                    [Op.in]: [ctx.params.data.companyId]
+                                }
+                            },
+                            include: [{
+                                model: server.mysql.User,
+                                as: "responsibleUser"
+                            }]
+                        }
+                    ],
+                    transaction: this._transaction
+                }).then((requestPaymentMethods) => {
+                    const accountBalances = {}
+                    const promises = _.map(requestPaymentMethods, (requestPaymentMethod) => {
+                        return ctx.call('data/transaction.create', {
+                            data: {
+                                amount: Math.abs(requestPaymentMethod.amount),
+                                createdById: ctx.params.data.createdById,
+                                accountId: requestPaymentMethod.request.responsibleUser.accountId,
+                                companyId: requestPaymentMethod.request.companyId,
+                                description: 'Adição do valor do pagamento do pedido #' + requestPaymentMethod.request.id + ' na conta de destino',
+                            },
+                            transaction: this._transaction
+                        }).then((transaction) => {
+                            return server.mysql.Account.findById(transaction.accountId).then((account) => {
+                                if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
+                                accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                                return server.mysql.RequestPaymentTransaction.create({
+                                    requestPaymentId: requestPaymentMethod.id,
+                                    transactionId: transaction.id,
+                                    settledDatetime: null,
+                                    action: 'payment'
+                                    }, {
+                                    transaction: this._transaction
+                                }).then(() => {
+                                    return requestPaymentMethod.update({
+                                        paid: true,
+                                        paidDatetime: moment(),
+                                    },{
+                                        returning: true,
+                                        plain: true,
+                                        transaction: this._transaction
+                                    })
+                                })                            
+                            })
+                        })
+                    })
+                    return Promise.all(promises).then(() => {
+                        const updateAccountBalancesPromise = []
+                        _.forEach(_.keys(accountBalances),(accountId) => {
+                            updateAccountBalancesPromise.push(server.mysql.Account.update({
+                                balance: accountBalances[accountId]
+                            }, {
+                                where: {
+                                    id: parseInt(accountId)
+                                },
+                                transaction: this._transaction
+                            }))
+                        })
+                        return Promise.all(updateAccountBalancesPromise).then(() => {
+                            if(this._saveInRequest) {
+                                return true
+                            }
+                            else {
+                                return ctx.call("cashier-balancing.commit")
+                            }
+                        })
                     })
                 })
-                return Promise.all(promises)
             })
         },
         markAsSettled(ctx){
-            console.log(ctx.params.data)
+            this._transaction = ctx.params.transaction || null
 
-            return server.mysql.RequestPaymentMethod.findAll({
-                include: [
-                    {
-                        model: server.mysql.Request,
-                        as: 'request',
-                        include: [
-                            {
-                                model: server.mysql.User,
-                                as: 'responsibleUser'
+            return ctx.call("cashier-balancing.setTransaction").then(() => {
+                return server.mysql.RequestPaymentMethod.findAll({
+                    include: [
+                        {
+                            model: server.mysql.Request,
+                            as: 'request',
+                            include: [
+                                {
+                                    model: server.mysql.User,
+                                    as: 'responsibleUser'
+                                }
+                            ],
+                            where: {
+                                companyId: {
+                                    [Op.in]: [ctx.params.data.companyId]
+                                }
                             }
-                        ],
-                        where: {
-                            companyId: {
-                                [Op.in]: [ctx.params.data.companyId]
-                            }
+                        },
+                        {
+                            model: server.mysql.RequestPaymentTransaction,
+                            as: 'requestPaymentTransactions'
+                        }
+                    ],
+                    where: {
+                        id: {
+                            [Op.in]: ctx.params.data.requestPaymentIds
                         }
                     },
-                    {
-                        model: server.mysql.RequestPaymentTransaction,
-                        as: 'requestPaymentTransactions'
-                    }
-                ],
-                where: {
-                    id: {
-                        [Op.in]: ctx.params.data.requestPaymentIds
-                    }
-                }
-            }).then((requestPaymentMethods) => {
-                let requestPaymentsToMarkAsSettled = _.filter(requestPaymentMethods, (requestPaymentMethod) => {
-                    requestPaymentMethod.requestPaymentTransactions.sort(function(a, b) { return new Date(a.dateCreated) - new Date(b.dateCreated) })
-                    if(!requestPaymentMethod.requestPaymentTransactions.length){
-                        return true
-                    }
-                    return _.last(requestPaymentMethod.requestPaymentTransactions).action !== 'settle.origin' && _.last(requestPaymentMethod.requestPaymentTransactions) !== 'settle.destination'
-                })
-
-                const transactionPromises = []
-                const accountBalances = {}
-
-                _.forEach(requestPaymentsToMarkAsSettled, (requestPaymentToMarkAsSettled) => {
-                    const iterationPromises = []
-                    iterationPromises.push(ctx.call('data/transaction.create', {
-                        data: {
-                            amount: Math.abs(requestPaymentToMarkAsSettled.amount),
-                            createdById: ctx.params.data.createdById,
-                            accountId: ctx.params.data.accountId,
-                            companyId: ctx.params.data.companyId,
-                            description: 'Adição do valor do acerto de contas na conta de destino',
+                    transaction: this._transaction
+                }).then((requestPaymentMethods) => {
+                    let requestPaymentsToMarkAsSettled = _.filter(requestPaymentMethods, (requestPaymentMethod) => {
+                        requestPaymentMethod.requestPaymentTransactions.sort(function(a, b) { return new Date(a.dateCreated) - new Date(b.dateCreated) })
+                        if(!requestPaymentMethod.requestPaymentTransactions.length){
+                            return true
                         }
-                    }).then((transaction) => {
-                        return server.mysql.Account.findById(ctx.params.data.accountId).then((account) => {
-                            if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
-                            accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
-                            return server.mysql.RequestPaymentTransaction.create({
-                                requestPaymentId: requestPaymentToMarkAsSettled.id,
-                                transactionId: transaction.id,
-                                settledDatetime: ctx.params.data.settledDatetime || new Date(),
-                                action: 'settle.destination'
-                            })
-                        })
-                    }))
-                    iterationPromises.push(ctx.call('data/transaction.create', {
-                        data: {
-                            amount: -Math.abs(requestPaymentToMarkAsSettled.amount),
-                            createdById: ctx.params.data.createdById,
-                            accountId: requestPaymentToMarkAsSettled.request.responsibleUser.accountId,
-                            companyId: ctx.params.data.companyId,
-                            description: 'Remoção do valor do acerto de contas na conta de origem',
-                        }
-                    }).then((transaction) => {
-                        return server.mysql.Account.findById(requestPaymentToMarkAsSettled.request.responsibleUser.accountId).then((account) => {
-                            if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
-                            accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
-                            return server.mysql.RequestPaymentTransaction.create({
-                                requestPaymentId: requestPaymentToMarkAsSettled.id,
-                                transactionId: transaction.id,
-                                settledDatetime: ctx.params.data.settledDatetime || new Date(),
-                                action: 'settle.origin'
-                            })
-                        })
-                    }))
-                    transactionPromises.push(
-                        Promise.all(iterationPromises)
-                    )
-                })
-
-                return Promise.all(transactionPromises).then((res) => {
-                    const updateAccountBalancesPromise = []
-                    _.forEach(_.keys(accountBalances),(accountId) => {
-                        updateAccountBalancesPromise.push(server.mysql.Account.update({
-                            balance: accountBalances[accountId]
-                        }, {
-                            where: {
-                                id: parseInt(accountId)
-                            }
-                        }))
+                        return _.last(requestPaymentMethod.requestPaymentTransactions).action !== 'settle.origin' && _.last(requestPaymentMethod.requestPaymentTransactions) !== 'settle.destination'
                     })
-                    return Promise.all(updateAccountBalancesPromise)
+
+                    const transactionPromises = []
+                    const accountBalances = {}
+
+                    _.forEach(requestPaymentsToMarkAsSettled, (requestPaymentToMarkAsSettled) => {
+                        const iterationPromises = []
+                        iterationPromises.push(ctx.call('data/transaction.create', {
+                            data: {
+                                amount: Math.abs(requestPaymentToMarkAsSettled.amount),
+                                createdById: ctx.params.data.createdById,
+                                accountId: ctx.params.data.accountId,
+                                companyId: ctx.params.data.companyId,
+                                description: 'Adição do valor do acerto de contas na conta de destino',
+                            },
+                            transaction: this._transaction
+                        }).then((transaction) => {
+                            return server.mysql.Account.findById(ctx.params.data.accountId, {
+                                transaction: this._transaction
+                            }).then((account) => {
+                                if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
+                                accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                                return server.mysql.RequestPaymentTransaction.create({
+                                    requestPaymentId: requestPaymentToMarkAsSettled.id,
+                                    transactionId: transaction.id,
+                                    settledDatetime: ctx.params.data.settledDatetime || new Date(),
+                                    action: 'settle.destination'
+                                },{
+                                    transaction: this._transaction
+                                })
+                            })
+                        }))
+                        iterationPromises.push(ctx.call('data/transaction.create', {
+                            data: {
+                                amount: -Math.abs(requestPaymentToMarkAsSettled.amount),
+                                createdById: ctx.params.data.createdById,
+                                accountId: requestPaymentToMarkAsSettled.request.responsibleUser.accountId,
+                                companyId: ctx.params.data.companyId,
+                                description: 'Redução do valor do acerto de contas na conta de origem',
+                            },
+                            transaction: this._transaction
+                        }).then((transaction) => {
+                            return server.mysql.Account.findById(requestPaymentToMarkAsSettled.request.responsibleUser.accountId, {
+                                transaction: this._transaction
+                            }).then((account) => {
+                                if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
+                                accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                                    return server.mysql.RequestPaymentTransaction.create({
+                                        requestPaymentId: requestPaymentToMarkAsSettled.id,
+                                        transactionId: transaction.id,
+                                        settledDatetime: ctx.params.data.settledDatetime || new Date(),
+                                        action: 'settle.origin'
+                                    }, {
+                                    transaction: this._transaction
+                                })
+                            })
+                        }))
+                        transactionPromises.push(
+                            Promise.all(iterationPromises)
+                        )
+                    })
+
+                    return Promise.all(transactionPromises).then((res) => {
+                        const updateAccountBalancesPromise = []
+                        _.forEach(_.keys(accountBalances),(accountId) => {
+                            updateAccountBalancesPromise.push(server.mysql.Account.update({
+                                balance: accountBalances[accountId]
+                            }, {
+                                where: {
+                                    id: parseInt(accountId)
+                                },
+                                transaction: this._transaction
+                            }))
+                        })
+                        return Promise.all(updateAccountBalancesPromise).then(() => {
+                            if(this._saveInRequest) {
+                                return true
+                            }
+                            else {
+                                return ctx.call("cashier-balancing.commit")
+                            }
+                        })
+                    })
                 })
             })
+        },
+
+        /**
+         * @returns {Promise} set transaction
+         */ 
+        setTransaction() {
+            if(!this._transaction){
+                return server.sequelize.transaction().then((transaction) => {
+                    this._transaction = transaction
+                    this._saveInRequest = false
+                })
+            }
+            else {
+                this._saveInRequest = true
+                return true
+            }
+        },
+
+        /**
+         * Commit persistence
+         */
+        commit() {
+            console.log("Commit Balance changes!")
+            this._transaction.commit()
+        },
+
+        /**
+         * Rollback persistence
+         */
+        rollback() {
+            console.log("Oh God, just rollback!")
+            this._transaction.rollback()
+            throw new Error()
         }
     }
 }}

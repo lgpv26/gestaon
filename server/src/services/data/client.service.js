@@ -1,6 +1,5 @@
 const _ = require('lodash')
 const Op = require('sequelize').Op
-const { MoleculerError } = require('moleculer').Errors
 
 module.exports = (server) => {
     return {
@@ -93,7 +92,7 @@ module.exports = (server) => {
                         clientAddresses.push({
                             id: (result.id) ? result.id : null,
                             status: 'activated',
-                            clientId: parseInt(ctx.params.data.clientId),
+                            clientId: (ctx.params.data.clientId) ? parseInt(ctx.params.data.clientId) : null,
                             addressId: parseInt(result.address.id),
                             name: (result.name) ? result.name : null,
                             number: (result.number) ? result.number : null,
@@ -105,7 +104,7 @@ module.exports = (server) => {
 
                     return ctx.call("data/client.saveClientAddresses", {
                         data: clientAddresses,
-                        clientId: parseInt(ctx.params.data.clientId),
+                        clientId: (ctx.params.data.clientId) ? parseInt(ctx.params.data.clientId) : null,
                         transaction: ctx.params.transaction
                     }).then((clientAddresses) => {
                         return clientAddresses
