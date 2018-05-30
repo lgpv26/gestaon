@@ -334,6 +334,7 @@
             },
         },
         methods: {
+            ...mapActions('toast',['showToast']),
             onGridInput(ev){
                 console.log(ev)
             },
@@ -484,6 +485,20 @@
                 this.search(filterData,params)
             },
             submit(){
+                if(!this.form.action){
+                    this.showToast({
+                        type: 'error',
+                        message: "Você deve selecionar uma ação!"
+                    })
+                    return
+                }
+                if(!this.selectedItems.length){
+                    this.showToast({
+                        type: 'error',
+                        message: "Você não selecionou nenhum item!"
+                    })
+                    return
+                }
                 if(this.form.action === 'paid'){
                     CashierBalancingAPI.markAsPaid({
                         requestPaymentIds: _.map(this.selectedItems, (selectedItem) => {
@@ -499,6 +514,13 @@
                     })
                 }
                 else if(this.form.action === 'settled'){
+                    if(!this.form.account){
+                        this.showToast({
+                            type: 'error',
+                            message: "Você deve selecionar uma conta de destino!"
+                        })
+                        return
+                    }
                     CashierBalancingAPI.markAsSettled({
                         settledDatetime: this.form.settledDatetime,
                         requestPaymentIds: _.map(this.selectedItems, (selectedItem) => {
