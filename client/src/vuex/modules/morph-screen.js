@@ -83,6 +83,9 @@ const actions = {
     },
     createDraft(context, {body, companyId}){
         return DraftsAPI.createOne(body, {companyId})
+    },
+    removeDraft(context, {draftId, companyId}){
+        return DraftsAPI.removeOne(draftId, {companyId})
     }
 };
 

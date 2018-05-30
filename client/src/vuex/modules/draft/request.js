@@ -276,6 +276,7 @@ const actions = {
                 }
                 return requestPaymentMethod
             }),
+            accountId: request.accountId,
             deadlineDatetime: ((request.useSuggestedDeadlineDatetime) ?  null : request.deadlineDatetime ),
             responsibleUserId: request.responsibleUserId,
             obs: request.obs

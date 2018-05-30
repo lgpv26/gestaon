@@ -28,7 +28,7 @@
             </div>
         </div>
         <span v-show="!draft">Carregando...</span>
-        <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent" @close="$emit('closeMorphScreen', $event)"></component>
+        <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent" @remove="remove()" @close="$emit('closeMorphScreen', $event)"></component>
     </div>
 </template>
 
@@ -67,9 +67,7 @@
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen','tags']),
             ...mapState('morph-screen', ['screens','isShowing']),
-            ...mapState('auth', [
-                'user', 'token', 'company'
-            ]),
+            ...mapState('auth', ['user', 'token', 'company']),
             formatedCreatedAt(){
                 return moment(this.activeMorphScreen.draft.createdAt).format("DD/MM/YYYY HH:mm")
             }
@@ -80,7 +78,7 @@
             // </editor-fold>
 
             ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS','SHOW_MS', 'ADD_DRAFT']),
-            ...mapActions('morph-screen', ['createMorphScreen']),
+            ...mapActions('morph-screen', ['createMorphScreen','removeDraft']),
             ...mapActions('loading', ['startLoading','setLoadingText']),
 
             /**
@@ -144,6 +142,19 @@
                 }
                 console.log("Emitting to draft/" + this.activeMorphScreen.draft.type + ".load", emitDraftDependencyDataLoad)
                 this.$socket.emit("draft/" + this.activeMorphScreen.draft.type + ".load", emitDraftDependencyDataLoad)
+            },
+            remove(){
+                const vm = this
+                vm.removeDraft({
+                    draftId: this.activeMorphScreen.draft.draftId,
+                    companyId: this.company.id
+                }).then(() => {
+                    console.log("Removed draft")
+                    vm.$emit('closeMorphScreen', {
+                        screen: vm.activeMorphScreen,
+                        remove: true
+                    })
+                })
             },
             leaveDraft(){
                 const emitData = {

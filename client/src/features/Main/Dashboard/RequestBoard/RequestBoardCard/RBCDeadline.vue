@@ -2,7 +2,7 @@
     <div>
         <div class="rbc-progress">
             <div class="tooltip-content">
-                <div v-if="!deadline.isOver">
+                <div v-if="!deadline.isOver && card.request.status !== 'finished'">
                     <span>O pedido ainda está dentro do prazo!</span>
                 </div>
                 <div v-else-if="overDeadlineRequestTimeline.length">

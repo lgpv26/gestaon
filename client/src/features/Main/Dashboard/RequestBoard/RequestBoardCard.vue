@@ -41,7 +41,7 @@
                             </app-popover>
                         </div>
                         <div class="objects__timeline">
-                            <div class="timeline__progress--current" v-if="!deadline.isOver" :style="{left: current.left + 'px'}">
+                            <div class="timeline__progress--current" v-if="!deadline.isOver && form.status !== 'finished'" :style="{left: current.left + 'px'}">
                                 <span class="progress__progress">{{ current.time }}</span>
                                 <request-board-icon-progress-shield></request-board-icon-progress-shield>
                             </div>
@@ -146,7 +146,6 @@
                         return requestTimelineItem.dateCreated
                     })
                     const lastRequestTimelineItem = _.last(sortedRequestTimeline)
-                    console.log(lastRequestTimelineItem)
                     this.form.status = lastRequestTimelineItem.status
                     this.form.responsibleUserId = lastRequestTimelineItem.userId
                 },
@@ -161,6 +160,10 @@
                     console.log("Received requestBoardRequestTimelineChangeUser", ev.evData)
                     const card = utils.removeReactivity(this.card)
                     card.request.requestTimeline.push(ev.evData.requestTimelineItem)
+                    _.assign(card.request, {
+                        userId: ev.evData.requestTimelineItem.userId,
+                        status: ev.evData.requestTimelineItem.status
+                    })
                     this.updateCard({
                         cardId: this.card.id,
                         card
@@ -172,6 +175,10 @@
                     console.log("Received requestBoardRequestTimelineChangeStatus", ev.evData)
                     const card = utils.removeReactivity(this.card)
                     card.request.requestTimeline.push(ev.evData.requestTimelineItem)
+                    _.assign(card.request, {
+                        userId: ev.evData.requestTimelineItem.userId,
+                        status: ev.evData.requestTimelineItem.status
+                    })
                     this.updateCard({
                         cardId: this.card.id,
                         card
@@ -188,6 +195,10 @@
                 },
                 inProgressRequestTimeline: [],
                 overDeadlineRequestTimeline: [],
+                lastItem: {
+                    finishedBeforeDeadline: false,
+                    time: null
+                },
                 current: {
                     time: null
                 },
@@ -260,8 +271,7 @@
             setTimeout(() => {
                 vm.loading = false;
             }, 1000)
-            vm.requestTimelineInterval = setInterval(() => {
-
+            const eachInterval = () => {
                 const startDate = moment(vm.card.request.dateCreated)
                 const deadlineDatetime = moment(vm.card.request.deadlineDatetime)
                 const nowDate = moment()
@@ -306,7 +316,12 @@
                     return (deadlineToTimelineItemInSec <= 0) || (requestTimelineItem.status === 'finished')
                 })
 
+                // some variables
                 const deadlineToNowInSec = moment.duration(deadlineDatetime.diff(nowDate)).asSeconds()
+                const deadlineToStartInSec = moment.duration(deadlineDatetime.diff(startDate)).asSeconds()
+                const startToNowInSec = deadlineToStartInSec - deadlineToNowInSec
+                const startToNowInMin = Math.floor(Math.abs(startToNowInSec) / 60)
+
                 if(deadlineToNowInSec <= 0){
                     this.deadline.isOver = true
                     const overTime = Math.floor(Math.abs(deadlineToNowInSec) / 60)
@@ -314,22 +329,15 @@
                         this.deadline.time = '+99'
                     }
                     else {
-                        this.deadline.time = overTime
+                        this.deadline.time = startToNowInMin
                     }
                 }
                 else {
-                    const deadlineToStartInSec = moment.duration(deadlineDatetime.diff(startDate)).asSeconds()
                     this.deadline.isOver = false
                     this.deadline.time = Math.floor(Math.abs(deadlineToStartInSec) / 60)
                 }
 
-                if(!this.deadline.isOver){
-                    const deadlineToStartInSec = moment.duration(deadlineDatetime.diff(startDate)).asSeconds()
-
-                    const startToNowInSec = deadlineToStartInSec - deadlineToNowInSec
-
-                    const startToNowInMin = Math.floor(Math.abs(startToNowInSec) / 60)
-
+                if(this.card.request.status !== 'finished' && !this.deadline.isOver){
                     const percentage = (startToNowInSec / deadlineToStartInSec) * 100
                     const maxWidthInPxs = 200 // max width in pixels, of the progress bar
                     const leftInPxs = (maxWidthInPxs * percentage) / 100
@@ -340,26 +348,32 @@
                     }
                 }
 
-                /*
-                // putting in created date order
-                vm.inProgressRequestTimeline = _.sortBy(vm.inProgressRequestTimeline, function(requestTimelineItem) {
-                    return requestTimelineItem.data.dateCreated;
-                })
-                vm.overDeadlineRequestTimeline = _.sortBy(vm.overDeadlineRequestTimeline, function(requestTimelineItem) {
-                    return requestTimelineItem.data.dateCreated;
-                })
+                if(this.card.request.status === 'finished'){
+                    const lastTimelineItem = _.last(this.card.request.requestTimeline)
+                    if(lastTimelineItem.status === 'finished'){
+                        const finishedDate = moment(lastTimelineItem.dateCreated)
+                        const finishToStartInSec = moment.duration(finishedDate.diff(startDate)).asSeconds()
+                        const finishToStartInMin = Math.floor(Math.abs(finishToStartInSec) / 60)
 
-                if(!vm.overDeadlineRequestTimeline.length){ // this means that there is an active progressing request timeline item
-                    const lastIndex = vm.inProgressRequestTimeline.length -1
-                    vm.inProgressRequestTimeline[lastIndex].current = true
+                        if(deadlineToStartInSec < finishToStartInSec){
+                            this.deadline.isOver = true
+                            if(finishToStartInMin > 99){
+                                this.deadline.time = '+99'
+                            }
+                            else {
+                                this.deadline.time = finishToStartInMin
+                            }
+                        }
+                        else {
+                            this.deadline.isOver = false
+                            this.deadline.time = finishToStartInMin
+                        }
+
+                    }
                 }
-
-                if(vm.card.request.id === 26){
-                    console.log(vm.inProgressRequestTimeline,vm.overDeadlineRequestTimeline)
-                }
-                */
-
-            }, 1000)
+            }
+            eachInterval()
+            vm.requestTimelineInterval = setInterval(() => eachInterval(), 3000)
         },
         beforeDestroy(){
             clearInterval(this.requestTimelineInterval)

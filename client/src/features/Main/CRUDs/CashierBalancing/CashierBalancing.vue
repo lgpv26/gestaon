@@ -410,6 +410,7 @@
 
                 this.loadingList = true
                 CashierBalancingAPI.getList(requestParams).then(({data}) => {
+
                     this.items = _.map(data.list.rows, (row) => {
                         let settled = false
                         if(row.requestPaymentTransactions.length) {
@@ -420,6 +421,7 @@
                                 settled = true
                             }
                         }
+
                         return {
                             id: row.id,
                             amount: row.amount,
@@ -427,7 +429,7 @@
                             date: moment(row.dateCreated).format("DD/MM/YYYY HH:mm"),
                             paid: row.paid,
                             name: row.request.client.name,
-                            clientGroup: row.request.client.clientGroup.name,
+                            clientGroup: _.get(row,'request.client.clientGroup.name', '---'),
                             paymentMethod: row.paymentMethod.name,
                             settled,
                             requestId: row.requestId,
@@ -510,7 +512,6 @@
                     }).then((res) => {
                         this.selectedItems = []
                         this.applyFilter()
-                        console.log("OK")
                     })
                 }
                 else if(this.form.action === 'settled'){

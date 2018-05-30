@@ -56,8 +56,8 @@ module.exports = (server) => { return {
         },
         remove(ctx){
             return server.mongodb.Draft.remove({
-                draftId: ctx.params.data.draftId,
-                companyId: ctx.params.data.companyId
+                draftId: parseInt(ctx.params.data.draftId),
+                companyId: parseInt(ctx.params.data.companyId)
             }).then((draft) => {
                 server.io.in(`company/${ctx.params.data.companyId}`).emit('draft.remove',new EventResponse({
                     draftId: parseInt(ctx.params.data.draftId),

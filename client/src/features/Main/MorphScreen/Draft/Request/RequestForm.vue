@@ -63,22 +63,29 @@
             </div>
             <span class="push-both-sides"></span>
             <div class="right-side">
+                <div class="account-selection">
+                    <app-select :items="accountsSelect" title="Conta" :verticalOffset="8" showInput="true" v-model="accountId" @change="sync($event,'accountId')">
+                        <input type="text" style="cursor: pointer;" readonly :value="selectedAccountName" placeholder="ESCOLHA UMA CONTA" />
+                        <icon-dropdown style="position: absolute; top: 6px; right: 5px;"></icon-dropdown>
+                        <template slot="item" slot-scope="itemProps">
+                            <span>{{itemProps.text }}</span>
+                        </template>
+                    </app-select>
+                </div>
+                <span class="push-both-sides"></span>
                 <div class="subtotal-container">
                     <span>Total a pagar</span>
                     <div class="amounts">
+                        <h3 class="total">{{ formatedTotalLeftToPay }} / </h3>
                         <h3 class="current" :class="{ left: totalLeftToPay < totalToPay, exact: totalLeftToPay === totalToPay, over: totalLeftToPay > totalToPay }">
-                            {{ formatedTotalLeftToPay }}
+                            {{ formatedTotalToPay }}
                         </h3>
-                        <h3 class="total">/ {{ formatedTotalToPay }}</h3>
                     </div>
-                </div>
-                <div class="subtotal-icon">
-                    <icon-log></icon-log>
                 </div>
             </div>
         </div>
         <div class="actions">
-            <a>Excluir Rascunho</a>
+            <a href="javascript: void(0)" @click="$emit('remove')">Excluir Rascunho</a>
             <span class="push-both-sides"></span>
             <a style="margin-right: 20px;" @click="$emit('close')">Voltar</a>
             <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
@@ -134,12 +141,14 @@
         },
         computed: {
             ...mapState('auth', ['user','company']),
+            ...mapState('data/accounts', ['accounts']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapGetters('draft/request', ['isClientSummaryAvailable']),
             ...mapFields([
                 'form',
                 'form.clientAddressId',
                 'form.clientPhoneId',
+                'form.accountId',
                 'form.activeStep',
                 'form.client',
                 'form.order',
@@ -149,6 +158,21 @@
             ...mapMultiRowFields({
                 requestPaymentMethodRows: 'form.requestPaymentMethods'
             }),
+            selectedAccountName(){
+                const selectedAccount = _.find(this.accounts, {id: this.accountId})
+                if(selectedAccount){
+                    return selectedAccount.name
+                }
+                return ''
+            },
+            accountsSelect(){
+                return _.map(this.accounts, (account) => {
+                    return {
+                        value: account.id,
+                        text: account.name
+                    }
+                })
+            },
             isOrderFormAllowed(){
                 if(!this.client.name || (this.client.id && this.clientAddressId && this.clientPhoneId)){
                     return true
@@ -224,6 +248,35 @@
             },
             persistRequest(){
                 const vm = this
+
+                console.log(vm.orderProducts)
+
+                let error = false
+
+                vm.requestPaymentMethods.forEach((requestPayment) => {
+                    if(!error && !_.get(requestPayment, 'paymentMethod.id', false)){
+                        error = "Selecione uma forma de pagamento por linha!"
+                    }
+                })
+
+                vm.orderProducts.forEach((orderProduct) => {
+                    if(!error && !parseInt(orderProduct.quantity)){
+                        error = "Os produtos devem possuir uma quantidade mínima de 1 item!"
+                    }
+                })
+
+                if(!error && (vm.totalLeftToPay !== vm.totalToPay)){
+                    error = "O valor a pagar deve coincidir com o valor total do pedido!"
+                }
+
+                if(error){
+                    vm.showToast({
+                        type: 'error',
+                        message: error
+                    })
+                    return false
+                }
+
                 vm.runRequestPersistence({
                     draftId: vm.activeMorphScreen.draft.draftId,
                     request: vm.form,
@@ -279,14 +332,15 @@
             }
             .right-side {
                 display: flex;
-                flex-direction: row;
+                flex-direction: column;
                 .subtotal-container {
                     text-align: right;
                     flex: 1;
                     .amounts {
                         display: flex;
-                        flex-direction: column;
+                        flex-direction: row;
                         align-items: flex-end;
+                        justify-content: flex-end;
                         h3.current {
                             font-size: 40px;
                             white-space: nowrap;
@@ -301,18 +355,16 @@
                             color: var(--font-color--terciary)
                         }
                         h3.total {
-                            margin-left: 10px;
+                            position: relative;
+                            top: -8px;
+                            margin-right: 10px;
                             font-size: 15px;
                             white-space: nowrap;
                         }
                     }
                 }
-                .subtotal-icon {
-                    margin-left: 15px;
-                    svg {
-                        position: relative;
-                        top: 34px;
-                    }
+                .account-selection {
+                    min-width: 320px;
                 }
             }
         }

@@ -280,13 +280,22 @@
             vm.$options.sockets['draft/request.client.select'] = (ev) => {
                 console.log("Received draft/request.client.select", ev)
                 if (ev.success) {
-                    if(_.get(ev.evData, 'clientAddresses', []).length){
-                        this.clientAddressId = _.last(ev.evData.clientAddresses).id
+                    const draftData = ev.evData
+                    if(_.get(draftData, 'clientAddresses', []).length){
+                        this.clientAddressId = _.last(draftData.clientAddresses).id
                     }
-                    if(_.get(ev.evData, 'clientPhones', []).length){
-                        this.clientPhoneId = _.last(ev.evData.clientPhones).id
+                    if(_.get(draftData, 'clientPhones', []).length){
+                        this.clientPhoneId = _.last(draftData.clientPhones).id
                     }
-                    vm.setClient(ev.evData)
+                    if(_.get(draftData, 'clientCustomFields', []).length){
+                        draftData.clientCustomFields = _.map(draftData.clientCustomFields, (clientCustomField) => {
+                            return {
+                                id: clientCustomField.customFieldId,
+                                value: clientCustomField.value
+                            }
+                        })
+                    }
+                    vm.setClient(draftData)
                     Vue.nextTick(() => {
                         const clientObjMapping = _.map(vm.client, (v, k) => {
                             return {
@@ -294,14 +303,14 @@
                                 path: k
                             }
                         })
-                        if(_.get(ev.evData, 'clientAddresses', []).length){
+                        if(_.get(draftData, 'clientAddresses', []).length){
                             clientObjMapping.push({
                                 value: this.clientAddressId,
                                 path: 'clientAddressId',
                                 customBaseFormPath: 'request'
                             })
                         }
-                        if(_.get(ev.evData, 'clientPhones', []).length){
+                        if(_.get(draftData, 'clientPhones', []).length){
                             clientObjMapping.push({
                                 value: this.clientPhoneId,
                                 path: 'clientPhoneId',

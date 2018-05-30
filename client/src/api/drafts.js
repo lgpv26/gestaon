@@ -10,5 +10,8 @@ export default {
     },
     removeAll(params){
         return Vue.http.delete(config.apiBaseUrl + '/drafts').then((response) => response.json());
+    },
+    removeOne(id, params = {}){
+        return Vue.http.delete(config.apiBaseUrl + '/drafts/' + id, { params }).then((response) => response.json());
     }
 }

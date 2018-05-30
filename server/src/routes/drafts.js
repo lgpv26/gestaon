@@ -56,8 +56,17 @@ module.exports = (server, restify) => {
         })
     });
 
-    server.del('/drafts', (req, res, next) => {
-        draftsController.removeAll()
-
+    server.del('/drafts/:draftId', (req, res, next) => {
+        server.broker.call("draft.remove", {
+            data: {
+                draftId: req.params.draftId,
+                companyId: req.query.companyId,
+                emittedBy: req.auth.id
+            }
+        }).then((draft) => {
+            return res.send(200, { data: draft })
+        }).catch((err) => {
+            return next(new HTTPError(err.message, 500))
+        })
     });
 };
