@@ -20,7 +20,6 @@
                 </div>
             </div>
             <div class="tooltip-actions">
-                <a>Editar <icon-edit></icon-edit></a>
                 <span class="push-both-sides"></span>
                 <timeago :since="requestTimelineItemData.dateCreated" style="color: var(--font-color--9)" :auto-update="60"></timeago>
             </div>

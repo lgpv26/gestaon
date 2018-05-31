@@ -2,87 +2,9 @@
     <div class="page--crud">
         <div>
             <h3 class="title">CAIXA - FECHAMENTO DIÁRIO</h3>
-            <ul class="filter-menu">
-                <li class="datetime-selector">
-                    <a href="javascript:void(0)" class="clear-filter" v-if="selectedDays" @click="clearCreatedDateFilter()"><icon-remove></icon-remove></a>
-                    <a class="btn btn--border-only" :class="{'right-padding': selectedDays}" @click="openCreatedDateSelector()">
-                        Intervalo
-                        <div class="dot-separator primary" v-if="selectedDays" style="margin: 0 10px;"></div>
-                        <span class="primary" v-if="selectedDays">{{ selectedDays }} dia(s)</span>
-                    </a>
-                    <app-datetime-selector ref="createdDateSelector" class="input--borderless" :value="form.dateCreated[0]"
-                           @input="onCreatedDateChange($event)" :config="filterDatetimeSelectorConfig" placeholder="..."></app-datetime-selector>
-                </li>
-                <li>
-                    <app-select v-model="form.clientGroup" :items="selectClientGroups" :multiple="true" :verticalOffset="5" title="Grupo do cliente"
-                        @change="onFilterChange($event)">
-                        <a class="btn btn--border-only">
-                            Grupo
-                            <div class="dot-separator secondary" v-if="form.clientGroup.length" style="margin: 0 10px;"></div>
-                            <span class="secondary" v-if="form.clientGroup.length">{{ form.clientGroup.length }}</span>
-                        </a>
-                        <template slot="section" slot-scope="sectionProps">
-                            <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
-                        </template>
-                        <template slot="item" slot-scope="itemProps">
-                            <span>{{itemProps.text }}</span>
-                        </template>
-                    </app-select>
-                </li>
-                <li>
-                    <app-select v-model="form.paymentMethod" :items="selectPaymentMethods" :multiple="true" :verticalOffset="5" title="Meio de pagamento"
-                        @change="onFilterChange($event)">
-                        <a class="btn btn--border-only">
-                            <icon-flag style="margin-right: 10px;"></icon-flag>
-                            Meio de pagamento
-                            <div class="dot-separator secondary" v-if="form.paymentMethod.length" style="margin: 0 10px;"></div>
-                            <span class="secondary" v-if="form.paymentMethod.length">{{ form.paymentMethod.length }}</span>
-                        </a>
-                        <template slot="section" slot-scope="sectionProps">
-                            <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
-                        </template>
-                        <template slot="item" slot-scope="itemProps">
-                            <span>{{itemProps.text }}</span>
-                        </template>
-                    </app-select>
-                </li>
-                <li>
-                    <app-select v-model="form.responsibleUser" :items="selectUsers" :multiple="true" :verticalOffset="5" title="Responsável"
-                        @change="onFilterChange($event)">
-                        <a class="btn btn--border-only">
-                            <icon-flag style="margin-right: 10px;"></icon-flag>
-                            Responsável
-                            <div class="dot-separator primary" v-if="form.responsibleUser.length" style="margin: 0 10px;"></div>
-                            <span class="primary" v-if="form.responsibleUser.length">{{ form.responsibleUser.length }}</span>
-                        </a>
-                        <template slot="section" slot-scope="sectionProps">
-                            <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
-                        </template>
-                        <template slot="item" slot-scope="itemProps">
-                            <span>{{itemProps.text }}</span>
-                        </template>
-                    </app-select>
-                </li>
-                <li>
-                    <app-select v-model="form.status" :items="selectStatus" :multiple="true" :verticalOffset="5" title="Status"
-                        @change="onFilterChange($event)">
-                        <a class="btn btn--border-only">
-                            <icon-status style="margin-right: 10px;"></icon-status>
-                            Status
-                            <div class="dot-separator terciary" v-if="form.status.length" style="margin: 0 10px;"></div>
-                            <span class="terciary" v-if="form.status.length">{{ form.status.length }}</span>
-                        </a>
-                        <template slot="section" slot-scope="sectionProps">
-                            <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
-                        </template>
-                        <template slot="item" slot-scope="itemProps">
-                            <span>{{itemProps.text }}</span>
-                        </template>
-                    </app-select>
-                </li>
-            </ul>
+            <app-cashier-balancing-filter ref="filter" @clean-selection="selectedItems = []" @search="search($event)"></app-cashier-balancing-filter>
             <app-grid ref="grid" v-model="selectedItems" :columns="columns" :items.sync="items" :total="totalItems" :loading="loadingList"
-                @input="onGridInput($event)" @scroll="onGridScroll($event)">
+                      @scroll="onGridScroll($event)">
                 <div class="summary__item">
                     <span>Itens da lista</span>
                     <h3>{{ totalItems }}</h3>
@@ -107,17 +29,17 @@
                 </div>
                 -->
                 <template slot="paid" slot-scope="slotProps">
-                    <a href="javascript:void(0)" :class="{active: slotProps.item.paid}" style="width: 32px;">
+                    <a href="javascript:void(0)" :class="{active: slotProps.item.paid}" style="width: 32px">
                         <icon-check></icon-check>
                     </a>
                 </template>
                 <template slot="settled" slot-scope="slotProps">
-                    <a href="javascript:void(0)" :class="{active: slotProps.item.settled}" style="width: 50px;">
+                    <a href="javascript:void(0)" :class="{active: slotProps.item.settled}" style="width: 50px">
                         <icon-check></icon-check>
                     </a>
                 </template>
                 <template slot="actions" slot-scope="slotProps">
-                    <a href="javascript:void(0)" style="width: 32px;">
+                    <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })" style="width: 32px;">
                         <icon-edit></icon-edit>
                     </a>
                 </template>
@@ -130,9 +52,9 @@
                 <div class="right-side">
                     <div class="group">
                         <span>Com selecionados:</span>
-                        <app-select v-model="form.action" :items="selectActions" title="Conta">
+                        <app-select v-model="form.action" :items="actionsSelectItems" title="Ação">
                             <a href="javascript:void(0)" v-if="!form.action">-- Selecione --</a>
-                            <a href="javascript:void(0)" v-else>{{ _.find(selectActions, {value: form.action}).text }}</a>
+                            <a href="javascript:void(0)" v-else>{{ _.find(actionsSelectItems, {value: form.action}).text }}</a>
                             <template slot="section" slot-scope="sectionProps">
                                 <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
                             </template>
@@ -148,9 +70,9 @@
                     </div>
                     <div class="group" v-if="form.action === 'settled'">
                         <span>Conta:</span>
-                        <app-select v-model="form.account" :items="selectAccounts" title="Conta">
+                        <app-select v-model="form.account" :items="accountsSelectItems" title="Conta">
                             <a href="javascript:void(0)" v-if="!form.account">-- Selecione --</a>
-                            <a href="javascript:void(0)" v-else>{{ _.find(accounts, {id: form.account}).name }}</a>
+                            <a href="javascript:void(0)" v-else>{{ _.find(accountsSelectItems, {value: form.account}).text }}</a>
                             <template slot="section" slot-scope="sectionProps">
                                 <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
                             </template>
@@ -173,11 +95,13 @@
     import _ from 'lodash';
 
     import CashierBalancingAPI from '../../../../api/cashier-balancing'
+    import CashierBalancingFilter from './CashierBalancingFilter.vue'
     import GridComponent from '../../../../components/Utilities/Grid.vue'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
     export default {
         components: {
+            'app-cashier-balancing-filter': CashierBalancingFilter,
             'app-grid': GridComponent
         },
         data(){
@@ -232,6 +156,14 @@
                         html: true
                     }
                 ],
+                filterForm: {
+                    dateCreated: [[]],
+                    dateCreatedToSend: [[]],
+                    clientGroup: [],
+                    paymentMethod: [],
+                    responsibleUser: [],
+                    status: []
+                },
                 form: {
                     account: null,
                     action: null,
@@ -244,7 +176,6 @@
                     status: []
                 },
                 loadingList: true,
-                selectedDays: 0,
                 datetimeSelectorConfig: {
                     altInput: true,
                     altFormat: 'd/m/Y H:i:S',
@@ -252,17 +183,7 @@
                     locale: Portuguese,
                     time_24hr: true,
                     enableTime: true
-                },
-                filterDatetimeSelectorConfig: {
-                    altInput: true,
-                    altFormat: 'd/m/Y H:i:S',
-                    dateFormat: 'Z',
-                    mode: 'range',
-                    locale: Portuguese,
-                    enableTime: false,
-                    clickOpens: false,
-                    defaultDate: [new Date(), new Date()]
-                },
+                }
             }
         },
         computed: {
@@ -271,48 +192,14 @@
             ...mapState('data/accounts',['accounts']),
             ...mapState('data/client-groups',['clientGroups']),
             ...mapState('data/payment-methods',['paymentMethods']),
+            ...mapState('data/request-status',['requestStatusList']),
+            ...mapGetters('data/request-status',['requestStatusListSelectItems']),
             selectedItemsTotalAmount(){
                 return _.sumBy(this.selectedItems, (selectedItem) => {
                     return parseFloat(selectedItem.amount)
                 })
             },
-            selectUsers(){
-                return _.map(this.users, (user) => {
-                    return {
-                        value: user.id,
-                        text: user.name
-                    }
-                })
-            },
-            selectClientGroups(){
-                return _.map(this.clientGroups, (clientGroup) => {
-                    return {
-                        value: clientGroup.id,
-                        text: clientGroup.name
-                    }
-                })
-            },
-            selectPaymentMethods(){
-                return _.map(this.paymentMethods, (paymentMethod) => {
-                    return {
-                        value: paymentMethod.id,
-                        text: paymentMethod.name
-                    }
-                })
-            },
-            selectStatus(){
-                return [
-                    {
-                        value: 'pending',
-                        text: 'PENDENTE'
-                    },
-                    {
-                        value: 'finished',
-                        text: 'FINALIZADO'
-                    }
-                ]
-            },
-            selectAccounts(){
+            accountsSelectItems(){
                 return _.map(this.accounts, (account) => {
                     return {
                         value: account.id,
@@ -320,7 +207,7 @@
                     }
                 })
             },
-            selectActions(){
+            actionsSelectItems(){
                 return [
                     {
                         text: 'Marcar como pago',
@@ -334,39 +221,14 @@
             },
         },
         methods: {
+            ...mapActions('draft/request',['runRequestRecoverance']),
             ...mapActions('toast',['showToast']),
-            onGridInput(ev){
-                console.log(ev)
-            },
-            onFilterChange(ev){
-                this.selectedItems = []
-                this.applyFilter()
-            },
             onGridScroll(ev){
-                this.applyFilter({
+                console.log("INICIOOU 1")
+                this.$refs.filter.apply({
                     offset: Math.ceil(ev.from),
                     limit: Math.ceil(ev.to - ev.from)
                 })
-            },
-            onCreatedDateChange(value){
-                const values = value.split(" ")
-
-                if(values.length > 1){
-
-                    value = [_.first(values),_.last(values)]
-
-                    this.form.dateCreatedToSend = value
-                    this.selectedDays = moment(value[1]).diff(moment(value[0]), 'days') + 1
-                }
-                else if(value.trim() !== ''){
-                    this.form.dateCreatedToSend = value
-                    this.selectedDays = 1
-                }
-                else {
-                    this.form.dateCreatedToSend = [[]]
-                    this.selectedDays = 0
-                }
-                this.onFilterChange()
             },
             getStatus(status){
                 switch(status){
@@ -386,17 +248,7 @@
                         return "---"
                 }
             },
-            clearCreatedDateFilter(){
-                this.selectedDays = 0
-                this.form.dateCreated = [[]]
-            },
-            openCreatedDateSelector(){
-                this.$refs.createdDateSelector.fp.open()
-            },
-            search(filterData = {}, params = {}){
-
-                /*this.items = []*/
-
+            search({ filterData = {}, params = {} }){
                 const requestParams = {
                     /*offset: Math.ceil(ev.from),
                     limit: Math.ceil(ev.to - ev.from),*/
@@ -421,7 +273,6 @@
                                 settled = true
                             }
                         }
-
                         return {
                             id: row.id,
                             amount: row.amount,
@@ -444,96 +295,54 @@
                     this.items = []
                 })
             },
-            applyFilter(params = {}){
-                const filterData = utils.removeReactivity(this.form)
-                if(!filterData.dateCreatedToSend[0] || !filterData.dateCreatedToSend[0].length){
-                    _.assign(filterData,{
-                        dateCreated: null
-                    })
-                }
-                else if(!_.isArray(filterData.dateCreatedToSend)){
-                    _.assign(filterData,{
-                        dateCreated: filterData.dateCreatedToSend
-                    })
-                }
-                else {
-                    const values = filterData.dateCreatedToSend
-                    if(values.length > 1){
-                        filterData.dateCreated = [[_.first(values),_.last(values)]]
-                    }
-                }
-
-                if(!filterData.clientGroup.length){
-                    _.assign(filterData,{
-                        clientGroup: null
-                    })
-                }
-                if(!filterData.responsibleUser.length){
-                    _.assign(filterData,{
-                        responsibleUser: null
-                    })
-                }
-                if(!filterData.paymentMethod.length){
-                    _.assign(filterData,{
-                        paymentMethod: null
-                    })
-                }
-                if(!filterData.status.length){
-                    _.assign(filterData,{
-                        status: null
-                    })
-                }
-
-                this.search(filterData,params)
-            },
             submit(){
-                if(!this.form.action){
-                    this.showToast({
+                const vm = this
+                if(!vm.form.action){
+                    vm.showToast({
                         type: 'error',
                         message: "Você deve selecionar uma ação!"
                     })
                     return
                 }
-                if(!this.selectedItems.length){
-                    this.showToast({
+                if(!vm.selectedItems.length){
+                    vm.showToast({
                         type: 'error',
                         message: "Você não selecionou nenhum item!"
                     })
                     return
                 }
-                if(this.form.action === 'paid'){
+                if(vm.form.action === 'paid'){
                     CashierBalancingAPI.markAsPaid({
-                        requestPaymentIds: _.map(this.selectedItems, (selectedItem) => {
+                        requestPaymentIds: _.map(vm.selectedItems, (selectedItem) => {
                             return selectedItem.id
                         }),
-                        accountId: this.form.account
+                        accountId: vm.form.account
                     }, {
-                        companyId: this.company.id
+                        companyId: vm.company.id
                     }).then((res) => {
-                        this.selectedItems = []
-                        this.applyFilter()
+                        vm.selectedItems = []
+                        vm.$refs.filter.apply()
                     })
                 }
-                else if(this.form.action === 'settled'){
-                    if(!this.form.account){
-                        this.showToast({
+                else if(vm.form.action === 'settled'){
+                    if(!vm.form.account){
+                        vm.showToast({
                             type: 'error',
                             message: "Você deve selecionar uma conta de destino!"
                         })
                         return
                     }
                     CashierBalancingAPI.markAsSettled({
-                        settledDatetime: this.form.settledDatetime,
-                        requestPaymentIds: _.map(this.selectedItems, (selectedItem) => {
+                        settledDatetime: vm.form.settledDatetime,
+                        requestPaymentIds: _.map(vm.selectedItems, (selectedItem) => {
                             return selectedItem.id
                         }),
-                        accountId: this.form.account
+                        accountId: vm.form.account
                     }, {
-                        companyId: this.company.id
+                        companyId: vm.company.id
                     }).then((res) => {
-                        this.selectedItems = []
-                        this.applyFilter()
-                        console.log("OK")
+                        vm.selectedItems = []
+                        vm.$refs.filter.apply()
                     })
                 }
             }

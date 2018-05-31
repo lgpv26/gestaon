@@ -7,7 +7,14 @@ const state = {
 }
 
 const getters = {
-
+    usersSelectItems(state){
+        return _.map(state.users, (user) => {
+            return {
+                value: user.id,
+                text: user.name
+            }
+        })
+    }
 }
 
 const mutations = {

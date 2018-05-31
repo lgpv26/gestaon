@@ -34,7 +34,7 @@
                                     Última atualização
                                     <input type="text" v-model="form.user.dateUpdated" readonly />
                                 </div>
-                                <div class="column is-6">
+                                <div class="column">
                                     Data de cadastro
                                     <input type="text" v-model="form.user.dateCreated" readonly />
                                 </div>
@@ -235,6 +235,25 @@
 </script>
 
 <style scoped>
+
+    .columns {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 10px;
+    }
+
+    .columns:last-child {
+        margin-bottom: 0;
+    }
+
+    .columns .column {
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+
+    .columns .column:last-child {
+        margin-right: 0;
+    }
 
     div.app-settings {
         background: #26272E;

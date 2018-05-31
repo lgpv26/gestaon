@@ -1,6 +1,8 @@
 const basePath = require('./../middlewares/base-path.middleware')
 const Controller = require('../models/Controller')
 
+import {Op} from 'sequelize'
+
 module.exports = (server, restify) => {
 
     const authGuard = require('./../middlewares/auth-guard.middleware')(server, restify);
@@ -22,6 +24,25 @@ module.exports = (server, restify) => {
     /* Me */
 
     server.get('/me', authGuard, usersController.me);
+
+    /* My requests */
+
+    server.get('/me/requests', authGuard, (req, res, next) => {
+        server.broker.call('data/request.getList', {
+            where: {
+                userId: req.auth.id,
+                status: {
+                    [Op.or]: ['pending','in-displacement']
+                }
+            }
+        }).then((requests) => {
+            return res.send(200, {
+                data: requests
+            })
+        }).catch((err) => {
+            console.log(err)
+        })
+    })
 
     /* Save FCM token to current accessToken */
 

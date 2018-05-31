@@ -10,12 +10,17 @@
             </div>
         </div>
         <app-select class="request-board__filter" v-model="requestBoardFilter.form.clientGroups" :title="'Grupo do cliente'"
-            @unselect="onFilter('clientGroups')" @select="onFilter('clientGroups')" :items="selectClientGroups" :multiple="true" :verticalOffset="15">
+            @unselect="onFilter('clientGroups')" @select="onFilter('clientGroups')" :items="clientGroupsSelectItems" :multiple="true" :verticalOffset="15">
             <div class="filter-item__target">
                 <span class="target__title">Grupo</span>
                 <div class="target__amount" v-if="requestBoardFilter.form.clientGroups.length">
                     <div></div>
-                    <span>{{ requestBoardFilter.form.clientGroups.length }}</span>
+                    <span v-if="requestBoardFilter.form.clientGroups.length === 1">
+                        {{ _.find(clientGroupsSelectItems, { value: _.first(requestBoardFilter.form.clientGroups) }).text }}
+                    </span>
+                    <span v-else>
+                        {{ requestBoardFilter.form.clientGroups.length }}
+                    </span>
                 </div>
             </div>
             <template slot="section" slot-scope="sectionProps">
@@ -26,12 +31,17 @@
             </template>
         </app-select>
         <app-select class="request-board__filter" v-model="requestBoardFilter.form.responsibleUsers" :title="'Responsável'"
-                    @unselect="onFilter('responsibleUsers')" @select="onFilter('responsibleUsers')" :multiple="true" :items="selectUsers" :verticalOffset="15">
+                    @unselect="onFilter('responsibleUsers')" @select="onFilter('responsibleUsers')" :multiple="true" :items="usersSelectItems" :verticalOffset="15">
             <div class="filter-item__target">
                 <span class="target__title">Responsável</span>
                 <div class="target__amount" v-if="requestBoardFilter.form.responsibleUsers.length">
                     <div></div>
-                    <span>{{ requestBoardFilter.form.responsibleUsers.length }}</span>
+                    <span v-if="requestBoardFilter.form.responsibleUsers.length === 1">
+                        {{ _.find(usersSelectItems, { value: _.first(requestBoardFilter.form.responsibleUsers) }).text }}
+                    </span>
+                    <span v-else>
+                        {{ requestBoardFilter.form.responsibleUsers.length }}
+                    </span>
                 </div>
             </div>
             <template slot="item" slot-scope="itemProps">
@@ -39,12 +49,17 @@
             </template>
         </app-select>
         <app-select class="request-board__filter" v-model="requestBoardFilter.form.promotionChannels"
-                    @unselect="onFilter('promotionChannels')" @select="onFilter('promotionChannels')" :title="'Canal de divulgação'" :multiple="true" :items="selectPromotionChannels" :verticalOffset="15">
+                    @unselect="onFilter('promotionChannels')" @select="onFilter('promotionChannels')" :title="'Canal de divulgação'" :multiple="true" :items="promotionChannelsSelectItems" :verticalOffset="15">
             <div class="filter-item__target">
                 <span class="target__title">Canal</span>
                 <div class="target__amount" v-if="requestBoardFilter.form.promotionChannels.length">
                     <div></div>
-                    <span>{{ requestBoardFilter.form.promotionChannels.length }}</span>
+                    <span v-if="requestBoardFilter.form.promotionChannels.length === 1">
+                        {{ _.find(promotionChannelsSelectItems, { value: _.first(requestBoardFilter.form.promotionChannels) }).text }}
+                    </span>
+                    <span v-else>
+                        {{ requestBoardFilter.form.promotionChannels.length }}
+                    </span>
                 </div>
             </div>
             <template slot="item" slot-scope="itemProps">
@@ -52,12 +67,17 @@
             </template>
         </app-select>
         <app-select class="request-board__filter" v-model="requestBoardFilter.form.status"
-                    @unselect="onFilter('status')" @select="onFilter('status')"  :title="'Status do pedido'" :multiple="true" :items="selectStatus" :verticalOffset="15">
+                    @unselect="onFilter('status')" @select="onFilter('status')"  :title="'Status do pedido'" :multiple="true" :items="requestStatusListSelectItems" :verticalOffset="15">
             <div class="filter-item__target">
                 <span class="target__title">Status</span>
                 <div class="target__amount" v-if="requestBoardFilter.form.status.length">
                     <div></div>
-                    <span>{{ requestBoardFilter.form.status.length }}</span>
+                    <span v-if="requestBoardFilter.form.status.length === 1">
+                        {{ _.find(requestStatusListSelectItems, { value: _.first(requestBoardFilter.form.status) }).text }}
+                    </span>
+                    <span v-else>
+                        {{ requestBoardFilter.form.status.length }}
+                    </span>
                 </div>
             </div>
             <template slot="item" slot-scope="itemProps">
@@ -138,45 +158,15 @@
             ...mapState('data/users', ['users']),
             ...mapState('data/client-groups', ['clientGroups']),
             ...mapState('data/promotion-channels', ['promotionChannels']),
+            ...mapGetters('data/request-status',['requestStatusListSelectItems']),
+            ...mapGetters('data/users',['usersSelectItems']),
+            ...mapGetters('data/client-groups',['clientGroupsSelectItems']),
+            ...mapGetters('data/promotion-channels',['promotionChannelsSelectItems']),
+            ...mapGetters('data/payment-methods',['paymentMethodsSelectItems']),
+
             ...mapFields([
                 'filters.dateCreated',
-            ]),
-            selectClientGroups(){
-                return _.map(this.clientGroups, (clientGroup) => {
-                    return {
-                        text: clientGroup.name,
-                        value: clientGroup.id
-                    }
-                })
-            },
-            selectUsers(){
-                return _.map(this.users, (user) => {
-                    return {
-                        text: user.name,
-                        value: user.id
-                    }
-                })
-            },
-            selectPromotionChannels(){
-                return _.map(this.promotionChannels, (promotionChannel) => {
-                    return {
-                        text: promotionChannel.name,
-                        value: promotionChannel.id
-                    }
-                })
-            },
-            selectStatus(){
-                return [
-                    {
-                        value: 'pending',
-                        text: 'PENDENTE'
-                    },
-                    {
-                        value: 'finished',
-                        text: 'FINALIZADO'
-                    }
-                ]
-            }
+            ])
         },
         methods: {
             ...mapMutations('request-board', ['SET_FILTER']),

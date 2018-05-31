@@ -149,7 +149,6 @@
                     draftId: this.activeMorphScreen.draft.draftId,
                     companyId: this.company.id
                 }).then(() => {
-                    console.log("Removed draft")
                     vm.$emit('closeMorphScreen', {
                         screen: vm.activeMorphScreen,
                         remove: true

@@ -61,7 +61,7 @@ module.exports = (server) => { return {
                     })
                 })
                 sections = JSON.parse(JSON.stringify(sections))
-                return ctx.call("data/request.list", {
+                return ctx.call("data/request.getList", {
                     where: {
                         id: {
                             [Op.in]: cardsRequestsIds

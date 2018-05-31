@@ -242,6 +242,10 @@
         margin-bottom: 10px;
     }
 
+    .table table {
+        width: 100%;
+    }
+
     .table th {
         background: #26272E;
     }

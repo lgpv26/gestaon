@@ -62,7 +62,6 @@
     import SearchComponent from "./_Shared/Search.vue";
     import CallerIDComponent from "./_Shared/CallerID.vue";
     import MenuComponent from "./_Shared/Menu.vue";
-    import ActiveRequestCard from "./Dashboard/RequestBoard/ActiveRequestCard.vue";
     import Modals from "./Dashboard/Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
     import SettingsComponent from "./Settings/Settings.vue";

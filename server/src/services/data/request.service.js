@@ -17,10 +17,10 @@ module.exports = (server) => { return {
          * @param {Object} where, {Array} include
          * @returns {Promise.<Array>} requests
          */
-        list(ctx){
+        getList(ctx){
             return server.mysql.Request.findAll({
-                where: ctx.params.where,
-                include: ctx.params.include
+                where: ctx.params.where || {},
+                include: ctx.params.include || []
             })
         },
         /**

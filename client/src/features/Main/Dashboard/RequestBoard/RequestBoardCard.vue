@@ -23,8 +23,8 @@
                 </app-popover>
 
             </div>
-            <h3 class="card__task" v-if="hasTaskInstruction">{{ card.request.task.text }}</h3>
-            <h3 class="card__task--add" v-else @click="onAddTaskClick()">+ Incluir Tarefa ou Anotação</h3>
+            <!--<h3 class="card__task" v-if="hasTaskInstruction">{{ card.request.task.text }}</h3>
+            <h3 class="card__task--add" v-else @click="onAddTaskClick()">+ Incluir Tarefa ou Anotação</h3>-->
             <div class="card__middle">
                 <div class="card__timer">
                     <div class="timer__objects">

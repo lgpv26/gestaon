@@ -159,7 +159,6 @@ const orderMutations = {
 const mutations = {
     SET_REQUEST(state, request = {}){
         state.form = _.assign(state.form, createRequest(request))
-        console.log(state.form)
     },
     ADD_REQUEST_PAYMENT_METHOD(state, requestPaymentMethod = {}){
         requestPaymentMethod.id = 'tmp/' + shortid.generate()
@@ -246,11 +245,17 @@ const orderActions = {
     },
 }
 const actions = {
+    runRequestRecoverance(context, {request,companyId}){
+        return RequestsAPI.recoverance(request.id, {
+            companyId
+        })
+    },
     runRequestPersistence(context, {draftId, request, companyId}){
         request =  utils.removeReactivity(request)
         const client = request.client
         const order = request.order
         const sendData = {
+            id: request.id,
             clientPhoneId: request.clientPhoneId,
             clientAddressId: request.clientAddressId,
             client: {
@@ -263,6 +268,7 @@ const actions = {
                 clientAddresses: client.clientAddresses
             },
             order: {
+                id: order.id,
                 promotionChannelId: order.promotionChannelId,
                 orderProducts: order.orderProducts
             },
@@ -289,6 +295,7 @@ const actions = {
             console.log("ERRO", err)
         })
     },
+
     setRequest(context, request){
         context.commit('SET_REQUEST', request || {})
         context.commit('SET_CLIENT', _.get(request, 'client', {}))

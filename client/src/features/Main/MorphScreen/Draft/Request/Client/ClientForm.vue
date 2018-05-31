@@ -190,7 +190,7 @@
                 return {
                     search() {
                         ServiceAPI.search({
-                            actingCities: ['MARINGA'],
+                            actingCities: ['MARINGA','SARANDI'],
                             q: vm.search.query,
                             companyId: vm.company.id
                         }).then(({data}) => {

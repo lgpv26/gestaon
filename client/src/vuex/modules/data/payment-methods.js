@@ -6,7 +6,14 @@ const state = {
 }
 
 const getters = {
-
+    paymentMethodsSelectItems(state){
+        return _.map(state.paymentMethods, (paymentMethod) => {
+            return {
+                value: paymentMethod.id,
+                text: paymentMethod.name
+            }
+        })
+    }
 }
 
 const mutations = {

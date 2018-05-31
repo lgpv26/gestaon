@@ -6,7 +6,7 @@
                 <span v-if="client.clientGroupId">Grupo: {{ client.clientGroup.name }}</span>
             </div>
             <div class="tooltip-actions">
-                <a href="javascript:void(0)" @click="runRecoverance()">Editar <icon-edit></icon-edit></a>
+                <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })">Editar <icon-edit></icon-edit></a>
             </div>
         </div>
         <div class="rbc-client" v-else>
@@ -41,11 +41,7 @@
             }
         },
         methods: {
-            runRecoverance(){
-                RequestsAPI.recoverance(this.card.request.id, {
-                    companyId: this.company.id
-                })
-            }
+            ...mapActions('draft/request',['runRequestRecoverance'])
         },
     }
 </script>

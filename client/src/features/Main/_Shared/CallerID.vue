@@ -107,18 +107,34 @@
                 this.createDraft(createDraftArgs)
             },
             createRequestDraftExistentClient(call, client){
-                const createDraftArgs = { body: {
-                    type: 'request',
-                    createdBy: this.user.id,
-                    data: {
-                        request: createRequest({
-                            activeStep: 'client',
-                            client
-                        })
-                    }
-                }, companyId: this.company.id }
+
+                // mappings for request draft format
+
+                if(_.get(client, 'clientCustomFields', []).length){
+                    client.clientCustomFields = _.map(client.clientCustomFields, (clientCustomField) => {
+                        return {
+                            id: clientCustomField.customFieldId,
+                            value: clientCustomField.value
+                        }
+                    })
+                }
+
+                const createDraftArgs = {
+                    body: {
+                        type: 'request',
+                        createdBy: this.user.id,
+                        data: {
+                            request: createRequest({
+                                activeStep: 'client',
+                                client
+                            })
+                        }
+                    },
+                    companyId: this.company.id
+                }
 
                 // select first address and phone
+
                 if(client.clientAddresses.length){
                     createDraftArgs.body.data.request.clientAddressId = client.clientAddresses[0].id
                 }
@@ -131,7 +147,9 @@
                         createDraftArgs.body.data.request.clientPhoneId = client.clientPhones[0].id
                     }
                 }
+
                 //if two of them are selected, go directly to order tab
+
                 if(_.get(createDraftArgs, 'body.data.request.clientAddressId', null) && _.get(createDraftArgs,'body.data.request.clientPhoneId', null)){
                     createDraftArgs.body.data.request.activeStep = 'order'
                 }

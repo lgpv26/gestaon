@@ -40,7 +40,7 @@
                 -->
             </div>
             <div class="tooltip-actions">
-                <a>Editar <icon-edit></icon-edit></a>
+                <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })">Editar <icon-edit></icon-edit></a>
                 <span class="push-both-sides"></span>
                 <timeago :since="card.request.dateCreated" style="color: var(--font-color--9)" :auto-update="60"></timeago>
             </div>
@@ -61,6 +61,7 @@
             return {}
         },
         computed: {
+            ...mapState('auth', ['company']),
             ...mapState('data/users', ['users']),
             recentFirstOverDeadlineRequestTimeline(){
                 return _.reverse(_.sortBy(this.overDeadlineRequestTimeline, (a) => {
@@ -69,6 +70,7 @@
             },
         },
         methods: {
+            ...mapActions('draft/request',['runRequestRecoverance']),
             getUserName(userId){
                 const user = _.find(this.users, {id: userId})
                 if(user){

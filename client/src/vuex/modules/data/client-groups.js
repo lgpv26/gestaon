@@ -6,7 +6,14 @@ const state = {
 }
 
 const getters = {
-
+    clientGroupsSelectItems(state){
+        return _.map(state.clientGroups, (clientGroup) => {
+            return {
+                value: clientGroup.id,
+                text: clientGroup.name
+            }
+        })
+    }
 }
 
 const mutations = {

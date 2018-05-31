@@ -6,6 +6,14 @@ const state = {
 }
 
 const getters = {
+    promotionChannelsSelectItems(state){
+        return _.map(state.promotionChannels, (promotionChannel) => {
+            return {
+                value: promotionChannel.id,
+                text: promotionChannel.name
+            }
+        })
+    }
 }
 
 const mutations = {

@@ -143,6 +143,15 @@
                                 client: vm.selectedClient || {}
                             })
                         }
+                        // mappings for request draft format
+                        if(_.get(createDraftArgs.body.data, 'request.client.clientCustomFields', []).length){
+                            createDraftArgs.body.data.request.client.clientCustomFields = _.map(createDraftArgs.body.data.request.client.clientCustomFields, (clientCustomField) => {
+                                return {
+                                    id: clientCustomField.customFieldId,
+                                    value: clientCustomField.value
+                                }
+                            })
+                        }
                         // select first address and phone
                         if(vm.selectedClient.clientAddresses.length){
                             createDraftArgs.body.data.request.clientAddressId = vm.selectedClient.clientAddresses[0].id
