@@ -12,6 +12,7 @@ if(process.env.NODE_ENV !== 'production') {
         // do stuff
     } catch (err) {
         console.log("Developer config file not found.")
+        
     }
 }
 
