@@ -53,9 +53,11 @@ log.info("Loading routes")
 require('../routes')(di.server)
 
 // initialize tracker protocols
+/*
 config.protocols.forEach((protocol) => {
     protocol['instance'] = new (require('../modules/Tracker/protocols/' + protocol.name))(di.server, protocol)
 })
+*/
 
 // try to connect to MySQL and create database if it was not found
 const connectToMySQL = new Promise((resolve, reject) => {
@@ -104,6 +106,8 @@ di.server.broker.createService(require('../services/draft/request/recoverance.se
 
 di.server.broker.createService(require('../services/draft/client/persistence.service')(di.server))
 di.server.broker.createService(require('../services/draft/client/recoverance.service')(di.server))
+
+log.info('Starting server as: ' + process.env.NODE_ENV)
 
 // starts callback chain until server starts, or shutdown if the procedure fails
 di.server.broker.start().then(() => {

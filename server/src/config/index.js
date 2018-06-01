@@ -32,8 +32,8 @@ if(process.env.NODE_ENV === 'production') {
             dialect: 'mysql',
             host: 'localhost',
             dbName: 'gestaon-dev',
-            user: 'root',
-            password: 'atrroot'
+            user: 'gestaon',
+            password: '3V25Gc9#2'
         },
         mongoDb: {
             host: 'localhost',
@@ -50,12 +50,12 @@ if(process.env.NODE_ENV === 'production') {
             requestTimeout: 5000
         },
         protocols: [
-            {name: 'gps103', port: 6001, debug: false},
-            /*{name: 'tk103', port: 6002},
-            {name: 'gt06', port: 6023},*/
+            /*{name: 'gps103', port: 6001, debug: false},
+            {name: 'tk103', port: 6002},
+            {name: 'gt06', port: 6023},
             {name: 'tlt2h', port: 6030, debug: false},
             {name: 'agiliza', port: 6150, debug: false},
-            {name: 'osmand', port: 6055, debug: false}
+            {name: 'osmand', port: 6055, debug: false}*/
         ],
         redis: {
             active: false
@@ -63,7 +63,7 @@ if(process.env.NODE_ENV === 'production') {
     };
 }
 else{
-    
+
     module.exports = {
         mainServer: {
             port: 8080,
