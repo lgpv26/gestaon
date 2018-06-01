@@ -107,7 +107,12 @@ di.server.broker.createService(require('../services/draft/request/recoverance.se
 di.server.broker.createService(require('../services/draft/client/persistence.service')(di.server))
 di.server.broker.createService(require('../services/draft/client/recoverance.service')(di.server))
 
-log.info('Starting server as: ' + process.env.NODE_ENV)
+if(process.env.NODE_ENV === 'production'){
+    log.info('Starting production server.')
+}
+else{
+    log.info('Starting development server.')
+}
 
 // starts callback chain until server starts, or shutdown if the procedure fails
 di.server.broker.start().then(() => {
