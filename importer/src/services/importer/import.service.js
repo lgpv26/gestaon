@@ -172,7 +172,8 @@ module.exports = (server) => {
                     data: {
                         name: (client.nome) ? client.nome : null,
                         companyId: parseInt(this._companyId),
-                        dateCreated: (client.DataCadastro) ? moment(client.DataCadastro).toDate() : numoment().toDate()
+                        dateCreated: (client.DataCadastro) ? moment(client.DataCadastro).toDate() : numoment().toDate(),
+                        origin: 'gestaoazul'
                     }
                 })
           
@@ -184,17 +185,23 @@ module.exports = (server) => {
             return server.mysql.Client.bulkCreate(_.map(ctx.params.data, (data, index) => {
                 if(_.has(data.client, 'tipocliente') && data.client.tipocliente){
                     switch (data.client.tipocliente.codigo) {
+                        case 1: // BALCÃO
+                        _.set(data.data, 'clientGroupId', 5) // BALCÃO
+                         break
+                        case 2: // DISK
+                        _.set(data.data, 'clientGroupId', 1) // DISK
+                          break
                         case 3: // Comércio
-                        _.set(data.data, 'clientGroupId', 2) // ATACADO/COMÉRCIO
+                        _.set(data.data, 'clientGroupId', 4) // COMÉRCIO
                           break
                         case 4: // Automática/VD
                         _.set(data.data, 'clientGroupId', 3) // AUTOMÁTICO
                           break
                         case 17: // Atacado
-                        _.set(data.data, 'clientGroupId', 2) // ATACADO/COMÉRCIO
+                        _.set(data.data, 'clientGroupId', 2) // ATACADO
                           break
                         default: // OUTROS
-                        _.set(data.data, 'clientGroupId', 1) // VAREJO
+                        _.set(data.data, 'clientGroupId', null) // VAREJO
                           break
                       }
                 }
@@ -258,11 +265,13 @@ module.exports = (server) => {
                     })
                 }
                 if(_.has(client, 'OBS')){
-                    clientCustomFields.push({
-                        clientId: client.client.id,
-                        customFieldId: 4, // HARD CODED
-                        value: client.OBS
-                    })
+                    if(!_.isEmpty(client.OBS)){
+                        clientCustomFields.push({
+                            clientId: client.client.id,
+                            customFieldId: 4, // HARD CODED
+                            value: client.OBS
+                        })
+                    }
                 }
             })
             return server.mysql.ClientCustomField.bulkCreate(clientCustomFields, {

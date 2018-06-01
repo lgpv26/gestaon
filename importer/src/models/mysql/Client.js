@@ -49,6 +49,9 @@ module.exports = {
                 status: {
                     type: Sequelize.STRING,
                     defaultValue: 'activated'
+                },
+                origin: {
+                    type: Sequelize.STRING
                 }
             }, {
                 tableName: "client",

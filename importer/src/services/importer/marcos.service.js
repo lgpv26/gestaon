@@ -244,7 +244,8 @@ module.exports = (server) => {
                                 clientPhones: [{
                                     number: (client[parser.phone]) ? client[parser.phone] : null
                                 }],
-                                clientCustomFields: clientCustomFields
+                                clientCustomFields: clientCustomFields,
+                                origin: 'kp'
                             })
                             resolve()
                         })
@@ -269,14 +270,16 @@ module.exports = (server) => {
                     clientGroupId =  3 // AUTOMÁTICO
                       break
                     case 'COMERCIO': 
-                    clientGroupId =  2 // ATACADO/COMÉRCIO
+                    clientGroupId =  4 // COMÉRCIO
                       break
                     case 'TELENTREGA': 
-                    clientGroupId =  3 // AUTOMÁTICO
+                    clientGroupId =  1 // DISK
+                      break
+                    case 'PORTARIA': 
+                    clientGroupId =  5 // BALCÃO
                       break
                     default: // OUTROS
-                    clientGroupId = 1 // VAREJO
-                    customFieldGroup = ctx.params.data
+                    clientGroupId = null // VAREJO
                       break
                   }
 
@@ -312,7 +315,7 @@ module.exports = (server) => {
                     city + '/' + state + ref
                 })
             }
-            if(typeof client[parser.obs] !== 'undefined' && !_.isEmpty(client[parser.obs])){
+            if(!_.isEmpty(client[parser.obs])){
                 clientCustomFields.push({
                     customFieldId: 4, // HARD CODED
                     value: client[parser.obs]
@@ -419,7 +422,7 @@ module.exports = (server) => {
                                 "filter": {
                                     "match": {
                                     "city": {
-                                        "query": client[parser.city],
+                                        "query": utils.removeDiacritics(client[parser.city]),
                                         "analyzer": "autocomplete"
                                         }
                                     }
