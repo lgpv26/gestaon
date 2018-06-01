@@ -42,7 +42,7 @@
     import UsersAPI from '../../../api/users';
     import _ from 'lodash';
 
-    import config from '@/config';
+    import config from '../../../config';
 
     import io from 'socket.io-client'
     import Vue from 'vue'

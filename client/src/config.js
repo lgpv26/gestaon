@@ -5,9 +5,9 @@ let config = {
     socketServer: 'http://gestaon.com:8080'
 }
 
-if(process.env.NODE_ENV === 'production') {
+if(process.env.NODE_ENV !== 'production') {
     try {
-        const developerConfig = require('config.developer')
+        const developerConfig = require('./config.developer')
         _.assign(config, developerConfig)
         // do stuff
     } catch (err) {
