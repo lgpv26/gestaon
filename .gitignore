@@ -1,4 +1,4 @@
 \.idea/
 
-client/src/config\.js
-server/src/config/config\.js
+client/src/config.developer\.js
+server/src/config/config.developer\.js
