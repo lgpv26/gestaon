@@ -63,7 +63,6 @@ if(process.env.NODE_ENV === 'production') {
     };
 }
 else{
-    
     module.exports = {
         mainServer: {
             port: 8080,
