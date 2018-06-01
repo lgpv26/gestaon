@@ -32,7 +32,7 @@ const config = {
     database: {
         dialect: 'mysql',
         host: 'localhost',
-        dbName: 'gestaon-dev',
+        dbName: 'gestaon-prod',
         user: 'gestaon',
         password: '3V25Gc9#2'
     },
