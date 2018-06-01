@@ -246,6 +246,13 @@ module.exports = class RequestBoard {
                                         cardId: evData.cardId,
                                         requestTimelineItem
                                     }))
+                                    if(evData.status == 'finished' || evData.status == 'canceled'){
+                                        return vm.server.broker.call('request-board.removeCard', {
+                                            data: {
+                                                cardId: evData.cardId
+                                            }
+                                        })
+                                    }
                                 })                                
                             })
                         })
@@ -347,10 +354,19 @@ module.exports = class RequestBoard {
                             transaction: transaction
                         }).then((requestTimelineItem) => {
                             transaction.commit().then(() => {
-                                    vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', new EventResponse({
-                                        cardId: evData.cardId,
-                                        requestTimelineItem
-                                    }))
+                                vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', new EventResponse({
+                                    cardId: evData.cardId,
+                                    requestTimelineItem
+                                }))
+                                vm.server.broker.call("push-notification.push", {
+                                    data: {
+                                        userId: evData.userId,
+                                        title: '',
+                                        message: '' 
+                                    }
+                                }).catch((err) => {
+                                        console.log(err)
+                                    })
                                 })
                             })
                         })

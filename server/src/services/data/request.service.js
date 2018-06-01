@@ -186,6 +186,7 @@ module.exports = (server) => { return {
                             requestId: ctx.params.requestId,
                             paidDatetime: (paymentMethod.paid) ? moment() : null
                         }),
+                        createdById: ctx.params.createdById,
                         where: {
                             id: paymentMethod.id
                         },
@@ -222,7 +223,8 @@ module.exports = (server) => { return {
                         data: {
                             requestPaymentIds: paymentsPaids,
                             companyId: ctx.params.companyId,
-                            createdById: ctx.params.createdById
+                            createdById: ctx.params.createdById,
+                            accountId: ctx.params.accountId
                         },
                         persistence: true,
                         transaction: ctx.params.transaction || null
@@ -261,19 +263,58 @@ module.exports = (server) => { return {
          * @returns {Promise.<Object>} paymentMethod
          */
         paymentMethodUpdate(ctx){
-            return server.mysql.RequestPaymentMethod.update(ctx.params.data, {
-                where: ctx.params.where || {},
-                transaction: ctx.params.transaction || null
-            }).then((paymentMethodUpdate) => {
-                if(parseInt(_.toString(paymentMethodUpdate)) < 1 ){
-                    console.log("Nenhum registro encontrado. Update.")
-                    throw new Error("Nenhum registro encontrado.")
+            return server.mysql.RequestPaymentMethod.findById(ctx.params.data.id, {
+                include: [{
+                    model: server.mysql.RequestPaymentTransaction,
+                    as: 'requestPaymentTransactions',
+                    include: [{
+                        model: server.mysql.Transaction,
+                        as: 'transaction'
+                    }]
+                }]
+            }).then((requestPaymentMethod) => {
+                if(requestPaymentMethod.paid !== ctx.params.data.paid || requestPaymentMethod.amount !== ctx.params.data.amount){
+                    ctx.call("data/request.revertTransaction", {
+                        data: requestPaymentMethod,
+                        createdById: ctx.params.createdById,
+                        requestId: ctx.params.data.requestId,
+                        transaction: ctx.params.transaction 
+                    }).catch((err) => {
+                        console.log('ERRO: revertTransaction', err)
+                        return new Error("ERRO: revertTransaction")
+                    })
                 }
-                return server.mysql.RequestPaymentMethod.findById(ctx.params.data.id, {
-                    transaction: ctx.params.transaction
-                }).then((paymentMethod) => {
-                    return JSON.parse(JSON.stringify(paymentMethod))
+                return server.mysql.RequestPaymentMethod.update(ctx.params.data, {
+                    where: ctx.params.where || {},
+                    transaction: ctx.params.transaction || null
+                }).then((paymentMethodUpdate) => {
+                    if(parseInt(_.toString(paymentMethodUpdate)) < 1 ){
+                        console.log("Nenhum registro encontrado. Update.")
+                        throw new Error("Nenhum registro encontrado.")
+                    }
+                    return server.mysql.RequestPaymentMethod.findById(ctx.params.data.id, {
+                        transaction: ctx.params.transaction
+                    }).then((paymentMethod) => {
+                        return JSON.parse(JSON.stringify(paymentMethod))
+                    })
+                }).catch((err) => {
+                    throw new Error(err) // COMENTAR
                 })
+            })
+        },
+        revertTransaction(ctx){
+            if(!_.first(ctx.params.data.requestPaymentTransactions)) return true
+            const requestTransaction = JSON.parse(JSON.stringify(_.first(ctx.params.data.requestPaymentTransactions))).transaction
+            
+            return ctx.call("cashier-balancing.revertTransaction", {
+                data: {
+                    amount: Math.abs(requestTransaction.amount),
+                    createdById: ctx.params.createdById,
+                    accountId: requestTransaction.accountId,
+                    companyId: requestTransaction.companyId,
+                    description: 'Redução do valor do pagamento #' + ctx.params.data.id + ' do pedido #' + ctx.params.requestId + ' na conta de destino (Recoversance)',
+                },
+                transaction: ctx.params.transaction 
             }).catch((err) => {
                 throw new Error(err) // COMENTAR
             })

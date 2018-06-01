@@ -244,13 +244,15 @@ module.exports = (server) => {
                             data: {
                                 amount: Math.abs(requestPaymentMethod.amount),
                                 createdById: ctx.params.data.createdById,
-                                accountId: requestPaymentMethod.request.responsibleUser.accountId,
+                                accountId: (ctx.params.data.accountId) ? ctx.params.data.accountId : requestPaymentMethod.request.responsibleUser.accountId,
                                 companyId: requestPaymentMethod.request.companyId,
                                 description: 'Adição do valor do pagamento do pedido #' + requestPaymentMethod.request.id + ' na conta de destino',
                             },
                             transaction: this._transaction
                         }).then((transaction) => {
-                            return server.mysql.Account.findById(transaction.accountId).then((account) => {
+                            return server.mysql.Account.findById(transaction.accountId, {
+                                transaction: this._transaction
+                            }).then((account) => {
                                 if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
                                 accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
                                 return server.mysql.RequestPaymentTransaction.create({
@@ -278,7 +280,7 @@ module.exports = (server) => {
                         _.forEach(_.keys(accountBalances),(accountId) => {
                             updateAccountBalancesPromise.push(server.mysql.Account.update({
                                 balance: accountBalances[accountId]
-                            }, {
+                                }, {
                                 where: {
                                     id: parseInt(accountId)
                                 },
@@ -291,6 +293,14 @@ module.exports = (server) => {
                             }
                             else {
                                 return ctx.call("cashier-balancing.commit")
+                            }
+                        }).catch(() => {
+                            console.log("Erro em: cashier-balancing.markAsPaid")
+                            if(this._saveInRequest) {
+                                return new Error("Error in markAsPaid")
+                            }
+                            else {
+                                return ctx.call("cashier-balancing.rollback")
                             }
                         })
                     })
@@ -417,10 +427,33 @@ module.exports = (server) => {
                             else {
                                 return ctx.call("cashier-balancing.commit")
                             }
+                        }).catch(() => {
+                            console.log("Erro em: cashier-balancing.markAsSettled")
+                            if(this._saveInRequest) {
+                                return new Error("Error in markAsSettled")
+                            }
+                            else {
+                                return ctx.call("cashier-balancing.rollback")
+                            }
                         })
                     })
                 })
             })
+        },
+
+        revertTransaction(ctx){
+            return ctx.call('data/transaction.create', {
+                data: ctx.params.data,
+                transaction: ctx.params.transaction
+            }).then((transaction) => {
+                return server.mysql.Account.findById(transaction.accountId, {
+                    transaction: ctx.params.transaction
+                }).then((account) => {
+                    account.balance = parseFloat(account.balance) - parseFloat(transaction.amount)
+                    return account.save({transaction: ctx.params.transaction})
+                })
+            })
+
         },
 
         /**

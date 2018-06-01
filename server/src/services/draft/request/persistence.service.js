@@ -12,6 +12,7 @@ module.exports = (server) => {
     let _userId = null
 
     let _draftId = null
+    let _reloadCard = null
 
     return {
     name: "draft/request/persistence",
@@ -26,8 +27,6 @@ module.exports = (server) => {
             this._companyId = ctx.params.companyId
             this._userId = ctx.params.userId
             this._draftId = ctx.params.draftId
-
-            //console.log(this._request)
            
             return ctx.call("draft/request/persistence.checkTempIds").then(() => {
              //START 
@@ -87,6 +86,20 @@ module.exports = (server) => {
                                     return ctx.call("draft/request/persistence.saveES", {
                                         requestOrderId: request.requestOrderId,
                                     }).then(() => {
+                                        if(request.status == 'pending' && request.userId){
+                                            return ctx.call("push-notification.push", {
+                                                data: {
+                                                    userId: request.userId,
+                                                    title: '',
+                                                    message: ''
+                                                },
+                                                notRejectNotLogged: true
+                                            }).then(() => {
+                                                return new EventResponse(request) 
+                                            }).catch((err) => {
+                                                console.log(err)
+                                            })
+                                        }
                                         return new EventResponse(request) 
                                     }).catch((err) => {
                                         console.log("Erro em: draft/request/persistence.saveES")
@@ -132,6 +145,9 @@ module.exports = (server) => {
                 this._transaction = transaction
             })
         },
+        reloadCard(ctx){
+            return this._reloadCard = ctx.params.reloadCard
+        },
         /**
          * @param {Object} data, {Object} transaction
          * @returns {Promise.<object>} request
@@ -143,7 +159,7 @@ module.exports = (server) => {
             else {
                 return ctx.call("data/request.getOne", {
                     where: {
-                        id: ctx.params.data.id
+                        id: (this._request.id) ? this._request.id : ctx.params.data.id
                     },
                     include: [{
                         model: server.mysql.RequestTimeline,
@@ -219,31 +235,41 @@ module.exports = (server) => {
                     }],
                     transaction: ctx.params.transaction
                 }).then((request) => {
-                    return ctx.call("request-board.consultSectionOne", {
-                        where: {
-                            companyId: request.companyId
-                        },
-                        companyId: request.companyId
-                    }).then((section) => {
-                        let maxCard = _.maxBy(section.cards, (card) => {
-                            return card.position
+                    if(this._reloadCard) {
+                        return ctx.call("request-board.reloadCard", {
+                            request: request, 
+                            companyId: this._companyId,
                         })
-                        let maxCardPosition = 65535
-                        if (maxCard) maxCardPosition += maxCard.position
-                        return ctx.call("request-board.createCard", {
-                            section: section,
-                            data: {
-                                requestId: request.id,
-                                position: maxCardPosition,
-                                section: section.id,
-                                createdBy: _.first(request.requestTimeline).triggeredBy,
+                    }
+                    else{
+                        return ctx.call("request-board.consultSectionOne", {
+                            where: {
                                 companyId: request.companyId
                             },
-                            request: request
-                        }).then((card) => {
-                            return card
+                            companyId: request.companyId
+                        }).then((section) => {
+                            let maxCard = _.maxBy(section.cards, (card) => {
+                                return card.position
+                            })
+                            let maxCardPosition = 65535
+                            if (maxCard) maxCardPosition += maxCard.position
+                            return ctx.call("request-board.createCard", {
+                                section: section,
+                                data: {
+                                    requestId: request.id,
+                                    position: maxCardPosition,
+                                    section: section.id,
+                                    createdBy: _.first(request.requestTimeline).triggeredBy,
+                                    companyId: request.companyId
+                                },
+                                request: request
+                            }).then((card) => {
+                                return card
+                            }).catch((err) => {
+                                console.log(err)
+                            })
                         })
-                    })
+                    }
                 }).catch((err) => {
                     console.log(err)
                     throw new Error(err)
@@ -261,7 +287,7 @@ module.exports = (server) => {
                             requestId: request.id,
                             triggeredBy: this._userId,
                             companyId: this._companyId,
-                            action: 'create',
+                            action: (this._request.id) ? 'recoverance_save' : 'create',
                             userId: (this._request.responsibleUserId) ? this._request.responsibleUserId : this._userId,
                             status: (this._request.status) ? (this._request.client.id) ? this._request.status : 'finished' :  (this._request.client.id) ? 'pending' : 'finished'
                         },
@@ -275,6 +301,7 @@ module.exports = (server) => {
                             requestId: request.id,
                             companyId: this._companyId,
                             createdById: this._userId,
+                            accountId: (this._request.accountId) ? this._request.accountId : null,
                             transaction: this._transaction
                         })
                     )
@@ -318,21 +345,32 @@ module.exports = (server) => {
 
         saveRequest(ctx){
             if (this._request.id) { // update request
-                return ctx.call("data/request.update", {
-                    data: _.assign(ctx.params.data, {
-                        id: this._request.id
-                    }),
+                return ctx.call("data/request.getOne", {
                     where: {
-                        id: this._request.id,
-                        companyId: this._companyId
-                    },
-                    transaction: this._transaction
-                }).then((request) => {
-                    return request
-                }).catch((err) => {
-                    console.log("Erro em: data/request.update")
-                    throw new Error(err)
-                })   
+                        id: this._request.id
+                    }
+                }).then((requestConsult) => {
+                    if(requestConsult.status === this._request.status){
+                        ctx.call("draft/request/persistence.reloadCard", {
+                            reloadCard: true
+                        })
+                    }
+                    return ctx.call("data/request.update", {
+                        data: _.assign(ctx.params.data, {
+                            id: this._request.id
+                        }),
+                        where: {
+                            id: this._request.id,
+                            companyId: this._companyId
+                        },
+                        transaction: this._transaction
+                    }).then((request) => {
+                        return request
+                    }).catch((err) => {
+                        console.log("Erro em: data/request.update")
+                        throw new Error(err)
+                    })   
+                })
             }
             else { // create request
                 return ctx.call("data/request.create", {
@@ -589,6 +627,7 @@ module.exports = (server) => {
          */
         commit(ctx) {
             console.log("Commiting...")
+            
             this._transaction.commit().then(() => {
                 console.log("Commit everything!")
                 console.log("Removing draft...")
@@ -602,7 +641,9 @@ module.exports = (server) => {
                     console.log("Remove draft!")
                     return true
                 })
+               return
             })
+            
         },
 
         /**

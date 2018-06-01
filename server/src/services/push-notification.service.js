@@ -16,7 +16,12 @@ module.exports = (server) => { return {
                 ]
             }).then((userAccessToken) => {
                 if(!userAccessToken){
-                    return Promise.reject(new Error("User didn't logged in through the app before"))
+                    if(ctx.params.notRejectNotLogged){
+                        return "User didn't logged in through the app before"
+                    }
+                    else{
+                        return Promise.reject(new Error("User didn't logged in through the app before"))
+                    }
                 }
                 const message = {
                     to: userAccessToken.fcmToken, // required fill with device token or topics
@@ -33,7 +38,7 @@ module.exports = (server) => { return {
                         sound : 'notification'
                     }
                 }
-                return server.fcm.send(message)
+                server.fcm.send(message)
             })
         }
     }

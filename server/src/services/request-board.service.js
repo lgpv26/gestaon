@@ -284,8 +284,6 @@ module.exports = (server) => { return {
             //position
             //sectionId
             return server.mongodb.Card.create(ctx.params.data).then((card) => {
-                //card = _.assignIn(card, { createdBy: controller.request.user.name }) // change createdBy to user name for emit to all users
-
                 // check socket connections and emit 
                 server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('cardCreated', {
                     data: card, sectionId: ctx.params.section.id
@@ -307,7 +305,18 @@ module.exports = (server) => { return {
             }).catch((err) => {
                 console.log(err)
                 return err
-            });
+            })
+        },
+        reloadCard(ctx){
+            return server.mongodb.Card.findOne({requestId: ctx.params.request.id}).then((card) => {
+                // check socket connections and emit 
+                card = card.toJSON()
+                card.request = ctx.params.request
+            
+                server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardCardUpdate', new EventResponse(card))
+
+                return card
+            })
         },
         /**
          * Remove a section associated to the company request-board
@@ -367,6 +376,33 @@ module.exports = (server) => { return {
             }
         },
         removeCard(ctx){
+            return server.mongodb.Card.findOne({ _id: ctx.params.data.cardId}).then((card) => {
+                return ctx.call("request-board.consultSectionOne", {
+                    where: {
+                        _id: card.section
+                    }
+                }).then((section) => {
+                    let index = _.findIndex(section.cards, (cardSection) => {
+                        return cardSection.valueOf() == card.id
+                    })
+           
+                    if(index == -1){
+                        return new Error('Card não encontrado!')
+                    }
+                    section.cards.splice(index,1)
+                    return section.save().then(() => {
+                        return server.mongodb.Card.remove({
+                            _id: ctx.params.data.cardId
+                        }).then(() => {
+                            server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardRemove', new EventResponse({
+                                removedCardId: ctx.params.data.cardId
+                            }))
+                            return ctx.params.data.cardId
+                        })
+                        
+                    })           
+                })
+            })
         },
         saveCardInSection(ctx){
             return ctx.call("request-board.consultSectionOne", {
