@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import moment from 'moment'
+const Op = require('sequelize').Op
 
 module.exports = (server) => { return {
     name: "data/request",
@@ -146,9 +147,8 @@ module.exports = (server) => { return {
          */            
         saveRequestOrderProducts(ctx) {
             /*
-            * Delete all client's clientAddress
+            * Delete all
             */ 
-           
             return server.mysql.RequestOrderProduct.destroy({
                 where: {
                     requestOrderId: ctx.params.requestOrderId
@@ -177,67 +177,93 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} paymentMethods 
          */
         setPaymentMethods(ctx) {
-            let paymentMethodsPromises = []
-            let paymentsPaids = []
-            ctx.params.data.forEach((paymentMethod) => {
-                if (paymentMethod.id) {
-                    paymentMethodsPromises.push(ctx.call("data/request.paymentMethodUpdate", {
-                        data: _.assign(paymentMethod, {
-                            requestId: ctx.params.requestId,
-                            paidDatetime: (paymentMethod.paid) ? moment() : null
-                        }),
-                        createdById: ctx.params.createdById,
-                        where: {
-                            id: paymentMethod.id
-                        },
-                        transaction: ctx.params.transaction 
-                    }).then((paymentMethod) => {
-                        if(paymentMethod.paid) paymentsPaids.push(paymentMethod.id)
-                        return paymentMethod
-                    }).catch((err) =>{
-                        //console.log(err) //comentar
+            let revertTransactions = []
+            //console.log(ctx.params.alreadyPaid)
+            return server.mysql.RequestPaymentMethod.destroy({
+                where: {
+                    id: {
+                        [Op.in]: _.map(ctx.params.removeRequestPaymentMethods, (removeRequestPayment) => {
+                            if(removeRequestPayment.paid || removeRequestPayment.settled) revertTransactions.push(removeRequestPayment)
+                            return removeRequestPayment.id
+                        })
+                    }
+                },
+                transaction: ctx.params.transaction || null
+            }).then(() => {
+                return ctx.call("data/request.revertTransaction", {
+                    data: revertTransactions,
+                    createdById: ctx.params.createdById,
+                    requestId: ctx.params.requestId,
+                    transaction: ctx.params.transaction 
+                }).then(() => {
+                    let paymentMethodsPromises = []
+                    let paymentsPaids = []
+                    ctx.params.data.forEach((paymentMethod) => {
+                        if (paymentMethod.id) {
+                            paymentMethodsPromises.push(ctx.call("data/request.paymentMethodUpdate", {
+                                data: _.assign(paymentMethod, {
+                                    requestId: ctx.params.requestId,
+                                    paidDatetime: (paymentMethod.paid) ? moment() : null,
+                                    dateRemoved: null
+                                }),
+                                createdById: ctx.params.createdById,
+                                where: {
+                                    id: paymentMethod.id
+                                },
+                                transaction: ctx.params.transaction 
+                            }).then((paymentMethod) => {
+                                if(paymentMethod.paid) paymentsPaids.push(paymentMethod.id)
+                                return paymentMethod
+                            }).catch((err) =>{
+                                //console.log(err) //comentar
+                                throw new Error(err)
+                            })
+                            )
+                        }
+                        else {
+                            paymentMethodsPromises.push(ctx.call("data/request.paymentMethodCreate", {
+                                data: _.assign(paymentMethod, {
+                                    requestId: ctx.params.requestId,
+                                    paidDatetime: (paymentMethod.paid) ? moment() : null
+                                }),
+                                transaction: ctx.params.transaction || null
+                            }).then((paymentMethod) => {
+                                if(paymentMethod.paid) paymentsPaids.push(paymentMethod.id)
+                                return paymentMethod
+                            }).catch((err) =>{
+                                //console.log(err) // COMENTAR
+                                throw new Error(err)
+                            })
+                            )
+                        }
+                    })
+                    return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
+                        console.log(paymentsPaids, ctx.params.alreadyPaid, _.pullAll(paymentsPaids, ctx.params.alreadyPaid))
+                        if(paymentsPaids.length){
+                            return ctx.call("cashier-balancing.markAsPaid", {
+                                data: {
+                                    requestPaymentIds: _.pullAll(paymentsPaids, ctx.params.alreadyPaid),
+                                    companyId: ctx.params.companyId,
+                                    createdById: ctx.params.createdById,
+                                    accountId: ctx.params.accountId
+                                },
+                                persistence: true,
+                                transaction: ctx.params.transaction || null
+                            }).then(() => {
+                                return paymentMethods
+                            })
+                        }
+                        else {
+                            return paymentMethods
+                        }
+                    }).catch((err) => {
+                        console.log('Erro payment methods em request service', err)
                         throw new Error(err)
                     })
-                    )
-                }
-                else {
-                    paymentMethodsPromises.push(ctx.call("data/request.paymentMethodCreate", {
-                        data: _.assign(paymentMethod, {
-                            requestId: ctx.params.requestId,
-                            paidDatetime: (paymentMethod.paid) ? moment() : null
-                        }),
-                        transaction: ctx.params.transaction || null
-                    }).then((paymentMethod) => {
-                        if(paymentMethod.paid) paymentsPaids.push(paymentMethod.id)
-                        return paymentMethod
-                    }).catch((err) =>{
-                        //console.log(err) // COMENTAR
-                        throw new Error(err)
-                    })
-                    )
-                }
-            })
-            return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
-                if(paymentsPaids.length){
-                    return ctx.call("cashier-balancing.markAsPaid", {
-                        data: {
-                            requestPaymentIds: paymentsPaids,
-                            companyId: ctx.params.companyId,
-                            createdById: ctx.params.createdById,
-                            accountId: ctx.params.accountId
-                        },
-                        persistence: true,
-                        transaction: ctx.params.transaction || null
-                    }).then(() => {
-                        return paymentMethods
-                    })
-                }
-                else {
-                    return paymentMethods
-                }
+                })
             }).catch((err) => {
-                console.log('Erro payment methods em request service')
-                throw new Error(err)
+                console.log('ERRO: revertTransaction do setPaymentMethods', err)
+                return new Error("ERRO: revertTransaction do setPaymentMethods")
             })
         },
 
@@ -263,61 +289,71 @@ module.exports = (server) => { return {
          * @returns {Promise.<Object>} paymentMethod
          */
         paymentMethodUpdate(ctx){
-            return server.mysql.RequestPaymentMethod.findById(ctx.params.data.id, {
-                include: [{
-                    model: server.mysql.RequestPaymentTransaction,
-                    as: 'requestPaymentTransactions',
-                    include: [{
-                        model: server.mysql.Transaction,
-                        as: 'transaction'
-                    }]
-                }]
-            }).then((requestPaymentMethod) => {
-                if(requestPaymentMethod.paid !== ctx.params.data.paid || requestPaymentMethod.amount !== ctx.params.data.amount){
-                    ctx.call("data/request.revertTransaction", {
-                        data: requestPaymentMethod,
-                        createdById: ctx.params.createdById,
-                        requestId: ctx.params.data.requestId,
-                        transaction: ctx.params.transaction 
-                    }).catch((err) => {
-                        console.log('ERRO: revertTransaction', err)
-                        return new Error("ERRO: revertTransaction")
-                    })
+            return server.mysql.RequestPaymentMethod.update(ctx.params.data, {
+                where: ctx.params.where || {},
+                paranoid: false,
+                transaction: ctx.params.transaction || null
+            }).then((paymentMethodUpdate) => {
+                if(parseInt(_.toString(paymentMethodUpdate)) < 1 ){
+                    console.log("Nenhum registro encontrado. Update.")
+                    throw new Error("Nenhum registro encontrado.")
                 }
-                return server.mysql.RequestPaymentMethod.update(ctx.params.data, {
-                    where: ctx.params.where || {},
-                    transaction: ctx.params.transaction || null
-                }).then((paymentMethodUpdate) => {
-                    if(parseInt(_.toString(paymentMethodUpdate)) < 1 ){
-                        console.log("Nenhum registro encontrado. Update.")
-                        throw new Error("Nenhum registro encontrado.")
-                    }
-                    return server.mysql.RequestPaymentMethod.findById(ctx.params.data.id, {
-                        transaction: ctx.params.transaction
-                    }).then((paymentMethod) => {
-                        return JSON.parse(JSON.stringify(paymentMethod))
-                    })
-                }).catch((err) => {
-                    throw new Error(err) // COMENTAR
+                return server.mysql.RequestPaymentMethod.findById(ctx.params.data.id, {
+                    transaction: ctx.params.transaction
+                }).then((paymentMethod) => {
+                    return JSON.parse(JSON.stringify(paymentMethod))
                 })
-            })
-        },
-        revertTransaction(ctx){
-            if(!_.first(ctx.params.data.requestPaymentTransactions)) return true
-            const requestTransaction = JSON.parse(JSON.stringify(_.first(ctx.params.data.requestPaymentTransactions))).transaction
-            
-            return ctx.call("cashier-balancing.revertTransaction", {
-                data: {
-                    amount: Math.abs(requestTransaction.amount),
-                    createdById: ctx.params.createdById,
-                    accountId: requestTransaction.accountId,
-                    companyId: requestTransaction.companyId,
-                    description: 'Redução do valor do pagamento #' + ctx.params.data.id + ' do pedido #' + ctx.params.requestId + ' na conta de destino (Recoversance)',
-                },
-                transaction: ctx.params.transaction 
             }).catch((err) => {
                 throw new Error(err) // COMENTAR
             })
+        },
+        
+        revertTransaction(ctx){
+            if(!ctx.params.data.length) return true
+            let promises = []
+            ctx.params.data.forEach((requestPayment, index) => {
+                requestPayment.requestPaymentTransactions.forEach((requestTransaction) => {
+                    if(_.has(requestTransaction, 'transaction')){
+                        if(requestTransaction.action == 'payment'){
+                            return ctx.call("cashier-balancing.revertTransaction", {
+                                data: {
+                                    amount: -Math.abs(requestTransaction.transaction.amount),
+                                    createdById: ctx.params.createdById,
+                                    accountId: requestTransaction.transaction.accountId,
+                                    companyId: requestTransaction.transaction.companyId,
+                                    description: 'Redução do valor do pagamento #' + requestPayment.id + ' do pedido #' + ctx.params.requestId + ' na conta de destino (Recoverance)',
+                                },
+                                type: 'paid',
+                                paymentMethodId: requestPayment.id,
+                                transaction: ctx.params.transaction 
+                            }).catch((err) => {
+                                console.log("Erro: revertTransaction in if paid", err)
+                                throw new Error(err) // COMENTAR
+                            })
+                        }
+                        else {
+                            return ctx.call("cashier-balancing.revertTransaction", {
+                                data: {
+                                    amount: (requestTransaction.operation == 'add') ? -Math.abs(requestTransaction.transaction.amount) : Math.abs(requestTransaction.transaction.amount),
+                                    createdById: ctx.params.createdById,
+                                    accountId: requestTransaction.transaction.accountId,
+                                    companyId: requestTransaction.transaction.companyId,
+                                    description: (requestTransaction.operation == 'add') ? 'Redução' : 'Adição' + ' do valor do acerto de contas #' + requestPayment.id + ' do pedido #' + ctx.params.requestId + ' na conta de ' 
+                                    + (requestTransaction.operation == 'add') ? 'destino' : 'origem' + '. (Recoverance)',
+                                },
+                                type: 'settled',
+                                paymentMethodId: requestPayment.id,
+                                operation: (requestTransaction.operation == 'add') ? 'remove' : 'add',
+                                transaction: ctx.params.transaction 
+                            }).catch((err) => {
+                                console.log("Erro: revertTransaction in if settled", err)
+                                throw new Error(err) // COMENTAR
+                            })
+                        }
+                    }
+                })
+            })
+            
         },
         // request-client-address
         /**

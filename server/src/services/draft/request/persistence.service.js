@@ -14,6 +14,8 @@ module.exports = (server) => {
     let _draftId = null
     let _reloadCard = null
 
+    let _oldRequest = null
+
     return {
     name: "draft/request/persistence",
     actions: {
@@ -29,7 +31,10 @@ module.exports = (server) => {
             this._draftId = ctx.params.draftId
            
             return ctx.call("draft/request/persistence.checkTempIds").then(() => {
-             //START 
+             //START
+
+             if(this._request.id) ctx.call("draft/request/persistence.consultRequest")
+
                 return ctx.call("draft/request/persistence.setTransaction").then(() => {
                     let promises = []
 
@@ -147,6 +152,96 @@ module.exports = (server) => {
         },
         reloadCard(ctx){
             return this._reloadCard = ctx.params.reloadCard
+            
+        },
+
+        consultRequest(ctx){
+            return ctx.call("data/request.getOne", {
+                where: {
+                    id: this._request.id
+                },
+                include: [{
+                    model: server.mysql.RequestTimeline,
+                    as: "requestTimeline",
+                    include: [{
+                        model: server.mysql.User,
+                        as: "triggeredByUser",
+                    },{
+                        model: server.mysql.User,
+                        as: "user",
+                    }]
+                },
+                {
+                    model: server.mysql.RequestClientPhone,
+                    as: "requestClientPhones",
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: "clientPhone",
+                    }]
+                },{
+                    model: server.mysql.RequestClientAddress,
+                    as: "requestClientAddresses",
+                    include: [{
+                        model: server.mysql.ClientAddress,
+                        as: "clientAddress",
+                        include:[{
+                            model: server.mysql.Address,
+                            as: "address"
+                        }]
+                    }]
+                },{
+                    model: server.mysql.Client,
+                    as: "client",
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: 'clientPhones'
+                    }, {
+                        model: server.mysql.ClientAddress,
+                        as: 'clientAddresses',
+                        include: [{
+                            model: server.mysql.Address,
+                            as: 'address'
+                        }]
+                    }, {
+                        model: server.mysql.ClientCustomField,
+                        as: 'clientCustomFields',
+                        include: [{
+                            model: server.mysql.CustomField,
+                            as: 'customField'
+                        }]
+                    }, {
+                        model: server.mysql.ClientGroup,
+                        as: 'clientGroup'
+                    }]
+                },{
+                    model: server.mysql.RequestOrder,
+                    as: "requestOrder",
+                    include: [{
+                        model: server.mysql.RequestOrderProduct,
+                        as: 'requestOrderProducts',
+                        include: [{
+                            model: server.mysql.Product,
+                            as: 'product'
+                        }]
+                    }]
+                },{
+                    model: server.mysql.RequestPaymentMethod,
+                    as: "requestPaymentMethods",
+                    include: [{
+                        model: server.mysql.PaymentMethod,
+                        as: 'paymentMethod'
+                    },{
+                        model: server.mysql.RequestPaymentTransaction,
+                        as: 'requestPaymentTransactions',
+                        include: [{
+                            model: server.mysql.Transaction,
+                            as: 'transaction'
+                        }]
+                    }]
+                }]
+            }).then((request) => {
+                return this._oldRequest = request
+            })
         },
         /**
          * @param {Object} data, {Object} transaction
@@ -296,13 +391,11 @@ module.exports = (server) => {
                 )
 
                 if(this._request.requestPaymentMethods){
-                    promises.push(ctx.call("data/request.setPaymentMethods", {
+                    promises.push(ctx.call("draft/request/persistence.setPaymentMethods", {
                             data: this._request.requestPaymentMethods,
-                            requestId: request.id,
-                            companyId: this._companyId,
-                            createdById: this._userId,
-                            accountId: (this._request.accountId) ? this._request.accountId : null,
-                            transaction: this._transaction
+                            requestId: request.id
+                        }).catch((err) => {
+                            return new Error(err)
                         })
                     )
                 }
@@ -343,34 +436,54 @@ module.exports = (server) => {
             })  
         },
 
+        setPaymentMethods(ctx){
+            let removeRequestPaymentMethods = []
+            let alreadyPaid = []
+            if(this._request.id && _.has(this._oldRequest, 'requestPaymentMethods')){
+                alreadyPaid = _.map(this._oldRequest.requestPaymentMethods, (requestPaymentMethod) => {
+                    if(requestPaymentMethod.paid) return requestPaymentMethod.id
+                })
+                removeRequestPaymentMethods = _.pullAllBy(this._oldRequest.requestPaymentMethods, ctx.params.data, 'id')
+            }
+
+            console.log('alreadyPaid ', alreadyPaid)
+            return ctx.call("data/request.setPaymentMethods", {
+                data: ctx.params.data,
+                removeRequestPaymentMethods: (removeRequestPaymentMethods) ? removeRequestPaymentMethods : [],
+                alreadyPaid: alreadyPaid,
+                requestId: ctx.params.requestId,
+                companyId: this._companyId,
+                createdById: this._userId,
+                accountId: (this._request.accountId) ? this._request.accountId : null,
+                transaction: this._transaction
+            }).catch((err) => {
+                return new Error (err)
+            })
+
+        },
+
         saveRequest(ctx){
             if (this._request.id) { // update request
-                return ctx.call("data/request.getOne", {
-                    where: {
+                if(this._oldRequest.status === this._request.status && this._oldRequest.status !== 'finished' || this._oldRequest.status !== 'canceled'){
+                    ctx.call("draft/request/persistence.reloadCard", {
+                        reloadCard: true
+                    })
+                }
+                return ctx.call("data/request.update", {
+                    data: _.assign(ctx.params.data, {
                         id: this._request.id
-                    }
-                }).then((requestConsult) => {
-                    if(requestConsult.status === this._request.status){
-                        ctx.call("draft/request/persistence.reloadCard", {
-                            reloadCard: true
-                        })
-                    }
-                    return ctx.call("data/request.update", {
-                        data: _.assign(ctx.params.data, {
-                            id: this._request.id
-                        }),
-                        where: {
-                            id: this._request.id,
-                            companyId: this._companyId
-                        },
-                        transaction: this._transaction
-                    }).then((request) => {
-                        return request
-                    }).catch((err) => {
-                        console.log("Erro em: data/request.update")
-                        throw new Error(err)
-                    })   
-                })
+                    }),
+                    where: {
+                        id: this._request.id,
+                        companyId: this._companyId
+                    },
+                    transaction: this._transaction
+                }).then((request) => {
+                    return request
+                }).catch((err) => {
+                    console.log("Erro em: data/request.update")
+                    throw new Error(err)
+                })   
             }
             else { // create request
                 return ctx.call("data/request.create", {
@@ -642,8 +755,7 @@ module.exports = (server) => {
                     return true
                 })
                return
-            })
-            
+            })            
         },
 
         /**

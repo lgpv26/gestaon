@@ -36,21 +36,93 @@ module.exports = (server, restify) => {
     })
 
     server.get('/requests/:id', (req, res, next) => {
-
-        const controller = new Controller({
-            request: {
-                id: req.params.id,
-                companyId: (req.query.companyId) ? req.query.companyId : null
-            }
-        })
-
-        return requestsController.getOne(controller).then((request) => {
-            if(!request){
-                return new restify.ResourceNotFoundError("Nenhum dado encontrado.")
-            }
-            return res.send(200, { data: request })
+        server.broker.call('data/request.getOne', {
+            where: {
+                id: req.params.id
+            },
+            include: [{
+                model: server.mysql.RequestTimeline,
+                as: "requestTimeline",
+                include: [{
+                    model: server.mysql.User,
+                    as: "triggeredByUser",
+                },{
+                    model: server.mysql.User,
+                    as: "user",
+                }]
+            },
+            {
+                model: server.mysql.RequestClientPhone,
+                as: "requestClientPhones",
+                include: [{
+                    model: server.mysql.ClientPhone,
+                    as: "clientPhone",
+                }]
+            },{
+                model: server.mysql.RequestClientAddress,
+                as: "requestClientAddresses",
+                include: [{
+                    model: server.mysql.ClientAddress,
+                    as: "clientAddress",
+                    include:[{
+                        model: server.mysql.Address,
+                        as: "address"
+                    }]
+                }]
+            },{
+                model: server.mysql.Client,
+                as: "client",
+                include: [{
+                    model: server.mysql.ClientPhone,
+                    as: 'clientPhones'
+                }, {
+                    model: server.mysql.ClientAddress,
+                    as: 'clientAddresses',
+                    include: [{
+                        model: server.mysql.Address,
+                        as: 'address'
+                    }]
+                }, {
+                    model: server.mysql.ClientCustomField,
+                    as: 'clientCustomFields',
+                    include: [{
+                        model: server.mysql.CustomField,
+                        as: 'customField'
+                    }]
+                }, {
+                    model: server.mysql.ClientGroup,
+                    as: 'clientGroup'
+                }]
+            },{
+                model: server.mysql.RequestOrder,
+                as: "requestOrder",
+                include: [{
+                    model: server.mysql.RequestOrderProduct,
+                    as: 'requestOrderProducts',
+                    include: [{
+                        model: server.mysql.Product,
+                        as: 'product'
+                    }]
+                }]
+            },{
+                model: server.mysql.RequestPaymentMethod,
+                as: "requestPaymentMethods",
+                include: [{
+                    model: server.mysql.PaymentMethod,
+                    as: 'paymentMethod'
+                },{
+                    model: server.mysql.RequestPaymentTransaction,
+                    as: 'requestPaymentTransactions',
+                    include: [{
+                        model: server.mysql.Transaction,
+                        as: 'transaction'
+                    }]
+                }]
+            }]
+        }).then((request) => {
+            return res.send(200, request)
         }).catch((err) => {
-            console.log('catch da rota do requests all', err)
+            console.log(err)
         })
     })
 

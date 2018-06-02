@@ -33,6 +33,13 @@ module.exports = {
                 paidDatetime: {
                     type: TIMESTAMP
                 },
+                settled: {
+                    type: Sequelize.BOOLEAN,
+                    default: false
+                },
+                settledDatetime: {
+                    type: TIMESTAMP
+                },
                 dateUpdated: {
                     type: TIMESTAMP
                 },
@@ -48,7 +55,8 @@ module.exports = {
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
                 deletedAt: 'dateRemoved',
-                freezeTableName: true
+                freezeTableName: true,
+                paranoid: true
             })
         }
     },
