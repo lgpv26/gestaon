@@ -140,13 +140,16 @@ di.server.broker.start().then(() => {
                         return resolve()
                     }).then(() => {
                         mongoose.Promise = bluebird
-                        let mongoConnectionString = 'mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName
+                        let mongoDbCredentials = {}
                         if(process.env.NODE_ENV === 'production'){
-                            mongoConnectionString = 'mongodb://' + config.mongoDb.user + ':' + config.mongoDb.password + '@' + config.mongoDb.host + '/'+ config.mongoDb.dbName
+                            mongoDbCredentials = {
+                                user: config.mongoDb.user,
+                                password: config.mongoDb.password
+                            }
                         }
-                        
-                        return mongoose.connect(mongoConnectionString, {
-                            promiseLibrary: bluebird
+                        return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
+                            promiseLibrary: bluebird,
+                            ...mongoDbCredentials
                         }).then(() => {
                             log.info("Successfully connected to MongoDB");
                             // finally, initialize di.server
