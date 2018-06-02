@@ -144,6 +144,7 @@ di.server.broker.start().then(() => {
                         if(process.env.NODE_ENV === 'production'){
                             mongoConnectionString = 'mongodb://' + config.mongoDb.user + ':' + config.mongoDb.password + '@' + config.mongoDb.host + '/'+ config.mongoDb.dbName
                         }
+                        
                         return mongoose.connect(mongoConnectionString, {
                             promiseLibrary: bluebird
                         }).then(() => {
