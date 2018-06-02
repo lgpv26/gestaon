@@ -255,6 +255,8 @@
         created(){
             const vm = this;
 
+            console.log("O sistema está iniciando...")
+
             /* start socket.io */
 
             const socket = io(config.socketServer + '?token=' + vm.token.accessToken)
