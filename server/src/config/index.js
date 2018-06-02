@@ -38,7 +38,9 @@ const config = {
     },
     mongoDb: {
         host: 'localhost',
-        dbName: 'GestaON'
+        dbName: 'gestaon-prod',
+        user: 'gestaon',
+        password: '3V25Gc9#2'
     },
     pubNub: {
         subscribeKey: "sub-c-ddbbcb76-eec5-11e6-889b-02ee2ddab7fe",

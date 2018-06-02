@@ -1,8 +1,8 @@
 import _ from 'lodash'
 
 let config = {
-    apiBaseUrl: 'http://gestaon.com:8080',
-    socketServer: 'http://gestaon.com:8080'
+    apiBaseUrl: 'http://api.gestaon.com',
+    socketServer: 'http://server.gestaon.com'
 }
 
 if(process.env.NODE_ENV !== 'production') {
@@ -12,7 +12,7 @@ if(process.env.NODE_ENV !== 'production') {
         // do stuff
     } catch (err) {
         console.log("Developer config file not found.")
-        
+
     }
 }
 
