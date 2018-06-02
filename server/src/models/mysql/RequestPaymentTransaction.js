@@ -22,8 +22,11 @@ module.exports = {
                 action: {
                     type: Sequelize.STRING
                 },
-                settledDatetime: {
-                    type: TIMESTAMP
+                operation: {
+                    type: Sequelize.STRING
+                },
+                revert:{
+                    type: Sequelize.BOOLEAN
                 },
                 dateUpdated: {
                     type: TIMESTAMP

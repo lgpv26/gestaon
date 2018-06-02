@@ -2,3 +2,4 @@
 
 client/src/config.developer\.js
 server/src/config/config.developer\.js
+\.vscode/launch\.json

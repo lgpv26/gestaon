@@ -256,10 +256,12 @@ module.exports = (server) => {
                                 if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
                                 accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
                                 return server.mysql.RequestPaymentTransaction.create({
+                                    requestPaymentId: ctx.params.paymentMethodId,                    
                                     requestPaymentId: requestPaymentMethod.id,
                                     transactionId: transaction.id,
-                                    settledDatetime: null,
-                                    action: 'payment'
+                                    action: 'payment',
+                                    operation: null,
+                                    revert: false
                                     }, {
                                     transaction: this._transaction
                                 }).then(() => {
@@ -442,18 +444,68 @@ module.exports = (server) => {
         },
 
         revertTransaction(ctx){
+            if(ctx.params.type == 'paid'){
+                return ctx.call("cashier-balancing.revertPaid", {
+                    data: ctx.params.data,
+                    paymentMethodId: ctx.params.paymentMethodId,
+                    transaction: ctx.params.transaction
+                })
+            }
+            else{
+                return ctx.call("cashier-balancing.revertSettled", {
+                    data: ctx.params.data,
+                    paymentMethodId: ctx.params.paymentMethodId,
+                    transaction: ctx.params.transaction
+                })
+            }            
+        },
+
+        revertPaid(ctx){
             return ctx.call('data/transaction.create', {
                 data: ctx.params.data,
                 transaction: ctx.params.transaction
             }).then((transaction) => {
-                return server.mysql.Account.findById(transaction.accountId, {
+                return server.mysql.RequestPaymentTransaction.create({
+                    requestPaymentId: ctx.params.paymentMethodId,
+                    transactionId: transaction.id,
+                    action: 'payment',
+                    operation: null,
+                    revert: true                 
+                    }, {
                     transaction: ctx.params.transaction
-                }).then((account) => {
-                    account.balance = parseFloat(account.balance) - parseFloat(transaction.amount)
-                    return account.save({transaction: ctx.params.transaction})
+                }).then(() => {
+                    return server.mysql.Account.findById(transaction.accountId, {
+                        transaction: ctx.params.transaction
+                    }).then((account) => {
+                        account.balance = parseFloat(account.balance) + parseFloat(transaction.amount)
+                        return account.save({transaction: ctx.params.transaction})
+                    })
                 })
             })
+        },
 
+        revertSettled(ctx){
+            return ctx.call('data/transaction.create', {
+                data: ctx.params.data,
+                transaction: ctx.params.transaction
+            }).then((transaction) => {
+                return server.mysql.RequestPaymentTransaction.create({
+                    requestPaymentId: ctx.params.paymentMethodId,
+                    transactionId: transaction.id,
+                    action: 'settled',
+                    operation: ctx.params.operation,
+                    revert: true                 
+                    }, {
+                    transaction: ctx.params.transaction
+                }).then(() => {
+                    return server.mysql.Account.findById(transaction.accountId, {
+                        transaction: ctx.params.transaction
+                    }).then((account) => {
+                        account.balance = parseFloat(account.balance) + parseFloat(transaction.amount)
+                        return account.save({transaction: ctx.params.transaction})
+                    })
+                })
+            })
         },
 
         /**

@@ -375,7 +375,9 @@ module.exports = (server) => {
             ctx.params.data.forEach((client, index) => {
                 if(_.has(client, 'clientPhones') && client.clientPhones.length){
                     client.clientPhones.forEach((clientPhone) => {
-                        phones.push(_.assign(clientPhone, {clientId: client.client.id}))
+                        if(!_.isEmpty(clientPhone.trim())){
+                            phones.push(_.assign(clientPhone, {clientId: client.client.id}))
+                        }                        
                     })
                 } 
             })
@@ -563,7 +565,7 @@ module.exports = (server) => {
                         client.clientPhones.forEach((clientPhone) => {
                         clientPhones.push({
                             clientPhoneId: clientPhone.id,
-                            number: (parseInt(clientPhone.number) >= 999999999 || parseInt(clientPhone.number) < 99999999999) ? clientPhone.number.slice(2) : clientPhone.number
+                            number: clientPhone.number
                         })
                     })
                     _.set(clientES[index], 'phones', clientPhones)

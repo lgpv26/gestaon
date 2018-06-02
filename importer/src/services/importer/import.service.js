@@ -293,10 +293,12 @@ module.exports = (server) => {
             _.forEach(ctx.params.data, (client, index) => {
                 if(_.has(client, 'telefones')){
                     client.telefones.forEach((phone, index) => {
-                        phones.push({
-                            clientId: client.client.id,
-                            number: phone.Telefone
-                        })
+                        if(!_.isEmpty(phone.trim())){
+                            phones.push({
+                                clientId: client.client.id,
+                                number: phone.Telefone
+                            })
+                        }
                     })
                 }
             })
@@ -400,10 +402,12 @@ module.exports = (server) => {
                 if(_.has(client, "clientPhones")){
                     let clientPhones = []
                         client.clientPhones.forEach((clientPhone) => {
-                        clientPhones.push({
-                            clientPhoneId: clientPhone.id,
-                            number: (parseInt(clientPhone.number) >= 999999999 || parseInt(clientPhone.number) < 99999999999) ? clientPhone.number.slice(2) : clientPhone.number
-                        })
+                            if(!_.isEmpty(clientPhone.trim())){
+                                clientPhones.push({
+                                    clientPhoneId: clientPhone.id,
+                                    number: clientPhone.number
+                                })
+                            }                        
                     })
                     _.set(clientES[index], 'phones', clientPhones)
                 }
