@@ -252,6 +252,7 @@
                 })
             }
         },
+        
         created(){
             const vm = this;
 
