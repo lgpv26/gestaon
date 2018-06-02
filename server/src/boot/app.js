@@ -143,8 +143,10 @@ di.server.broker.start().then(() => {
                         let mongoDbCredentials = {}
                         if(process.env.NODE_ENV === 'production'){
                             mongoDbCredentials = {
-                                user: config.mongoDb.user,
-                                password: config.mongoDb.password
+                                auth: {
+                                    user: config.mongoDb.user,
+                                    password: config.mongoDb.password
+                                }
                             }
                         }
                         return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
