@@ -172,13 +172,22 @@ module.exports = (server) => { return {
                 console.log(err)
             })
         },
+        paymentMethodGetOne(ctx){
+            return server.mysql.RequestPaymentMethod.findOne({
+                where: ctx.params.where || {},
+                include: ctx.params.include || [],
+                transaction: ctx.params.transaction || null,
+                paranoid: false
+            }).then((requestPaymentMethod) => {
+                return JSON.parse(JSON.stringify(requestPaymentMethod))
+            })
+        },
         /**
          * @param {Object} data, {Object} requestId, {Object} transaction (optional)
          * @returns {Promise.<Array>} paymentMethods 
          */
         setPaymentMethods(ctx) {
             let revertTransactions = []
-            //console.log(ctx.params.alreadyPaid)
             return server.mysql.RequestPaymentMethod.destroy({
                 where: {
                     id: {
@@ -192,6 +201,8 @@ module.exports = (server) => { return {
             }).then(() => {
                 return ctx.call("data/request.revertTransaction", {
                     data: revertTransactions,
+                    changePaid: ctx.params.changePaid,
+                    alreadyPaid: ctx.params.alreadyPaid,
                     createdById: ctx.params.createdById,
                     requestId: ctx.params.requestId,
                     transaction: ctx.params.transaction 
@@ -226,6 +237,7 @@ module.exports = (server) => { return {
                                     requestId: ctx.params.requestId,
                                     paidDatetime: (paymentMethod.paid) ? moment() : null
                                 }),
+                                createdById: ctx.params.createdById,
                                 transaction: ctx.params.transaction || null
                             }).then((paymentMethod) => {
                                 if(paymentMethod.paid) paymentsPaids.push(paymentMethod.id)
@@ -238,7 +250,6 @@ module.exports = (server) => { return {
                         }
                     })
                     return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
-                        console.log(paymentsPaids, ctx.params.alreadyPaid, _.pullAll(paymentsPaids, ctx.params.alreadyPaid))
                         if(paymentsPaids.length){
                             return ctx.call("cashier-balancing.markAsPaid", {
                                 data: {
@@ -272,16 +283,40 @@ module.exports = (server) => { return {
          * @returns {Promise.<Object>} paymentMethod
          */
         paymentMethodCreate(ctx){
-            return server.mysql.RequestPaymentMethod.create(ctx.params.data, {
-                transaction: ctx.params.transaction || null
-            }).then((paymentMethod) => {
-                if(!paymentMethod){
-                    console.log("Nenhum registro encontrado. Create.")
-                    throw new Error("Nenhum registro encontrado.")
+            return ctx.call("data/request.paymentMethodGetOne", {
+                where: {
+                    requestId: ctx.params.data.requestId,
+                    paymentMethodId: ctx.params.data.paymentMethodId
+                },
+                transaction: ctx.params.transaction 
+            }).then((payment) => {
+                if(payment) {
+                    _.set(ctx.params.data, 'id', payment.id)
+                    _.set(ctx.params.data, 'dateRemoved', null)
+                    return ctx.call("data/request.paymentMethodUpdate", {
+                        data: ctx.params.data,
+                        createdById: ctx.params.createdById,
+                        where: {
+                            id: ctx.params.data.id
+                        },
+                        transaction: ctx.params.transaction 
+                    }).then((paymentMethod) => {
+                        return paymentMethod
+                    })
                 }
-                return JSON.parse(JSON.stringify(paymentMethod))
-            }).catch((err) => {
-                throw new Error(err) // COMENTAR
+                else {
+                    return server.mysql.RequestPaymentMethod.create(ctx.params.data, {
+                        transaction: ctx.params.transaction || null
+                    }).then((paymentMethod) => {
+                        if(!paymentMethod){
+                            console.log("Nenhum registro encontrado. Create.")
+                            throw new Error("Nenhum registro encontrado.")
+                        }
+                        return JSON.parse(JSON.stringify(paymentMethod))
+                    }).catch((err) => {
+                        throw new Error(err) // COMENTAR
+                    })
+                }
             })
         },
         /**
@@ -309,6 +344,9 @@ module.exports = (server) => { return {
         },
         
         revertTransaction(ctx){
+            if(ctx.params.changePaid.length){
+                ctx.params.data = _.concat(ctx.params.data, ctx.params.changePaid)
+            }
             if(!ctx.params.data.length) return true
             let promises = []
             ctx.params.data.forEach((requestPayment, index) => {
@@ -352,8 +390,7 @@ module.exports = (server) => { return {
                         }
                     }
                 })
-            })
-            
+            })       
         },
         // request-client-address
         /**
