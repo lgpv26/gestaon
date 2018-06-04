@@ -262,6 +262,7 @@
         position: absolute;
         z-index: 999;
         height: 100%;
+        pointer-events: none;
         -webkit-touch-callout: none; /* iOS Safari */
         -webkit-user-select: none; /* Safari */
         -khtml-user-select: none; /* Konqueror HTML */
@@ -274,6 +275,7 @@
         display: flex;
         flex-direction: row;
         height: 100%;
+        pointer-events: initial;
     }
 
     #request-panel > .add-section {
@@ -287,6 +289,7 @@
         border-radius: 100%;
         box-shadow: var(--dial-button-shadow);
         cursor: pointer;
+        pointer-events: initial;
     }
 
     #request-panel > .add-section:hover .colorizable {

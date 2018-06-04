@@ -19,7 +19,8 @@
                     <div v-else :class="{ active: value === clientGroup.id }" style="display: flex; flex-direction: row;">
                         <span style="cursor: pointer;" @click="select(clientGroup)">{{ clientGroup.name }}</span>
                         <span class="push-both-sides"></span>
-                        <a href="javascript:void(0)" style="margin-right: 3px;" @click="edit(clientGroup)">
+                        <icon-check style="height: 11px;"></icon-check>
+                        <a href="javascript:void(0)" v-if="false" style="margin-right: 3px;" @click="edit(clientGroup)">
                             <icon-edit></icon-edit>
                         </a>
                     </div>
@@ -33,7 +34,7 @@
                         <icon-check style="height: 11px;"></icon-check>
                     </div>
                 </div>
-                <div style="margin-top: 20px; position: relative;" v-else>
+                <div style="margin-top: 20px; position: relative;" v-if="false">
                     <a class="btn btn--primary btn--border-only" style="float: right;" @click="add()">
                         Novo
                     </a>
@@ -76,6 +77,7 @@
                 this.adding = true
             },
             edit(clientGroup){
+                return
                 this.adding = false
                 this.editing = clientGroup.id
                 this.editForm.name = clientGroup.name

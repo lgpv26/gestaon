@@ -19,12 +19,13 @@
                     <div v-else :class="{ active: value === user.id }" style="display: flex; flex-direction: row;">
                         <span style="cursor: pointer;" @click="select(user)">{{ user.name }}</span>
                         <span class="push-both-sides"></span>
-                        <a href="javascript:void(0)" style="margin-right: 3px;" @click="edit(user)">
+                        <icon-check style="height: 11px;"></icon-check>
+                        <a href="javascript:void(0)" v-if="false" style="margin-right: 3px;" @click="edit(user)">
                             <icon-edit></icon-edit>
                         </a>
                     </div>
                 </div>
-                <div style="margin-top: 20px; position: relative;" v-if="adding">
+                <div style="margin-top: 20px; position: relative;" v-if="false && adding">
                     <input type="text" style="font-size: 12px;" v-model="inputValue" placeholder="ADICIONAR NOVO" />
                     <div style="position: absolute; right: 24px; top: 0; cursor: pointer; font-weight: bold;" @click="adding = false">
                         voltar
@@ -33,7 +34,7 @@
                         <icon-check style="height: 11px;"></icon-check>
                     </div>
                 </div>
-                <div style="margin-top: 20px; position: relative;" v-else>
+                <div style="margin-top: 20px; position: relative;" v-if="false">
                     <a class="btn btn--primary btn--border-only" style="float: right;" @click="add()">
                         Novo
                     </a>

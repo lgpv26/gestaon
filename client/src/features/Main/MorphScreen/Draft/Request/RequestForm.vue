@@ -42,9 +42,9 @@
                             <app-switch style="float: right;" :value="activeStep === 'order'" :disabled="!isOrderFormAllowed" @changed="changeStep('order')"></app-switch>
                         </div>
                     </form>
-                    <div class="separator"></div>
+                    <div v-if="false" class="separator"></div>
                     <!-- Task form -->
-                    <form :class="{'active': activeStep === 'task'}">
+                    <form v-if="false" :class="{'active': activeStep === 'task'}">
                         <div class="form__content" v-show="activeStep === 'task'">
                             <!--<app-task-form @step-change="onStepChange($event)" :task.sync="form.task"></app-task-form>-->
                         </div>
@@ -64,7 +64,7 @@
             <span class="push-both-sides"></span>
             <div class="right-side">
                 <div class="account-selection">
-                    <app-select :items="accountsSelect" title="Conta" :verticalOffset="8" showInput="true" v-model="accountId" @change="sync($event,'accountId')">
+                    <app-select :items="accountsSelect" title="Conta" :verticalOffset="8" v-model="accountId" @change="sync($event,'accountId')">
                         <input type="text" style="cursor: pointer;" readonly :value="selectedAccountName" placeholder="ESCOLHA UMA CONTA" />
                         <icon-dropdown style="position: absolute; top: 6px; right: 5px;"></icon-dropdown>
                         <template slot="item" slot-scope="itemProps">

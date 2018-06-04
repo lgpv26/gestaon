@@ -19,7 +19,7 @@
                         <icon-check></icon-check>
                     </div>
                 </div>
-                <div style="margin-top: 20px; position: relative;">
+                <div style="margin-top: 20px; position: relative;" v-if="false">
                     <input type="text" style="font-size: 12px;" v-model="inputValue" placeholder="ADICIONAR NOVO" />
                     <div style="position: absolute; right: 0px; top: 0; cursor: pointer;" @click="save()">
                         <icon-check></icon-check>

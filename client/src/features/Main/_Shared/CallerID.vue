@@ -186,7 +186,7 @@
 <style scoped lang="scss">
     #caller-id {
         position: absolute;
-        z-index: 999999999999;
+        z-index: 500000;
         top: 75px;
         bottom: 75px;
         right: -240px;

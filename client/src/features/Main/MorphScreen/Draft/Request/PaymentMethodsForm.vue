@@ -5,6 +5,7 @@
             <th>Forma de pagamento</th>
             <!--<th style="text-align: left; width: 80px;">Parcela</th>-->
             <th style="text-align: left; width: 150px;">Vencimento</th>
+            <th style="text-align: left; width: 150px;">Número</th>
             <th style="text-align: right; width: 150px;">Valores</th>
             <th></th>
         </tr>
@@ -20,6 +21,10 @@
                     @input="changeRequestPaymentMethodRowDeadline($event,index)" :config="datetimeSelectorConfig" placeholder="-- SELECIONAR --"></app-datetime-selector>
                 <span v-else>---</span>
             </td>
+            <td>
+                <input type="text" v-model="requestPaymentMethodRow.code" v-if="requestPaymentMethodRow.paymentMethod.id === config.system.IDMappings.paymentMethods.bill" style="text-transform: initial" />
+                <span v-else>---</span>
+            </td>
             <td><money type="text" v-model="requestPaymentMethodRow.amount" @input.native="inputRequestPaymentMethodRow($event,'amount',index)" style="text-align: right;"></money></td>
             <td class="actions">
                 <app-switch v-model="requestPaymentMethodRow.paid" @change="toggleRequestPaymentMethodRowPaid($event, index)" :title="'Marcar como pago '"
@@ -30,8 +35,14 @@
             </td>
         </tr>
         <tr>
-            <td colspan="5">
-                <a class="btn btn--border-only" @click="add()" style="display: inline-flex; margin-top: 15px; padding: 0 7px; color: var(--font-color--d-secondary);">Adicionar pagamento</a>
+            <td colspan="6" style="padding-top: 15px;">
+                <div style="display: flex; flex-direction: row;">
+                    <a class="btn btn--border-only" @click="add()" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Adicionar pagamento</a>
+                    <div style="display: flex; align-items: center; background: var(--bg-color); margin-left: 10px; border-radius: 5px; padding: 0 7px;">
+                        <span style="margin-right: 5px;">Crédito utilizado: <strong style="color: var(--font-color--terciary)">R$0,00</strong> de <strong>R$150,00</strong></span>
+                        <icon-edit></icon-edit>
+                    </div>
+                </div>
             </td>
         </tr>
         </tbody>
@@ -44,6 +55,7 @@
     import utils from '@/utils/index'
     import _ from 'lodash'
     import moment from 'moment'
+    import shortid from 'shortid'
     import DraftMixin from '../DraftMixin'
     import PaymentMethodSelectComponent from '../_Shared/PaymentMethodSelect.vue'
 

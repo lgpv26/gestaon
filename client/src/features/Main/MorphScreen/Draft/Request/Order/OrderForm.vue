@@ -1,6 +1,6 @@
 <template>
     <div style="display: flex; flex-grow: 1; flex-direction: row">
-            <div class="form__main-column" style="display: flex; flex-direction: column; margin-right: 10px;">
+            <div class="form__main-column" style="display: flex; flex-direction: column;">
                 <div class="form-groups">
                     <app-order-products-form></app-order-products-form>
                 </div>
@@ -53,7 +53,7 @@
                     </div>
                 </div>
             </div>
-            <div class="form__side-column" style="display: flex; flex-direction: column;">
+            <div v-if="false" class="form__side-column" style="display: flex; flex-direction: column;">
                 <div class="reports">
                     <div class="side-column__tabs">
                         <ul>
@@ -245,6 +245,7 @@
         },
         mounted(){
             const vm = this
+            /*
             Highcharts.theme = {
                 colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066',
                     '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
@@ -584,6 +585,7 @@
                     }
                 ]
             })
+            */
             vm.suggestedTimeInterval = setInterval(() => {
                 if(vm.useSuggestedDeadlineDatetime){
                     vm.deadlineDatetime = moment().add(20, 'minutes').toDate()

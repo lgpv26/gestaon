@@ -15,12 +15,12 @@
                         </div>
                     </div>
                     <div v-else :class="{ active: value.id === paymentMethod.id }" style="display: flex; flex-direction: row;">
-                        <span style="cursor: pointer;" @click="select(paymentMethod)" @dblclick="edit(paymentMethod)">{{ paymentMethod.name }}</span>
+                        <span style="cursor: pointer;" @click="select(paymentMethod)">{{ paymentMethod.name }}</span>
                         <span class="push-both-sides"></span>
                         <icon-check></icon-check>
                     </div>
                 </div>
-                <div style="margin-top: 20px; position: relative;">
+                <div style="margin-top: 20px; position: relative;" v-if="false">
                     <input type="text" style="font-size: 12px;" v-model="inputValue" placeholder="ADICIONAR NOVO" />
                     <div style="position: absolute; right: 0px; top: 0; cursor: pointer;" @click="save()">
                         <icon-check></icon-check>

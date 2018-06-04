@@ -182,7 +182,7 @@
         transition: .0s opacity;
         width: 320px;
         position: absolute;
-        z-index: 99999;
+        z-index: 600000;
         background-color: var(--bg-color--2);
         padding: 20px;
         border-radius: 5px;

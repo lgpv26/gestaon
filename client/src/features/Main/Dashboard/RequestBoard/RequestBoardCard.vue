@@ -1,6 +1,6 @@
 <template>
     <div class="request-board-card">
-        <div class="request-board-card__loading" v-if="loading">
+        <div class="request-board-card__loading" v-if="false">
             <span>Carregando...</span>
         </div>
         <div class="request-board-card__container">
@@ -520,7 +520,7 @@
         align-items: center;
         justify-content: center;
         z-index: 1;
-        transition: all 0.5s ease;
+        /* transition: all 0.5s ease; */
     }
     .card__middle .objects__timeline .timeline__progress span.progress__progress {
         position: absolute;
@@ -545,7 +545,7 @@
         align-items: center;
         justify-content: center;
         z-index: 3;
-        transition: all 0.5s ease;
+        /* transition: all 0.5s ease; */
     }
     .card__middle .objects__timeline .timeline__progress--current span.progress__progress {
         position: absolute;

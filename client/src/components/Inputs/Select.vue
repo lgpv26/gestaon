@@ -158,7 +158,7 @@
         align-items: center;
     }
     .ag-select-input .select-input__container {
-        transition: .5s opacity;
+        /* transition: .5s opacity; */
         width: 240px;
         position: absolute;
         z-index: 99999;
