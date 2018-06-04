@@ -36,7 +36,7 @@ module.exports = class Draft {
             vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId)
             // if from database, call the service
             vm.server.broker.call('draft.get', {
-                data: {
+                where: {
                     companyId: vm.socket.activeCompany.id,
                     draftId: evData.draftId
                 }

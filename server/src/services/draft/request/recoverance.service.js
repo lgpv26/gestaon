@@ -23,75 +23,83 @@ module.exports = (server) => {
             this._userId = ctx.params.userId
             this._request = {}
 
-            return server.broker.call('draft/request/recoverance.consultRequest').then((request) => {
-                let promises = []
-                
-                promises.push(ctx.call("draft/request/recoverance.setRequest", {
-                    request: request
-                }).then((request) => {
-                    this._request = request
-                }).catch((err) => {
-                    console.log("Erro em: draft/request/recoverance.setRequest")
-                    throw new Error(err)
-                }))
-                
-                if(_.has(request, "client")){
-                    promises.push(ctx.call("draft/request/recoverance.setClient", {
-                        client: request.client
-                    }).then((client) => {
-                        _.set(this._request, 'client', client)
+            return ctx.call('draft.get', {
+                where: {
+                    companyId: this._companyId,
+                    "data.request.id": parseInt(this._requestId)
+                }
+            }).then((draft) => {
+                if(draft) return new EventResponse(new Error ('Só é possivel gerar editar 1 rascunho. Favor concluir o rascunho deste pedido para gerar um novo.'))
+                return ctx.call('draft/request/recoverance.consultRequest').then((request) => {
+                    let promises = []
+                    
+                    promises.push(ctx.call("draft/request/recoverance.setRequest", {
+                        request: request
+                    }).then((request) => {
+                        this._request = request
                     }).catch((err) => {
-                        console.log("Erro em: draft/request/recoverance.setClient")
+                        console.log("Erro em: draft/request/recoverance.setRequest")
                         throw new Error(err)
                     }))
-                }
+                    
+                    if(_.has(request, "client")){
+                        promises.push(ctx.call("draft/request/recoverance.setClient", {
+                            client: request.client
+                        }).then((client) => {
+                            _.set(this._request, 'client', client)
+                        }).catch((err) => {
+                            console.log("Erro em: draft/request/recoverance.setClient")
+                            throw new Error(err)
+                        }))
+                    }
 
-                if(_.has(request, "requestOrder")){
-                    promises.push(ctx.call("draft/request/recoverance.setOrder", {
-                        order: request.requestOrder
-                    }).then((order) => {
-                        _.set(this._request, 'order', order)
-                    }).catch((err) => {
-                        console.log("Erro em: draft/request/recoverance.setClient")
-                        throw new Error(err)
-                    }))
-                }
+                    if(_.has(request, "requestOrder")){
+                        promises.push(ctx.call("draft/request/recoverance.setOrder", {
+                            order: request.requestOrder
+                        }).then((order) => {
+                            _.set(this._request, 'order', order)
+                        }).catch((err) => {
+                            console.log("Erro em: draft/request/recoverance.setClient")
+                            throw new Error(err)
+                        }))
+                    }
 
-                if(_.has(request, "requestPaymentMethods")){
-                    promises.push(ctx.call("draft/request/recoverance.setRequestAccountId", {
-                        requestPaymentMethods: request.requestPaymentMethods
-                    }).then((accountId) => {
-                        if(accountId) _.set(this._request, 'accountId', accountId)
-                    }))
-                    promises.push(ctx.call("draft/request/recoverance.setRequestPaymentMethods", {
-                        requestPaymentMethods: request.requestPaymentMethods
-                    }).then((requestPaymentMethods) => {
-                        _.set(this._request, 'requestPaymentMethods', requestPaymentMethods)
-                    }).catch((err) => {
-                        console.log("Erro em: draft/request/recoverance.setClient")
-                        throw new Error(err)
-                    }))
-                }
+                    if(_.has(request, "requestPaymentMethods")){
+                        promises.push(ctx.call("draft/request/recoverance.setRequestAccountId", {
+                            requestPaymentMethods: request.requestPaymentMethods
+                        }).then((accountId) => {
+                            if(accountId) _.set(this._request, 'accountId', accountId)
+                        }))
+                        promises.push(ctx.call("draft/request/recoverance.setRequestPaymentMethods", {
+                            requestPaymentMethods: request.requestPaymentMethods
+                        }).then((requestPaymentMethods) => {
+                            _.set(this._request, 'requestPaymentMethods', requestPaymentMethods)
+                        }).catch((err) => {
+                            console.log("Erro em: draft/request/recoverance.setClient")
+                            throw new Error(err)
+                        }))
+                    }
 
-                return Promise.all(promises).then(() => {
-                    return ctx.call("draft.create", {
-                        data: {
-                            createdBy: this._userId,
-                            companyId: this._companyId,
-                            data: { 
-                                request: this._request 
+                    return Promise.all(promises).then(() => {
+                        return ctx.call("draft.create", {
+                            data: {
+                                createdBy: this._userId,
+                                companyId: this._companyId,
+                                data: { 
+                                    request: this._request 
+                                }
                             }
-                        }
-                    }).then(() => {
-                        return new EventResponse('Success')
-                    }).catch((err) => {
-                        console.log("Erro em: draft/request/recoverance.consultRequest")
-                        return new EventResponse(err)
+                        }).then(() => {
+                            return new EventResponse('Success')
+                        }).catch((err) => {
+                            console.log("Erro em: draft/request/recoverance.consultRequest")
+                            return new EventResponse(err)
+                        })
                     })
+                }).catch((err) => {
+                    console.log("Erro em: draft/request/recoverance.consultRequest")
+                    throw new Error(err)
                 })
-            }).catch((err) => {
-                console.log("Erro em: draft/request/recoverance.consultRequest")
-                throw new Error(err)
             })
         
         },
@@ -270,7 +278,6 @@ module.exports = (server) => {
                 return requestPaymentMethod
             })
         },
-
         setRequestAccountId(ctx) {
             let accountId = null
             ctx.params.requestPaymentMethods.forEach((requestPaymentMethod) => {

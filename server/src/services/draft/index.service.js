@@ -12,7 +12,8 @@ module.exports = (server) => { return {
          * @returns
          */
         get(ctx) {
-            return server.mongodb.Draft.findOne({ draftId: ctx.params.data.draftId, companyId: ctx.params.data.companyId }).then((draft) => {
+            return server.mongodb.Draft.findOne(ctx.params.where).then((draft) => {
+                if(!draft) return null
                 return draft.toJSON()
             })
         },

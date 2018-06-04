@@ -91,7 +91,7 @@ module.exports = {
         Request.hasMany(RequestTimeline, {as: 'requestTimeline', foreignKey: 'requestId'})
 
         Request.hasMany(RequestPaymentMethod, {as: 'requestPaymentMethods', foreignKey: 'requestId'})
-        Request.belongsToMany(PaymentMethod, {through: RequestPaymentMethod, as: 'paymentMethod', foreignKey: 'requestId'})
+        Request.belongsToMany(PaymentMethod, {through: RequestPaymentMethod, as: 'paymentMethod', foreignKey: 'requestId', unique: false})
 
         Request.hasMany(RequestClientPhone, {as: 'requestClientPhones', foreignKey: 'requestId'});
         Request.belongsToMany(ClientPhone, { through: RequestClientPhone, as: 'clientPhones', foreignKey: 'requestId' });
