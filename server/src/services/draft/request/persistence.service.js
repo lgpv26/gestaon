@@ -136,9 +136,7 @@ module.exports = (server) => {
                     })
                 }).catch((err) => {
                     console.log("Erro em: draft/request/persistence.removeTempIds")
-                    return ctx.call("draft/request/persistence.rollback").then(() => {
-                        return new EventResponse(err)
-                    })      
+                    return new EventResponse(err)    
                 })
             })
         },
@@ -234,11 +232,6 @@ module.exports = (server) => {
                     },{
                         model: server.mysql.RequestPaymentTransaction,
                         as: 'requestPaymentTransactions',
-                        where: {
-                            revert: false
-                        },
-                        limit: 1,
-                        order: [[ 'dateCreated', 'DESC' ]],
                         include: [{
                             model: server.mysql.Transaction,
                             as: 'transaction'
@@ -247,6 +240,8 @@ module.exports = (server) => {
                 }]
             }).then((request) => {
                 return this._oldRequest = request
+            }).catch((err) => {
+                console.log(err)
             })
         },
         /**
@@ -446,56 +441,56 @@ module.exports = (server) => {
             let removeRequestPaymentMethods = []
             let alreadyPaid = []
             let changePaid = []
-
-            if(this._request.id && _.has(this._oldRequest, 'requestPaymentMethods')){
-                alreadyPaid = _.map(_.filter(this._oldRequest.requestPaymentMethods, (requestPaymentMethod) => {
-                    return requestPaymentMethod.paid
-                }), (requestPaymentMethod) => {
-                    return requestPaymentMethod
-                })
-
-                ctx.params.data.forEach((payment, index) => {
-                    const indexOldPayment = _.findIndex(this._oldRequest.requestPaymentMethods, (oldPayment) => {
-                        return oldPayment.id == payment.id
+            return new Promise((resolve,reject) => {
+                if(this._request.id && _.has(this._oldRequest, 'requestPaymentMethods')){
+                    alreadyPaid = _.map(_.filter(this._oldRequest.requestPaymentMethods, (requestPaymentMethod) => {
+                        return requestPaymentMethod.paid
+                    }), (requestPaymentMethod) => {
+                        return requestPaymentMethod
                     })
+                    const changePromises = []
 
-                    if(indexOldPayment !== -1 && parseFloat(payment.amount) !== parseFloat(this._oldRequest.requestPaymentMethods[indexOldPayment].amount)){
-                        changePaid.push(_.assign(payment, {difference: 'amount', requestPaymentTransactions: [_.last(_.filter(this._oldRequest.requestPaymentMethods[indexOldPayment].requestPaymentTransactions, (filter) => {
-                                    if(filter.requestPaymentId === payment.id && !filter.revert) return filter
-                                }))]
-                            })
-                        )
-                    }
-                    if(indexOldPayment !== -1 && payment.paid !== this._oldRequest.requestPaymentMethods[indexOldPayment].paid){
-                        changePaid.push(_.assign(payment, {difference: 'paid', requestPaymentTransactions: [_.last(_.filter(this._oldRequest.requestPaymentMethods[indexOldPayment].requestPaymentTransactions, (filter) => {
-                                    if(filter.requestPaymentId === payment.id && !filter.revert) return filter
-                                }))]
-                            })
-                        )
-                    }
+                    ctx.params.data.forEach((payment, index) => {
+                        const indexOldPayment = _.findIndex(this._oldRequest.requestPaymentMethods, (oldPayment) => {
+                            return oldPayment.id == payment.id
+                        })
+        
+                        if(indexOldPayment !== -1 && parseFloat(payment.amount) !== parseFloat(this._oldRequest.requestPaymentMethods[indexOldPayment].amount)){
+                            _.set(ctx.params.data[index], 'settled', false)
+                            _.set(ctx.params.data[index], 'settledDatetime', null)
+                            changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPaymentMethods[indexOldPayment].requestPaymentTransactions}))
+                        }
+
+                        if(indexOldPayment !== -1 && payment.paid !== this._oldRequest.requestPaymentMethods[indexOldPayment].paid){
+                            _.set(ctx.params.data[index], 'settled', false)
+                            _.set(ctx.params.data[index], 'settledDatetime', null)
+                            changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPaymentMethods[indexOldPayment].requestPaymentTransactions}))
+                        }
+                    })
+                    alreadyPaid = _.pullAllBy(alreadyPaid, changePaid, 'id')
+                    removeRequestPaymentMethods = _.pullAllBy(this._oldRequest.requestPaymentMethods, ctx.params.data, 'id')
+                    resolve()
+                }
+                else{
+                    resolve()
+                }
+            }).then(() => {
+                    return ctx.call("data/request.setPaymentMethods", {
+                        data: ctx.params.data,
+                        removeRequestPaymentMethods: (removeRequestPaymentMethods) ? removeRequestPaymentMethods : [],
+                        alreadyPaid: _.map(alreadyPaid, (paid) => {
+                            return paid.id
+                        }),
+                        changePaid: changePaid,
+                        requestId: ctx.params.requestId,
+                        companyId: this._companyId,
+                        createdById: this._userId,
+                        accountId: (this._request.accountId) ? this._request.accountId : null,
+                        transaction: this._transaction
+                    }).catch((err) => {
+                        return new Error (err)
+                    })       
                 })
-
-                alreadyPaid = _.pullAllBy(alreadyPaid, changePaid, 'id')
-                removeRequestPaymentMethods = _.pullAllBy(this._oldRequest.requestPaymentMethods, ctx.params.data, 'id')
-            }
-
-            console.log(removeRequestPaymentMethods[0])
-
-            return ctx.call("data/request.setPaymentMethods", {
-                data: ctx.params.data,
-                removeRequestPaymentMethods: (removeRequestPaymentMethods) ? removeRequestPaymentMethods : [],
-                alreadyPaid: _.map(alreadyPaid, (paid) => {
-                    return paid.id
-                }),
-                changePaid: changePaid,
-                requestId: ctx.params.requestId,
-                companyId: this._companyId,
-                createdById: this._userId,
-                accountId: (this._request.accountId) ? this._request.accountId : null,
-                transaction: this._transaction
-            }).catch((err) => {
-                return new Error (err)
-            })
         },
 
         saveRequest(ctx){

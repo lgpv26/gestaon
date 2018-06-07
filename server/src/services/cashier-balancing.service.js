@@ -343,11 +343,11 @@ module.exports = (server) => {
                     transaction: this._transaction
                 }).then((requestPaymentMethods) => {
                     let requestPaymentsToMarkAsSettled = _.filter(requestPaymentMethods, (requestPaymentMethod) => {
-                        requestPaymentMethod.requestPaymentTransactions.sort(function(a, b) { return new Date(a.dateCreated) - new Date(b.dateCreated) })
+                        requestPaymentMethod.requestPaymentTransactions.sort((a, b) => { return new Date(a.dateCreated) - new Date(b.dateCreated) })
                         if(!requestPaymentMethod.requestPaymentTransactions.length){
                             return true
                         }
-                        return _.last(requestPaymentMethod.requestPaymentTransactions).action !== 'settle.origin' && _.last(requestPaymentMethod.requestPaymentTransactions) !== 'settle.destination'
+                        return _.last(requestPaymentMethod.requestPaymentTransactions).action !== 'settle'
                     })
 
                     const transactionPromises = []
@@ -373,8 +373,9 @@ module.exports = (server) => {
                                 return server.mysql.RequestPaymentTransaction.create({
                                     requestPaymentId: requestPaymentToMarkAsSettled.id,
                                     transactionId: transaction.id,
-                                    settledDatetime: ctx.params.data.settledDatetime || new Date(),
-                                    action: 'settle.destination'
+                                    action: 'settle',
+                                    operation: 'add',
+                                    revert: false
                                 },{
                                     transaction: this._transaction
                                 })
@@ -398,10 +399,22 @@ module.exports = (server) => {
                                     return server.mysql.RequestPaymentTransaction.create({
                                         requestPaymentId: requestPaymentToMarkAsSettled.id,
                                         transactionId: transaction.id,
-                                        settledDatetime: ctx.params.data.settledDatetime || new Date(),
-                                        action: 'settle.origin'
+                                        action: 'settle',
+                                        operation: 'remove',
+                                        revert: false
                                     }, {
                                     transaction: this._transaction
+                                }).then(() => {
+                                    return server.mysql.RequestPaymentMethod.update({
+                                        settled: true,
+                                        settledDatetime: ctx.params.data.settledDatetime || new Date()
+                                    },
+                                    {
+                                        where: {
+                                            id: requestPaymentToMarkAsSettled.id
+                                        },                                   
+                                        transaction: this._transaction
+                                    })
                                 })
                             })
                         }))
@@ -454,6 +467,7 @@ module.exports = (server) => {
             else{
                 return ctx.call("cashier-balancing.revertSettled", {
                     data: ctx.params.data,
+                    operation: ctx.params.operation,
                     paymentMethodId: ctx.params.paymentMethodId,
                     transaction: ctx.params.transaction
                 })
@@ -477,8 +491,7 @@ module.exports = (server) => {
                     return server.mysql.Account.findById(transaction.accountId, {
                         transaction: ctx.params.transaction
                     }).then((account) => {
-                        account.balance = parseFloat(account.balance) + parseFloat(transaction.amount)
-                        return account.save({transaction: ctx.params.transaction})
+                        return {account, transaction}
                     })
                 })
             })
@@ -492,7 +505,7 @@ module.exports = (server) => {
                 return server.mysql.RequestPaymentTransaction.create({
                     requestPaymentId: ctx.params.paymentMethodId,
                     transactionId: transaction.id,
-                    action: 'settled',
+                    action: 'settle',
                     operation: ctx.params.operation,
                     revert: true                 
                     }, {
@@ -501,8 +514,7 @@ module.exports = (server) => {
                     return server.mysql.Account.findById(transaction.accountId, {
                         transaction: ctx.params.transaction
                     }).then((account) => {
-                        account.balance = parseFloat(account.balance) + parseFloat(transaction.amount)
-                        return account.save({transaction: ctx.params.transaction})
+                        return {account, transaction}
                     })
                 })
             })
