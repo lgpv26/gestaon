@@ -40,7 +40,7 @@
                 </div>
             </app-dropdown-menu>
             <!--
-            <app-popover :config = "{ contentPadding: false }">
+            <app-popover :contentPadding="false">
                 <template slot="triggerer">
                     <div style="width: 100%; height: 20px; display: flex; align-items: center; justify-content: center;">
                         <icon-header-add></icon-header-add>

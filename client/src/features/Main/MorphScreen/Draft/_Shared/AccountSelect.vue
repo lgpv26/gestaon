@@ -1,11 +1,11 @@
 <template>
-    <app-popover>
+    <app-popover v-bind="popoverProps">
         <template slot="triggerer">
             <slot></slot>
         </template>
         <template slot="content">
             <div style="width: 240px;">
-                <h3>Conta</h3>
+                <h3 v-if="showTitle">Conta</h3>
                 <div v-for="account in accounts" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === account.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
@@ -51,7 +51,7 @@
     import Vue from 'vue'
 
     export default {
-        props: ['value'],
+        props: ['value','showTitle','popoverProps'],
         data(){
             return {
                 adding: false,
@@ -84,6 +84,9 @@
             save(){
 
             }
+        },
+        mounted(){
+            console.log("popoverPros", this.popoverProps)
         }
     }
 </script>

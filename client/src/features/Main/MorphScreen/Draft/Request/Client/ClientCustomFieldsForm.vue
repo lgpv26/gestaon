@@ -1,6 +1,7 @@
 <template>
-    <div class="form-group">
-        <app-custom-field-select v-model="clientCustomFields" :items="items" @change="change($event)">
+    <div class="form-group" style="display: flex; flex-direction: column; flex-grow: 1;">
+        <app-custom-field-select v-model="clientCustomFields" :items="items"
+             :popoverProps="{ placement: 'bottom-start', verticalOffset: 8, horizontalOffset: -20, style: { 'flex-grow': '1' }, contentStyle: { width: '350px' } }" @change="change($event)">
             <div style="cursor: pointer; display: flex; flex-direction: row; align-items: center; flex-grow: 1;">
                 <div class="header__icon" style="margin-right: 8px;">
                     <icon-client-details style="position: relative; top: 2px;"></icon-client-details>

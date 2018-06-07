@@ -2,9 +2,11 @@
 const config = require('../config/index')
 const restify = require('restify')
 const corsMiddleware = require('restify-cors-middleware')
-const PrettyLogger = require('pretty-logger'), log = new PrettyLogger()
+/*const PrettyLogger = require('pretty-logger'), log = new PrettyLogger()*/
 const mongoose = require('mongoose')
 const bluebird = require('bluebird')
+const chalk = require('chalk')
+const log = console.log
 
 // in-source imports
 const { BootError } = require('~errors')
@@ -16,7 +18,6 @@ const di = new DI(restify.createServer())
 // overall setup
 di.setInnkeeper()
 di.setSocketIO()
-di.setY()
 di.setElasticSearch()
 di.setSequelize()
 di.setVersion()
@@ -44,12 +45,12 @@ di.attachModels('mysql') // attached to di.server.mysql.{modelName}
 di.attachModels('draft-form','','models') // attached to server.draftFormModels.{modelName}
 
 // loading all sockets
-log.info("Loading sockets")
+log(chalk.gray("Loading sockets"))
 const Socket = require('../events')
 new Socket(di.server)
 
 // loading all http request routes
-log.info("Loading routes")
+log(chalk.gray("Loading routes"))
 require('../routes')(di.server)
 
 // initialize tracker protocols
@@ -66,16 +67,20 @@ const connectToMySQL = new Promise((resolve, reject) => {
         user: config.database.user,
         password: config.database.password
     })
-    let databaseCreated = false;
+    let databaseCreated = false
     mysqlConnection.connect((err) => {
-        if(err) return reject(err);
-        mysqlConnection.query("CREATE DATABASE `" + config.database.dbName + "`;", function (err) {
-            if(err){
-                return resolve(databaseCreated);
-            }
-            log.warning("Database not found. Database \"" + config.database.dbName + "\" created.")
-            databaseCreated = true;
-            resolve(databaseCreated)
+        if(err) return reject(err)
+        mysqlConnection.query("CREATE DATABASE `" + config.database.dbName + "`;", function(err){
+            mysqlConnection.end(function(connectionReleaseError) {
+                log(chalk.magenta("Connection check ended and released"))
+                if(err){
+                    log(chalk.blue("Using existent " + chalk.black.bold.bgBlue(" " + config.database.dbName + " ") + " MySQL database"))
+                    return resolve(databaseCreated)
+                }
+                log(chalk.yellow("MySQL database " + chalk.black.bold.bgYellow(" " + config.database.dbName + " ") + " created"))
+                databaseCreated = true
+                resolve(databaseCreated)
+            })
         })
     })
 })
@@ -108,10 +113,10 @@ di.server.broker.createService(require('../services/draft/client/persistence.ser
 di.server.broker.createService(require('../services/draft/client/recoverance.service')(di.server))
 
 if(process.env.NODE_ENV === 'production'){
-    log.info('Starting production server.')
+    log(chalk.blue('Starting production server'))
 }
 else{
-    log.info('Starting development server.')
+    log(chalk.blue('Starting development server'))
 }
 
 // starts callback chain until server starts, or shutdown if the procedure fails
@@ -121,14 +126,14 @@ di.server.broker.start().then(() => {
             requestTimeout: config.elasticSearch.requestTimeout
         }, function (error) {
             if (error) {
-                console.log(new BootError('ElasticSearch is down!'))
+                log(chalk.red(new BootError('ElasticSearch is down!')))
             } else {
-                log.info('ElasticSearch is running')
+                log(chalk.green('Successfully connected to ElasticSearch server'))
                 // guarantee MySQL structure
-                return di.server.sequelize.sync({
+                return di.server.sequelize.authenticate({
                     logging: false
                 }).then(() => {
-                    log.info("Successfully connected to MySQL");
+                    log(chalk.green("Successfully connected to MySQL server"));
                     return new Promise((resolve, reject) => {
                         if(databaseCreated){
                             return require("~utils/first-seed.js")(di.server).then(() => {
@@ -153,19 +158,26 @@ di.server.broker.start().then(() => {
                             promiseLibrary: bluebird,
                             ...mongoDbCredentials
                         }).then(() => {
-                            log.info("Successfully connected to MongoDB");
+                            log(chalk.green("Successfully connected to MongoDB server"))
                             // finally, initialize di.server
                             di.server.listen(config.mainServer.port, () => {
-                                log.info("Server v" + config.mainServer.version + " running on port: " + config.mainServer.port)
+                                log(
+                                    chalk.blue(
+                                        "Server " +
+                                        chalk.black.bold.bgBlue(" v" + config.mainServer.version + " ") +
+                                        " running on port: " +
+                                        chalk.black.bold.bgBlue(" " + config.mainServer.port + " ")
+                                    )
+                                )
                             })
                         })
                     })
                 }).catch((err) => {
-                    console.log(new BootError(err.message + " (" + err.name + ")"))
+                    log(new BootError(err.message + " (" + err.name + ")"))
                 })
             }
         })
     })
 }).catch((err) => {
-    console.log(new BootError(err.message + " (" + err.name + ")"))
+    log(new BootError(err.message + " (" + err.name + ")"))
 })

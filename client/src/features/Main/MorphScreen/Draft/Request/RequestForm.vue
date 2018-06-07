@@ -64,13 +64,21 @@
             <span class="push-both-sides"></span>
             <div class="right-side">
                 <div class="account-selection">
-                    <app-select :items="accountsSelect" title="Conta" :verticalOffset="8" v-model="accountId" @change="sync($event,'accountId')">
+                    <app-select v-if="false" :items="accountsSelect" title="Conta" :verticalOffset="8" v-model="accountId" @change="sync($event,'accountId')">
                         <input type="text" style="cursor: pointer;" readonly :value="selectedAccountName" placeholder="ESCOLHA UMA CONTA" />
                         <icon-dropdown style="position: absolute; top: 6px; right: 5px;"></icon-dropdown>
                         <template slot="item" slot-scope="itemProps">
                             <span>{{itemProps.text }}</span>
                         </template>
                     </app-select>
+                    <app-account-select v-model="accountId" @change="sync($event,'accountId')"
+                        :popoverProps="{ placement: 'top-start', verticalOffset: 10, useScroll: true, triggererStyle: { position: 'relative' }}">
+                        <input type="text" style="cursor: pointer;" readonly :value="selectedAccountName" placeholder="ESCOLHA UMA CONTA" />
+                        <icon-dropdown style="position: absolute; top: 6px; right: 5px;"></icon-dropdown>
+                        <template slot="item" slot-scope="itemProps">
+                            <span>{{itemProps.text }}</span>
+                        </template>
+                    </app-account-select>
                 </div>
                 <span class="push-both-sides"></span>
                 <div class="subtotal-container">
@@ -103,6 +111,7 @@
     import _ from 'lodash'
     import DraftMixin from '../DraftMixin'
 
+    import AccountSelectComponent from '../_Shared/AccountSelect.vue'
     import PaymentMethodsForm from './PaymentMethodsForm.vue'
 
     import ClientForm from './Client/ClientForm.vue'
@@ -120,6 +129,7 @@
 
     export default {
         components: {
+            'app-account-select': AccountSelectComponent,
             'app-client-summary': ClientSummary,
             'app-payment-methods-form': PaymentMethodsForm,
             'app-client-form': ClientForm,

@@ -1,5 +1,6 @@
 <template>
-    <app-client-group-select v-model="clientGroupId" @change="change($event)">
+    <app-client-group-select v-model="clientGroupId" @change="change($event)"
+         :popoverProps="{ placement: 'bottom-start', verticalOffset: -5, horizontalOffset: 0, contentStyle: { width: '350px' } }">
         <div style="cursor: pointer; display: flex; flex-direction: row; align-items: center;" class="form-group">
             <div class="header__icon" style="margin-right: 8px;">
                 <icon-client-group style="position: relative; top: 2px;"></icon-client-group>

@@ -32,9 +32,6 @@ module.exports = class DependencyInjection {
         return this.server.fcm
     }
 
-    setY(){
-    }
-
     setElasticSearch(){
         this.server.elasticSearch = new require('elasticsearch').Client({
             host: config.elasticSearch.host + ':' + config.elasticSearch.port
@@ -47,7 +44,12 @@ module.exports = class DependencyInjection {
         this.server.sequelize = new Sequelize(config.database.dbName, config.database.user, config.database.password, {
             logging: false,
             host: config.database.host,
-            dialect: config.database.dialect
+            dialect: config.database.dialect,
+            pool: {
+                max: 5,
+                min: 0,
+                idle: 10000
+            }
         })
         
         return this.server.sequelize

@@ -1,8 +1,14 @@
 <template>
     <div class="popover-component">
-        <div ref="content" :style="[contentDefaultStyle, contentStyle]" class="popover-content popover-shadow" :class="{hidden: !visible && !forceVisible, 'content-padding': config.contentPadding}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
-            <slot name="content">
-            </slot>
+        <div ref="content" v-if="!useScroll" :style="[contentDefaultStyle, contentStyle]" class="popover-content popover-shadow"
+             :class="{hidden: !visible && !forceVisible, 'content-padding': contentPadding}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
+            <slot name="content"></slot>
+        </div>
+        <div ref="content" v-else :style="[contentDefaultStyle, contentStyle]" style="height: 280px;" class="popover-content popover-shadow"
+             :class="{hidden: !visible && !forceVisible}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
+            <div :class="{'content-padding': contentPadding}">
+                <slot name="content"></slot>
+            </div>
         </div>
         <div ref="triggerer" :style="[triggererDefaultStyle, triggererStyle]" class="popover-triggerer" @click="onTriggererClick()" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
             <slot name="triggerer">
@@ -14,11 +20,20 @@
 <script>
 
     import _ from 'lodash'
+    import Scrollbar from 'smooth-scrollbar'
     import Popper from 'popper.js'
     import Vue from 'vue'
 
     export default {
         props: {
+            placement: {
+                default: 'bottom',
+                type: String
+            },
+            useScroll: {
+                default: false,
+                type: Boolean
+            },
             forceVisible: {
                 default: false,
                 type: Boolean
@@ -39,13 +54,17 @@
                 },
                 type: Object
             },
-            config: {
-                default: () => {
-                    return {
-                        contentPadding: true
-                    }
-                },
-                type: Object
+            verticalOffset: {
+                default: 0,
+                type: Number
+            },
+            horizontalOffset: {
+                default: 0,
+                type: Number
+            },
+            contentPadding: {
+                default: true,
+                type: Boolean
             }
         },
         data(){
@@ -59,6 +78,7 @@
                     backgroundColor: 'var(--bg-color--2)',
                     borderRadius: '5px'
                 },
+                scrollbar: null,
                 visible: false,
                 leaveTimeout: null,
                 popper: null
@@ -116,6 +136,15 @@
             attachPopper(){
                 this.destroyPopper()
                 this.popper = new Popper(this.$refs.triggerer, this.$refs.content, {
+                    placement: this.placement,
+                    modifiers: {
+                        flip: {
+                            enabled: false
+                        },
+                        offset: {
+                            offset: this.horizontalOffset + ',' + this.verticalOffset
+                        }
+                    }
                 })
             },
             destroyPopper(){
@@ -127,10 +156,17 @@
         mounted(){
             this.attachContentToBody()
             this.attachPopper()
-            document.addEventListener('mousedown', this.onBodyClick);
+            document.addEventListener('mousedown', this.onBodyClick)
+            if(this.useScroll){
+                this.scrollbar = Scrollbar.init(this.$refs.content, {
+                    overscrollEffect: 'bounce',
+                    alwaysShowTracks: true
+                })
+            }
 
         },
         beforeDestroy(){
+            if(this.scrollbar) this.scrollbar.destroy()
             this.destroyPopper()
             this.$refs.content.parentNode.removeChild(this.$refs.content)
             document.removeEventListener("mousedown", this.onBodyClick)
@@ -152,6 +188,6 @@
     }
 
     .content-padding {
-        padding: 15px 20px;
+        padding: 12px 15px;
     }
 </style>

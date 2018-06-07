@@ -1,11 +1,11 @@
 <template>
-    <app-popover :style="{'flex-grow': 1}">
+    <app-popover v-bind="popoverProps" :style="{'flex-grow': 1}">
         <template slot="triggerer">
             <slot></slot>
         </template>
         <template slot="content">
-            <div style="width: 240px;">
-                <h3>Grupo de clientes</h3>
+            <div>
+                <h3 v-if="showTitle">Grupo de clientes</h3>
                 <div v-for="clientGroup in clientGroups" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === clientGroup.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
@@ -51,7 +51,7 @@
     import Vue from 'vue'
 
     export default {
-        props: ['value'],
+        props: ['value','popoverProps','showTitle'],
         data(){
             return {
                 adding: false,

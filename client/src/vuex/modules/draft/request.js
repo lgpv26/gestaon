@@ -285,7 +285,8 @@ const actions = {
             accountId: request.accountId,
             deadlineDatetime: ((request.useSuggestedDeadlineDatetime) ?  null : request.deadlineDatetime ),
             responsibleUserId: request.responsibleUserId,
-            obs: request.obs
+            obs: request.obs,
+            status: 'pending'
         }
         return RequestsAPI.persistence(draftId, sendData, {
             companyId

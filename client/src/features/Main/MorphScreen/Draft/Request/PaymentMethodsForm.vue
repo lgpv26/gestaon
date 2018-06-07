@@ -38,10 +38,11 @@
             <td colspan="6" style="padding-top: 15px;">
                 <div style="display: flex; flex-direction: row;">
                     <a class="btn btn--border-only" @click="add()" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Adicionar pagamento</a>
-                    <div style="display: flex; align-items: center; background: var(--bg-color); margin-left: 10px; border-radius: 5px; padding: 0 7px;">
-                        <span style="margin-right: 5px;">Crédito utilizado: <strong style="color: var(--font-color--terciary)">R$0,00</strong> de <strong>R$150,00</strong></span>
-                        <icon-edit></icon-edit>
-                    </div>
+                    <app-client-credit :popoverProps="{verticalOffset: 10, horizontalOffset: -5, placement: 'top-start'}">
+                        <div class="client-credit-triggerer">
+                            <span style="margin-right: 8px;">Crédito utilizado: <strong style="color: var(--font-color--terciary)">R$0,00</strong> de <strong>R$150,00</strong></span>
+                        </div>
+                    </app-client-credit>
                 </div>
             </td>
         </tr>
@@ -58,6 +59,7 @@
     import shortid from 'shortid'
     import DraftMixin from '../DraftMixin'
     import PaymentMethodSelectComponent from '../_Shared/PaymentMethodSelect.vue'
+    import ClientCreditComponent from '../_Shared/ClientCredit.vue'
 
     import ClientForm from './Client/ClientForm.vue'
     import ClientSummary from './Client/ClientSummary.vue'
@@ -73,7 +75,8 @@
 
     export default {
         components: {
-            'app-payment-method-select': PaymentMethodSelectComponent
+            'app-payment-method-select': PaymentMethodSelectComponent,
+            'app-client-credit': ClientCreditComponent
         },
         mixins: [DraftMixin],
         data(){
@@ -161,5 +164,18 @@
             justify-content: center;
             padding-bottom: 0;
         }
+    }
+    .client-credit-triggerer {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        background: var(--bg-color);
+        margin-left: 10px;
+        border-radius: 5px;
+        padding: 0 7px;
+        cursor: pointer;
+    }
+    .client-credit-triggerer:hover {
+        background: var(--bg-color--4);
     }
 </style>

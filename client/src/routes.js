@@ -3,9 +3,10 @@ const RegisterRoute = () => import('./features/Auth/Register.vue');
 const MainRoute = () => import('./features/Main/Main.vue');
 const DashboardRoute = () => import('./features/Main/Dashboard/Dashboard.vue');
 const TestRoute = () => import('./features/Main/Test/Test.vue');
-const ClientsRoute = () => import('./features/Main/CRUDs/Clients/Clients.vue');
-const CashierBalancingRoute = () => import('./features/Main/CRUDs/CashierBalancing/CashierBalancing.vue');
-const RequestsRoute = () => import('./features/Main/CRUDs/Requests/Requests.vue');
+const ClientsRoute = () => import('./features/Main/Lists/Clients/Clients.vue');
+const CashierBalancingRoute = () => import('./features/Main/Lists/CashierBalancing/CashierBalancing.vue');
+const CreditBillsRoute = () => import('./features/Main/Lists/CreditBills/CreditBills.vue');
+const RequestsRoute = () => import('./features/Main/Lists/Requests/Requests.vue');
 const CompaniesRoute = () => import('./features/Main/Companies/Companies.vue');
 
 export default [
@@ -47,6 +48,13 @@ export default [
                 component: CashierBalancingRoute,
                 meta: {
                     title: 'Caixa / Fechamento diário - GestaON'
+                }
+            },
+            {
+                path: 'credit-bills',
+                component: CreditBillsRoute,
+                meta: {
+                    title: 'Notinhas - GestaON'
                 }
             },
             {

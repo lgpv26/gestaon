@@ -1,11 +1,11 @@
 <template>
-    <app-popover>
+    <app-popover v-bind="popoverProps">
         <template slot="triggerer">
             <slot></slot>
         </template>
         <template slot="content">
-            <div style="width: 200px;">
-                <h3>Grupo de clientes</h3>
+            <div>
+                <h3 v-if="showTitle">Grupo de clientes</h3>
                 <div v-for="customField in customFields" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === customField.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
@@ -38,7 +38,7 @@
     import Vue from 'vue'
 
     export default {
-        props: ['value'],
+        props: ['value','showTitle','popoverProps'],
         data(){
             return {
                 editing: false,
