@@ -2,7 +2,7 @@
     <div id="page-login">
         <div class="login__container">
             <div class="container__header">
-                <h3>AGILIZA ERP</h3>
+                <h3>GESTAON ERP</h3>
             </div>
             <div class="container__body">
                 <form autocomplete="off">
@@ -111,10 +111,10 @@
     }
 
     #page-login div.login__container {
-        background-image: url('../../assets/imgs/bg-login-form.jpg');
+        background-image: url('../../assets/imgs/bg-login-form.png');
         background-size: cover;
         background-position: center;
-        width: 460px;
+        width: 540px;
         display: flex;
         flex-direction: column;
         border-radius: 5px;
@@ -126,6 +126,7 @@
     }
 
     #page-login div.login__container h3 {
+        display:none;
         margin: 0;
         text-align: center;
         font-size: 30px;
@@ -133,7 +134,15 @@
     }
 
     #page-login div.login__container .container__header {
-        width: 300px;
+      background-image: url('../../assets/imgs/logo-white.png');
+      background-size: cover;
+      background-position: center;
+      justify-content: center;
+      align-items: center;
+
+
+        width: 241px;
+        height:64px;
         color: #FFF;
         text-align: center;
         display: flex;
