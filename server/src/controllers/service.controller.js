@@ -25,7 +25,7 @@ module.exports = (server, restify) => {
                         },
                         {
                             "from": 0,
-                            "size": 5,
+                            "size": 20,
                             "query": {
                                 "bool": {
                                     "must": [

@@ -290,10 +290,6 @@ const actions = {
         }
         return RequestsAPI.persistence(draftId, sendData, {
             companyId
-        }).then((response) => {
-            console.log("SUCESSO", response)
-        }).catch((err) => {
-            console.log("ERRO", err)
         })
     },
 

@@ -15,7 +15,7 @@ module.exports = (server) => { return {
         },
         getList(ctx){
             return server.mongodb.Call.find({
-                companyId: ctx.params.data.companyId
+                // companyId: ctx.params.data.companyId
             }).sort({createdAt: -1}).limit(10).exec().then((data) => {
                 return JSON.parse(JSON.stringify(data))
             }).then((calls) => {
@@ -56,34 +56,65 @@ module.exports = (server) => { return {
             })
         },
         create(ctx){
-            return server.mongodb.Call.create(ctx.params.data).then((data) => {
+
+            // remove leading 0 if there is
+            let number = ctx.params.data.number
+            let isValid = true
+            let isAnonymous = false
+
+            if(number.charAt(0) === '0'){
+                number = number.substring(1)
+            }
+
+            if(number === 'anonymous'){
+                number = null
+                isAnonymous = true
+            }
+
+            if(number.length !== 11 && number.length !== 10){
+                number = null
+                isValid = false
+            }
+
+            const createData = {
+                number: number,
+                destination: ctx.params.data.destination,
+                isValid,
+                isAnonymous
+            }
+
+            return server.mongodb.Call.create(createData).then((data) => {
                 return data.toJSON()
             }).then((call) => {
-                return server.mysql.ClientPhone.findAll({
-                    where: {
-                        number: call.number
-                    },
-                    include: [
-                        {
-                            model: server.mysql.Client,
-                            as: "client"
-                        }
-                    ]
-                }).then((data) => {
-                    return JSON.parse(JSON.stringify(data))
-                }).then((clientPhones) => {
-                    call.clients = []
-                    _.forEach(clientPhones, (clientPhone) => {
-                        if(clientPhone.number === call.number){
-                            const alreadyAddedToClients = _.find(call.clients, {id: clientPhone.clientId})
-                            if(!alreadyAddedToClients){
-                                call.clients.push(clientPhone.client)
+                if(call.number){
+                    return server.mysql.ClientPhone.findAll({
+                        where: {
+                            number: call.number
+                        },
+                        include: [
+                            {
+                                model: server.mysql.Client,
+                                as: "client"
                             }
-                        }
+                        ]
+                    }).then((data) => {
+                        return JSON.parse(JSON.stringify(data))
+                    }).then((clientPhones) => {
+                        call.clients = []
+                        _.forEach(clientPhones, (clientPhone) => {
+                            if(clientPhone.number === call.number){
+                                const alreadyAddedToClients = _.find(call.clients, {id: clientPhone.clientId})
+                                if(!alreadyAddedToClients){
+                                    call.clients.push(clientPhone.client)
+                                }
+                            }
+                        })
+                        server.io.emit('caller-id.new', new EventResponse(call))
+                        return call
                     })
-                    server.io.in('company/' + ctx.params.data.companyId).emit('caller-id.new', new EventResponse(call))
-                    return call
-                })
+                }
+                server.io.emit('caller-id.new', new EventResponse(call))
+                return call
             })
         },
         update(ctx){

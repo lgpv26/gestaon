@@ -79,6 +79,7 @@
 
             ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS','SHOW_MS', 'ADD_DRAFT']),
             ...mapActions('morph-screen', ['createMorphScreen','removeDraft']),
+            ...mapActions('toast', ['showToast']),
             ...mapActions('loading', ['startLoading','setLoadingText']),
 
             /**
@@ -149,9 +150,18 @@
                     draftId: this.activeMorphScreen.draft.draftId,
                     companyId: this.company.id
                 }).then(() => {
+                    vm.showToast({
+                        type: 'success',
+                        message: "Rascunho removido!"
+                    })
                     vm.$emit('closeMorphScreen', {
                         screen: vm.activeMorphScreen,
                         remove: true
+                    })
+                }).catch((err) => {
+                    vm.showToast({
+                        type: 'error',
+                        message: err
                     })
                 })
             },

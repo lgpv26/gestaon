@@ -6,6 +6,10 @@ module.exports = {
 
         const schema = new Schema({
             companyId: Number,
+            destination: String,
+            obs: String,
+            isAnonymous: Boolean,
+            isValid: Boolean,
             number: {
                 type: String,
                 required: [true, 'O número do telefone deve existir.'],

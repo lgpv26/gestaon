@@ -70,7 +70,8 @@
                     </div>
                     <div class="group" v-if="form.action === 'settled'">
                         <span>Conta:</span>
-                        <app-select v-model="form.account" :items="accountsSelectItems" title="Conta">
+                        <app-account-select v-model="form.account" :items="accountsSelectItems"
+                            :popoverProps="{ placement:'top-start', verticalOffset: 15, useScroll: true }">
                             <a href="javascript:void(0)" v-if="!form.account">-- Selecione --</a>
                             <a href="javascript:void(0)" v-else>{{ _.find(accountsSelectItems, {value: form.account}).text }}</a>
                             <template slot="section" slot-scope="sectionProps">
@@ -79,7 +80,7 @@
                             <template slot="item" slot-scope="itemProps">
                                 <span>{{itemProps.text }}</span>
                             </template>
-                        </app-select>
+                        </app-account-select>
                     </div>
                     <a class="btn btn--primary" @click="submit()">Confirmar</a>
                 </div>
@@ -98,11 +99,13 @@
     import CashierBalancingFilter from './CashierBalancingFilter.vue'
     import GridComponent from '../../../../components/Utilities/Grid.vue'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
+    import AccountSelectComponent from '../../MorphScreen/Draft/_Shared/AccountSelect.vue'
 
     export default {
         components: {
             'app-cashier-balancing-filter': CashierBalancingFilter,
-            'app-grid': GridComponent
+            'app-grid': GridComponent,
+            'app-account-select': AccountSelectComponent
         },
         data(){
             return {

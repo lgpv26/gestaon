@@ -10,8 +10,12 @@
             <div ref="scrollbar">
                 <div class="calls">
                     <div v-for="call in calls" class="call">
-                        <span class="number">{{ utils.formatPhone(call.number) }}</span>
+                        <span class="number" v-if="!call.isAnonymous && call.isValid">{{ utils.formatPhone(call.number) }}</span>
+                        <span class="number anonymous" v-else-if="call.isAnonymous">Privado</span>
+                        <span class="number invalid" v-else-if="!call.isValid">Número inválido</span>
+                        <span class="number" v-else>Número desconhecido</span>
                         <span class="time">{{ moment(call.createdAt).format("DD/MM/YYYY HH:mm:ss") }}</span>
+                        <span class="destination">{{ call.destination }}</span>
                         <div v-if="call.clients.length" v-for="client in call.clients">
                             <div class="client existent-client">
                                 <span style="font-weight: bold;">{{ client.name }}</span>
@@ -249,8 +253,23 @@
                         font-weight: 600;
                         color: var(--font-color--10)
                     }
+                    span.number.anonymous {
+                        font-size: 18px;
+                        font-weight: 600;
+                        color: var(--font-color--terciary)
+                    }
+                    span.number.invalid {
+                        font-size: 18px;
+                        font-weight: 600;
+                        color: var(--font-color--terciary)
+                    }
                     span.time {
-                        color: var(--font-color--7)
+                        color: var(--font-color--7);
+                        font-size: 12px;
+                    }
+                    span.destination {
+                        color: var(--font-color--7);
+                        font-size: 12px;
                     }
                     div.client {
                         margin: 10px 0 0;

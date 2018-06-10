@@ -6,9 +6,9 @@ module.exports = (server, restify) => {
 
     /* CRUD */
 
-    server.use(basePath(
+    /*server.use(basePath(
         '/calls', authGuard
-    ));
+    ));*/
 
     /* Users CRUD */
 

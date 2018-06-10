@@ -47,7 +47,7 @@ module.exports = (server) => {
                             }).then((clientPhones) => {
                                 _.set(client, "clientPhones", clientPhones)
                             })
-                        )
+                            )
                         }
                         if(_.has(this._client, "clientCustomFields")){
                             clientPromisses.push(ctx.call("draft/client/persistence.setClientCustomFields", {
@@ -75,17 +75,16 @@ module.exports = (server) => {
                                     })
                                 })
                             }
-                        }).catch((err) => {
-                            console.log(err, "Erro em: draft/client/persistence.setClient")
-                            throw new Error("Nenhum registro encontrado.")
-                        })           
+                        })
                     }).catch((err) => {
                         console.log(err, "Erro em: draft/client/persistence.saveClient")
                         if(_saveInRequest) {
                             throw new Error(err)
                         }
                         else{
-                            return ctx.call("draft/client/persistence.rollback")
+                            return ctx.call("draft/client/persistence.rollback", {
+                                error: err
+                            })
                         }
                     }) 
                 })
@@ -392,10 +391,10 @@ module.exports = (server) => {
         /**
          * Rollback persistence
          */
-        rollback() {
+        rollback(ctx) {
             console.log("Oh God, just rollback!")
             this._transaction.rollback()
-            throw new Error()
+            return Promise.reject(ctx.params.error)
         }
     }
 }}

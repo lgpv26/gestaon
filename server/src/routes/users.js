@@ -34,10 +34,101 @@ module.exports = (server, restify) => {
                 status: {
                     [Op.or]: ['pending','in-displacement']
                 }
-            }
+            },
+            include: [
+                {
+                    model: server.mysql.Client,
+                    as: 'client'
+                },
+                {
+                    model: server.mysql.RequestClientAddress,
+                    as: 'requestClientAddresses',
+                    include: [{
+                        model: server.mysql.ClientAddress,
+                        as: 'clientAddress',
+                        include: [{
+                            model: server.mysql.Address,
+                            as: 'address'
+                        }]
+                    }]
+                },
+                {
+                    model: server.mysql.RequestClientPhone,
+                    as: 'requestClientPhones'
+                }
+            ]
         }).then((requests) => {
             return res.send(200, {
                 data: requests
+            })
+        }).catch((err) => {
+            console.log(err)
+        })
+    })
+
+    /* My request */
+
+    server.get('/me/requests/:id', authGuard, (req, res, next) => {
+        server.broker.call('data/request.getOne', {
+            where: {
+                id: req.params.id,
+                userId: req.auth.id,
+                status: {
+                    [Op.or]: ['pending','in-displacement']
+                }
+            },
+            include: [
+                {
+                    model: server.mysql.Client,
+                    as: 'client'
+                },
+                {
+                    model: server.mysql.RequestClientAddress,
+                    as: 'requestClientAddresses',
+                    include: [{
+                        model: server.mysql.ClientAddress,
+                        as: 'clientAddress',
+                        include: [{
+                            model: server.mysql.Address,
+                            as: 'address'
+                        }]
+                    }]
+                },
+                {
+                    model: server.mysql.RequestClientPhone,
+                    as: 'requestClientPhones'
+                },
+                {
+                    model: server.mysql.RequestPaymentMethod,
+                    as: "requestPaymentMethods",
+                    include: [{
+                        model: server.mysql.PaymentMethod,
+                        as: 'paymentMethod'
+                    },
+                        {
+                            model: server.mysql.RequestPaymentTransaction,
+                            as: 'requestPaymentTransactions',
+                            include: [{
+                                model: server.mysql.Transaction,
+                                as: 'transaction'
+                            }]
+                        }]
+                },{
+                    model: server.mysql.RequestOrder,
+                    as: "requestOrder",
+                    include: [{
+                        model: server.mysql.RequestOrderProduct,
+                        as: 'requestOrderProducts',
+                        include: [{
+                            model: server.mysql.Product,
+                            as: 'product'
+                        }]
+                    }]
+                }
+            ]
+        }).then((request) => {
+            return res.send(200, {
+                data: request
             })
         }).catch((err) => {
             console.log(err)

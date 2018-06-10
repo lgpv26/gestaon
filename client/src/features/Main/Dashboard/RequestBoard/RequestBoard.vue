@@ -154,6 +154,12 @@
                     this.moveCard(ev.evData.card)
                 }
             },
+            requestBoardCardRemove(ev){
+                console.log("Received requestBoardCardRemove", ev)
+                if(ev.success){
+                    // this.moveCard(ev.evData.card)
+                }
+            },
         },
         methods: {
             ...mapMutations('morph-screen', []),

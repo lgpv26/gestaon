@@ -42,14 +42,14 @@ const mutations = {
         }
         if(error){
             iziToast.error({
-                title: 'Erro',
+                title: 'Ops...',
                 message: error
             });
         }
         else {
             iziToast.error({
-                title: 'Erro',
-                message: "Houve um erro."
+                title: 'Ops...',
+                message: "Ocorreu um erro."
             });
         }
     }

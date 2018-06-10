@@ -93,7 +93,7 @@
             </div>
         </div>
         <div class="actions">
-            <a href="javascript: void(0)" @click="$emit('remove')">Excluir Rascunho</a>
+            <a @click="$emit('remove')">Excluir Rascunho</a>
             <span class="push-both-sides"></span>
             <a style="margin-right: 20px;" @click="$emit('close')">Voltar</a>
             <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
@@ -214,7 +214,7 @@
         },
         methods: {
             ...mapActions('draft/request', ['runRequestPersistence','runClientPersistence','setRequest','setClient','addOrderProduct','addRequestPaymentMethod']),
-            ...mapActions('toast', ['showToast']),
+            ...mapActions('toast', ['showToast','showError']),
             ...mapActions('loading', ['stopLoading']),
             changeStep(step){
                 let activeStep = null
@@ -247,19 +247,25 @@
                     client: vm.client,
                     companyId: vm.company.id
                 }).then((client) => {
+                    vm.showToast({
+                        type: 'success',
+                        message: "Cliente salvo com sucesso!"
+                    })
                     const emitData = {
                         draftId: vm.activeMorphScreen.draft.draftId,
                         clientId: parseInt(client.id)
                     }
                     console.log("Emitting draft/request.client.select", emitData)
                     vm.$socket.emit('draft/request.client.select', emitData)
-                    console.log("Cliente persistido com sucesso!")
+                }).catch((err) => {
+                    vm.showToast({
+                        type: 'error',
+                        message: err
+                    })
                 })
             },
             persistRequest(){
                 const vm = this
-
-                console.log(vm.orderProducts)
 
                 let error = false
 
@@ -292,10 +298,23 @@
                     request: vm.form,
                     companyId: vm.company.id
                 }).then((response) => {
-                    console.log("Pedido persistido com sucesso!")
-                    vm.$emit('close', {
-                        screen: vm.activeMorphScreen,
-                        remove: true
+                    if(response.success){
+                        vm.showToast({
+                            type: 'success',
+                            message: "Pedido salvo com sucesso!"
+                        })
+                        vm.$emit('close', {
+                            screen: vm.activeMorphScreen,
+                            remove: true
+                        })
+                    }
+                    else {
+                        vm.showError(response.error.message)
+                    }
+                }).catch((err) => {
+                    vm.showToast({
+                        type: 'error',
+                        message: err
                     })
                 })
             }

@@ -47,6 +47,7 @@ const actions = {
     },
     loadCalls(context, data){
         return CallsAPI.getList({ companyId: data.companyId }).then((response) => {
+            console.log(response)
             context.commit('SET_ALL', response.data)
             return response.data
         })

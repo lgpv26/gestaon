@@ -1,4 +1,5 @@
 import {Op} from 'sequelize'
+import _ from 'lodash'
 
 module.exports = (server) => { return {
     name: "push-notification",
@@ -37,6 +38,11 @@ module.exports = (server) => { return {
                         color : '#059A79',
                         sound : 'notification'
                     }
+                }
+                if(_.get(ctx.params,'data.payload',false)){
+                    _.assign(message, {
+                        data: ctx.params.data.payload
+                    })
                 }
                 server.fcm.send(message)
             })

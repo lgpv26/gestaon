@@ -24,6 +24,10 @@
                         text: 'Pendente'
                     },
                     {
+                        value: 'in_displacement',
+                        text: 'Em deslocamento'
+                    },
+                    {
                         value: 'finished',
                         text: 'Finalizado'
                     }

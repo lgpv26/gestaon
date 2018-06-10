@@ -94,8 +94,12 @@ module.exports = (server) => {
                                                 return ctx.call("push-notification.push", {
                                                     data: {
                                                         userId: request.userId,
-                                                        title: '',
-                                                        message: ''
+                                                        title: 'Novo pedido #' + this._request.id,
+                                                        message: 'Abra a notificação para ver mais detalhes',
+                                                        payload: {
+                                                            type: 'request.create',
+                                                            id: this._request.id
+                                                        }
                                                     },
                                                     notRejectNotLogged: true
                                                 }).then(() => {
