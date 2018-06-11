@@ -64,16 +64,16 @@ module.exports = (server) => {
                         }))
                     }
 
-                    if(_.has(request, "requestPaymentMethods")){
+                    if(_.has(request, "requestPayments")){
                         promises.push(ctx.call("draft/request/recoverance.setRequestAccountId", {
-                            requestPaymentMethods: request.requestPaymentMethods
+                            requestPayments: request.requestPayments
                         }).then((accountId) => {
                             if(accountId) _.set(this._request, 'accountId', accountId)
                         }))
-                        promises.push(ctx.call("draft/request/recoverance.setRequestPaymentMethods", {
-                            requestPaymentMethods: request.requestPaymentMethods
-                        }).then((requestPaymentMethods) => {
-                            _.set(this._request, 'requestPaymentMethods', requestPaymentMethods)
+                        promises.push(ctx.call("draft/request/recoverance.setRequestPayments", {
+                            requestPayments: request.requestPayments
+                        }).then((requestPayments) => {
+                            _.set(this._request, 'requestPayments', requestPayments)
                         }).catch((err) => {
                             console.log("Erro em: draft/request/recoverance.setClient")
                             throw new Error(err)
@@ -146,8 +146,8 @@ module.exports = (server) => {
                             as: 'clientGroup'
                         }]
                     },{
-                        model: server.mysql.RequestPaymentMethod,
-                        as: "requestPaymentMethods",
+                        model: server.mysql.RequestPayment,
+                        as: "requestPayments",
                         include: [{
                             model: server.mysql.PaymentMethod,
                             as: 'paymentMethod'
@@ -267,22 +267,22 @@ module.exports = (server) => {
             }
             return _.omit(order, omit)
         },
-        setRequestPaymentMethods(ctx){
-            return _.map(ctx.params.requestPaymentMethods, (requestPaymentMethod) => {
-                _.unset(requestPaymentMethod, 'requestPaymentTransactions')
-                _.unset(requestPaymentMethod, 'paymentMethodId')
-                _.unset(requestPaymentMethod, 'requestId')
-                _.unset(requestPaymentMethod, 'dateUpdated')
-                _.unset(requestPaymentMethod, 'dateCreated')
-                _.unset(requestPaymentMethod, 'dateRemoved')                
-                return requestPaymentMethod
+        setRequestPayments(ctx){
+            return _.map(ctx.params.requestPayments, (requestPayment) => {
+                _.unset(requestPayment, 'requestPaymentTransactions')
+                _.unset(requestPayment, 'paymentMethodId')
+                _.unset(requestPayment, 'requestId')
+                _.unset(requestPayment, 'dateUpdated')
+                _.unset(requestPayment, 'dateCreated')
+                _.unset(requestPayment, 'dateRemoved')                
+                return requestPayment
             })
         },
         setRequestAccountId(ctx) {
             let accountId = null
-            ctx.params.requestPaymentMethods.forEach((requestPaymentMethod) => {
-                if(requestPaymentMethod.paid && _.has(requestPaymentMethod, 'requestPaymentTransactions')){
-                    accountId = _.last(requestPaymentMethod.requestPaymentTransactions).transaction.accountId
+            ctx.params.requestPayments.forEach((requestPayment) => {
+                if(requestPayment.paid && _.has(requestPayment, 'requestPaymentTransactions')){
+                    accountId = _.last(requestPayment.requestPaymentTransactions).transaction.accountId
                 }
             })
             return accountId

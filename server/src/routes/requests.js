@@ -105,8 +105,8 @@ module.exports = (server, restify) => {
                     }]
                 }]
             },{
-                model: server.mysql.RequestPaymentMethod,
-                as: "requestPaymentMethods",
+                model: server.mysql.RequestPayment,
+                as: "requestPayments",
                 include: [{
                     model: server.mysql.PaymentMethod,
                     as: 'paymentMethod'
@@ -142,6 +142,7 @@ module.exports = (server, restify) => {
         return server.broker.call('draft/request/persistence.start', {
             request: req.body,
             userId: req.auth.id,
+            userAccountId: req.auth.accountId,
             draftId: req.params.draftId,
             companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
         }).then((request) => {

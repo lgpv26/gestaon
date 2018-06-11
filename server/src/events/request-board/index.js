@@ -197,8 +197,8 @@ module.exports = class RequestBoard {
                                 as: 'clientGroup'
                             }]
                         },{
-                            model: vm.server.mysql.RequestPaymentMethod,
-                            as: "requestPaymentMethods",
+                            model: vm.server.mysql.RequestPayment,
+                            as: "requestPayments",
                             include: [{
                                 model: vm.server.mysql.PaymentMethod,
                                 as: 'paymentMethod'
@@ -309,8 +309,8 @@ module.exports = class RequestBoard {
                                 as: 'clientGroup'
                             }]
                         },{
-                            model: vm.server.mysql.RequestPaymentMethod,
-                            as: "requestPaymentMethods",
+                            model: vm.server.mysql.RequestPayment,
+                            as: "requestPayments",
                             include: [{
                                 model: vm.server.mysql.PaymentMethod,
                                 as: 'paymentMethod'
