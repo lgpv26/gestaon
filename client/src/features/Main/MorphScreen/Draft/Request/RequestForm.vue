@@ -163,10 +163,10 @@
                 'form.client',
                 'form.order',
                 'form.order.orderProducts',
-                'form.requestPaymentMethods'
+                'form.requestPayments'
             ]),
             ...mapMultiRowFields({
-                requestPaymentMethodRows: 'form.requestPaymentMethods'
+                requestPaymentRows: 'form.requestPayments'
             }),
             selectedAccountName(){
                 const selectedAccount = _.find(this.accounts, {id: this.accountId})
@@ -195,8 +195,8 @@
                 })
             },
             totalLeftToPay(){
-                return _.sumBy(this.requestPaymentMethods, (requestPaymentMethod) => {
-                    return requestPaymentMethod.amount
+                return _.sumBy(this.requestPayments, (requestPayment) => {
+                    return requestPayment.amount
                 })
             },
             formatedTotalToPay(){
@@ -206,14 +206,14 @@
                 return utils.formatMoney(sum, 2,'R$ ','.',',')
             },
             formatedTotalLeftToPay(){
-                const sum = _.sumBy(this.requestPaymentMethods, (requestPaymentMethod) => {
-                    return requestPaymentMethod.amount
+                const sum = _.sumBy(this.requestPayments, (requestPayment) => {
+                    return requestPayment.amount
                 })
                 return utils.formatMoney(sum, 2,'R$ ','.',',')
             }
         },
         methods: {
-            ...mapActions('draft/request', ['runRequestPersistence','runClientPersistence','setRequest','setClient','addOrderProduct','addRequestPaymentMethod']),
+            ...mapActions('draft/request', ['runRequestPersistence','runClientPersistence','setRequest','setClient','addOrderProduct','addRequestPayment']),
             ...mapActions('toast', ['showToast','showError']),
             ...mapActions('loading', ['stopLoading']),
             changeStep(step){
@@ -237,8 +237,8 @@
                 if(!this.orderProducts.length){
                     this.addOrderProduct()
                 }
-                if(!this.requestPaymentMethods.length){
-                    this.addRequestPaymentMethod()
+                if(!this.requestPayments.length){
+                    this.addRequestPayment()
                 }
             },
             persistClient(){
@@ -269,7 +269,7 @@
 
                 let error = false
 
-                vm.requestPaymentMethods.forEach((requestPayment) => {
+                vm.requestPayments.forEach((requestPayment) => {
                     if(!error && !_.get(requestPayment, 'paymentMethod.id', false)){
                         error = "Selecione uma forma de pagamento por linha!"
                     }

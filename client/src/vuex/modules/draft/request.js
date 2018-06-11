@@ -19,7 +19,7 @@ import {createOrder} from '@/models/OrderModel'
 import {createOrderProduct} from '@/models/OrderProductModel'
 import {createProduct} from '@/models/ProductModel'
 
-import {createRequestPaymentMethod} from '@/models/RequestPaymentMethodModel'
+import {createRequestPayment} from '@/models/RequestPaymentModel'
 import {createPaymentMethod} from '@/models/PaymentMethodModel'
 
 const state = {
@@ -57,7 +57,7 @@ const state = {
         },
         task: {
         },
-        requestPaymentMethods: [],
+        requestPayments: [],
         clientAddressId: null,
         clientPhoneId: null,
         accountId: null,
@@ -160,20 +160,20 @@ const mutations = {
     SET_REQUEST(state, request = {}){
         state.form = _.assign(state.form, createRequest(request))
     },
-    ADD_REQUEST_PAYMENT_METHOD(state, requestPaymentMethod = {}){
-        requestPaymentMethod.id = 'tmp/' + shortid.generate()
-        state.form.requestPaymentMethods.push(createRequestPaymentMethod(requestPaymentMethod))
+    ADD_REQUEST_PAYMENT(state, requestPayment = {}){
+        requestPayment.id = 'tmp/' + shortid.generate()
+        state.form.requestPayments.push(createRequestPayment(requestPayment))
     },
-    REMOVE_REQUEST_PAYMENT_METHOD(state, requestPaymentMethodId){
-        const index = _.findIndex(state.form.requestPaymentMethods, {id: requestPaymentMethodId})
+    REMOVE_REQUEST_PAYMENT(state, requestPaymentId){
+        const index = _.findIndex(state.form.requestPayments, {id: requestPaymentId})
         if(index !== -1){
-            state.form.requestPaymentMethods.splice(index, 1)
+            state.form.requestPayments.splice(index, 1)
         }
     },
-    SET_REQUEST_PAYMENT_METHOD_PAYMENT_METHOD(state, {requestPaymentMethodId,paymentMethod}){
-        const requestPaymentMethod = _.find(state.form.requestPaymentMethods, {id: requestPaymentMethodId})
-        if(requestPaymentMethod){
-            requestPaymentMethod.paymentMethod = _.assign(requestPaymentMethod.paymentMethod,createPaymentMethod(paymentMethod))
+    SET_REQUEST_PAYMENT_PAYMENT_METHOD(state, {requestPaymentId,paymentMethod}){
+        const requestPayment = _.find(state.form.requestPayments, {id: requestPaymentId})
+        if(requestPayment){
+            requestPayment.paymentMethod = _.assign(requestPayment.paymentMethod,createPaymentMethod(paymentMethod))
         }
     },
     ...clientMutations,
@@ -272,15 +272,15 @@ const actions = {
                 promotionChannelId: order.promotionChannelId,
                 orderProducts: order.orderProducts
             },
-            requestPayments: _.map(request.requestPaymentMethods, (requestPaymentMethod) => {
-                if(_.has(requestPaymentMethod,'paymentMethod')){
-                    if(requestPaymentMethod.paymentMethod.id){
-                        requestPaymentMethod = _.assign(requestPaymentMethod, { paymentMethodId: requestPaymentMethod.paymentMethod.id })
+            requestPayments: _.map(request.requestPayments, (requestPayment) => {
+                if(_.has(requestPayment,'paymentMethod')){
+                    if(requestPayment.paymentMethod.id){
+                        requestPayment = _.assign(requestPayment, { paymentMethodId: requestPayment.paymentMethod.id })
                     }
-                    _.unset(requestPaymentMethod, 'nextInstallments')
-                    _.unset(requestPaymentMethod, 'paymentMethod')
+                    _.unset(requestPayment, 'nextInstallments')
+                    _.unset(requestPayment, 'paymentMethod')
                 }
-                return requestPaymentMethod
+                return requestPayment
             }),
             accountId: request.accountId,
             deadlineDatetime: ((request.useSuggestedDeadlineDatetime) ?  null : request.deadlineDatetime ),
@@ -298,14 +298,14 @@ const actions = {
         context.commit('SET_CLIENT', _.get(request, 'client', {}))
         context.commit('SET_ORDER', _.get(request, 'order', {}))
     },
-    addRequestPaymentMethod(context, requestPaymentMethod){
-        context.commit('ADD_REQUEST_PAYMENT_METHOD', requestPaymentMethod)
+    addRequestPayment(context, requestPayment){
+        context.commit('ADD_REQUEST_PAYMENT', requestPayment)
     },
-    removeRequestPaymentMethod(context, requestPaymentMethodId){
-        context.commit('REMOVE_REQUEST_PAYMENT_METHOD', requestPaymentMethodId)
+    removeRequestPayment(context, requestPaymentId){
+        context.commit('REMOVE_REQUEST_PAYMENT', requestPaymentId)
     },
-    setRequestPaymentMethodPaymentMethod(context, {requestPaymentMethodId, paymentMethod}){
-        context.commit('SET_REQUEST_PAYMENT_METHOD_PAYMENT_METHOD', {requestPaymentMethodId, paymentMethod})
+    setRequestPaymentPaymentMethod(context, {requestPaymentId, paymentMethod}){
+        context.commit('SET_REQUEST_PAYMENT_PAYMENT_METHOD', {requestPaymentId, paymentMethod})
     },
     ...clientActions,
     ...orderActions
