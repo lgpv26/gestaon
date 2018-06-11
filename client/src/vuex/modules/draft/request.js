@@ -272,7 +272,7 @@ const actions = {
                 promotionChannelId: order.promotionChannelId,
                 orderProducts: order.orderProducts
             },
-            requestPaymentMethods: _.map(request.requestPaymentMethods, (requestPaymentMethod) => {
+            requestPayments: _.map(request.requestPaymentMethods, (requestPaymentMethod) => {
                 if(_.has(requestPaymentMethod,'paymentMethod')){
                     if(requestPaymentMethod.paymentMethod.id){
                         requestPaymentMethod = _.assign(requestPaymentMethod, { paymentMethodId: requestPaymentMethod.paymentMethod.id })

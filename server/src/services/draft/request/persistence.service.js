@@ -10,6 +10,7 @@ module.exports = (server) => {
 
     let _companyId = null
     let _userId = null
+    let _userAccountId = null
 
     let _draftId = null
     let _reloadCard = null
@@ -28,6 +29,7 @@ module.exports = (server) => {
             this._request = ctx.params.request
             this._companyId = ctx.params.companyId
             this._userId = ctx.params.userId
+            this._userAccountId = ctx.params.userAccountId
             this._draftId = ctx.params.draftId
            
             return ctx.call("draft/request/persistence.checkTempIds").then(() => {
@@ -82,6 +84,7 @@ module.exports = (server) => {
                                 },
                                 transaction: this._transaction
                             }).then((request) => {
+                                
                                 return ctx.call("draft/request/persistence.createCard", {
                                     data: request,
                                     transaction: this._transaction
@@ -228,8 +231,8 @@ module.exports = (server) => {
                         }]
                     }]
                 },{
-                    model: server.mysql.RequestPaymentMethod,
-                    as: "requestPaymentMethods",
+                    model: server.mysql.RequestPayment,
+                    as: "requestPayments",
                     include: [{
                         model: server.mysql.PaymentMethod,
                         as: 'paymentMethod'
@@ -326,8 +329,8 @@ module.exports = (server) => {
                             }]
                         }]
                     },{
-                        model: server.mysql.RequestPaymentMethod,
-                        as: "requestPaymentMethods",
+                        model: server.mysql.RequestPayment,
+                        as: "requestPayments",
                         include: [{
                             model: server.mysql.PaymentMethod,
                             as: 'paymentMethod'
@@ -395,12 +398,10 @@ module.exports = (server) => {
                     })
                 )
 
-                if(this._request.requestPaymentMethods){
+                if(this._request.requestPayments){
                     promises.push(ctx.call("draft/request/persistence.setPaymentMethods", {
-                            data: this._request.requestPaymentMethods,
+                            data: this._request.requestPayments,
                             requestId: request.id
-                        }).catch((err) => {
-                            return new Error(err)
                         })
                     )
                 }
@@ -433,68 +434,109 @@ module.exports = (server) => {
                     return request
                 }).catch((err) => {
                     console.log("Erro em: data/request.setRequest - PROMISE ALL")
-                    throw new Error(err)
+                    throw Error(err)
                 })         
             }).catch((err) => {
                 console.log(err, "Erro em: data/request.saveRequest")
-                throw new Error(err)
+                throw Error(err)
             })  
         },
 
         setPaymentMethods(ctx){
-            let removeRequestPaymentMethods = []
-            let alreadyPaid = []
-            let changePaid = []
-            return new Promise((resolve,reject) => {
-                if(this._request.id && _.has(this._oldRequest, 'requestPaymentMethods')){
-                    alreadyPaid = _.map(_.filter(this._oldRequest.requestPaymentMethods, (requestPaymentMethod) => {
-                        return requestPaymentMethod.paid
-                    }), (requestPaymentMethod) => {
-                        return requestPaymentMethod
-                    })
-                    const changePromises = []
-
-                    ctx.params.data.forEach((payment, index) => {
-                        const indexOldPayment = _.findIndex(this._oldRequest.requestPaymentMethods, (oldPayment) => {
-                            return oldPayment.id == payment.id
+            return ctx.call("draft/request/persistence.checkLimit").then(() => {
+                let removeRequestPayments = []
+                let alreadyPaid = []
+                let changePaid = []
+                return new Promise((resolve,reject) => {
+                    if(this._request.id && _.has(this._oldRequest, 'requestPayments')){
+                        alreadyPaid = _.map(_.filter(this._oldRequest.requestPayments, (requestPayment) => {
+                            return requestPayment.paid
+                        }), (requestPayment) => {
+                            return requestPayment
                         })
-        
-                        if(indexOldPayment !== -1 && parseFloat(payment.amount) !== parseFloat(this._oldRequest.requestPaymentMethods[indexOldPayment].amount)){
-                            _.set(ctx.params.data[index], 'settled', false)
-                            _.set(ctx.params.data[index], 'settledDatetime', null)
-                            changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPaymentMethods[indexOldPayment].requestPaymentTransactions}))
-                        }
-
-                        if(indexOldPayment !== -1 && payment.paid !== this._oldRequest.requestPaymentMethods[indexOldPayment].paid){
-                            _.set(ctx.params.data[index], 'settled', false)
-                            _.set(ctx.params.data[index], 'settledDatetime', null)
-                            changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPaymentMethods[indexOldPayment].requestPaymentTransactions}))
-                        }
+                        const promises = []
+                        
+                        ctx.params.data.forEach((payment, index) => {
+                            promises.push(new Promise((resolve, reject) => {
+                                    const indexOldPayment = _.findIndex(this._oldRequest.requestPayments, (oldPayment) => {
+                                        return oldPayment.id == payment.id
+                                    })
+            
+                                    if(indexOldPayment !== -1 && parseFloat(payment.amount) !== parseFloat(this._oldRequest.requestPayments[indexOldPayment].amount)){
+                                        _.set(payment, 'changed', true)
+                                        _.set(ctx.params.data[index], 'settled', false)
+                                        _.set(ctx.params.data[index], 'settledDatetime', null)
+                                        changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPayments[indexOldPayment].requestPaymentTransactions}))
+                                    }
+            
+                                    if(indexOldPayment !== -1 && payment.paid !== this._oldRequest.requestPayments[indexOldPayment].paid){
+                                        _.set(payment, 'changed', true)
+                                        _.set(ctx.params.data[index], 'settled', false)
+                                        _.set(ctx.params.data[index], 'settledDatetime', null)
+                                        changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPayments[indexOldPayment].requestPaymentTransactions}))
+                                    }
+                                    
+                                    return ctx.call("data/payment-method.getOne", {
+                                        data: {
+                                            id: payment.paymentMethodId,
+                                            companyId: this._companyId
+                                        }
+                                    }).then((paymentMethod) => {
+                                        if(!paymentMethod.autoPay && payment.changed && this._oldRequest.requestPayments[indexOldPayment].settled && this._oldRequest.requestPayments[indexOldPayment].paid) reject('Não é possivel excluir Notinha já paga!')
+                                        _.set(ctx.params.data[index], 'paymentMethod', paymentMethod)
+                                        resolve()              
+                                    })
+                                })
+                            )
+                        })
+                        return Promise.all(promises).then(() => {                          
+                            alreadyPaid = _.pullAllBy(alreadyPaid, changePaid, 'id')
+                            removeRequestPayments = _.pullAllBy(this._oldRequest.requestPayments, ctx.params.data, 'id')
+                            removeRequestPayments.forEach((removeRequestPayment) => {
+                                if(!removeRequestPayment.paymentMethod.autoPay && removeRequestPayment.settled && removeRequestPayment.paid) reject('Não é possivel excluir Notinha já paga!')
+                            })
+                            resolve() 
+                        })
+                    }
+                    else{
+                        const promises = []
+                        ctx.params.data.forEach((payment, index) => {
+                            promises.push(ctx.call("data/payment-method.getOne", {
+                                    data: {
+                                        id: payment.paymentMethodId,
+                                        companyId: this._companyId
+                                    }
+                                }).then((paymentMethod) => {
+                                    return _.set(ctx.params.data[index], 'paymentMethod', paymentMethod)
+                                })
+                            )
+                        })
+                        return Promise.all(promises).then(() => {
+                            resolve()
+                        })
+                    }
+                }).then(() => {
+                        return ctx.call("data/request.setPaymentMethods", {
+                            data: ctx.params.data,
+                            removeRequestPayments: (removeRequestPayments) ? removeRequestPayments : [],
+                            alreadyPaid: _.map(alreadyPaid, (paid) => {
+                                return paid.id
+                            }),
+                            changePaid: changePaid,
+                            requestId: ctx.params.requestId,
+                            companyId: this._companyId,
+                            clientId: this._request.client.id,
+                            createdById: this._userId,
+                            createdByAccountId: this._userAccountId,
+                            accountId: (this._request.accountId) ? this._request.accountId : null,
+                            transaction: this._transaction
+                        }).catch((err) => {
+                            return new Error (err)
+                        })       
                     })
-                    alreadyPaid = _.pullAllBy(alreadyPaid, changePaid, 'id')
-                    removeRequestPaymentMethods = _.pullAllBy(this._oldRequest.requestPaymentMethods, ctx.params.data, 'id')
-                    resolve()
-                }
-                else{
-                    resolve()
-                }
-            }).then(() => {
-                    return ctx.call("data/request.setPaymentMethods", {
-                        data: ctx.params.data,
-                        removeRequestPaymentMethods: (removeRequestPaymentMethods) ? removeRequestPaymentMethods : [],
-                        alreadyPaid: _.map(alreadyPaid, (paid) => {
-                            return paid.id
-                        }),
-                        changePaid: changePaid,
-                        requestId: ctx.params.requestId,
-                        companyId: this._companyId,
-                        createdById: this._userId,
-                        accountId: (this._request.accountId) ? this._request.accountId : null,
-                        transaction: this._transaction
-                    }).catch((err) => {
-                        return new Error (err)
-                    })       
-                })
+            }).catch((err) => {
+                throw Error(err)
+            })
         },
 
         saveRequest(ctx){
@@ -589,9 +631,9 @@ module.exports = (server) => {
                     )
                 }
             }
-            if(_.has(this._request, "requestPaymentMethods")){
+            if(_.has(this._request, "requestPayments")){
                 removeTemps.push(ctx.call("draft/request/persistence.removeTempIds", {
-                        path: 'requestPaymentMethods'
+                        path: 'requestPayments'
                     })
                 )
             }
@@ -623,43 +665,62 @@ module.exports = (server) => {
         },
 
         setOrderProducts(ctx){
-            return ctx.call("draft/request/persistence.validValues").then(() => {
-                return ctx.call("data/request.setRequestOrderProducts", {
-                    data: _.map(this._request.order.orderProducts, orderProduct => {
-                        return _.assign(orderProduct, {
-                            requestOrderId: ctx.params.data.requestOrderId,
-                        })
-                    }),
-                    companyId: this._companyId, 
-                    requestOrderId: ctx.params.data.requestOrderId,
-                    transaction: this._transaction
-                }).then((orderProducts) => {
-                    return orderProducts
-                }).catch((err) => {
-                    console.log("Erro em: data/request.setRequestOrderProducts")
-                    throw new Error(err)
-                })
+            return ctx.call("data/request.setRequestOrderProducts", {
+                data: _.map(this._request.order.orderProducts, orderProduct => {
+                    return _.assign(orderProduct, {
+                        requestOrderId: ctx.params.data.requestOrderId,
+                    })
+                }),
+                companyId: this._companyId, 
+                requestOrderId: ctx.params.data.requestOrderId,
+                transaction: this._transaction
+            }).then((orderProducts) => {
+                return orderProducts
             }).catch((err) => {
-                console.log("Erro em: draft/request/persistence.validValues")
+                console.log("Erro em: data/request.setRequestOrderProducts")
                 throw new Error(err)
             })
         },
 
-        validValues(ctx){
-            let valueOrder = null
-            let valuePayments = null
-            this._request.order.orderProducts.forEach((orderProduct) => {
-                valueOrder += orderProduct.quantity * (orderProduct.unitPrice - orderProduct.unitDiscount)
+        checkLimit(ctx){
+            if(!this._request.client.id) return true
+            const promises = []
+               
+            promises.push(ctx.call("data/client.get", {
+                where: {
+                    id: this._request.client.id
+                },
+                transaction: this._transaction
+            }))
+
+            promises.push(new Promise((resolve, reject) => {
+                let valuesCredit = 0
+                let paymentPromises = []
+                this._request.requestPayments.forEach((requestPaymentMethod) => {
+                    paymentPromises.push(ctx.call("data/payment-method.getOne", {
+                            data: {
+                                id: requestPaymentMethod.paymentMethodId,
+                                companyId: this._companyId
+                            },
+                            transaction: this._transaction
+                        }).then((paymentMethod) => {
+                            if(!paymentMethod.autoPay) return valuesCredit += requestPaymentMethod.amount
+                        })
+                    )
+                })
+                return Promise.all(paymentPromises).then(() => {
+                    resolve(valuesCredit)
+                })
+            }))
+            
+            return Promise.all(promises).then((response) => {
+                if(response && (parseFloat(response[0].creditLimit) >= (parseFloat(response[0].limitInUse) + parseFloat(response[1])))){
+                    return true
+                }
+                else{
+                    throw new Error('Sem limite de credito')
+                }
             })
-            this._request.requestPaymentMethods.forEach((paymentMethods) => {
-                valuePayments += paymentMethods.amount
-            })
-            if(valueOrder === valuePayments){
-                return true
-            }
-            else{
-                throw new Error('Valores incompativeis')
-            }
         },
 
         saveOrder(ctx){

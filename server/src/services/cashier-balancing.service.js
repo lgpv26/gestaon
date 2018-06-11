@@ -134,7 +134,7 @@ module.exports = (server) => {
 
             const promises = []
 
-            promises.push(server.mysql.RequestPaymentMethod.findAndCountAll({
+            promises.push(server.mysql.RequestPayment.findAndCountAll({
                 where,
                 include: [
                     {
@@ -179,7 +179,7 @@ module.exports = (server) => {
                 offset: parseInt(ctx.params.data.offset),
             }))
 
-            promises.push(server.mysql.RequestPaymentMethod.sum('amount', {
+            promises.push(server.mysql.RequestPayment.sum('amount', {
                 where,
                 include: [
                     {
@@ -214,7 +214,7 @@ module.exports = (server) => {
             this._transaction = ctx.params.transaction || null
 
             return ctx.call("cashier-balancing.setTransaction").then(() => {
-                return server.mysql.RequestPaymentMethod.findAll({
+                return server.mysql.RequestPayment.findAll({
                     where: {
                         id: {
                             [Op.in]: ctx.params.data.requestPaymentIds
@@ -222,6 +222,14 @@ module.exports = (server) => {
                         paid: (ctx.params.persistence) ? true : false
                     },
                     include: [
+                        {
+                            model: server.mysql.RequestPaymentTransaction,
+                            as: 'requestPaymentTransactions',
+                            include: [{
+                                model: server.mysql.Transaction,
+                                as: 'transaction'
+                            }]
+                        },
                         {
                             model: server.mysql.Request,
                             as: 'request',
@@ -237,16 +245,30 @@ module.exports = (server) => {
                         }
                     ],
                     transaction: this._transaction
-                }).then((requestPaymentMethods) => {
+                }).then((requestPayments) => {
                     const accountBalances = {}
-                    const promises = _.map(requestPaymentMethods, (requestPaymentMethod) => {
+                    const promises = _.map(requestPayments, (requestPayment) => {
+                        return new Promise((resolve, reject) => {
+                            if(requestPayment.settled){
+                                const data = _.filter(requestPayment.requestPaymentTransactions, (paymentTransaction) => {
+                                    if(paymentTransaction.action == 'settle' && paymentTransaction.operation == 'add' && !paymentTransaction.revert){
+                                        return paymentTransaction
+                                    }
+                                })
+                                resolve((data.length) ? data[0].transaction.accountId : null)
+                            }
+                            else{
+                                resolve((ctx.params.data.accountId) ? ctx.params.data.accountId : requestPayment.request.responsibleUser.accountId)
+                            }
+                        }).then((accountId) => {
+                        if(!accountId) return new Error("Error in markAsPaid, account Id is not null")
                         return ctx.call('data/transaction.create', {
                             data: {
-                                amount: Math.abs(requestPaymentMethod.amount),
+                                amount: Math.abs(requestPayment.amount),
                                 createdById: ctx.params.data.createdById,
-                                accountId: (ctx.params.data.accountId) ? ctx.params.data.accountId : requestPaymentMethod.request.responsibleUser.accountId,
-                                companyId: requestPaymentMethod.request.companyId,
-                                description: 'Adição do valor do pagamento do pedido #' + requestPaymentMethod.request.id + ' na conta de destino',
+                                accountId: accountId,
+                                companyId: requestPayment.request.companyId,
+                                description: 'Adição do valor do pagamento do pedido #' + requestPayment.request.id + ' na conta de destino',
                             },
                             transaction: this._transaction
                         }).then((transaction) => {
@@ -257,7 +279,7 @@ module.exports = (server) => {
                                 accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
                                 return server.mysql.RequestPaymentTransaction.create({
                                     requestPaymentId: ctx.params.paymentMethodId,                    
-                                    requestPaymentId: requestPaymentMethod.id,
+                                    requestPaymentId: requestPayment.id,
                                     transactionId: transaction.id,
                                     action: 'payment',
                                     operation: null,
@@ -265,7 +287,7 @@ module.exports = (server) => {
                                     }, {
                                     transaction: this._transaction
                                 }).then(() => {
-                                    return requestPaymentMethod.update({
+                                    return requestPayment.update({
                                         paid: true,
                                         paidDatetime: moment(),
                                     },{
@@ -277,6 +299,7 @@ module.exports = (server) => {
                             })
                         })
                     })
+                })
                     return Promise.all(promises).then(() => {
                         const updateAccountBalancesPromise = []
                         _.forEach(_.keys(accountBalances),(accountId) => {
@@ -313,7 +336,7 @@ module.exports = (server) => {
             this._transaction = ctx.params.transaction || null
 
             return ctx.call("cashier-balancing.setTransaction").then(() => {
-                return server.mysql.RequestPaymentMethod.findAll({
+                return server.mysql.RequestPayment.findAll({
                     include: [
                         {
                             model: server.mysql.Request,
@@ -341,13 +364,13 @@ module.exports = (server) => {
                         }
                     },
                     transaction: this._transaction
-                }).then((requestPaymentMethods) => {
-                    let requestPaymentsToMarkAsSettled = _.filter(requestPaymentMethods, (requestPaymentMethod) => {
-                        requestPaymentMethod.requestPaymentTransactions.sort((a, b) => { return new Date(a.dateCreated) - new Date(b.dateCreated) })
-                        if(!requestPaymentMethod.requestPaymentTransactions.length){
+                }).then((requestPayments) => {
+                    let requestPaymentsToMarkAsSettled = _.filter(requestPayments, (requestPayment) => {
+                        requestPayment.requestPaymentTransactions.sort((a, b) => { return new Date(a.dateCreated) - new Date(b.dateCreated) })
+                        if(!requestPayment.requestPaymentTransactions.length){
                             return true
                         }
-                        return _.last(requestPaymentMethod.requestPaymentTransactions).action !== 'settle'
+                        return _.last(requestPayment.requestPaymentTransactions).action !== 'settle'
                     })
 
                     const transactionPromises = []
@@ -365,21 +388,23 @@ module.exports = (server) => {
                             },
                             transaction: this._transaction
                         }).then((transaction) => {
-                            return server.mysql.Account.findById(ctx.params.data.accountId, {
-                                transaction: this._transaction
-                            }).then((account) => {
-                                if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
-                                accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
-                                return server.mysql.RequestPaymentTransaction.create({
-                                    requestPaymentId: requestPaymentToMarkAsSettled.id,
-                                    transactionId: transaction.id,
-                                    action: 'settle',
-                                    operation: 'add',
-                                    revert: false
-                                },{
+                                return server.mysql.Account.findById(ctx.params.data.accountId, {
                                     transaction: this._transaction
+                                }).then((account) => {
+                                    if(requestPaymentToMarkAsSettled.paid){
+                                        if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
+                                        accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                                    }
+                                    return server.mysql.RequestPaymentTransaction.create({
+                                        requestPaymentId: requestPaymentToMarkAsSettled.id,
+                                        transactionId: transaction.id,
+                                        action: 'settle',
+                                        operation: 'add',
+                                        revert: false
+                                    },{
+                                        transaction: this._transaction
+                                    })
                                 })
-                            })
                         }))
                         iterationPromises.push(ctx.call('data/transaction.create', {
                             data: {
@@ -394,8 +419,10 @@ module.exports = (server) => {
                             return server.mysql.Account.findById(requestPaymentToMarkAsSettled.request.responsibleUser.accountId, {
                                 transaction: this._transaction
                             }).then((account) => {
-                                if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
-                                accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                                if(requestPaymentToMarkAsSettled.paid){
+                                    if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
+                                    accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                                }
                                     return server.mysql.RequestPaymentTransaction.create({
                                         requestPaymentId: requestPaymentToMarkAsSettled.id,
                                         transactionId: transaction.id,
@@ -405,7 +432,7 @@ module.exports = (server) => {
                                     }, {
                                     transaction: this._transaction
                                 }).then(() => {
-                                    return server.mysql.RequestPaymentMethod.update({
+                                    return server.mysql.RequestPayment.update({
                                         settled: true,
                                         settledDatetime: ctx.params.data.settledDatetime || new Date()
                                     },

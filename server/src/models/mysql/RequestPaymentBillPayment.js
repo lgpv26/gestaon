@@ -4,7 +4,7 @@ import _ from 'lodash'
 module.exports = {
     defineModel: (server) => {
         const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize);
-        const modelName = 'RequestPaymentTransaction';
+        const modelName = 'RequestPaymentBillPayment';
         return {
             name: modelName,
             instance: server.sequelize.define(_.camelCase(modelName), {
@@ -13,23 +13,15 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
-                requestPaymentId: {
+                requestPaymentBillId: {
                     type: Sequelize.INTEGER
                 },
-                transactionId: {
+                paymentMethodId: {
                     type: Sequelize.INTEGER
                 },
-                requestPaymentBillPaymentId: {
-                    type: Sequelize.INTEGER
-                },
-                action: {
-                    type: Sequelize.STRING
-                },
-                operation: {
-                    type: Sequelize.STRING
-                },
-                revert:{
-                    type: Sequelize.BOOLEAN
+                amount: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
                 },
                 dateUpdated: {
                     type: TIMESTAMP
@@ -41,19 +33,20 @@ module.exports = {
                     type: TIMESTAMP
                 }
             }, {
-                tableName: "request_payment_transaction",
+                tableName: 'request_payment_bill_payment',
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
                 deletedAt: 'dateRemoved',
-                paranoid: true,
-                freezeTableName: true
+                freezeTableName: true,
+                paranoid: true
             })
         }
     },
-    postSettings: ({RequestPaymentTransaction,RequestPayment,RequestPaymentBillPayment,Transaction}) => {
-        RequestPaymentTransaction.belongsTo(RequestPayment, {as: 'requestPayment', foreignKey: 'requestPaymentId'})
-        RequestPaymentTransaction.belongsTo(RequestPaymentBillPayment, {as: 'requestPaymentBillPayment', foreignKey: 'requestPaymentBillPaymentId'})
-        RequestPaymentTransaction.belongsTo(Transaction, {as: 'transaction', foreignKey: 'transactionId'})
+    postSettings: ({RequestPaymentBillPayment, RequestPaymentBill, PaymentMethod, RequestPaymentTransaction}) => {
+        RequestPaymentBillPayment.belongsTo(PaymentMethod, {as: 'paymentBillMethod', foreignKey: 'paymentMethodId'})
+        RequestPaymentBillPayment.belongsTo(RequestPaymentBill, {as: 'requestPaymentBill', foreignKey: 'requestPaymentBillId'})
+
+        RequestPaymentBillPayment.hasMany(RequestPaymentTransaction, {as: 'requestPaymentTransactions', foreignKey: 'requestPaymentBillPaymentId'})
     }
 }

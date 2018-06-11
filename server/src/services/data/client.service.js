@@ -1,7 +1,12 @@
 const _ = require('lodash')
 const Op = require('sequelize').Op
+import moment from 'moment'
+import { runInContext } from 'vm';
 
 module.exports = (server) => {
+    //PRIVATES
+    let _transaction = null
+
     return {
         name: "data/client",
         actions: {
@@ -52,7 +57,7 @@ module.exports = (server) => {
                         throw new Error("Nenhum registro encontrado.")
                     }
                     return server.mysql.Client.findById(ctx.params.data.id, {
-                            transaction: ctx.params.transaction
+                            transaction: ctx.params.transaction || null
                     }).then((client) => {
                         return JSON.parse(JSON.stringify(client))
                     }).catch((err) => {
@@ -63,6 +68,289 @@ module.exports = (server) => {
             },
             remove(ctx) {
 
+            },
+            changeCreditLimit(ctx) {
+                //console.log(ctx.params.data)
+                return ctx.call("data/client.update", {
+                    data: {
+                        creditLimit: ctx.params.data.creditLimit,
+                        id: ctx.params.data.clientId
+                    },
+                    where: {
+                        id: ctx.params.data.clientId,
+                        companyId: ctx.params.data.companyId
+                    }
+                }).then((client) => {
+                    return {creditLimit: client.creditLimit}
+                })
+            },
+            /**
+             * @param {Object} id, companyId
+             * @returns {Promise.<Array>} requests
+             */
+            getBills(ctx) {
+                return server.mysql.RequestPaymentBill.findAll({
+                    include: [{
+                        model: server.mysql.RequestPaymentBillPayment,
+                        as: 'requestPaymentBillPayments'
+                        }, {
+                        model: server.mysql.RequestPayment,
+                        as: 'requestPayments',
+                        where: {
+                            paid: false,
+                            settled: true
+                        },
+                        include: [{
+                                model: server.mysql.PaymentMethod,
+                                as: 'paymentMethod',
+                                where: {
+                                    autoPay: 0
+                                }
+                            },
+                            {
+                                model: server.mysql.Request,
+                                as: 'request',
+                                required: true,
+                                include: [{
+                                    model: server.mysql.Client,
+                                    as: 'client',
+                                    where:{
+                                        companyId: ctx.params.companyId,
+                                        id: ctx.params.clientId
+                                    },
+                                    required: true
+                                }]
+                            }
+                        ]
+                    }]
+                }).then((bills) => {
+                    return JSON.parse(JSON.stringify(bills))
+                })
+            },
+            /**
+             * @param {Object} id, companyId
+             * @returns {Promise.<Array>} requests    
+             */
+            markBillsAsPaid(ctx){
+                return ctx.call("data/client.setTransaction").then(() => {
+                    return server.mysql.RequestPaymentBill.findAll({
+                        where: {
+                            id: {
+                                [Op.in]: ctx.params.data.requestPaymentBills
+                            },
+                        },
+                        include: [{
+                            model: server.mysql.RequestPaymentBillPayment,
+                            as: 'requestPaymentBillPayments'
+                        }, {
+                            model: server.mysql.RequestPayment,
+                            as: 'requestPayments',
+                            where: {
+                                paid: false,
+                                settled: true
+                            },
+                            include: [{
+                                model: server.mysql.PaymentMethod,
+                                as: 'paymentMethod'
+                            },
+                            {
+                                model: server.mysql.RequestPaymentTransaction,
+                                as: 'requestPaymentTransactions',
+                                include: [{
+                                    model: server.mysql.Transaction,
+                                    as: 'transaction'
+                                }]
+                            },
+                            {
+                                model: server.mysql.Request,
+                                as: 'request',
+                                required: true,
+                                include: [{
+                                    model: server.mysql.Client,
+                                    as: 'client',
+                                    where: {
+                                        companyId: ctx.params.data.companyId,
+                                        id: ctx.params.data.clientId
+                                    },
+                                    required: true
+                                }]
+                            }]
+                        }],
+                        transaction: this._transaction
+                    }).then((requestPaymentBills) => {
+                        if (!requestPaymentBills) return new Error("Erro na consulta")
+                        const limitinUse = {}
+                        const promises = _.map(requestPaymentBills, (requestPaymentBill, index) => {
+                            if (!requestPaymentBill.requestPayments) return new Error("Erro na consulta")
+                            return ctx.call("data/request.paymentMethodUpdate", {
+                                data: {
+                                    paid: true,
+                                    paidDatetime: moment()
+                                },
+                                where: {
+                                    id: requestPaymentBill.requestPayments.id
+                                },
+                                transaction: ctx.params.transaction 
+                            }).then(() => {
+                                return ctx.call("data/client.get", {
+                                    where: {
+                                        id: requestPaymentBill.requestPayments.request.client.id
+                                    },
+                                    transaction: ctx.params.transaction 
+                                }).then((client) => {
+                                    if(!limitinUse[client.id]) limitinUse[client.id] = client.limitInUse
+                                    limitinUse[client.id] = parseFloat(limitinUse[client.id]) - parseFloat(requestPaymentBill.requestPayments.amount)
+                                })
+                            })
+                        })
+                        return Promise.all(promises).then(() => {
+                            const updateLimitInUsePromise = []
+                            _.forEach(_.keys(limitinUse), (clientId) => {
+                                updateLimitInUsePromise.push(server.mysql.Client.update({
+                                    limitInUse: limitinUse[clientId]
+                                }, {
+                                        where: {
+                                            id: parseInt(clientId)
+                                        },
+                                        transaction: ctx.params.transaction 
+                                    }))
+                            })
+                            return Promise.all(updateLimitInUsePromise).then(() => {
+                                return ctx.call("data/client.commit")
+                            }).catch(() => {
+                                console.log("Erro em: data/client.markAsPaidBill")
+                                return ctx.call("data/client.rollback")
+                            })
+                        })
+                    })
+                }) 
+            },
+            billsPaymentMethod(ctx) {
+                    return ctx.call("data/client.setTransaction").then(() => {
+                        return server.mysql.RequestPaymentBill.findAll({
+                            where: {
+                                id: {
+                                    [Op.in]: _.map(ctx.params.data.requestPaymentBills, (requestPaymentBill) => {
+                                        return requestPaymentBill.id
+                                    })
+                                },
+                            },
+                            include: [{
+                                model: server.mysql.RequestPaymentBillPayment,
+                                as: 'requestPaymentBillPayments'
+                                }, {
+                                model: server.mysql.RequestPayment,
+                                as: 'requestPayments',
+                                where: {
+                                    paid: false,
+                                    settled: true
+                                },
+                                include: [{
+                                        model: server.mysql.PaymentMethod,
+                                        as: 'paymentMethod'
+                                    },
+                                    {
+                                        model: server.mysql.RequestPaymentTransaction,
+                                        as: 'requestPaymentTransactions',
+                                        include: [{
+                                            model: server.mysql.Transaction,
+                                            as: 'transaction'
+                                        }]
+                                    },
+                                    {
+                                        model: server.mysql.Request,
+                                        as: 'request',
+                                        required: true,
+                                        include: [{
+                                            model: server.mysql.Client,
+                                            as: 'client',
+                                            where:{
+                                                companyId: ctx.params.data.companyId,
+                                                id: ctx.params.data.clientId
+                                            },
+                                            required: true
+                                        }]
+                                    }
+                                ]
+                            }],
+                            transaction: this._transaction
+                        }).then((requestPaymentBills) => {                  
+                            const accountBalances = {}
+                            const promises = _.map(requestPaymentBills, (requestPaymentBill, index) => {
+                                if(!requestPaymentBill.requestPayments) return new Error("Erro na consulta")
+                                return new Promise((resolve, reject) => {
+                                    resolve(_.assign(requestPaymentBill, ctx.params.data.requestPaymentBills[index]))
+                                }).then((paymentBill) => {                        
+                                if(!paymentBill) return new Error("Error in markAsPaid, bill can not be null")
+                                const requestTransaction = _.last(_.filter(paymentBill.requestPayments.requestPaymentTransactions, (requestTransaction) => {
+                                    return requestTransaction.action == 'settle' && requestTransaction.operation == 'add' && !requestTransaction.revert
+                                }))
+                                return ctx.call('data/transaction.create', {
+                                    data: {
+                                        amount: Math.abs(paymentBill.amount),
+                                        createdById: ctx.params.data.createdById,
+                                        accountId: requestTransaction.transaction.accountId,
+                                        companyId: ctx.params.data.companyId,
+                                        description: 'Adição do valor do pagamento da notinha #' + requestPaymentBill.id + ' do pedido #' + requestPaymentBill.requestPayments.request.id + ' na conta de destino',
+                                    },
+                                    transaction: this._transaction
+                                }).then((transaction) => {
+                                    return server.mysql.Account.findById(transaction.accountId, {
+                                        transaction: this._transaction
+                                    }).then((account) => {
+                                        if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
+                                        accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                                        return server.mysql.RequestPaymentBillPayment.create({                
+                                            requestPaymentBillId: requestPaymentBill.id,
+                                            paymentMethodId: paymentBill.paymentMethodId,
+                                            amount: transaction.amount
+                                            }, {
+                                            transaction: this._transaction
+                                        }).then((requestPaymentBillPayment) => {
+                                            return server.mysql.RequestPaymentTransaction.create({
+                                                requestPaymentBillPaymentId: requestPaymentBillPayment.id,
+                                                transactionId: transaction.id,
+                                                action: 'payment',
+                                                revert: false
+                                            }, {
+                                            transaction: this._transaction
+                                            }).then(() => {
+                                                return ctx.call("data/client.get", {
+                                                    where: {
+                                                        id: requestPaymentBill.requestPayments.request.client.id
+                                                    },
+                                                    transaction: this._transaction
+                                                }).then((client) => {
+                                                    if(!limitInUseChange[client.id]) limitInUseChange[client.id] = client.limitInUse
+                                                    limitInUseChange[client.id] = parseFloat(limitInUseChange[client.id]) - parseFloat(transaction.amount) 
+                                                })
+                                            })
+                                        })
+                                    })  
+                                })
+                            })
+                        })
+                        return Promise.all(promises).then(() => {
+                            const updateAccountBalancesPromise = []
+                            _.forEach(_.keys(accountBalances),(accountId) => {
+                                updateAccountBalancesPromise.push(server.mysql.Account.update({
+                                    balance: accountBalances[accountId]
+                                    }, {
+                                    where: {
+                                        id: parseInt(accountId)
+                                    },
+                                    transaction: this._transaction
+                                }))
+                            })
+                            return Promise.all(updateAccountBalancesPromise).then(() => {
+                                return ctx.call("data/client.commit")
+                            }).catch(() => {
+                                console.log("Erro em: data/client.markAsPaidBill")
+                                return ctx.call("data/client.rollback")
+                            })
+                        })
+                    })
+                }) 
             },
             /**
              * @param {Object} where, {Array} include, {Object} transaction
@@ -312,7 +600,32 @@ module.exports = (server) => {
                         console.log(err)
                     })
                 })
-            }
+            },
+        /**
+         * @returns {Promise} set transaction
+         */ 
+        setTransaction() {
+            return server.sequelize.transaction().then((transaction) => {
+                this._transaction = transaction
+            })
+        },
+
+        /**
+         * Commit persistence
+         */
+        commit() {
+            console.log("Commit Notinha changes!")
+            this._transaction.commit()
+        },
+
+        /**
+         * Rollback persistence
+         */
+        rollback() {
+            console.log("Oh God, just rollback!")
+            this._transaction.rollback()
+            throw new Error()
+        }
         }
     }
 }

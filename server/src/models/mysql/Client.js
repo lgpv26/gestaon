@@ -27,6 +27,14 @@ module.exports = {
                     set(val) {
                         this.setDataValue('obs', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
+                },         
+                creditLimit: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
+                },
+                limitInUse: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
                 },
                 clientGroupId: {
                     type: Sequelize.INTEGER
@@ -35,6 +43,12 @@ module.exports = {
                     type: Sequelize.STRING,
                     set(val) {
                         this.setDataValue('legalDocument', (val == '' | val == null) ? null : val.toUpperCase().trim());
+                    }
+                },
+                origin: {
+                    type: Sequelize.STRING,
+                    set(val) {
+                        this.setDataValue('origin', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
                 },
                 dateUpdated: {

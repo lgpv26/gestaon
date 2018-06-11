@@ -1,6 +1,7 @@
 const basePath = require('./../middlewares/base-path.middleware');
 const Controller = require('../models/Controller')
 const _ = require('lodash')
+import EventResponse from '~server/models/EventResponse'
 
 module.exports = (server, restify) => {
 
@@ -75,6 +76,56 @@ module.exports = (server, restify) => {
     });
 
     server.patch('/clients/:id', clientsController.updateOne);
+
+    server.get('/clients/:id/bills', (req, res, next) => {
+        return server.broker.call('data/client.getBills', {
+            clientId: req.params.id,
+            companyId: req.query.companyId
+        }).then((data) => {
+            return res.send(200, { data })
+        })
+    })
+
+    server.post('/clients/:id/markBillsAsPaid', (req, res, next) => {
+        return server.broker.call('data/client.markBillsAsPaid', {
+            data: _.assign({
+                companyId: parseInt(req.query.companyId),
+                createdById: parseInt(req.auth.id),
+                clientId: parseInt(req.params.id)
+            }, req.body)
+        }).then((data) => {
+            return res.send(200, new EventResponse(data))
+        }).catch((err) => {
+            return res.send(200, new EventResponse(err))
+        })
+    })
+
+    server.post('/clients/:id/billsPaymentMethod', (req, res, next) => {
+        return server.broker.call('data/client.billsPaymentMethod', {
+            data: _.assign({
+                companyId: parseInt(req.query.companyId),
+                createdById: parseInt(req.auth.id),
+                clientId: parseInt(req.params.id)
+            }, req.body)
+        }).then((data) => {
+            return res.send(200, new EventResponse(data))
+        }).catch((err) => {
+            return res.send(200, new EventResponse(err))
+        })
+    })
+
+    server.post('/clients/:id/changeCredtiLimit', (req, res, next) => {
+        return server.broker.call('data/client.changeCreditLimit', {
+            data: _.assign({
+                clientId: req.params.id,
+                companyId: req.query.companyId,
+            }, req.body)
+        }).then((data) => {
+            return res.send(200, new EventResponse(data))
+        }).catch((err) => {
+            return res.send(200, new EventResponse(err))
+        })
+    })
 
     // CLIENTS GROUP //
     server.patch('/clients/:id/clients-group', (req, res, next) => {
