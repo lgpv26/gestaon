@@ -276,7 +276,7 @@ module.exports = (server) => {
                                 transaction: this._transaction
                             }).then((account) => {
                                 if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
-                                accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
+                                accountBalances[account.id] = (parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount))
                                 return server.mysql.RequestPaymentTransaction.create({
                                     requestPaymentId: ctx.params.paymentMethodId,                    
                                     requestPaymentId: requestPayment.id,

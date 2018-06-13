@@ -119,7 +119,6 @@ module.exports = (server) => { return {
                 companyId: ctx.params.companyId, 
                 transaction: ctx.params.transaction
             }).then((orderProductWithProduct) => {
-                
                  let orderProducts = _.map(orderProductWithProduct, orderProduct => {
                     return _.assign(orderProduct, {
                         productId: parseInt(orderProduct.product.id),
@@ -579,46 +578,6 @@ module.exports = (server) => { return {
             }).catch((err) => {
                 throw new Error("Erro timeline.")
             })
-        },
-
-        /**
-         * @param {Object} where, {Array} include
-         * @returns {Promise.<Array>} requests
-         */
-        changeStatus(ctx){
-            new Promise((resolve, reject) => {
-                let transaction = _.get(ctx, 'transaction', false)
-                if(!transaction){
-                    server.sequelize.transaction().then((transaction) => {
-                        this._transaction = transaction
-                        resolve(transaction)
-                    })
-                }
-                else {
-                    resolve(transaction)
-                }
-            }).then((transaction) => {
-                ctx.call('data/request.createTimeline', {
-                    where: {
-                        id: controller.request.id
-                    },
-
-                })
-            })
-            return server.mysql.Request.update(controller.request.data, {
-                where: {
-                    id: controller.request.id
-                },
-                transaction: controller.transaction
-            })
-
-        },
-        /**
-         * @param {Object} where, {Array} include
-         * @returns {Promise.<Array>} requests
-         */
-        changeUser(ctx){
-
         }
     }
 }
