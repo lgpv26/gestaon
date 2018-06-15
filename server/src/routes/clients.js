@@ -119,7 +119,8 @@ module.exports = (server, restify) => {
             data: _.assign({
                 clientId: req.params.id,
                 companyId: req.query.companyId,
-            }, req.body)
+            }, req.body),
+            userId: req.auth.id
         }).then((data) => {
             return res.send(200, new EventResponse(data))
         }).catch((err) => {

@@ -20,6 +20,7 @@ module.exports = (server) => {
             get(ctx) {
                 return server.mysql.Client.findOne({
                     where: ctx.params.where || {},
+                    attributes: ctx.params.attributes || null,
                     include: ctx.params.include || [],
                     transaction: ctx.params.transaction || null
                 }).then((client) => {
@@ -70,18 +71,40 @@ module.exports = (server) => {
 
             },
             changeCreditLimit(ctx) {
-                //console.log(ctx.params.data)
-                return ctx.call("data/client.update", {
-                    data: {
-                        creditLimit: ctx.params.data.creditLimit,
+                return ctx.call("data/client.get", {
+                    where: {
                         id: ctx.params.data.clientId
                     },
-                    where: {
-                        id: ctx.params.data.clientId,
-                        companyId: ctx.params.data.companyId
-                    }
+                    attributes: ['id','creditLimit','limitInUse']
                 }).then((client) => {
-                    return {creditLimit: client.creditLimit}
+                    if(parseFloat(client.limitInUse) > parseFloat(ctx.params.data.creditLimit)) throw new Error('Limite de crédito não pode ser inferior ao crédito em uso!')
+                    return ctx.call("data/client.setTransaction").then(() => {
+                        return server.mysql.CreditLog.create({
+                            clientId: client.id,
+                            newCreditLimit: ctx.params.data.creditLimit,
+                            oldCreditLimit: client.creditLimit,
+                            userId: ctx.params.userId
+                        }, {
+                            transaction: this._transaction
+                        }).then(() => {
+                            return ctx.call("data/client.update", {
+                                data: {
+                                    creditLimit: ctx.params.data.creditLimit,
+                                    id: ctx.params.data.clientId
+                                },
+                                where: {
+                                    id: ctx.params.data.clientId,
+                                    companyId: ctx.params.data.companyId
+                                },
+                                transaction: this._transaction
+                            }).then((client) => {
+                                return ctx.call("data/client.commit")
+                                .then(() => {
+                                    return {creditLimit: client.creditLimit}
+                                })                                
+                            })
+                        })
+                    })
                 })
             },
             /**
@@ -614,7 +637,7 @@ module.exports = (server) => {
          * Commit persistence
          */
         commit() {
-            console.log("Commit Notinha changes!")
+            console.log("Commit do data/client!")
             this._transaction.commit()
         },
 
@@ -622,7 +645,7 @@ module.exports = (server) => {
          * Rollback persistence
          */
         rollback() {
-            console.log("Oh God, just rollback!")
+            console.log("Oh God, just rollback do data/client!")
             this._transaction.rollback()
             throw new Error()
         }
