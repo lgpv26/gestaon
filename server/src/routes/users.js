@@ -99,8 +99,8 @@ module.exports = (server, restify) => {
                     as: 'requestClientPhones'
                 },
                 {
-                    model: server.mysql.RequestPaymentMethod,
-                    as: "requestPaymentMethods",
+                    model: server.mysql.RequestPayment,
+                    as: "requestPayments",
                     include: [{
                         model: server.mysql.PaymentMethod,
                         as: 'paymentMethod'

@@ -29,13 +29,15 @@ module.exports = (server, restify) => {
     })
 
     server.post('/mobile/requests/:id/status', (req, res, next) => {
-        server.broker.call('data/mobile.changeStatus', {
+        const aaa = {
             data: req.body,
             requestId: req.params.id,
             userAccountId: req.auth.accountId,
             userId: req.auth.id,
             companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
-        }).then((request) => {
+        }
+        console.log("Chegou aqui", aaa)
+        server.broker.call('data/mobile.changeStatus', aaa).then((request) => {
             return res.send(200, new EventResponse(request))
         }).catch((err) => {
             return res.send(200, new EventResponse(err))

@@ -9,12 +9,12 @@
                     <h3>Limite de crédito</h3>
                     <div class="form">
                         <money v-model="form.creditLimit"></money>
-                        <a class="btn btn--primary">Salvar</a>
+                        <a class="btn btn--primary" @click="save()">Salvar</a>
                     </div>
                 </div>
                 <div class="credit-bills-container">
                     <h3>Notinhas pendentes</h3>
-                    <table>
+                    <table v-if="bills.length">
                         <thead>
                             <tr>
                                 <th>Código</th>
@@ -23,13 +23,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Código</td>
+                            <tr v-for="bill in bills">
+                                <td>{{ bill.id }}</td>
                                 <td>00/00/2018 10:00</td>
                                 <td>Status</td>
                             </tr>
                         </tbody>
                     </table>
+                    <span v-else>Este cliente não possui notinhas pendentes!</span>
                 </div>
             </div>
         </template>
@@ -42,18 +43,55 @@
     import utils from '@/utils/index'
     import Vue from 'vue'
 
+    import ClientsAPI from '../../../../../api/clients'
+
     export default {
-        props: ['value', 'popoverProps'],
+        props: ['clientId', 'popoverProps'],
         data(){
             return {
+                bills: [],
                 form: {
+                    limitInUse: 0,
                     creditLimit: 0
                 }
             }
         },
+        watch: {
+            clientId: {
+                handler(clientId){
+                    const vm = this
+                    if(clientId){
+                        ClientsAPI.getCreditInfo(clientId, {
+                            companyId: vm.company.id
+                        }).then((response) => {
+                            vm.bills = response.data.bills
+                            vm.form.limitInUse = response.data.limitInUse
+                            vm.form.creditLimit = response.data.creditLimit
+                            const clientCreditInfo = utils.removeReactivity(vm.form)
+                            vm.$emit('input', clientCreditInfo)
+                            vm.$emit('change', clientCreditInfo)
+                        })
+                    }
+                },
+                immediate: true
+            }
+        },
         computed: {
+            ...mapState('auth',['company'])
         },
         methods: {
+            save(){
+                const vm = this
+                ClientsAPI.changeCreditLimit(vm.clientId,{
+                    creditLimit: vm.form.creditLimit
+                },{
+                    companyId: vm.company.id
+                }).then(() => {
+                    const clientCreditInfo = utils.removeReactivity(vm.form)
+                    vm.$emit('input', clientCreditInfo)
+                    vm.$emit('change', clientCreditInfo)
+                })
+            }
         }
     }
 </script>

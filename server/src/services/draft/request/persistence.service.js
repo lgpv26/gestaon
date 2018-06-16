@@ -696,15 +696,15 @@ module.exports = (server) => {
             promises.push(new Promise((resolve, reject) => {
                 let valuesCredit = 0
                 let paymentPromises = []
-                this._request.requestPayments.forEach((requestPaymentMethod) => {
+                this._request.requestPayments.forEach((requestPayment) => {
                     paymentPromises.push(ctx.call("data/payment-method.getOne", {
                             data: {
-                                id: requestPaymentMethod.paymentMethodId,
+                                id: requestPayment.paymentMethodId,
                                 companyId: this._companyId
                             },
                             transaction: this._transaction
                         }).then((paymentMethod) => {
-                            if(!paymentMethod.autoPay) return valuesCredit += requestPaymentMethod.amount
+                            if(!paymentMethod.autoPay) return valuesCredit += requestPayment.amount
                         })
                     )
                 })

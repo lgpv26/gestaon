@@ -24,7 +24,7 @@
                         text: 'Pendente'
                     },
                     {
-                        value: 'in_displacement',
+                        value: 'in-displacement',
                         text: 'Em deslocamento'
                     },
                     {

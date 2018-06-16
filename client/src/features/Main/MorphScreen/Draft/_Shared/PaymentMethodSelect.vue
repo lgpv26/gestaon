@@ -1,5 +1,5 @@
 <template>
-    <app-popover>
+    <app-popover v-bind="popoverProps">
         <template slot="triggerer">
             <slot v-if="hasDefaultSlot"></slot>
             <input v-else type="text" style="cursor: pointer;" :value="selectedPaymentMethodName" readonly />
@@ -38,7 +38,7 @@
     import Vue from 'vue'
 
     export default {
-        props: ['value'],
+        props: ['value','popoverProps'],
         data(){
             return {
                 editing: false,

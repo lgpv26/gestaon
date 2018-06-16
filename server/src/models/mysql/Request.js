@@ -65,7 +65,7 @@ module.exports = {
                     type: TIMESTAMP
                 },
                 status: {
-                    type: Sequelize.ENUM('pending','finished','canceled','in_displacement')
+                    type: Sequelize.ENUM('pending','finished','canceled','in-displacement')
                 }
             }, {
                 tableName: "request",

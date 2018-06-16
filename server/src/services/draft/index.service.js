@@ -49,7 +49,10 @@ module.exports = (server) => { return {
          * @returns
          */
         update(ctx){
-            return server.mongodb.Draft.findOneAndUpdate({ draftId: ctx.params.data.draftId, companyId: ctx.params.data.companyId }, {
+            return server.mongodb.Draft.findOneAndUpdate({
+                draftId: ctx.params.data.draftId,
+                companyId: ctx.params.data.companyId
+            }, {
                 $set: ctx.params.data
             }).then((draft) => {
                 return draft.toJSON()

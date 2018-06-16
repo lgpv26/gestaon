@@ -167,7 +167,7 @@ module.exports = (server) => {
             changeStatus(ctx) {
                 return server.broker.call('data/request.getList', {
                     where: {
-                        status: 'in_displacement',
+                        status: 'in-displacement',
                         userId: ctx.params.userId
                     },
                     include: [
@@ -177,7 +177,7 @@ module.exports = (server) => {
                         }
                     ]
                 }).then((checkRequest) => {
-                    if(checkRequest.length && ctx.params.data.status == 'in_displacement') throw new Error('Só é possivel ter um pedido em deslocamento!')
+                    if(checkRequest.length && ctx.params.data.status === 'in-displacement') throw new Error('Só é possivel ter um pedido em deslocamento!')
                     return server.broker.call('data/request.getOne', {
                         where: {
                             id: parseInt(ctx.params.requestId),
@@ -457,7 +457,6 @@ module.exports = (server) => {
                     throw new Error(err)
                 })
             },
-
             setRequestPayments(ctx) {
                 return ctx.call("data/mobile.checkLimit").then(() => {
                     let removeRequestPayments = []
@@ -570,15 +569,15 @@ module.exports = (server) => {
                 promises.push(new Promise((resolve, reject) => {
                     let valuesCredit = 0
                     let paymentPromises = []
-                    this._request.requestPayments.forEach((requestPaymentMethod) => {
+                    this._request.requestPayments.forEach((requestPayment) => {
                         paymentPromises.push(ctx.call("data/payment-method.getOne", {
                                 data: {
-                                    id: requestPaymentMethod.paymentMethodId,
+                                    id: requestPayment.paymentMethodId,
                                     companyId: this._companyId
                                 },
                                 transaction: this._transaction
                             }).then((paymentMethod) => {
-                                if(!paymentMethod.autoPay) return valuesCredit += requestPaymentMethod.amount
+                                if(!paymentMethod.autoPay) return valuesCredit += requestPayment.amount
                             })
                         )
                     })

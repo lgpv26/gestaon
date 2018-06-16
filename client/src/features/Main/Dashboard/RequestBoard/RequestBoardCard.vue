@@ -239,8 +239,8 @@
                     case "pending":
                         return "Pendente"
                         break;
-                    case "sent":
-                        return "Enviado"
+                    case "in-displacement":
+                        return "Deslocando"
                         break;
                     case "canceled":
                         return "Cancelado"

@@ -77,6 +77,15 @@ module.exports = (server, restify) => {
 
     server.patch('/clients/:id', clientsController.updateOne);
 
+    server.get('/clients/:id/credit-info', (req, res, next) => {
+        return server.broker.call('data/client.getCreditInfo', {
+            clientId: req.params.id,
+            companyId: req.query.companyId
+        }).then((data) => {
+            return res.send(200, { data })
+        })
+    })
+
     server.get('/clients/:id/bills', (req, res, next) => {
         return server.broker.call('data/client.getBills', {
             clientId: req.params.id,
@@ -114,7 +123,7 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.post('/clients/:id/changeCredtiLimit', (req, res, next) => {
+    server.post('/clients/:id/change-credit-limit', (req, res, next) => {
         return server.broker.call('data/client.changeCreditLimit', {
             data: _.assign({
                 clientId: req.params.id,

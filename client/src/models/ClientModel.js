@@ -8,6 +8,8 @@ export class ClientModel {
         name = '',
         legalDocument = '',
         clientGroupId = null,
+        creditLimit = 0,
+        limitInUse = 0,
         clientAddressForm = {},
         clientCustomFields = [],
         clientAddresses = [],
@@ -15,6 +17,8 @@ export class ClientModel {
     } = {}){
         this.id = id
         this.name = name
+        this.creditLimit = creditLimit
+        this.limitInUse = limitInUse
         this.legalDocument = legalDocument
         this.clientGroupId = clientGroupId
         this.clientCustomFields = clientCustomFields

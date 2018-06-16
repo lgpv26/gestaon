@@ -107,6 +107,29 @@ module.exports = (server) => {
                     })
                 })
             },
+            getCreditInfo(ctx){
+                return Promise.all([
+                    server.mysql.Client.findOne({
+                        where: {
+                            companyId: ctx.params.companyId,
+                            id: ctx.params.clientId
+                        },
+                        attributes: ['creditLimit','limitInUse']
+                    }).then((client) => {
+                        return JSON.parse(JSON.stringify(client))
+                    }),
+                    ctx.call('data/client.getBills', {
+                        companyId: ctx.params.companyId,
+                        clientId: ctx.params.clientId
+                    })
+                ]).then(([client, bills]) => {
+                    return {
+                        creditLimit: client.creditLimit,
+                        limitInUse: client.limitInUse,
+                        bills
+                    }
+                })
+            },
             /**
              * @param {Object} id, companyId
              * @returns {Promise.<Array>} requests

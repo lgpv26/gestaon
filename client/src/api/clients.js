@@ -32,6 +32,15 @@ export default {
     savePhones(clientId, body, params){
         return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId + '/phones', { clientPhones: body }, { params }).then((response) => response.json())
     },
+    getCreditInfo(id, params = {}){
+        return Vue.http.get(config.apiBaseUrl + '/clients/' + id + '/credit-info', { params }).then((response) => response.json())
+    },
+    getBills(id, params = {}){
+        return Vue.http.get(config.apiBaseUrl + '/clients/' + id + '/bills', { params }).then((response) => response.json())
+    },
+    changeCreditLimit(clientId, body, params){
+        return Vue.http.post(config.apiBaseUrl + '/clients/' + clientId + '/change-credit-limit', body, { params }).then((response) => response.json())
+    },
     search(params){
         return Vue.http.get(config.apiBaseUrl + '/clients/search', { params }).then((response) => response.json())
     }

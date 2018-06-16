@@ -25,7 +25,7 @@ module.exports = {
                     default: null
                 },
                 status: {
-                    type: Sequelize.ENUM('pending', 'in_displacement', 'canceled', 'finished'),
+                    type: Sequelize.ENUM('pending', 'in-displacement', 'canceled', 'finished'),
                     default: null
                 },
                 action: {
