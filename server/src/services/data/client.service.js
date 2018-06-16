@@ -102,6 +102,15 @@ module.exports = (server) => {
                                 .then(() => {
                                     return {creditLimit: client.creditLimit}
                                 })                                
+                            }).catch((err) => {
+                                return ctx.call("data/client.rollback", {
+                                    err: 'Não foi possivel alterar o limite de credito! Update'
+                                })
+                            })
+                        }).catch((err) => {
+                            console.log(err)
+                            return ctx.call("data/client.rollback", {
+                                err: 'Não foi possivel alterar o limite de credito! CreditLog'
                             })
                         })
                     })
@@ -690,10 +699,10 @@ module.exports = (server) => {
         /**
          * Rollback persistence
          */
-        rollback() {
+        rollback(ctx) {
             console.log("Oh God, just rollback do data/client!")
             this._transaction.rollback()
-            throw new Error()
+            throw new Error(ctx.params.err)
         }
         }
     }
