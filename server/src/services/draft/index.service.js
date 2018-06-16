@@ -55,6 +55,7 @@ module.exports = (server) => { return {
             }, {
                 $set: ctx.params.data
             }).then((draft) => {
+                if(!draft) throw new Error ('Erro ao atualizar Draft')
                 return draft.toJSON()
             })
         },

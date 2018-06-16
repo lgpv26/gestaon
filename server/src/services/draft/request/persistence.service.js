@@ -443,7 +443,6 @@ module.exports = (server) => {
         },
 
         setPaymentMethods(ctx){
-            return ctx.call("draft/request/persistence.checkLimit").then(() => {
                 let removeRequestPayments = []
                 let alreadyPaid = []
                 let changePaid = []
@@ -464,6 +463,7 @@ module.exports = (server) => {
             
                                     if(indexOldPayment !== -1 && parseFloat(payment.amount) !== parseFloat(this._oldRequest.requestPayments[indexOldPayment].amount)){
                                         _.set(payment, 'changed', true)
+                                        _.set(payment, 'oldAmount', parseFloat(this._oldRequest.requestPayments[indexOldPayment].amount))
                                         _.set(ctx.params.data[index], 'settled', false)
                                         _.set(ctx.params.data[index], 'settledDatetime', null)
                                         changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPayments[indexOldPayment].requestPaymentTransactions}))
@@ -516,6 +516,7 @@ module.exports = (server) => {
                         })
                     }
                 }).then(() => {
+                    return new Promise((resolve, reject) => {
                         return ctx.call("data/request.setPaymentMethods", {
                             data: ctx.params.data,
                             removeRequestPayments: (removeRequestPayments) ? removeRequestPayments : [],
@@ -530,13 +531,20 @@ module.exports = (server) => {
                             createdByAccountId: this._userAccountId,
                             accountId: (this._request.accountId) ? this._request.accountId : null,
                             transaction: this._transaction
-                        }).catch((err) => {
+                        })
+                        .then(() => {
+                            return ctx.call("draft/request/persistence.checkLimit")
+                            .then(() => {
+                                resolve()
+                            }).catch((err) => {
+                               reject(err)
+                            }) 
+                        })
+                        .catch((err) => {
                             return new Error (err)
                         })       
                     })
-            }).catch((err) => {
-                throw Error(err)
-            })
+                })
         },
 
         saveRequest(ctx){
@@ -684,37 +692,13 @@ module.exports = (server) => {
 
         checkLimit(ctx){
             if(!this._request.client.id) return true
-            const promises = []
-               
-            promises.push(ctx.call("data/client.get", {
+            return ctx.call("data/client.get", {
                 where: {
                     id: this._request.client.id
                 },
                 transaction: this._transaction
-            }))
-
-            promises.push(new Promise((resolve, reject) => {
-                let valuesCredit = 0
-                let paymentPromises = []
-                this._request.requestPayments.forEach((requestPayment) => {
-                    paymentPromises.push(ctx.call("data/payment-method.getOne", {
-                            data: {
-                                id: requestPayment.paymentMethodId,
-                                companyId: this._companyId
-                            },
-                            transaction: this._transaction
-                        }).then((paymentMethod) => {
-                            if(!paymentMethod.autoPay) return valuesCredit += requestPayment.amount
-                        })
-                    )
-                })
-                return Promise.all(paymentPromises).then(() => {
-                    resolve(valuesCredit)
-                })
-            }))
-            
-            return Promise.all(promises).then((response) => {
-                if(response && (parseFloat(response[0].creditLimit) >= (parseFloat(response[0].limitInUse) + parseFloat(response[1])))){
+            }).then((client) => {
+                if(client && (parseFloat(client.creditLimit) >= parseFloat(client.limitInUse))){
                     return true
                 }
                 else{

@@ -190,7 +190,7 @@ module.exports = (server) => { return {
                 where: {
                     id: {
                         [Op.in]: _.map(ctx.params.removeRequestPayments, (removeRequestPayment) => {
-                            if(removeRequestPayment.paid || removeRequestPayment.settled) revertTransactions.push(removeRequestPayment)
+                            revertTransactions.push(removeRequestPayment)
                             return removeRequestPayment.id
                         })
                     }
@@ -199,6 +199,7 @@ module.exports = (server) => { return {
             }).then(() => {
                 return ctx.call("data/request.revertTransaction", {
                     data: revertTransactions,
+                    clientId: ctx.params.clientId,
                     changePaid: ctx.params.changePaid,
                     alreadyPaid: ctx.params.alreadyPaid,
                     createdById: ctx.params.createdById,
@@ -427,8 +428,32 @@ module.exports = (server) => { return {
             if (!ctx.params.data.length) return true
             const promises = []
             const accountBalances = {}
+            const limitInUseChange = {}
 
             ctx.params.data.forEach((requestPayment) => {
+                if(!requestPayment.paymentMethod.autoPay){
+                    promises.push(new Promise((resolve, reject) => {
+                            if(!limitInUseChange[ctx.params.clientId]){
+                                ctx.call("data/client.get", {
+                                    where: {
+                                        id: ctx.params.clientId
+                                    },
+                                    transaction: ctx.params.transaction 
+                                }).then((client) => {
+                                    const value = (requestPayment.oldAmount) ? requestPayment.oldAmount : requestPayment.amount
+                                    console.log(client.limitInUse, value, parseFloat(client.limitInUse), parseFloat(value))
+                                    limitInUseChange[client.id] = (parseFloat(client.limitInUse) - parseFloat(value))
+                                    resolve()
+                                })
+                            }
+                            else{
+                                limitInUseChange[ctx.params.clientId] = parseFloat(limitInUseChange[ctx.params.clientId].limitInUse + value)
+                                resolve()
+                            }
+                        })
+                    )
+                }
+
                 requestPayment.requestPaymentTransactions.sort((a, b) => { return new Date(a.dateCreated) - new Date(b.dateCreated) })
 
                 let paymentsRevert = _.filter(requestPayment.requestPaymentTransactions, (requestPaymentTransaction) => {
@@ -515,7 +540,21 @@ module.exports = (server) => { return {
                             transaction: ctx.params.transaction
                         }))
                 })
-                return Promise.all(updateAccountBalancesPromise)
+                return Promise.all(updateAccountBalancesPromise).then(() => {
+                    const updateClientLimitPromise = []
+                    console.log(limitInUseChange)
+                    _.forEach(_.keys(limitInUseChange), (clientId) => {
+                        updateClientLimitPromise.push(server.mysql.Client.update({
+                            limitInUse: limitInUseChange[clientId]
+                        }, {
+                                where: {
+                                    id: parseInt(clientId)
+                                },
+                                transaction: ctx.params.transaction
+                            }))
+                    })
+                    return Promise.all(updateClientLimitPromise)
+                })
             }).catch((err) => {
                 console.log('error: ', err)
             })
