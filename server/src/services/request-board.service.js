@@ -284,6 +284,7 @@ module.exports = (server) => { return {
             //position
             //sectionId
             return server.mongodb.Card.create(ctx.params.data).then((card) => {
+                if(!card) throw new Error ('Erro ao criar Card')
                 // check socket connections and emit 
                 server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('cardCreated', {
                     data: card, sectionId: ctx.params.section.id
@@ -309,6 +310,7 @@ module.exports = (server) => { return {
         },
         reloadCard(ctx){
             return server.mongodb.Card.findOne({requestId: ctx.params.request.id}).then((card) => {
+                if(!card) throw new Error ('Erro ao atualizar Card')
                 // check socket connections and emit 
                 card = card.toJSON()
                 card.request = ctx.params.request

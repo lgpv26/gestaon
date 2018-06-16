@@ -52,6 +52,7 @@ module.exports = (server) => { return {
             return server.mongodb.Draft.findOneAndUpdate({ draftId: ctx.params.data.draftId, companyId: ctx.params.data.companyId }, {
                 $set: ctx.params.data
             }).then((draft) => {
+                if(!draft) throw new Error ('Erro ao atualizar Draft')
                 return draft.toJSON()
             })
         },
