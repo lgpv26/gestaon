@@ -159,6 +159,9 @@ module.exports = (server) => {
                                 model: server.mysql.Transaction,
                                 as: 'transaction'
                             }]
+                        },{
+                            model: server.mysql.RequestPaymentBill,
+                            as: 'requestPaymentBills'
                         }]
                     },{
                         model: server.mysql.RequestOrder,
@@ -269,6 +272,7 @@ module.exports = (server) => {
         },
         setRequestPayments(ctx){
             return _.map(ctx.params.requestPayments, (requestPayment) => {
+                if(requestPayment.requestPaymentBills) _.set(requestPayment, 'deadlineDatetime', requestPayment.requestPaymentBills.deadlineDatetime)
                 _.unset(requestPayment, 'requestPaymentTransactions')
                 _.unset(requestPayment, 'paymentMethodId')
                 _.unset(requestPayment, 'requestId')
