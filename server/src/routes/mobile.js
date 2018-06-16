@@ -36,7 +36,6 @@ module.exports = (server, restify) => {
             userId: req.auth.id,
             companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
         }
-        console.log("Chegou aqui", aaa)
         server.broker.call('data/mobile.changeStatus', aaa).then((request) => {
             return res.send(200, new EventResponse(request))
         }).catch((err) => {

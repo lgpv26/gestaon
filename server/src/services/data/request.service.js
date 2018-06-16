@@ -206,7 +206,7 @@ module.exports = (server) => { return {
                     requestId: ctx.params.requestId,
                     transaction: ctx.params.transaction 
                 }).then(() => {
-                    const limitInUseChange = {}
+                   // const limitInUseChange = {}
                     let paymentMethodsPromises = []
                     let paymentsPaids = []
                     
@@ -234,7 +234,10 @@ module.exports = (server) => { return {
                                             requestPaymentId: paymentMethodReturn.id
                                         },
                                         transaction: ctx.params.transaction 
-                                    }).then(() => {
+                                    })
+                                     /*
+                                    .then(() => {
+                                        /*
                                         return ctx.call("data/client.get", {
                                             where: {
                                                 id: ctx.params.clientId
@@ -244,7 +247,8 @@ module.exports = (server) => { return {
                                             if(!limitInUseChange[client.id]) limitInUseChange[client.id] = client.limitInUse
                                             limitInUseChange[client.id] = parseFloat(limitInUseChange[client.id]) + parseFloat(paymentMethodReturn.amount) 
                                         })
-                                    })
+                                    
+                                    })*/
                                 }
                                 else{
                                     if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
@@ -273,7 +277,7 @@ module.exports = (server) => { return {
                                                 deadlineDatetime: requestPayment.deadlineDatetime
                                             },
                                             transaction: ctx.params.transaction 
-                                        }).then(() => {
+                                        })/*.then(() => {
                                             return ctx.call("data/client.get", {
                                                 where: {
                                                     id: ctx.params.clientId
@@ -284,6 +288,7 @@ module.exports = (server) => { return {
                                                 limitInUseChange[client.id] = parseFloat(limitInUseChange[client.id]) + parseFloat(paymentMethodReturn.amount)
                                             })
                                         })
+                                        */
                                 }
                                 else{
                                     if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
@@ -296,6 +301,7 @@ module.exports = (server) => { return {
                             )
                         }
                     })
+                    /*
                     return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
                         const updateLimitInUsePromise = []
                         _.forEach(_.keys(limitInUseChange),(clientId) => {
@@ -308,7 +314,8 @@ module.exports = (server) => { return {
                                 transaction: ctx.params.transaction
                             }))
                         })
-                        return Promise.all(updateLimitInUsePromise).then(() => {
+                        */
+                        return Promise.all(paymentMethodsPromises).then(() => {
                             if(paymentsPaids.length){
                                 return ctx.call("cashier-balancing.markAsPaid", {
                                     data: {
@@ -332,7 +339,7 @@ module.exports = (server) => { return {
                         console.log('Erro payment methods em request service', err)
                         throw new Error(err)
                     })
-                })
+              //  })
             }).catch((err) => {
                 console.log('ERRO: revertTransaction do setPaymentMethods', err)
                 return new Error("ERRO: revertTransaction do setPaymentMethods")
@@ -431,6 +438,7 @@ module.exports = (server) => { return {
             const limitInUseChange = {}
 
             ctx.params.data.forEach((requestPayment) => {
+                /*
                 if(!requestPayment.paymentMethod.autoPay){
                     promises.push(new Promise((resolve, reject) => {
                             if(!limitInUseChange[ctx.params.clientId]){
@@ -453,6 +461,7 @@ module.exports = (server) => { return {
                         })
                     )
                 }
+                */
 
                 requestPayment.requestPaymentTransactions.sort((a, b) => { return new Date(a.dateCreated) - new Date(b.dateCreated) })
 
@@ -540,9 +549,11 @@ module.exports = (server) => { return {
                             transaction: ctx.params.transaction
                         }))
                 })
-                return Promise.all(updateAccountBalancesPromise).then(() => {
+                return Promise.all(updateAccountBalancesPromise)
+                /*
+                .then(() => {
                     const updateClientLimitPromise = []
-                    console.log(limitInUseChange)
+                    
                     _.forEach(_.keys(limitInUseChange), (clientId) => {
                         updateClientLimitPromise.push(server.mysql.Client.update({
                             limitInUse: limitInUseChange[clientId]
@@ -554,7 +565,8 @@ module.exports = (server) => { return {
                             }))
                     })
                     return Promise.all(updateClientLimitPromise)
-                })
+                    
+                })*/
             }).catch((err) => {
                 console.log('error: ', err)
             })

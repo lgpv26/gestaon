@@ -540,15 +540,24 @@ module.exports = (server) => {
                             transaction: this._transaction
                         })
                         .then(() => {
-                            return ctx.call("draft/request/persistence.checkLimit")
-                            .then(() => {
+                            resolve ()
+                            /*
+                            if(changePaid.length  || removeRequestPayments.length){
+                                return ctx.call("draft/request/persistence.checkLimit")
+                                .then(() => {
+                                    resolve()
+                                }).catch((err) => {
+                                reject(err)
+                                }) 
+                            }
+                            else {
                                 resolve()
-                            }).catch((err) => {
-                               reject(err)
-                            }) 
+                            }
+                            */
                         })
                         .catch((err) => {
-                            return new Error (err)
+                            reject(err)
+                            //return new Error (err)
                         })       
                     })
                 })
@@ -556,7 +565,7 @@ module.exports = (server) => {
 
         saveRequest(ctx){
             if (this._request.id) { // update request         
-                if(this._oldRequest.status === this._request.status && this._oldRequest.status !== 'finished' || this._oldRequest.status !== 'canceled'){
+                if(this._oldRequest.status == this._request.status && (this._oldRequest.status != 'finished' || this._oldRequest.status != 'canceled')){
                     ctx.call("draft/request/persistence.reloadCard", {
                         reloadCard: true
                     })
