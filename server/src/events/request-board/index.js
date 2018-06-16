@@ -246,11 +246,36 @@ module.exports = class RequestBoard {
                                         cardId: evData.cardId,
                                         requestTimelineItem
                                     }))
+                                    vm.server.broker.call("push-notification.push", {
+                                        data: {
+                                            userId: request.userId,
+                                            title: 'O Status do pedido #' + request.id + ' foi alterado.',
+                                            message: 'Abra a notificação para ver mais detalhes',
+                                            payload: {
+                                                type: 'request.changeStatus',
+                                                id: request.id
+                                            }
+                                        },
+                                        notRejectNotLogged: true
+                                    })
                                     if(evData.status == 'finished' || evData.status == 'canceled'){
                                         return vm.server.broker.call('request-board.removeCard', {
                                             data: {
                                                 cardId: evData.cardId
                                             }
+                                        }).then(() => {
+                                            vm.server.broker.call("push-notification.push", {
+                                                data: {
+                                                    userId: request.userId,
+                                                    title: 'O pedido #' + request.id + ' foi encerrado.',
+                                                    message: 'Abra a notificação para ver mais detalhes',
+                                                    payload: {
+                                                        type: 'request.removed',
+                                                        id: request.id
+                                                    }
+                                                },
+                                                notRejectNotLogged: true
+                                            })
                                         })
                                     }
                                 })                                
@@ -354,18 +379,33 @@ module.exports = class RequestBoard {
                             transaction: transaction
                         }).then((requestTimelineItem) => {
                             transaction.commit().then(() => {
-                                vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', new EventResponse({
-                                    cardId: evData.cardId,
-                                    requestTimelineItem
-                                }))
-                                vm.server.broker.call("push-notification.push", {
-                                    data: {
-                                        userId: evData.userId,
-                                        title: '',
-                                        message: '' 
-                                    }
-                                }).catch((err) => {
-                                        console.log(err)
+                                    vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('requestBoardRequestTimelineChangeUser', new EventResponse({
+                                        cardId: evData.cardId,
+                                        requestTimelineItem
+                                    }))
+                                    vm.server.broker.call("push-notification.push", {
+                                        data: {
+                                            userId: evData.userId,
+                                            title: 'Novo pedido #' + request.id,
+                                            message: 'Abra a notificação para ver mais detalhes',
+                                            payload: {
+                                                type: 'request.create',
+                                                id: request.id
+                                            }
+                                        },
+                                        notRejectNotLogged: true
+                                    })
+                                    vm.server.broker.call("push-notification.push", {
+                                        data: {
+                                            userId: request.userId,
+                                            title: 'O pedido #' + request.id + ' foi passado a outro usuário.',
+                                            message: 'Abra a notificação para ver mais detalhes',
+                                            payload: {
+                                                type: 'request.removed',
+                                                id: request.id
+                                            }
+                                        },
+                                        notRejectNotLogged: true
                                     })
                                 })
                             })

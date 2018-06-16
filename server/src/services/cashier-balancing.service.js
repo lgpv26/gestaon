@@ -144,10 +144,12 @@ module.exports = (server) => {
                             {
                                 model: server.mysql.Client,
                                 as: 'client',
+                                required: false,
                                 include: [
                                     {
                                         model: server.mysql.ClientGroup,
-                                        as: 'clientGroup'
+                                        as: 'clientGroup',
+                                        required: false
                                     }
                                 ],
                                 where: clientWhere
@@ -189,7 +191,8 @@ module.exports = (server) => {
                             {
                                 model: server.mysql.Client,
                                 as: 'client',
-                                where: clientWhere
+                                where: clientWhere,
+                                required: false
                             }
                         ],
                         where: {
