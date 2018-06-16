@@ -40,7 +40,7 @@
                 -->
             </div>
             <div class="tooltip-actions">
-                <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })">Editar <icon-edit></icon-edit></a>
+                <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: card.request.id, companyId: company.id })">Editar <icon-edit></icon-edit></a>
                 <span class="push-both-sides"></span>
                 <timeago :since="card.request.dateCreated" style="color: var(--font-color--9)" :auto-update="60"></timeago>
             </div>
@@ -85,8 +85,8 @@
                     case "pending":
                         return "Pendente"
                         break;
-                    case "sent":
-                        return "Enviado"
+                    case "in-displacement":
+                        return "Em deslocamento"
                         break;
                     case "canceled":
                         return "Cancelado"

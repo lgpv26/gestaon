@@ -39,7 +39,7 @@
                     </a>
                 </template>
                 <template slot="actions" slot-scope="slotProps">
-                    <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })" style="width: 32px;">
+                    <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: slotProps.item.requestId, companyId: company.id })" style="width: 32px;">
                         <icon-edit></icon-edit>
                     </a>
                 </template>
@@ -239,8 +239,8 @@
                     case "pending":
                         return "Pendente"
                         break;
-                    case "sent":
-                        return "Enviado"
+                    case "in-displacement":
+                        return "Em deslocamento"
                         break;
                     case "canceled":
                         return "Cancelado"
@@ -268,7 +268,6 @@
                 CashierBalancingAPI.getList(requestParams).then(({data}) => {
                     console.log("getList",data)
                     this.items = _.map(data.list.rows, (row) => {
-
                         return {
                             id: row.id,
                             amount: row.amount,

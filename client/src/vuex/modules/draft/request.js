@@ -245,8 +245,8 @@ const orderActions = {
     },
 }
 const actions = {
-    runRequestRecoverance(context, {request,companyId}){
-        return RequestsAPI.recoverance(request.id, {
+    runRequestRecoverance(context, {requestId,companyId}){
+        return RequestsAPI.recoverance(requestId, {
             companyId
         })
     },
