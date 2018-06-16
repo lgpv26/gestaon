@@ -313,6 +313,7 @@
                             if(selectedItem.paymentMethodId === config.system.IDMappings.paymentMethods.bill){
                                 return false
                             }
+                            return selectedItem
                         }), (selectedItem) => {
                             return selectedItem.id
                         }),

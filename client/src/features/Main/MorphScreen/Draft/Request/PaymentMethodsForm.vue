@@ -22,7 +22,8 @@
                 <span v-else>---</span>
             </td>
             <td>
-                <input type="text" v-model="requestPaymentRow.code" v-if="requestPaymentRow.paymentMethod.id === config.system.IDMappings.paymentMethods.bill" style="text-transform: initial" />
+                <input type="text" v-model="requestPaymentRow.code" v-if="requestPaymentRow.paymentMethod.id === config.system.IDMappings.paymentMethods.bill"
+                @input="inputRequestPaymentRow($event,'code',index)" style="text-transform: initial" />
                 <span v-else>---</span>
             </td>
             <td><money type="text" v-model="requestPaymentRow.amount" @input.native="inputRequestPaymentRow($event,'amount',index)" style="text-align: right;"></money></td>
