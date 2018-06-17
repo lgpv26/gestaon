@@ -28,6 +28,10 @@
                         text: 'Em deslocamento'
                     },
                     {
+                        value: 'canceled',
+                        text: 'Cancelado'
+                    },
+                    {
                         value: 'finished',
                         text: 'Finalizado'
                     }
@@ -50,7 +54,7 @@
                 this.$socket.emit('request-board:request-timeline:change-status', sendData)
                 this.$emit('change', statusItem.value)
                 this.$emit('input', statusItem.value)
-                if(statusItem.value === 'finished'){
+                if(statusItem.value === 'finished' || statusItem.value === 'canceled'){
                     this.removeCard(this.cardId)
                 }
             }

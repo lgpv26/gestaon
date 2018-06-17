@@ -222,7 +222,8 @@ module.exports = (server) => {
                                                 cardId: card._id,
                                                 requestTimelineItem
                                             }))
-                                            if(ctx.params.data.status == 'finished' || ctx.params.data.status == 'canceled'){
+
+                                            if(ctx.params.data.status === 'finished' || ctx.params.data.status === 'canceled'){
                                                 server.broker.call('request-board.removeCard', {
                                                     data: {
                                                         cardId: card._id

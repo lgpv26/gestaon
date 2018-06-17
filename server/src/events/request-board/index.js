@@ -258,7 +258,7 @@ module.exports = class RequestBoard {
                                         },
                                         notRejectNotLogged: true
                                     })
-                                    if(evData.status == 'finished' || evData.status == 'canceled'){
+                                    if(evData.status === 'finished' || evData.status === 'canceled'){
                                         return vm.server.broker.call('request-board.removeCard', {
                                             data: {
                                                 cardId: evData.cardId

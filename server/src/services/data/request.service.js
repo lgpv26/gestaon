@@ -301,8 +301,8 @@ module.exports = (server) => { return {
                             )
                         }
                     })
-                    /*
                     return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
+                        /*
                         const updateLimitInUsePromise = []
                         _.forEach(_.keys(limitInUseChange),(clientId) => {
                             updateLimitInUsePromise.push(server.mysql.Client.update({
@@ -315,31 +315,30 @@ module.exports = (server) => { return {
                             }))
                         })
                         */
-                        return Promise.all(paymentMethodsPromises).then(() => {
-                            if(paymentsPaids.length){
-                                return ctx.call("cashier-balancing.markAsPaid", {
-                                    data: {
-                                        requestPaymentIds: _.pullAll(paymentsPaids, ctx.params.alreadyPaid),
-                                        companyId: ctx.params.companyId,
-                                        createdById: ctx.params.createdById,
-                                        accountId: ctx.params.accountId
-                                    },
-                                    persistence: true,
-                                    transaction: ctx.params.transaction || null
-                                }).then(() => {
-                                    return paymentMethods
-                                })
-                            }
-                            else {
-                                
+                        /*return Promise.all(paymentMethodsPromises).then(() => {*/
+                        if(paymentsPaids.length){
+                            return ctx.call("cashier-balancing.markAsPaid", {
+                                data: {
+                                    requestPaymentIds: _.pullAll(paymentsPaids, ctx.params.alreadyPaid),
+                                    companyId: ctx.params.companyId,
+                                    createdById: ctx.params.createdById,
+                                    accountId: ctx.params.accountId
+                                },
+                                persistence: true,
+                                transaction: ctx.params.transaction || null
+                            }).then(() => {
                                 return paymentMethods
-                            }
-                        })
+                            })
+                        }
+                        else {
+                            return paymentMethods
+                        }
+                        /*})*/
                     }).catch((err) => {
                         console.log('Erro payment methods em request service', err)
                         throw new Error(err)
                     })
-              //  })
+                })
             }).catch((err) => {
                 console.log('ERRO: revertTransaction do setPaymentMethods', err)
                 return new Error("ERRO: revertTransaction do setPaymentMethods")

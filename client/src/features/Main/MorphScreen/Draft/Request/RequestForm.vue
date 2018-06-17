@@ -239,6 +239,7 @@
                 }
                 if(!this.requestPayments.length){
                     this.addRequestPayment()
+                    this.sync(this.requestPayments,'requestPayments')
                 }
             },
             persistClient(){

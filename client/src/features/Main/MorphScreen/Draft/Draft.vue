@@ -8,7 +8,7 @@
                     <span class="title__draft-id">#{{ screen.draft.draftId }}</span>
                     <icon-log style="margin-left: 3px; position: relative; top: 1px;"></icon-log>
                 </h1>
-                <span class="summary__info">Iniciado às <em>{{ formatedCreatedAt }}</em> por <em>{{ screen.draft.createdBy }}</em></span>
+                <span class="summary__info">Iniciado às <em>{{ formatedCreatedAt }}</em> por <em>{{ _.find(users, {id: screen.draft.createdBy}).name }}</em></span>
             </div>
             <span class="push-both-sides"></span>
             <div class="header__tags" v-if="tags.length">
@@ -68,6 +68,7 @@
             ...mapGetters('morph-screen', ['activeMorphScreen','tags']),
             ...mapState('morph-screen', ['screens','isShowing']),
             ...mapState('auth', ['user', 'token', 'company']),
+            ...mapState('data/users', ['users']),
             formatedCreatedAt(){
                 return moment(this.activeMorphScreen.draft.createdAt).format("DD/MM/YYYY HH:mm")
             }

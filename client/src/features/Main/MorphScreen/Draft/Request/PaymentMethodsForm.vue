@@ -38,15 +38,18 @@
             </td>
         </tr>
         <tr>
-            <td colspan="6" style="padding-top: 15px;" v-if="client.id">
+            <td colspan="6" style="padding-top: 15px;">
                 <div style="display: flex; flex-direction: row;">
                     <a class="btn btn--border-only" @click="add()" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Adicionar pagamento</a>
-                    <app-client-credit v-model="form.clientCredit" :clientId="client.id" :popoverProps="{verticalOffset: 10, horizontalOffset: -5, placement: 'top-start'}">
+                    <app-client-credit v-if="client.id" v-model="form.clientCredit" :clientId="client.id" :popoverProps="{verticalOffset: 10, horizontalOffset: -5, placement: 'top-start'}">
                         <div class="client-credit-triggerer">
                             <span style="margin-right: 8px;">
+                                Notinhas pendentes
+                                <!--
                                 Crédito utilizado:
                                 <strong style="color: var(--font-color--terciary)">{{ utils.formatMoney(form.clientCredit.limitInUse,2,'R$ ','.',',') }}</strong> de
                                 <strong>{{ utils.formatMoney(form.clientCredit.creditLimit,2,'R$ ','.',',') }}</strong>
+                                -->
                             </span>
                         </div>
                     </app-client-credit>

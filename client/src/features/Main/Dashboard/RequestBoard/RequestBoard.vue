@@ -157,7 +157,7 @@
             requestBoardCardRemove(ev){
                 console.log("Received requestBoardCardRemove", ev)
                 if(ev.success){
-                    // this.moveCard(ev.evData.card)
+                    this.removeCard(ev.evData.removedCardId)
                 }
             },
         },
@@ -169,7 +169,7 @@
                 'RESET_REQUESTS','ADD_REQUEST','SET_SECTION_REQUESTS','MOVE_CARD'
             ]),
             ...mapActions('request-board', [
-                'moveCard','updateCard'
+                'moveCard','updateCard','removeCard'
             ]),
 
             /* Sections */

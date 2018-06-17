@@ -396,9 +396,12 @@ module.exports = (server) => { return {
                         return server.mongodb.Card.remove({
                             _id: ctx.params.data.cardId
                         }).then(() => {
-                            server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardRemove', new EventResponse({
+                            server.io.emit('requestBoardCardRemove', new EventResponse({
                                 removedCardId: ctx.params.data.cardId
                             }))
+                            /*server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardRemove', new EventResponse({
+                                removedCardId: ctx.params.data.cardId
+                            }))*/
                             return ctx.params.data.cardId
                         })
                         
