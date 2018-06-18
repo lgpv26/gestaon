@@ -7,7 +7,7 @@
                 <span>{{ clientAddress.address.neighborhood }} - {{ clientAddress.address.city }}/{{ clientAddress.address.state }}</span>
             </div>
             <div class="tooltip-actions">
-                <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })">Editar <icon-edit></icon-edit></a>
+                <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: card.request.id, companyId: company.id })">Editar <icon-edit></icon-edit></a>
             </div>
         </div>
         <div class="rbc-location" v-else>

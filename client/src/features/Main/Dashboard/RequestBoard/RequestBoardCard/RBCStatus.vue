@@ -24,8 +24,12 @@
                         text: 'Pendente'
                     },
                     {
-                        value: 'in_displacement',
+                        value: 'in-displacement',
                         text: 'Em deslocamento'
+                    },
+                    {
+                        value: 'canceled',
+                        text: 'Cancelado'
                     },
                     {
                         value: 'finished',
@@ -35,6 +39,7 @@
             }
         },
         methods: {
+            ...mapActions('request-board',['removeCard']),
             onItemClick(statusItem){
                 if(statusItem.value !== this.value){
                     this.changeValue(statusItem)
@@ -49,6 +54,9 @@
                 this.$socket.emit('request-board:request-timeline:change-status', sendData)
                 this.$emit('change', statusItem.value)
                 this.$emit('input', statusItem.value)
+                if(statusItem.value === 'finished' || statusItem.value === 'canceled'){
+                    this.removeCard(this.cardId)
+                }
             }
         },
     }

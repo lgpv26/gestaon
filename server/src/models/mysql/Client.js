@@ -27,6 +27,14 @@ module.exports = {
                     set(val) {
                         this.setDataValue('obs', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
+                },         
+                creditLimit: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
+                },
+                limitInUse: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
                 },
                 clientGroupId: {
                     type: Sequelize.INTEGER
@@ -35,6 +43,12 @@ module.exports = {
                     type: Sequelize.STRING,
                     set(val) {
                         this.setDataValue('legalDocument', (val == '' | val == null) ? null : val.toUpperCase().trim());
+                    }
+                },
+                origin: {
+                    type: Sequelize.STRING,
+                    set(val) {
+                        this.setDataValue('origin', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
                 },
                 dateUpdated: {
@@ -61,7 +75,7 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Client,Address,ClientAddress,ClientPhone,ClientCustomField,CustomField, ClientGroup,Request}) => {
+    postSettings: ({Client,Address,ClientAddress,ClientPhone,ClientCustomField,CustomField, ClientGroup,Request, CreditLog}) => {
         Client.hasMany(ClientAddress, {as: 'clientAddresses', foreignKey: 'clientId'});
         Client.belongsToMany(Address, {through: ClientAddress, as: 'addresses', foreignKey: 'clientId'});
 
@@ -73,5 +87,6 @@ module.exports = {
         Client.belongsToMany(CustomField, { through: ClientCustomField, as: 'customFields', foreignKey: 'clientId' });
 
         Client.hasMany(Request, {as: 'clientRequest', foreignKey: 'clientId'})
+        Client.hasMany(CreditLog, {as: 'creditLog', foreignKey: 'clientId'})
     }
 }

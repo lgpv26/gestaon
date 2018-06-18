@@ -4,7 +4,7 @@ import _ from 'lodash'
 module.exports = {
     defineModel: (server) => {
         const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize);
-        const modelName = 'RequestPaymentTransaction';
+        const modelName = 'CreditLog';
         return {
             name: modelName,
             instance: server.sequelize.define(_.camelCase(modelName), {
@@ -13,24 +13,20 @@ module.exports = {
                     primaryKey: true,
                     autoIncrement: true
                 },
-                requestPaymentId: {
+                clientId: {
                     type: Sequelize.INTEGER
+                },        
+                newCreditLimit: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
                 },
-                transactionId: {
+                oldCreditLimit: {
+                    type: Sequelize.DECIMAL(10,2),
+                    default: 0
+                },
+                userId: {
                     type: Sequelize.INTEGER
-                },
-                requestPaymentBillPaymentId: {
-                    type: Sequelize.INTEGER
-                },
-                action: {
-                    type: Sequelize.STRING
-                },
-                operation: {
-                    type: Sequelize.STRING
-                },
-                revert:{
-                    type: Sequelize.BOOLEAN
-                },
+                }, 
                 dateUpdated: {
                     type: TIMESTAMP
                 },
@@ -41,7 +37,7 @@ module.exports = {
                     type: TIMESTAMP
                 }
             }, {
-                tableName: "request_payment_transaction",
+                tableName: "credit_log",
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -51,9 +47,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({RequestPaymentTransaction,RequestPayment,RequestPaymentBillPayment,Transaction}) => {
-        RequestPaymentTransaction.belongsTo(RequestPayment, {as: 'requestPayment', foreignKey: 'requestPaymentId'})
-        RequestPaymentTransaction.belongsTo(RequestPaymentBillPayment, {as: 'requestPaymentBillPayment', foreignKey: 'requestPaymentBillPaymentId'})
-        RequestPaymentTransaction.belongsTo(Transaction, {as: 'transaction', foreignKey: 'transactionId'})
+    postSettings: ({CreditLog, Client, User}) => {
+        CreditLog.belongsTo(Client, {as: 'clientCreditLog', foreignKey: 'clientId'});
+        CreditLog.belongsTo(User, {as: 'userCreditLog', foreignKey: 'userId'});
     }
 }

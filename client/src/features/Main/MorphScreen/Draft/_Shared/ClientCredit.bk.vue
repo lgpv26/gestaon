@@ -81,7 +81,7 @@
         },
         methods: {
             save(){
-                /*const vm = this
+                const vm = this
                 ClientsAPI.changeCreditLimit(vm.clientId,{
                     creditLimit: vm.form.creditLimit
                 },{
@@ -90,7 +90,7 @@
                     const clientCreditInfo = utils.removeReactivity(vm.form)
                     vm.$emit('input', clientCreditInfo)
                     vm.$emit('change', clientCreditInfo)
-                })*/
+                })
             }
         }
     }

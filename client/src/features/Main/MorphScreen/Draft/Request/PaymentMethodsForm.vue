@@ -11,25 +11,28 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="(requestPaymentMethodRow,index) in requestPaymentMethodRows" class="payment-method">
+        <tr v-for="(requestPaymentRow,index) in requestPaymentRows" class="payment-method">
             <td>
-                <app-payment-method-select v-model="requestPaymentMethodRow.paymentMethod" @change="changeRequestPaymentMethodRowPaymentMethod($event,index)"></app-payment-method-select>
+                <app-payment-method-select :popoverProps="{placement: 'top-start', verticalOffset: 10}" v-model="requestPaymentRow.paymentMethod" @change="changeRequestPaymentRowPaymentMethod($event,index)"></app-payment-method-select>
             </td>
             <!--<td>PARCELA</td>-->
             <td>
-                <app-datetime-selector v-if="requestPaymentMethodRow.paymentMethod.hasDeadline" v-model="requestPaymentMethodRow.deadlineDatetime"
-                    @input="changeRequestPaymentMethodRowDeadline($event,index)" :config="datetimeSelectorConfig" placeholder="-- SELECIONAR --"></app-datetime-selector>
+                <app-datetime-selector v-if="requestPaymentRow.paymentMethod.hasDeadline" v-model="requestPaymentRow.deadlineDatetime"
+                    @input="changeRequestPaymentRowDeadline($event,index)" :config="datetimeSelectorConfig" placeholder="-- SELECIONAR --"></app-datetime-selector>
                 <span v-else>---</span>
             </td>
             <td>
-                <input type="text" v-model="requestPaymentMethodRow.code" v-if="requestPaymentMethodRow.paymentMethod.id === config.system.IDMappings.paymentMethods.bill" style="text-transform: initial" />
+                <input type="text" v-model="requestPaymentRow.code" v-if="requestPaymentRow.paymentMethod.id === config.system.IDMappings.paymentMethods.bill"
+                @input="inputRequestPaymentRow($event,'code',index)" style="text-transform: initial" />
                 <span v-else>---</span>
             </td>
-            <td><money type="text" v-model="requestPaymentMethodRow.amount" @input.native="inputRequestPaymentMethodRow($event,'amount',index)" style="text-align: right;"></money></td>
+            <td><money type="text" v-model="requestPaymentRow.amount" @input.native="inputRequestPaymentRow($event,'amount',index)" style="text-align: right;"></money></td>
             <td class="actions">
-                <app-switch v-model="requestPaymentMethodRow.paid" @change="toggleRequestPaymentMethodRowPaid($event, index)" :title="'Marcar como pago '"
+                <app-switch v-if="requestPaymentRow.paymentMethod.id !== config.system.IDMappings.paymentMethods.bill" v-model="requestPaymentRow.paid"
+                    @change="toggleRequestPaymentRowPaid($event, index)" :title="'Marcar como pago '"
                     v-tippy="{ placement: 'right', theme: 'light', zIndex: 99999999, inertia: true, arrow: true, animation: 'perspective' }"></app-switch>
-                <a href="javascript:void(0)" @click="remove(requestPaymentMethodRow.id, index)" style="margin-left: 10px;">
+                <app-switch :value="false" :disabled="true" v-else></app-switch>
+                <a href="javascript:void(0)" @click="remove(requestPaymentRow.id, index)" style="margin-left: 10px;">
                     <icon-remove></icon-remove>
                 </a>
             </td>
@@ -38,9 +41,16 @@
             <td colspan="6" style="padding-top: 15px;">
                 <div style="display: flex; flex-direction: row;">
                     <a class="btn btn--border-only" @click="add()" style="display: inline-flex; padding: 0 7px; color: var(--font-color--d-secondary);">Adicionar pagamento</a>
-                    <app-client-credit :popoverProps="{verticalOffset: 10, horizontalOffset: -5, placement: 'top-start'}">
+                    <app-client-credit v-if="client.id" v-model="form.clientCredit" :clientId="client.id" :popoverProps="{verticalOffset: 10, horizontalOffset: -5, placement: 'top-start'}">
                         <div class="client-credit-triggerer">
-                            <span style="margin-right: 8px;">Crédito utilizado: <strong style="color: var(--font-color--terciary)">R$0,00</strong> de <strong>R$150,00</strong></span>
+                            <span style="margin-right: 8px;">
+                                Notinhas pendentes
+                                <!--
+                                Crédito utilizado:
+                                <strong style="color: var(--font-color--terciary)">{{ utils.formatMoney(form.clientCredit.limitInUse,2,'R$ ','.',',') }}</strong> de
+                                <strong>{{ utils.formatMoney(form.clientCredit.creditLimit,2,'R$ ','.',',') }}</strong>
+                                -->
+                            </span>
                         </div>
                     </app-client-credit>
                 </div>
@@ -90,6 +100,12 @@
                     time_24hr: true,
                     enableTime: true
                 },
+                form: {
+                    clientCredit: {
+                        limitInUse: 0,
+                        creditLimit: 0
+                    }
+                },
                 formPath: 'request'
             }
         },
@@ -97,39 +113,40 @@
             ...mapState('auth', ['user','company']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapFields([
-                'form.requestPaymentMethods'
+                'form.requestPayments',
+                'form.client'
             ]),
             ...mapMultiRowFields({
-                requestPaymentMethodRows: 'form.requestPaymentMethods'
+                requestPaymentRows: 'form.requestPayments'
             }),
         },
         methods: {
-            ...mapActions('draft/request', ['addRequestPaymentMethod', 'removeRequestPaymentMethod']),
-            toggleRequestPaymentMethodRowPaid(value,index){
-                this.requestPaymentMethods[index].paid = value
-                this.sync(value,'requestPaymentMethods[' + index + '].paid')
+            ...mapActions('draft/request', ['addRequestPayment', 'removeRequestPayment']),
+            toggleRequestPaymentRowPaid(value,index){
+                this.requestPayments[index].paid = value
+                this.sync(value,'requestPayments[' + index + '].paid')
             },
-            inputRequestPaymentMethodRow(ev,field,index){
+            inputRequestPaymentRow(ev,field,index){
                 if(ev.isTrusted){
-                    this.sync(this.requestPaymentMethods[index][field],'requestPaymentMethods[' + index + '].' + field)
+                    this.sync(this.requestPayments[index][field],'requestPayments[' + index + '].' + field)
                 }
             },
-            changeRequestPaymentMethodRowPaymentMethod(paymentMethod, index){
-                this.sync(paymentMethod,'requestPaymentMethods[' + index + '].paymentMethod')
+            changeRequestPaymentRowPaymentMethod(paymentMethod, index){
+                this.sync(paymentMethod,'requestPayments[' + index + '].paymentMethod')
             },
-            changeRequestPaymentMethodRowDeadline(deadlineDatetime, index){
+            changeRequestPaymentRowDeadline(deadlineDatetime, index){
                 deadlineDatetime = moment(deadlineDatetime)
                 if(deadlineDatetime.isValid()){
-                    this.sync(deadlineDatetime.toDate(),'requestPaymentMethods[' + index + '].deadlineDatetime')
+                    this.sync(deadlineDatetime.toDate(),'requestPayments[' + index + '].deadlineDatetime')
                 }
             },
             add(){
-                this.addRequestPaymentMethod()
-                this.sync(this.requestPaymentMethods,'requestPaymentMethods')
+                this.addRequestPayment()
+                this.sync(this.requestPayments,'requestPayments')
             },
-            remove(requestPaymentMethodId, index){
-                this.removeRequestPaymentMethod(requestPaymentMethodId)
-                this.syncKeyRemove(index, 'requestPaymentMethods')
+            remove(requestPaymentId, index){
+                this.removeRequestPayment(requestPaymentId)
+                this.syncKeyRemove(index, 'requestPayments')
             },
         },
         mounted(){

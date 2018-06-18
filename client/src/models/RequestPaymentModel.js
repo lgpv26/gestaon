@@ -4,7 +4,7 @@ import { createPaymentMethod } from './PaymentMethodModel'
 
 import generateCode from 'nanoid/generate'
 
-export class RequestPaymentMethodModel {
+export class RequestPaymentModel {
     constructor({ id = null, deadlineDatetime = null, amount = 0,
             code = generateCode('ABCDEFGHIJKLMNOPQRSTUVXYWZ0123456789',5), nextInstallments = [], paymentMethod = {}, paid = false } = {}){
         this.id = id
@@ -17,6 +17,6 @@ export class RequestPaymentMethodModel {
     }
 }
 
-export function createRequestPaymentMethod(data){
-    return new RequestPaymentMethodModel(data)
+export function createRequestPayment(data){
+    return new RequestPaymentModel(data)
 }

@@ -22,19 +22,19 @@
                             <td colspan="4" style="padding-top: 5px; text-align: right">{{ utils.formatMoney(orderSubtotal,2,'R$ ','.',',') }}</td>
                         </tr>
                     </tbody>
-                    <tbody v-if="hasRequestPaymentMethods">
+                    <tbody v-if="hasRequestPayments">
                         <tr>
                             <td colspan="4" style="padding-top: 10px;"></td>
                         </tr>
-                        <tr v-for="requestPaymentMethod in requestPaymentMethods">
-                            <td colspan="3" style="text-align: right">{{ requestPaymentMethod.paymentMethod.name }}</td>
-                            <td colspan="1" style="text-align: right">{{ utils.formatMoney(requestPaymentMethod.amount,2,'R$ ','.',',') }}</td>
+                        <tr v-for="requestPayment in requestPayments">
+                            <td colspan="3" style="text-align: right">{{ requestPayment.paymentMethod.name }}</td>
+                            <td colspan="1" style="text-align: right">{{ utils.formatMoney(requestPayment.amount,2,'R$ ','.',',') }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             <div class="tooltip-actions">
-                <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })">Editar <icon-edit></icon-edit></a>
+                <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: card.request.id, companyId: company.id })">Editar <icon-edit></icon-edit></a>
             </div>
         </div>
         <div class="rbc-order" v-else>
@@ -72,15 +72,15 @@
             requestOrderProducts(){
                 return this.card.request.requestOrder.requestOrderProducts
             },
-            hasRequestPaymentMethods(){
-                const requestPaymentMethods = _.get(this.card, 'request.requestPaymentMethods', false)
-                if(requestPaymentMethods && requestPaymentMethods.length){
-                    return requestPaymentMethods
+            hasRequestPayments(){
+                const requestPayments = _.get(this.card, 'request.requestPayments', false)
+                if(requestPayments && requestPayments.length){
+                    return requestPayments
                 }
                 return false
             },
-            requestPaymentMethods(){
-                return this.card.request.requestPaymentMethods
+            requestPayments(){
+                return this.card.request.requestPayments
             }
         },
         methods: {

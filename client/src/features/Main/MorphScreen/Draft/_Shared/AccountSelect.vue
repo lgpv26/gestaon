@@ -84,9 +84,6 @@
             save(){
 
             }
-        },
-        mounted(){
-            console.log("popoverPros", this.popoverProps)
         }
     }
 </script>

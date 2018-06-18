@@ -223,16 +223,18 @@ module.exports = (server) => {
         },
 
         setClientAddresses(ctx){
-            return server.mysql.ClientAddress.bulkCreate(_.map(ctx.params.data, (client, index) => {
-                if(_.has(client, 'address') && client.address.id){
+            const mapped = _.map(_.filter(ctx.params.data, (client) => {
+                return _.has(client, 'address') && client.address.id
+            }), (client, index) => {
                     return {
-                        clientId: client.client.id,
+                        name: "PADRÃO",
+                        clientId: parseInt(client.client.id),
                         addressId: parseInt(client.address.id),
                         number: (client.numero) ? parseInt(client.numero) : null,
-                        complement: (client.complemento) ? client.complemento : null
+                        complement: (client.complemento.trim()) ? client.complemento : null
                     }
-                }
-            }), {
+            })
+            return server.mysql.ClientAddress.bulkCreate(mapped, {
                 returning: true,
                 transaction: this._transaction
             }).then((response) => {
@@ -260,12 +262,11 @@ module.exports = (server) => {
                     clientCustomFields.push({
                         clientId: client.client.id,
                         customFieldId: 5, // HARD CODED
-                        value: address + ', ' + number + '  ' + complement + ' - ' + neighborhood + 
-                        city + '/' + state
+                        value: address + ', ' + number + ((complement) ? ' ' + complement : '') + ' - ' + neighborhood + ' - ' + city + '/' + state
                     })
                 }
                 if(_.has(client, 'OBS')){
-                    if(!_.isEmpty(client.OBS)){
+                    if(!_.isEmpty(_.toString(client.OBS).trim())){
                         clientCustomFields.push({
                             clientId: client.client.id,
                             customFieldId: 4, // HARD CODED
@@ -293,11 +294,10 @@ module.exports = (server) => {
             _.forEach(ctx.params.data, (client, index) => {
                 if(_.has(client, 'telefones')){
                     client.telefones.forEach((phone, index) => {
-                        if(!_.isEmpty(phone.trim())){
-                            phones.push({
-                                clientId: client.client.id,
-                                number: phone.Telefone
-                            })
+                        const number = _.toString(phone.Telefone).trim()
+                        if(!_.isEmpty(number)){
+                            if(number.length == 10 || number.length == 11) phones.push(_.assign({number}, {clientId: client.client.id}))
+                            if(number.length == 12 && _.startsWith(number, 0)) phones.push(_.assign({number: number.splice(0,1)}, {clientId: client.client.id}))
                         }
                     })
                 }
@@ -330,11 +330,10 @@ module.exports = (server) => {
          * @param {Object} transaction (optional)
          * @returns {Promise.<array>} saves ES
          */ 
-        saveES(ctx) {
+        saveES(ctx) { 
             return ctx.call("importer/import.setES", {
                 data: ctx.params.data
             }).then((responseClient) => {
-
                 let esIndexPromises = []
                 responseClient.forEach((client) => {
                         esIndexPromises.push({
@@ -361,9 +360,10 @@ module.exports = (server) => {
                     return true
                 })
             }).catch((err) => {
-                console.log("Erro em: importer/import.saveES (general)")
+                console.log(err, "Erro em: importer/import.saveES (general)")
                 //throw new Error(err)
-            })                
+            })              
+        
         },
         /**
          * set data to ES 
@@ -371,8 +371,6 @@ module.exports = (server) => {
          * @returns {Promise.<object>} client and addresses
          */ 
         setES(ctx){
-            //console.log(ctx.params.data)
-
             let clientES = []
             
             ctx.params.data.forEach((client, index) => {
@@ -402,7 +400,7 @@ module.exports = (server) => {
                 if(_.has(client, "clientPhones")){
                     let clientPhones = []
                         client.clientPhones.forEach((clientPhone) => {
-                            if(!_.isEmpty(clientPhone.trim())){
+                            if(!_.isEmpty(clientPhone)){
                                 clientPhones.push({
                                     clientPhoneId: clientPhone.id,
                                     number: clientPhone.number

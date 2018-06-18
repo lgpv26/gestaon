@@ -134,8 +134,8 @@ module.exports = (server) => { return {
                                 }]
                             }]
                         },{
-                            model: server.mysql.RequestPaymentMethod,
-                            as: "requestPaymentMethods",
+                            model: server.mysql.RequestPayment,
+                            as: "requestPayments",
                             include: [{
                                 model: server.mysql.PaymentMethod,
                                 as: 'paymentMethod'
@@ -284,6 +284,7 @@ module.exports = (server) => { return {
             //position
             //sectionId
             return server.mongodb.Card.create(ctx.params.data).then((card) => {
+                if(!card) throw new Error ('Erro ao criar Card')
                 // check socket connections and emit 
                 server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('cardCreated', {
                     data: card, sectionId: ctx.params.section.id
@@ -309,6 +310,7 @@ module.exports = (server) => { return {
         },
         reloadCard(ctx){
             return server.mongodb.Card.findOne({requestId: ctx.params.request.id}).then((card) => {
+                if(!card) throw new Error ('Erro ao atualizar Card')
                 // check socket connections and emit 
                 card = card.toJSON()
                 card.request = ctx.params.request
@@ -394,9 +396,12 @@ module.exports = (server) => { return {
                         return server.mongodb.Card.remove({
                             _id: ctx.params.data.cardId
                         }).then(() => {
-                            server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardRemove', new EventResponse({
+                            server.io.emit('requestBoardCardRemove', new EventResponse({
                                 removedCardId: ctx.params.data.cardId
                             }))
+                            /*server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardRemove', new EventResponse({
+                                removedCardId: ctx.params.data.cardId
+                            }))*/
                             return ctx.params.data.cardId
                         })
                         

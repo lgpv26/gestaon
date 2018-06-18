@@ -14,9 +14,11 @@
                 <menu-icon-sale class="icon"></menu-icon-sale>
             </router-link>
             -->
+            <!--
             <router-link to="/credit-bills" exact tag="li" :title="'Notinhas'"
                          v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
                 <menu-icon-finance class="icon"></menu-icon-finance></router-link>
+                -->
             <router-link to="/cashier-balancing" exact tag="li" :title="'Caixa / Fechamento diário'"
                          v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
                 <menu-icon-cash-check class="icon"></menu-icon-cash-check></router-link>

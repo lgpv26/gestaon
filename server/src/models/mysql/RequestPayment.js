@@ -4,7 +4,7 @@ import _ from 'lodash'
 module.exports = {
     defineModel: (server) => {
         const TIMESTAMP = require('sequelize-mysql-timestamp')(server.sequelize);
-        const modelName = 'RequestPaymentMethod';
+        const modelName = 'RequestPayment';
         return {
             name: modelName,
             instance: server.sequelize.define(_.camelCase(modelName), {
@@ -19,12 +19,15 @@ module.exports = {
                 paymentMethodId: {
                     type: Sequelize.INTEGER
                 },
-                deadlineDatetime: {
-                    type: TIMESTAMP
-                },
                 amount: {
                     type: Sequelize.DECIMAL(10,2),
                     default: 0
+                },
+                code: {
+                    type: Sequelize.STRING,
+                    set(val) {
+                        this.setDataValue('code', (val === '' || val === null) ? null : val.toUpperCase().trim());
+                    }
                 },
                 paid: {
                     type: Sequelize.BOOLEAN,
@@ -50,7 +53,7 @@ module.exports = {
                     type: TIMESTAMP
                 }
             }, {
-                tableName: 'request_payment_method',
+                tableName: 'request_payment',
                 timestamps: true,
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
@@ -60,10 +63,11 @@ module.exports = {
             })
         }
     },
-    postSettings: ({RequestPaymentMethod, Request, PaymentMethod, RequestPaymentTransaction}) => {
-        RequestPaymentMethod.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
-        RequestPaymentMethod.belongsTo(PaymentMethod, {as: 'paymentMethod', foreignKey: 'paymentMethodId'})
+    postSettings: ({RequestPayment, Request, PaymentMethod, RequestPaymentBill, RequestPaymentTransaction}) => {
+        RequestPayment.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
+        RequestPayment.belongsTo(PaymentMethod, {as: 'paymentMethod', foreignKey: 'paymentMethodId'})
+        RequestPayment.hasOne(RequestPaymentBill, {as: 'requestPaymentBills', foreignKey: 'requestPaymentId'})
 
-        RequestPaymentMethod.hasMany(RequestPaymentTransaction, {as: 'requestPaymentTransactions', foreignKey: 'requestPaymentId'})
+        RequestPayment.hasMany(RequestPaymentTransaction, {as: 'requestPaymentTransactions', foreignKey: 'requestPaymentId'})
     }
 }

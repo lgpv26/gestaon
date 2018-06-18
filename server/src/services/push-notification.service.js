@@ -28,9 +28,7 @@ module.exports = (server) => { return {
                     to: userAccessToken.fcmToken, // required fill with device token or topics
                     collapse_key: null,
                     priority: 'HIGH',
-                    data: {
-                        your_custom_data_key: 'your_custom_data_value'
-                    },
+                    data: {},
                     notification: {
                         title: ctx.params.data.title,
                         body: ctx.params.data.message,

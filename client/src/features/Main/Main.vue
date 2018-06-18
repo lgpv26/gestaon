@@ -100,8 +100,8 @@
                 accessTokenExpirationTimer: null,
                 showSettings: false,
                 menuList: [
-                    {text: 'Add. empresa', type: 'system', action: this.addCompany, onlyAdmin: true},
-                    {text: 'Configurações', type: 'system', action: this.toggleSettings, onlyAdmin: false},
+                    /*{text: 'Add. empresa', type: 'system', action: this.addCompany, onlyAdmin: true},*/
+                    /*{text: 'Configurações', type: 'system', action: this.toggleSettings, onlyAdmin: false},*/
                     {text: 'Sair', type: 'system', action: this.logout, onlyAdmin: false}
                 ]
             }

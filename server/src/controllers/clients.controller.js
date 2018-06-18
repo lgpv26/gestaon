@@ -475,8 +475,132 @@ module.exports = (server, restify) => {
         // EXPORT TO ES  //  
         ///////////////////
         exportToES: (req, res, next) => {
-            let esRequestBody = [];
-            server.mysql.Client.findAll({
+            const limitPerIteration = 1000
+            let iteration = 0
+            const lastIteration = 44
+
+            const executeBulk = function(){
+                iteration ++
+                let esRequestBody = []
+                server.mysql.Client.findAll({
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: 'clientPhones'
+                    }, {
+                        model: server.mysql.ClientAddress,
+                        as: 'clientAddresses',
+                        required: false,
+                        include: [{
+                            model: server.mysql.Address,
+                            required: false,
+                            as: 'address'
+                        }]
+                    }, {
+                        model: server.mysql.ClientCustomField,
+                        as: 'clientCustomFields',
+                        include: [{
+                            model: server.mysql.CustomField,
+                            as: 'customField'
+                        }]
+                    }],
+                    offset: (iteration - 1) * limitPerIteration,
+                    limit: limitPerIteration,
+                    distinct: 'id'
+                }).then((clients) => {
+                    clients.forEach((client) => {
+                        let metaObj = {};
+                        metaObj.index = {
+                            _index: 'main',
+                            _type: 'client',
+                            _id: client.id
+                        }
+                        esRequestBody.push(metaObj)
+                        let docObj = {
+                            companyId: client.companyId,
+                            name: client.name,
+                            obs: client.obs,
+                            addresses: _.map(client.clientAddresses, clientAddress => {
+                                return {
+                                    clientAddressId: clientAddress.id,
+                                    complement: clientAddress.complement,
+                                    address: clientAddress.address.name,
+                                    cep: clientAddress.address.cep,
+                                    neighborhood: clientAddress.address.neighborhood,
+                                    number: clientAddress.number
+                                };
+                            }),
+                            phones: _.map(client.clientPhones, clientPhone => {
+                                return {
+                                    clientPhoneId: clientPhone.id,
+                                    number: clientPhone.number
+                                };
+                            }),
+                            customFields: _.map(client.clientCustomFields, clientCustomField => {
+                                return {
+                                    clientCustomFieldId: clientCustomField.id,
+                                    documentType: clientCustomField.customField.name,
+                                    documentValue: clientCustomField.value
+                                };
+                            }),
+                            dateUpdated: client.dateUpdated,
+                            dateCreated: client.dateCreated,
+                            status: client.status
+                        };
+                        esRequestBody.push(docObj);
+                    })
+                    server.elasticSearch.bulk({
+                        body: esRequestBody
+                    }, function (esErr, esRes) {
+                        if (esErr) {
+                            console.error(esErr);
+                            return next(
+                                new restify.ResourceNotFoundError(esErr)
+                            );
+                        }
+                        console.log("Iteração " + iteration + " retornou " + clients.length + " clientes.")
+                        if(iteration !== lastIteration){
+                            executeBulk()
+                        }
+                        else {
+                            console.log("Terminou")
+                            return res.send(200, {
+                                data: esRes
+                            })
+                        }
+                    });
+                })
+            }
+
+            executeBulk()
+
+            /*server.mysql.Client.findAll({
+                limit: 5000,
+                include: [{
+                    model: server.mysql.ClientPhone,
+                    as: 'clientPhones'
+                }, {
+                    model: server.mysql.ClientAddress,
+                    as: 'clientAddresses',
+                    required: false,
+                    include: [{
+                        model: server.mysql.Address,
+                        required: false,
+                        as: 'address'
+                    }]
+                }, {
+                    model: server.mysql.ClientCustomField,
+                    as: 'clientCustomFields',
+                    include: [{
+                        model: server.mysql.CustomField,
+                        as: 'customField'
+                    }]
+                }]
+            }).then((clients) => {
+                console.log(clients.length)
+            })
+
+            let esRequestBody = [];*/
+            /*server.mysql.Client.findAll({
                 include: [{
                     model: server.mysql.ClientPhone,
                     as: 'clientPhones'
@@ -496,65 +620,11 @@ module.exports = (server, restify) => {
                     }]
                 }]
             }).then((clients) => {
-                clients.forEach((client) => {
-                    let metaObj = {};
-                    metaObj.index = {
-                        _index: 'main',
-                        _type: 'client',
-                        _id: client.id
-                    }
-                    esRequestBody.push(metaObj);
-                    let docObj = {
-                        companyId: client.companyId,
-                        name: client.name,
-                        obs: client.obs,
-                        legalDocument: client.legalDocument,
-                        addresses: _.map(client.clientAddresses, clientAddress => {
-                            return {
-                                clientAddressId: clientAddress.id,
-                                complement: clientAddress.complement,
-                                address: clientAddress.address.name,
-                                cep: clientAddress.address.cep,
-                                neighborhood: clientAddress.address.neighborhood,
-                                number: clientAddress.number
-                            };
-                        }),
-                        phones: _.map(client.clientPhones, clientPhone => {
-                            return {
-                                clientPhoneId: clientPhone.id,
-                                ddd: clientPhone.ddd,
-                                number: clientPhone.number
-                            };
-                        }),
-                        customFields: _.map(client.clientCustomFields, clientCustomField => {
-                            return {
-                                clientCustomFieldId: clientCustomField.id,
-                                documentType: clientCustomField.customField.name,
-                                documentValue: clientCustomField.value
-                            };
-                        }),
-                        dateUpdated: client.dateUpdated,
-                        dateCreated: client.dateCreated,
-                        status: client.status
-                    };
-                    esRequestBody.push(docObj);
-                });
-                server.elasticSearch.bulk({
-                    body: esRequestBody
-                }, function (esErr, esRes) {
-                    if (esErr) {
-                        console.error(esErr);
-                        return next(
-                            new restify.ResourceNotFoundError(esErr)
-                        );
-                    }
-                    return res.send(200, {
-                        data: esRes
-                    });
-                });
-            });
+                console.log("Houve respposta", clients)
+
+            */
         }
-    };
+    }
 
     /* -------------------------------------- */
     /* --- Reusable request functions ------- */

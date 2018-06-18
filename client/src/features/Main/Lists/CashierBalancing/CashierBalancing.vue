@@ -39,7 +39,7 @@
                     </a>
                 </template>
                 <template slot="actions" slot-scope="slotProps">
-                    <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })" style="width: 32px;">
+                    <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: slotProps.item.requestId, companyId: company.id })" style="width: 32px;">
                         <icon-edit></icon-edit>
                     </a>
                 </template>
@@ -91,6 +91,7 @@
 <script>
     import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
 
+    import config from '../../../../config';
     import utils from '../../../../utils/index';
     import moment from 'moment';
     import _ from 'lodash';
@@ -238,8 +239,8 @@
                     case "pending":
                         return "Pendente"
                         break;
-                    case "sent":
-                        return "Enviado"
+                    case "in-displacement":
+                        return "Em deslocamento"
                         break;
                     case "canceled":
                         return "Cancelado"
@@ -265,27 +266,19 @@
 
                 this.loadingList = true
                 CashierBalancingAPI.getList(requestParams).then(({data}) => {
-
+                    console.log("getList",data)
                     this.items = _.map(data.list.rows, (row) => {
-                        let settled = false
-                        if(row.requestPaymentTransactions.length) {
-                            row.requestPaymentTransactions.sort((a, b) => {
-                                return new Date(a.dateCreated) - new Date(b.dateCreated)
-                            })
-                            if(_.last(row.requestPaymentTransactions).action === 'settle.origin' || _.last(row.requestPaymentTransactions).action === 'settle.destination'){
-                                settled = true
-                            }
-                        }
                         return {
                             id: row.id,
                             amount: row.amount,
                             formattedAmount: utils.formatMoney(row.amount, 2,'R$ ','.',','),
                             date: moment(row.dateCreated).format("DD/MM/YYYY HH:mm"),
                             paid: row.paid,
-                            name: row.request.client.name,
+                            name: _.get(row,'request.client.name', '---'),
                             clientGroup: _.get(row,'request.client.clientGroup.name', '---'),
                             paymentMethod: row.paymentMethod.name,
-                            settled,
+                            paymentMethodId: row.paymentMethod.id,
+                            settled: row.settled,
                             requestId: row.requestId,
                             status: this.getStatus(row.request.status)
                         }
@@ -316,7 +309,12 @@
                 }
                 if(vm.form.action === 'paid'){
                     CashierBalancingAPI.markAsPaid({
-                        requestPaymentIds: _.map(vm.selectedItems, (selectedItem) => {
+                        requestPaymentIds: _.map(_.filter(vm.selectedItems, (selectedItem) => {
+                            if(selectedItem.paymentMethodId === config.system.IDMappings.paymentMethods.bill){
+                                return false
+                            }
+                            return selectedItem
+                        }), (selectedItem) => {
                             return selectedItem.id
                         }),
                         accountId: vm.form.account

@@ -12,7 +12,7 @@ export class RequestModel {
         clientAddressId = null,
         useSuggestedDeadlineDatetime = true,
         deadlineDatetime = null,
-        requestPaymentMethods = [],
+        requestPayments = [],
         obs = '',
     } = {}){
         this.id = id
@@ -24,7 +24,7 @@ export class RequestModel {
         this.accountId = accountId
         this.useSuggestedDeadlineDatetime = useSuggestedDeadlineDatetime
         this.deadlineDatetime = deadlineDatetime
-        this.requestPaymentMethods = requestPaymentMethods
+        this.requestPayments = requestPayments
         this.obs = obs
     }
 }

@@ -80,7 +80,7 @@ module.exports = {
     },
 
     postSettings: ({Request,Company,Client,User,RequestOrder,RequestClientPhone,RequestClientAddress,RequestTimeline,
-        ClientPhone,ClientAddress,RequestPaymentMethod, PaymentMethod}) => {
+        ClientPhone,ClientAddress,RequestPayment, PaymentMethod, RequestPaymentBill}) => {
 
         Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
         Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
@@ -90,8 +90,9 @@ module.exports = {
 
         Request.hasMany(RequestTimeline, {as: 'requestTimeline', foreignKey: 'requestId'})
 
-        Request.hasMany(RequestPaymentMethod, {as: 'requestPaymentMethods', foreignKey: 'requestId'})
-        Request.belongsToMany(PaymentMethod, {through: RequestPaymentMethod, as: 'paymentMethod', foreignKey: 'requestId', unique: false})
+        Request.hasMany(RequestPayment, {as: 'requestPayments', foreignKey: 'requestId'})
+        Request.belongsToMany(PaymentMethod, {through: RequestPayment, as: 'paymentMethod', foreignKey: 'requestId'})
+        Request.belongsToMany(RequestPaymentBill, {through: RequestPayment, as: 'billsRequestPayment', foreignKey: 'requestId'})
 
         Request.hasMany(RequestClientPhone, {as: 'requestClientPhones', foreignKey: 'requestId'});
         Request.belongsToMany(ClientPhone, { through: RequestClientPhone, as: 'clientPhones', foreignKey: 'requestId' });

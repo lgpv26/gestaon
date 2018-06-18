@@ -8,12 +8,16 @@
                     <span>---</span>
                     <span>Pedido {{ card.request.id }} | Venda: {{ card.request.requestOrder.id }}</span>
                 </div>
+                <div v-else-if="requestTimelineItemData.action === 'recoverance_save'" style="display: flex; flex-direction: column;">
+                    <span>{{ _.find(users, {id: requestTimelineItemData.triggeredBy}).name }} editou o pedido</span>
+                    <span>Responsável: {{ _.find(users, {id: requestTimelineItemData.userId}).name }}</span>
+                </div>
                 <div v-else>
                     <span v-if="requestTimelineItemData.action === 'user_change'">{{ _.find(users, {id: requestTimelineItemData.triggeredBy}).name }} mudou o responsável</span>
                     <span v-else-if="requestTimelineItemData.action === 'status_change'">{{ _.find(users, {id: requestTimelineItemData.triggeredBy}).name }} mudou o status</span>
                     <span v-if="requestTimelineItemData.action === 'user_change'">
                     para {{ _.find(users, {id: requestTimelineItemData.userId}).name }}
-                </span>
+                    </span>
                     <span v-if="requestTimelineItemData.action === 'status_change'">
                     para {{ requestTimelineItemData.status }}
                 </span>

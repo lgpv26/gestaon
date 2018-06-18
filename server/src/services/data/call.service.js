@@ -66,12 +66,11 @@ module.exports = (server) => { return {
                 number = number.substring(1)
             }
 
-            if(number === 'anonymous'){
+            if(_.includes(['anonymous','Anonymous'], number)){
                 number = null
                 isAnonymous = true
             }
-
-            if(number.length !== 11 && number.length !== 10){
+            else if((number.length !== 11 && number.length !== 10 || _.includes(['unknown','Unknown'], number))){
                 number = null
                 isValid = false
             }
@@ -83,9 +82,12 @@ module.exports = (server) => { return {
                 isAnonymous
             }
 
+            console.log("createData", createData)
+
             return server.mongodb.Call.create(createData).then((data) => {
                 return data.toJSON()
             }).then((call) => {
+                console.log(call)
                 if(call.number){
                     return server.mysql.ClientPhone.findAll({
                         where: {
@@ -113,8 +115,11 @@ module.exports = (server) => { return {
                         return call
                     })
                 }
-                server.io.emit('caller-id.new', new EventResponse(call))
-                return call
+                else {
+                    call.clients = []
+                    server.io.emit('caller-id.new', new EventResponse(call))
+                    return call
+                }
             })
         },
         update(ctx){

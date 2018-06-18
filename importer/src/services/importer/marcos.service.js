@@ -146,7 +146,7 @@ module.exports = (server) => {
                                                     }],
                                                 }).then((clients) => {
                                                     console.log("Importação para MySQL concluida! Total: ", clients.length + '. Salvando no elastic search!')
-                                                    return ctx.call('importer/import.saveES', {
+                                                    return ctx.call('importer/import/marcos.saveES', {
                                                         data: clients
                                                     }).catch((err) => {
                                                         console.log(err, "erro do importer/import.saveES")
@@ -308,14 +308,13 @@ module.exports = (server) => {
                 const neighborhood =(client[parser.neighborhood]) ? client[parser.neighborhood] : ''
                 const city = (client[parser.city]) ? client[parser.city] : ''
                 const state = (client[parser.state]) ? client[parser.state] : ''
-                const ref = (client[parser.ref]) ? ' - Complemento: ' +  client[parser.ref] : ''
+                const ref = (client[parser.ref]) ? ' - ' +  client[parser.ref] : ''
                 clientCustomFields.push({
                     customFieldId: 5, // HARD CODED
-                    value: address + ', ' + number + '  ' + complement + ' - ' + neighborhood + 
-                    city + '/' + state + ref
+                    value: address + ', ' + number + ((complement) ? ' ' + complement : '') + ' - ' + neighborhood + ' - ' + city + '/' + state + ref
                 })
             }
-            if(!_.isEmpty(client[parser.obs])){
+            if(!_.isEmpty(_.toString(client[parser.obs]).trim())){
                 clientCustomFields.push({
                     customFieldId: 4, // HARD CODED
                     value: client[parser.obs]
@@ -375,8 +374,10 @@ module.exports = (server) => {
             ctx.params.data.forEach((client, index) => {
                 if(_.has(client, 'clientPhones') && client.clientPhones.length){
                     client.clientPhones.forEach((clientPhone) => {
-                        if(!_.isEmpty(clientPhone.trim())){
-                            phones.push(_.assign(clientPhone, {clientId: client.client.id}))
+                        const number = _.toString(clientPhone.number)
+                        if(!_.isEmpty(number.trim())){
+                            if(number.length == 10 || number.length == 11) phones.push(_.assign({number}, {clientId: client.client.id}))
+                            if(number.length == 12 && _.startsWith(number, 0)) phones.push(_.assign({number: number.splice(0,1)}, {clientId: client.client.id})) 
                         }                        
                     })
                 } 
@@ -494,7 +495,7 @@ module.exports = (server) => {
          * @returns {Promise.<array>} saves ES
          */ 
         saveES(ctx) {
-            return ctx.call("importer/import.setES", {
+            return ctx.call("importer/import/marcos.setES", {
                 data: ctx.params.data
             }).then((responseClient) => {
 
@@ -526,7 +527,7 @@ module.exports = (server) => {
             }).catch((err) => {
                 console.log("Erro em: importer/import.saveES (general)")
                 //throw new Error(err)
-            })                
+            })            
         },
         /**
          * set data to ES 

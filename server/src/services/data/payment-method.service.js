@@ -11,9 +11,10 @@ module.exports = (server) => { return {
                     companyId: {
                         [Op.in]: [0,ctx.params.data.companyId]
                     }
-                }
-            }).then((customField) => {
-                return JSON.parse(JSON.stringify(customField))
+                },
+                transaction: ctx.params.transaction || null
+            }).then((paymentMethod) => {
+                return JSON.parse(JSON.stringify(paymentMethod))
             })
         },
         /**

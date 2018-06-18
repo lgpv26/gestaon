@@ -39,7 +39,7 @@
                     </a>
                 </template>
                 <template slot="actions" slot-scope="slotProps">
-                    <a href="javascript:void(0)" @click="runRequestRecoverance({ request: card.request, companyId: company.id })" style="width: 32px;">
+                    <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: card.request.id, companyId: company.id })" style="width: 32px;">
                         <icon-edit></icon-edit>
                     </a>
                 </template>

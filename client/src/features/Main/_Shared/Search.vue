@@ -34,10 +34,10 @@
             </div>
         </div>
         <div class="search__action-button" ref="actionButton" >
-            <app-dropdown-menu :menuList="menuList" placement="bottom-end" :verticalOffset="10">
-                <div style="width: 40px; height: 20px; display: flex; align-items: center; justify-content: center;">
-                    <icon-header-add></icon-header-add>
-                </div>
+            <div style="width: 40px; height: 20px; display: flex; align-items: center; justify-content: center;" @click="addRequestDraft()">
+                <icon-header-add></icon-header-add>
+            </div>
+            <app-dropdown-menu v-if="false" :menuList="menuList" placement="bottom-end" :verticalOffset="10">
             </app-dropdown-menu>
             <!--
             <app-popover :contentPadding="false">
