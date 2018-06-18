@@ -84,7 +84,6 @@ module.exports = (server) => {
                                 },
                                 transaction: this._transaction
                             }).then((request) => {
-                                
                                 return ctx.call("draft/request/persistence.createCard", {
                                     data: request,
                                     transaction: this._transaction
@@ -123,7 +122,7 @@ module.exports = (server) => {
                                         }) 
                                     })
                                 }).catch((err) => {
-                                    console.log("Erro em: draft/request/persistence.createCard")
+                                    console.log("Erro em: draft/request/persistence.createCard", err)
                                     return ctx.call("draft/request/persistence.rollback").then(() => {
                                         return new EventResponse(err)
                                     }) 
@@ -263,6 +262,7 @@ module.exports = (server) => {
          * @returns {Promise.<object>} request
          */
         createCard(ctx) {
+
             if(!this._request.client.id){
                 return true
             }
@@ -363,6 +363,7 @@ module.exports = (server) => {
                             })
                             let maxCardPosition = 65535
                             if (maxCard) maxCardPosition += maxCard.position
+
                             return ctx.call("request-board.createCard", {
                                 section: section,
                                 data: {

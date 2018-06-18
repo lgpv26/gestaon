@@ -223,16 +223,18 @@ module.exports = (server) => {
         },
 
         setClientAddresses(ctx){
-            return server.mysql.ClientAddress.bulkCreate(_.map(ctx.params.data, (client, index) => {
-                if(_.has(client, 'address') && client.address.id){
+            const mapped = _.map(_.filter(ctx.params.data, (client) => {
+                return _.has(client, 'address') && client.address.id
+            }), (client, index) => {
                     return {
-                        clientId: client.client.id,
+                        name: "PADRÃO",
+                        clientId: parseInt(client.client.id),
                         addressId: parseInt(client.address.id),
                         number: (client.numero) ? parseInt(client.numero) : null,
-                        complement: (client.complemento) ? client.complemento : null
+                        complement: (client.complemento.trim()) ? client.complemento : null
                     }
-                }
-            }), {
+            })
+            return server.mysql.ClientAddress.bulkCreate(mapped, {
                 returning: true,
                 transaction: this._transaction
             }).then((response) => {
@@ -260,8 +262,7 @@ module.exports = (server) => {
                     clientCustomFields.push({
                         clientId: client.client.id,
                         customFieldId: 5, // HARD CODED
-                        value: address + ', ' + number + '  ' + complement + ' - ' + neighborhood + 
-                        city + '/' + state
+                        value: address + ', ' + number + ((complement) ? ' ' + complement : '') + ' - ' + neighborhood + ' - ' + city + '/' + state
                     })
                 }
                 if(_.has(client, 'OBS')){

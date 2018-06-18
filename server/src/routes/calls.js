@@ -41,13 +41,6 @@ module.exports = (server, restify) => {
         return server.broker.call('data/call.create', {
             data: req.body
         }).then((data) => {
-            /*server.broker.call('push-notification.push', {
-                data: {
-                    userId: req.auth.id,
-                    title: "Título da msg",
-                    message: "Enviando msg de teste"
-                }
-            })*/
             return res.send(200, { data })
         }).catch((err) => {
             return next(err)

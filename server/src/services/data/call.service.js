@@ -62,16 +62,18 @@ module.exports = (server) => { return {
             let isValid = true
             let isAnonymous = false
 
+            console.log("Teste", number)
+
             if(number.charAt(0) === '0'){
                 number = number.substring(1)
             }
 
-            if(number === 'anonymous'){
+            if(_.includes(['anonymous','Anonymous'], number)){
                 number = null
                 isAnonymous = true
             }
 
-            if(number.length !== 11 && number.length !== 10){
+            if((number.length !== 11 && number.length !== 10 || _.includes(['unknown','Unknown'], number))){
                 number = null
                 isValid = false
             }

@@ -308,11 +308,10 @@ module.exports = (server) => {
                 const neighborhood =(client[parser.neighborhood]) ? client[parser.neighborhood] : ''
                 const city = (client[parser.city]) ? client[parser.city] : ''
                 const state = (client[parser.state]) ? client[parser.state] : ''
-                const ref = (client[parser.ref]) ? ' - Complemento: ' +  client[parser.ref] : ''
+                const ref = (client[parser.ref]) ? ' - ' +  client[parser.ref] : ''
                 clientCustomFields.push({
                     customFieldId: 5, // HARD CODED
-                    value: address + ', ' + number + '  ' + complement + ' - ' + neighborhood + 
-                    city + '/' + state + ref
+                    value: address + ', ' + number + ((complement) ? ' ' + complement : '') + ' - ' + neighborhood + ' - ' + city + '/' + state + ref
                 })
             }
             if(!_.isEmpty(_.toString(client[parser.obs]).trim())){
