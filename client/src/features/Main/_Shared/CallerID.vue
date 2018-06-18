@@ -11,8 +11,8 @@
                 <div class="calls">
                     <div v-for="call in calls" class="call">
                         <span class="number" v-if="!call.isAnonymous && call.isValid">{{ utils.formatPhone(call.number) }}</span>
-                        <span class="number anonymous" v-else-if="call.isAnonymous">Privado</span>
-                        <span class="number invalid" v-else-if="!call.isValid">Número inválido</span>
+                        <span class="number anonymous" v-else-if="false">Privado</span>
+                        <span class="number invalid" v-else-if="call.isAnonymous || !call.isValid">Não identificado</span>
                         <span class="number" v-else>Número desconhecido</span>
                         <span class="time">{{ moment(call.createdAt).format("DD/MM/YYYY HH:mm:ss") }}</span>
                         <span class="destination">{{ call.destination }}</span>
@@ -261,7 +261,7 @@
                     span.number.invalid {
                         font-size: 18px;
                         font-weight: 600;
-                        color: var(--font-color--terciary)
+                        color: var(--font-color--7)
                     }
                     span.time {
                         color: var(--font-color--7);

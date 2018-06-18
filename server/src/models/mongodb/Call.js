@@ -12,7 +12,6 @@ module.exports = {
             isValid: Boolean,
             number: {
                 type: String,
-                required: [true, 'O número do telefone deve existir.'],
                 minlength: [10, "O telefone deve ter no mínimo 10 dígitos."],
                 maxlength: [11, "O telefone deve ter no máximo 11 dígitos."]
             }

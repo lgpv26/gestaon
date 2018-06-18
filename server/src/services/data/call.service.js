@@ -62,8 +62,6 @@ module.exports = (server) => { return {
             let isValid = true
             let isAnonymous = false
 
-            console.log("Teste", number)
-
             if(number.charAt(0) === '0'){
                 number = number.substring(1)
             }
@@ -72,12 +70,11 @@ module.exports = (server) => { return {
                 number = null
                 isAnonymous = true
             }
-
-            if((number.length !== 11 && number.length !== 10 || _.includes(['unknown','Unknown'], number))){
+            else if((number.length !== 11 && number.length !== 10 || _.includes(['unknown','Unknown'], number))){
                 number = null
                 isValid = false
             }
-            
+
             const createData = {
                 number: number,
                 destination: ctx.params.data.destination,
@@ -85,9 +82,12 @@ module.exports = (server) => { return {
                 isAnonymous
             }
 
+            console.log("createData", createData)
+
             return server.mongodb.Call.create(createData).then((data) => {
                 return data.toJSON()
             }).then((call) => {
+                console.log(call)
                 if(call.number){
                     return server.mysql.ClientPhone.findAll({
                         where: {
@@ -115,8 +115,11 @@ module.exports = (server) => { return {
                         return call
                     })
                 }
-                server.io.emit('caller-id.new', new EventResponse(call))
-                return call
+                else {
+                    call.clients = []
+                    server.io.emit('caller-id.new', new EventResponse(call))
+                    return call
+                }
             })
         },
         update(ctx){
