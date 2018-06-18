@@ -8,11 +8,13 @@
                 <form autocomplete="off">
                     <div>
                         <label>E-mail</label>
-                        <input type="email" class="input" placeholder="email@dominio.com.br" autocomplete="false" v-model="form.email" >
+                        <input style="display:none;"/>
+                        <input type="email" class="input" placeholder="email@dominio.com.br" autocomplete="off" v-model="form.email" >
                     </div>
                     <div>
                         <label>Senha</label>
-                        <input type="password" class="input" placeholder="*******" v-model="form.password" >
+                        <input style="display:none;"/>
+                        <input type="password" class="input" placeholder="*******" autocomplete="off" v-model="form.password" >
                     </div>
                     <div style="margin-top: 20px;">
                         <button class="btn" @click.prevent="login">entrar</button>
@@ -104,6 +106,7 @@
     /* Login Page */
     #page-login input{
         text-transform: uppercase;
+        font-size: 24px;
     }
 
     #page-login input[type=email]{
@@ -139,15 +142,13 @@
       background-position: center;
       justify-content: center;
       align-items: center;
-
-
-        width: 241px;
-        height:64px;
-        color: #FFF;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
+      width: 241px;
+      height:64px;
+      color: #FFF;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
     }
 
     #page-login div.login__container .container__header h3 {
