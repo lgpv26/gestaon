@@ -77,7 +77,6 @@ module.exports = (server) => { return {
                 number = null
                 isValid = false
             }
-
             const createData = {
                 number: number,
                 destination: ctx.params.data.destination,
