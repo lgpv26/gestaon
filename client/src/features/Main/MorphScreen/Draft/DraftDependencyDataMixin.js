@@ -8,6 +8,7 @@ export default {
         ...mapActions('data/promotion-channels', ['setPromotionChannels']),
         ...mapActions('data/accounts', ['setAccounts']),
         ...mapActions('data/payment-methods', ['setPaymentMethods']),
+        ...mapActions('data/products', ['setProducts']),
 
         loadRequestDependencyData(data){
             this.setClientGroups(data.clientGroups)
@@ -15,6 +16,7 @@ export default {
             this.setPromotionChannels(data.promotionChannels)
             this.setAccounts(data.accounts)
             this.setPaymentMethods(data.paymentMethods)
+            this.setProducts(data.products)
         }
     }
 }

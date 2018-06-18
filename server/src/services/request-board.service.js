@@ -310,7 +310,10 @@ module.exports = (server) => { return {
         },
         reloadCard(ctx){
             return server.mongodb.Card.findOne({requestId: ctx.params.request.id}).then((card) => {
-                if(!card) throw new Error ('Erro ao atualizar Card')
+                if(!card){
+                    console.log("CAPTUREI VOCÊ, SEU DANADO!!!", ctx.params, card)
+                    throw new Error ('Erro ao atualizar Card')
+                }
                 // check socket connections and emit 
                 card = card.toJSON()
                 card.request = ctx.params.request

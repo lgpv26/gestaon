@@ -6,7 +6,11 @@ let config = {
     system: { // don't change settings under this object if you don't know what you're doing
         IDMappings: {
             paymentMethods: {
+                default: 1,
                 bill: 4
+            },
+            products: {
+                default: 1
             }
         }
     }

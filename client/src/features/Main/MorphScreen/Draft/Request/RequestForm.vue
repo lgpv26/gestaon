@@ -84,9 +84,9 @@
                 <div class="subtotal-container">
                     <span>Total a pagar</span>
                     <div class="amounts">
-                        <h3 class="total">{{ formatedTotalLeftToPay }} / </h3>
+                        <h3 class="total">{{ utils.formatMoney(totalLeftToPay, 2,'R$ ','.',',') }} / </h3>
                         <h3 class="current" :class="{ left: totalLeftToPay < totalToPay, exact: totalLeftToPay === totalToPay, over: totalLeftToPay > totalToPay }">
-                            {{ formatedTotalToPay }}
+                            {{ utils.formatMoney(totalToPay, 2,'R$ ','.',',') }}
                         </h3>
                     </div>
                 </div>
@@ -108,6 +108,7 @@
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
     import utils from '@/utils/index'
+    import config from '../../../../../config'
     import _ from 'lodash'
     import DraftMixin from '../DraftMixin'
 
@@ -152,6 +153,8 @@
         computed: {
             ...mapState('auth', ['user','company']),
             ...mapState('data/accounts', ['accounts']),
+            ...mapState('data/products', ['products']),
+            ...mapState('data/payment-methods', ['paymentMethods']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapGetters('draft/request', ['isClientSummaryAvailable']),
             ...mapFields([
@@ -198,18 +201,6 @@
                 return _.sumBy(this.requestPayments, (requestPayment) => {
                     return requestPayment.amount
                 })
-            },
-            formatedTotalToPay(){
-                const sum = _.sumBy(this.orderProducts, (orderProduct) => {
-                    return (orderProduct.unitPrice - orderProduct.unitDiscount) * orderProduct.quantity
-                })
-                return utils.formatMoney(sum, 2,'R$ ','.',',')
-            },
-            formatedTotalLeftToPay(){
-                const sum = _.sumBy(this.requestPayments, (requestPayment) => {
-                    return requestPayment.amount
-                })
-                return utils.formatMoney(sum, 2,'R$ ','.',',')
             }
         },
         methods: {
@@ -234,12 +225,44 @@
             },
             loadData(data){
                 this.setRequest(data.request)
-                if(!this.orderProducts.length){
-                    this.addOrderProduct()
+                if(!this.orderProducts.length && !this.requestPayments.length){
+                    const defaultProduct = _.find(this.products, {id: config.system.IDMappings.products.default})
+                    this.addOrderProduct({
+                        product: defaultProduct,
+                        unitPrice: defaultProduct.price,
+                        quantity: 1
+                    })
+                    const defaultPaymentMethod = _.find(this.paymentMethods, {id: config.system.IDMappings.paymentMethods.default})
+                    this.addRequestPayment({
+                        paymentMethod: defaultPaymentMethod,
+                        amount: defaultProduct.price
+                    })
+                    this.syncMultiple([
+                        {
+                            value: this.orderProducts,
+                            path: 'order.orderProducts'
+                        },
+                        {
+                            value: this.requestPayments,
+                            path: 'requestPayments'
+                        }
+                    ])
                 }
-                if(!this.requestPayments.length){
-                    this.addRequestPayment()
+                else if(!this.requestPayments.length && this.orderProducts.length){
+                    const defaultPaymentMethod = _.find(this.paymentMethods, {id: config.system.IDMappings.paymentMethods.default})
+                    this.addRequestPayment({
+                        paymentMethod: defaultPaymentMethod
+                    })
                     this.sync(this.requestPayments,'requestPayments')
+                }
+                else if(this.requestPayments.length && !this.orderProducts.length){
+                    const defaultProduct = _.find(this.products, {id: config.system.IDMappings.products.default})
+                    this.addOrderProduct({
+                        product: defaultProduct,
+                        unitPrice: defaultProduct.price,
+                        quantity: 1
+                    })
+                    this.sync(this.orderProducts,'order.orderProducts')
                 }
             },
             persistClient(){
@@ -284,6 +307,10 @@
 
                 if(!error && (vm.totalLeftToPay !== vm.totalToPay)){
                     error = "O valor a pagar deve coincidir com o valor total do pedido!"
+                }
+
+                if(vm.totalToPay <= 0){
+                    error = "O valor total do pedido deve ser positivo!"
                 }
 
                 if(error){

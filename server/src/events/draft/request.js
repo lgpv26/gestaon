@@ -68,6 +68,12 @@ module.exports = class Request extends Draft {
                 }
             }))
 
+            dataPromises.push(vm.server.broker.call('data/product.getList', {
+                data: {
+                    companyId: vm.socket.activeCompany.id
+                }
+            }))
+
             Promise.all(dataPromises).then((dataPromises) => {
                 vm.socket.instance.emit('draft/request.load', new EventResponse({
                     clientGroups: dataPromises[0],
@@ -75,7 +81,8 @@ module.exports = class Request extends Draft {
                     paymentMethods: dataPromises[2],
                     accounts: dataPromises[3],
                     promotionChannels: dataPromises[4],
-                    users: dataPromises[5]
+                    users: dataPromises[5],
+                    products: dataPromises[6]
                 }))
             })
         })
