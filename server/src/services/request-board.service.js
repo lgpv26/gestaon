@@ -309,7 +309,8 @@ module.exports = (server) => { return {
             })
         },
         reloadCard(ctx){
-            return server.mongodb.Card.findOne({requestId: ctx.params.request.id}).then((card) => {
+            return server.mongodb.Card.findOne({requestId: ctx.params.request.id})
+            .then((card) => {
                 if(!card){
                     console.log("CAPTUREI VOCÊ, SEU DANADO!!!", ctx.params, card)
                     throw new Error ('Erro ao atualizar Card')

@@ -13,7 +13,6 @@ module.exports = (server) => {
     let _userAccountId = null
 
     let _draftId = null
-    let _reloadCard = null
 
     let _oldRequest = null
 
@@ -84,9 +83,8 @@ module.exports = (server) => {
                                 },
                                 transaction: this._transaction
                             }).then((request) => {
-                                return ctx.call("draft/request/persistence.createCard", {
-                                    data: request,
-                                    transaction: this._transaction
+                                return ctx.call("draft/request/persistence.dashboard", {
+                                    data: request
                                 }).then(() => {
                                     return ctx.call("draft/request/persistence.commit").then(() => {
                                         return ctx.call("draft/request/persistence.saveES", {
@@ -122,7 +120,7 @@ module.exports = (server) => {
                                         }) 
                                     })
                                 }).catch((err) => {
-                                    console.log("Erro em: draft/request/persistence.createCard", err)
+                                    console.log("Erro em: draft/request/persistence.dashboard")
                                     return ctx.call("draft/request/persistence.rollback").then(() => {
                                         return new EventResponse(err)
                                     }) 
@@ -154,11 +152,7 @@ module.exports = (server) => {
                 this._transaction = transaction
             })
         },
-        reloadCard(ctx){
-            return this._reloadCard = ctx.params.reloadCard
-            
-        },
-
+        
         consultRequest(ctx){
             if(!this._request.id) return true
             return ctx.call("data/request.getOne", {
@@ -261,15 +255,14 @@ module.exports = (server) => {
          * @param {Object} data, {Object} transaction
          * @returns {Promise.<object>} request
          */
-        createCard(ctx) {
-
+        dashboard(ctx) {
             if(!this._request.client.id){
                 return true
             }
             else {
                 return ctx.call("data/request.getOne", {
                     where: {
-                        id: (this._request.id) ? this._request.id : ctx.params.data.id
+                        id: ctx.params.data.id
                     },
                     include: [{
                         model: server.mysql.RequestTimeline,
@@ -343,9 +336,9 @@ module.exports = (server) => {
                             as: 'paymentMethod'
                         }]
                     }],
-                    transaction: ctx.params.transaction
+                    transaction: this._transaction
                 }).then((request) => {
-                    if(this._reloadCard) {
+                    if(this._request.id && (this._oldRequest.status == this._request.status) && (this._oldRequest.status != 'finished' || this._oldRequest.status != 'canceled')) {
                         return ctx.call("request-board.reloadCard", {
                             request: request, 
                             companyId: this._companyId,
@@ -363,7 +356,6 @@ module.exports = (server) => {
                             })
                             let maxCardPosition = 65535
                             if (maxCard) maxCardPosition += maxCard.position
-
                             return ctx.call("request-board.createCard", {
                                 section: section,
                                 data: {
@@ -566,11 +558,6 @@ module.exports = (server) => {
 
         saveRequest(ctx){
             if (this._request.id) { // update request         
-                if(this._oldRequest.status == this._request.status && (this._oldRequest.status != 'finished' || this._oldRequest.status != 'canceled')){
-                    ctx.call("draft/request/persistence.reloadCard", {
-                        reloadCard: true
-                    })
-                }
                 return ctx.call("data/request.update", {
                     data: _.assign(ctx.params.data, {
                         id: this._request.id
