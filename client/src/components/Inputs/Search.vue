@@ -20,7 +20,7 @@
                 <slot name="settings"></slot>
             </div>
         </transition>
-        
+
     </div>
 </template>
 <script>
