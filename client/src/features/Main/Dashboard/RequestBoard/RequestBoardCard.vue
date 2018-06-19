@@ -21,7 +21,6 @@
                         <app-rbc-order id="rbc-order" :card="card"></app-rbc-order>
                     </template>
                 </app-popover>
-
             </div>
             <!--<h3 class="card__task" v-if="hasTaskInstruction">{{ card.request.task.text }}</h3>
             <h3 class="card__task--add" v-else @click="onAddTaskClick()">+ Incluir Tarefa ou Anotação</h3>-->
@@ -74,10 +73,10 @@
                 </div>
             </div>
             <div class="card__footer">
-                <app-popover :contentStyle="popoverContentStyle">
+                <app-popover :placement="'bottom-start'" :verticalOffset="5" :contentStyle="popoverContentStyle">
                     <template slot="triggerer">
                         <span class="footer__location" ref="footerLocation">
-                            <request-board-icon-location></request-board-icon-location> Local
+                            <request-board-icon-location></request-board-icon-location>
                         </span>
                     </template>
                     <template slot="content">
@@ -85,15 +84,18 @@
                     </template>
                 </app-popover>
                 <span class="push-both-sides"></span>
-                <app-popover :contentStyle="dropdownMenuPopoverContentStyle">
+                <app-popover :placement="'bottom-center'" :verticalOffset="5" :horizontalOffset="20" :contentStyle="dropdownMenuPopoverContentStyle">
                     <template slot="triggerer">
-                        <a class="footer__status ignore"><request-board-icon-status></request-board-icon-status> {{ status }}</a>
+                        <a class="footer__status ignore">
+                            <request-board-icon-status></request-board-icon-status>
+                            <span>{{ status }}</span>
+                        </a>
                     </template>
                     <template slot="content">
                         <app-rbc-status id="rbc-status" :cardId="card.id" v-model="form.status"></app-rbc-status>
                     </template>
                 </app-popover>
-                <app-popover :contentStyle="dropdownMenuPopoverContentStyle">
+                <app-popover :placement="'bottom-start'" :verticalOffset="5" :horizontalOffset="18" :useScroll="true">
                     <template slot="triggerer">
                         <a class="footer__responsible-user ignore"><request-board-icon-flag></request-board-icon-flag> {{ responsibleUserName }}</a>
                     </template>
@@ -240,7 +242,7 @@
                         return "Pendente"
                         break;
                     case "in-displacement":
-                        return "Deslocando"
+                        return "Em deslocamento"
                         break;
                     case "canceled":
                         return "Cancelado"
@@ -641,6 +643,23 @@
         overflow: hidden;
         text-overflow: ellipsis;
         flex-shrink: 0;
+    }
+
+    .card__footer .footer__status span {
+        white-space: nowrap;
+        margin-left: 0;
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    .card__footer .footer__responsible-user {
+        font-weight: 600;
+        font-size: 12px;
+    }
+
+    .card__footer .footer__location {
+        font-weight: 600;
+        font-size: 12px;
     }
 
 </style>

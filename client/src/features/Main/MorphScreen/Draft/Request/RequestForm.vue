@@ -303,13 +303,16 @@
                     if(!error && !parseInt(orderProduct.quantity)){
                         error = "Os produtos devem possuir uma quantidade mínima de 1 item!"
                     }
+                    if(!error && !_.get(orderProduct,'product.id',false)){
+                        error = "Você deve selecionar um produto por linha!"
+                    }
                 })
 
                 if(!error && (vm.totalLeftToPay !== vm.totalToPay)){
                     error = "O valor a pagar deve coincidir com o valor total do pedido!"
                 }
 
-                if(vm.totalToPay <= 0){
+                if(!error && vm.totalToPay <= 0){
                     error = "O valor total do pedido deve ser positivo!"
                 }
 

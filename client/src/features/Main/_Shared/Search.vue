@@ -333,7 +333,7 @@
     /* search input */
 
     .search__search-input {
-        width: 320px;
+        width: 450px;
         padding-left: 20px;
         padding-right: 20px;
         border-bottom-left-radius: 32px;
