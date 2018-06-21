@@ -82,12 +82,9 @@ module.exports = (server) => { return {
                 isAnonymous
             }
 
-            console.log("createData", createData)
-
             return server.mongodb.Call.create(createData).then((data) => {
                 return data.toJSON()
             }).then((call) => {
-                console.log(call)
                 if(call.number){
                     return server.mysql.ClientPhone.findAll({
                         where: {

@@ -8,7 +8,7 @@
                 :style="{'margin-top':(verticalOffset)? verticalOffset + 'px' : '0', 'margin-left':(horizontalOffset)? horizontalOffset + 'px' : '0'}" >
                 <a class="container__close-button" ref="closeButton">X</a>
                 <slot name="no-results" v-if="!items || items.length <= 0 || forceNoResults"></slot>
-                <div ref="scrollbar" style="overflow-y: auto; max-height: 180px;">
+                <div ref="scrollbar" style="overflow-y: auto; max-height: 340px;">
                     <div class="scrollable-content">
                         <div class="result-box__items" v-show="items && items.length > 0 && !forceNoResults">
                             <div v-for="item in items" v-if="!showOnly || item[showOnly]" :key="item.iterationId" class="items__item" ref="searchable" @click="searchItemSelected(item)">
@@ -20,6 +20,7 @@
                 <slot name="settings"></slot>
             </div>
         </transition>
+
     </div>
 </template>
 <script>
@@ -180,7 +181,7 @@
     .ag-search .search-input__result-box {
         flex-shrink: 0;
         transition: .0s opacity;
-        width: 320px;
+        width: 450px;
         position: absolute;
         z-index: 600000;
         background-color: var(--bg-color--2);
