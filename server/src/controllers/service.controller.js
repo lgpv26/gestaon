@@ -36,9 +36,9 @@ module.exports = (server, restify) => {
                                                         "multi_match": {
                                                             "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
-                                                                "name",
-                                                                "obs",
-                                                                "legalDocument"
+                                                                "name^7",
+                                                                "obs^2",
+                                                                "legalDocument^2"
                                                             ],
                                                             "operator": "or",
                                                             "analyzer": "standard"
@@ -49,10 +49,11 @@ module.exports = (server, restify) => {
                                                             "inner_hits": {},
                                                             "path": "customFields",
                                                             "query": {
+                                                                
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "customFields.documentValue"
+                                                                        "customFields.documentValue^3"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "and"
@@ -68,8 +69,8 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
-                                                                        "addresses.cep^5", "addresses.neighborhood"
+                                                                        "addresses.address^6", "addresses.number^5", "addresses.complement^4", 
+                                                                        "addresses.cep^1", "addresses.neighborhood^2"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "and",
@@ -86,7 +87,7 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "phones.ddd", "phones.number"
+                                                                        "phones.ddd^6", "phones.number^6"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "and",
@@ -105,9 +106,9 @@ module.exports = (server, restify) => {
                                                         "multi_match": {
                                                             "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
-                                                                "name",
-                                                                "obs",
-                                                                "legalDocument"
+                                                                "name^7",
+                                                                "obs^2",
+                                                                "legalDocument^2"
                                                             ],
                                                             "operator": "and",
                                                             "analyzer": "standard",
@@ -122,8 +123,8 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
-                                                                        "addresses.cep^5", "addresses.neighborhood"
+                                                                        "addresses.address^6", "addresses.number^5", "addresses.complement^4", 
+                                                                        "addresses.cep^1", "addresses.neighborhood^2"
                                                                     ],
                                                                     "analyzer": "standard"
                                                                 }
@@ -138,7 +139,7 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "customFields.documentValue"
+                                                                        "customFields.documentValue^3"
                                                                     ],
                                                                     "analyzer": "standard"
                                                                 }
@@ -153,7 +154,7 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "phones.ddd", "phones.number"
+                                                                        "phones.ddd^6", "phones.number^6"
                                                                     ],
                                                                     "analyzer": "standard"
                                                                 }
@@ -170,9 +171,9 @@ module.exports = (server, restify) => {
                                                         "multi_match": {
                                                             "query": utils.removeDiacritics(req.query.q.trim()),
                                                             "fields": [
-                                                                "name",
-                                                                "obs",
-                                                                "legalDocument"
+                                                                "name^7",
+                                                                "obs^2",
+                                                                "legalDocument^2"
                                                             ],
                                                             "analyzer": "standard",
                                                             "operator": "or",
@@ -187,8 +188,8 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "addresses.address^3", "addresses.number^2", "addresses.complement^2", 
-                                                                        "addresses.cep^5", "addresses.neighborhood"
+                                                                        "addresses.address^6", "addresses.number^5", "addresses.complement^4", 
+                                                                        "addresses.cep^1", "addresses.neighborhood^2"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "or",
@@ -205,7 +206,7 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "customFields.documentValue"
+                                                                        "customFields.documentValue^3"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "or",
@@ -222,7 +223,7 @@ module.exports = (server, restify) => {
                                                                 "multi_match": {
                                                                     "query": utils.removeDiacritics(req.query.q.trim()),
                                                                     "fields": [
-                                                                        "phones.ddd", "phones.number"
+                                                                        "phones.ddd^6", "phones.number^6"
                                                                     ],
                                                                     "analyzer": "standard",
                                                                     "operator": "or",
@@ -254,7 +255,7 @@ module.exports = (server, restify) => {
                                     "must": {
                                         "multi_match": {
                                             "query": utils.removeDiacritics(req.query.q.trim()),
-                                            "fields": ["name", "cep", "neighborhood"],
+                                            "fields": ["name^4", "cep", "neighborhood^2"],
                                             "analyzer": "standard",
                                             "operator": "AND"
                                         }
