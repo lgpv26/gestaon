@@ -471,6 +471,15 @@ module.exports = (server) => {
             
                                     if(indexOldPayment !== -1 && payment.paid !== this._oldRequest.requestPayments[indexOldPayment].paid){
                                         _.set(payment, 'changed', true)
+                                        _.set(payment, 'oldAmount', parseFloat(this._oldRequest.requestPayments[indexOldPayment].amount))
+                                        _.set(ctx.params.data[index], 'settled', false)
+                                        _.set(ctx.params.data[index], 'settledDatetime', null)
+                                        changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPayments[indexOldPayment].requestPaymentTransactions}))
+                                    }
+
+                                    if(indexOldPayment !== -1 && payment.paymentMethodId !== this._oldRequest.requestPayments[indexOldPayment].paymentMethodId){
+                                        _.set(payment, 'changed', true)
+                                        _.set(payment, 'oldAmount', parseFloat(this._oldRequest.requestPayments[indexOldPayment].amount))
                                         _.set(ctx.params.data[index], 'settled', false)
                                         _.set(ctx.params.data[index], 'settledDatetime', null)
                                         changePaid.push(_.assign(payment, {requestPaymentTransactions: this._oldRequest.requestPayments[indexOldPayment].requestPaymentTransactions}))
@@ -533,8 +542,6 @@ module.exports = (server) => {
                             transaction: this._transaction
                         })
                         .then(() => {
-                            resolve ()
-                            /*
                             if(changePaid.length  || removeRequestPayments.length){
                                 return ctx.call("draft/request/persistence.checkLimit")
                                 .then(() => {
@@ -546,7 +553,6 @@ module.exports = (server) => {
                             else {
                                 resolve()
                             }
-                            */
                         })
                         .catch((err) => {
                             reject(err)

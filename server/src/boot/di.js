@@ -39,6 +39,14 @@ module.exports = class DependencyInjection {
         return this.server.elasticSearch
     }
 
+    setGoogleApi(){
+        this.server.googleMaps = require('@google/maps').createClient({
+            key: 'AIzaSyAWi3eGS7ziCHGh264uVstGZTm-lve3XWs',
+            Promise: Promise
+        })
+        return this.server.googleMaps
+    }
+
     setSequelize(){
         const Sequelize = require('sequelize')
         this.server.sequelize = new Sequelize(config.database.dbName, config.database.user, config.database.password, {

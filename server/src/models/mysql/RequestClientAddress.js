@@ -28,6 +28,12 @@ module.exports = {
                         this.setDataValue('type', (val == '' | val == null) ? null : val.toUpperCase().trim());
                     }
                 },
+                lat: {
+                    type: Sequelize.DECIMAL(10,8)
+                },
+                lng: {
+                    type: Sequelize.DECIMAL(11,8)
+                },
                 dateUpdated: {
                     type: TIMESTAMP
                 },

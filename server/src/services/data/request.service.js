@@ -206,7 +206,7 @@ module.exports = (server) => { return {
                     requestId: ctx.params.requestId,
                     transaction: ctx.params.transaction 
                 }).then(() => {
-                   // const limitInUseChange = {}
+                    const limitInUseChange = {}
                     let paymentMethodsPromises = []
                     let paymentsPaids = []
                     
@@ -226,18 +226,17 @@ module.exports = (server) => { return {
                                 transaction: ctx.params.transaction 
                             }).then((paymentMethodReturn) => {
                                 if(!requestPayment.paid && !requestPayment.paymentMethod.autoPay) {
-                                    return ctx.call("data/request.paymentBillUpdate", {
+                                    return ctx.call("data/request.setPaymentBill", {
                                         data: {
                                             deadlineDatetime: requestPayment.deadlineDatetime
                                         },
                                         where: {
                                             requestPaymentId: paymentMethodReturn.id
                                         },
+                                        requestPaymentId: paymentMethodReturn.id,
                                         transaction: ctx.params.transaction 
                                     })
-                                     /*
                                     .then(() => {
-                                        /*
                                         return ctx.call("data/client.get", {
                                             where: {
                                                 id: ctx.params.clientId
@@ -248,7 +247,7 @@ module.exports = (server) => { return {
                                             limitInUseChange[client.id] = parseFloat(limitInUseChange[client.id]) + parseFloat(paymentMethodReturn.amount) 
                                         })
                                     
-                                    })*/
+                                    })
                                 }
                                 else{
                                     if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
@@ -271,24 +270,26 @@ module.exports = (server) => { return {
                                 transaction: ctx.params.transaction || null
                             }).then((paymentMethodReturn) => {
                                 if(!requestPayment.paid && !requestPayment.paymentMethod.autoPay) {
-                                    return ctx.call("data/request.paymentBillCreate", {
-                                            data: {
-                                                requestPaymentId: paymentMethodReturn.id,
-                                                deadlineDatetime: requestPayment.deadlineDatetime
+                                    return ctx.call("data/request.setPaymentBill", {
+                                        data: {
+                                            requestPaymentId: paymentMethodReturn.id,
+                                            deadlineDatetime: requestPayment.deadlineDatetime
+                                        },
+                                        requestPaymentId: paymentMethodReturn.id,
+                                        transaction: ctx.params.transaction 
+                                    })
+                                    .then(() => {
+                                        return ctx.call("data/client.get", {
+                                            where: {
+                                                id: ctx.params.clientId
                                             },
                                             transaction: ctx.params.transaction 
-                                        })/*.then(() => {
-                                            return ctx.call("data/client.get", {
-                                                where: {
-                                                    id: ctx.params.clientId
-                                                },
-                                                transaction: ctx.params.transaction 
-                                            }).then((client) => {
-                                                if(!limitInUseChange[client.id]) limitInUseChange[client.id] = client.limitInUse
-                                                limitInUseChange[client.id] = parseFloat(limitInUseChange[client.id]) + parseFloat(paymentMethodReturn.amount)
-                                            })
+                                        }).then((client) => {
+                                            if(!limitInUseChange[client.id]) limitInUseChange[client.id] = client.limitInUse
+                                            limitInUseChange[client.id] = parseFloat(limitInUseChange[client.id]) + parseFloat(paymentMethodReturn.amount)
                                         })
-                                        */
+                                    })
+                                        
                                 }
                                 else{
                                     if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
@@ -302,7 +303,7 @@ module.exports = (server) => { return {
                         }
                     })
                     return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
-                        /*
+                        
                         const updateLimitInUsePromise = []
                         _.forEach(_.keys(limitInUseChange),(clientId) => {
                             updateLimitInUsePromise.push(server.mysql.Client.update({
@@ -314,8 +315,8 @@ module.exports = (server) => { return {
                                 transaction: ctx.params.transaction
                             }))
                         })
-                        */
-                        /*return Promise.all(paymentMethodsPromises).then(() => {*/
+                        
+                        return Promise.all(paymentMethodsPromises).then(() => {
                         if(paymentsPaids.length){
                             return ctx.call("cashier-balancing.markAsPaid", {
                                 data: {
@@ -333,7 +334,7 @@ module.exports = (server) => { return {
                         else {
                             return paymentMethods
                         }
-                        /*})*/
+                        })
                     }).catch((err) => {
                         console.log('Erro payment methods em request service', err)
                         throw new Error(err)
@@ -383,6 +384,44 @@ module.exports = (server) => { return {
                 })
             }).catch((err) => {
                 throw new Error(err) // COMENTAR
+            })
+        },
+
+        setPaymentBill(ctx){
+            return ctx.call("data/request.getOneBill", {
+                where: ctx.params.where || {},
+                transaction: ctx.params.transaction
+            }).then((bill) => {
+                if(bill){
+                    return ctx.call("data/request.paymentBillUpdate", {
+                        data: {
+                            deadlineDatetime: ctx.params.data.deadlineDatetime
+                        },
+                        where: {
+                            requestPaymentId: ctx.params.requestPaymentId
+                        },
+                        transaction: ctx.params.transaction 
+                    })
+                }
+                else{
+                    return ctx.call("data/request.paymentBillCreate", {
+                        data: {
+                            requestPaymentId: ctx.params.requestPaymentId,
+                            deadlineDatetime: ctx.params.data.deadlineDatetime
+                        },
+                        transaction: ctx.params.transaction 
+                    })
+                }
+            })
+        },
+
+        getOneBill(ctx){
+            return server.mysql.RequestPaymentBill.findOne({
+                where: ctx.params.where || {},
+                include: ctx.params.include || [],
+                transaction: ctx.params.transaction || null
+            }).then((requestPaymentBill) => {
+                return JSON.parse(JSON.stringify(requestPaymentBill))
             })
         },
 
@@ -576,21 +615,67 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} requests
          */
         setRequestClientAddresses(ctx){
-            return server.mysql.RequestClientAddress.destroy({
-                where: {
-                    requestId: ctx.params.requestId
-                },
-                transaction: ctx.params.transaction
-            }).then(() => {
-                return server.mysql.RequestClientAddress.bulkCreate(ctx.params.data, {
-                    updateOnDuplicate: ['requestId', 'clientAddressId', 'type', 'dateUpdated', 'dateRemoved', 'status'],
+            const promises = []
+            ctx.params.data.forEach((clientAddress, index) => {
+                promises.push(ctx.call("data/request.getGeo", {
+                        clientAddressId: clientAddress.clientAddressId,
+                        transaction: ctx.params.transaction
+                    }).then((geo) => {
+                        if (!_.isEmpty(geo)) {
+                            _.set(ctx.params.data[index], 'lat', geo.lat)
+                            _.set(ctx.params.data[index], 'lng', geo.lng)
+                        }
+                    })
+                )
+            })
+            
+            return Promise.all(promises).then(() => {
+                return server.mysql.RequestClientAddress.destroy({
+                    where: {
+                        requestId: ctx.params.requestId
+                    },
                     transaction: ctx.params.transaction
-                }).then((response) => {
-                    return response
-                }).catch((error) => {
-                    return error
+                }).then(() => {
+                    return server.mysql.RequestClientAddress.bulkCreate(ctx.params.data, {
+                        updateOnDuplicate: ['requestId', 'clientAddressId', 'type', 'lat', 'lng', 'dateUpdated', 'dateRemoved', 'status'],
+                        transaction: ctx.params.transaction
+                    }).then((response) => {
+                        return response
+                    }).catch((error) => {
+                        return error
+                    })
                 })
             })
+        },
+
+        getGeo(ctx){
+            return server.mysql.ClientAddress.findById(parseInt(ctx.params.clientAddressId), {
+                include: [{
+                    model: server.mysql.Address,
+                    as: 'address'
+                }],
+                transaction: ctx.params.transaction
+            })
+                .then((clientAddress) => {
+                    const name = (clientAddress.address.name) ? clientAddress.address.name : ''
+                    const number = (clientAddress.number) ? clientAddress.number : ''
+                    const complement = (clientAddress.complement) ? clientAddress.complement : ''
+                    const neighborhood = (clientAddress.address.neighborhood) ? clientAddress.address.neighborhood : ''
+                    const city = (clientAddress.address.city) ? clientAddress.address.city : ''
+                    const state = (clientAddress.address.state) ? clientAddress.address.state : ''
+                    const cep = (clientAddress.address.cep) ? clientAddress.address.cep : ''
+
+                    return server.googleMaps.geocode({ address: name + ', ' + number + ' - ' + complement + ' - ' + neighborhood + ' - ' + city + '/' + state + ' - ' + cep })
+                        .asPromise()
+                        .then((response) => {
+                            if (response.length) return {}
+                            const geo = _.first(response.json.results)
+                            return { lat: geo.geometry.location.lat, lng: geo.geometry.location.lng }
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                        })
+                })
         },
         // request-client-phone
         /**

@@ -24,6 +24,7 @@ di.setVersion()
 di.setOAuth2()
 di.setMoleculer()
 di.setFCM()
+di.setGoogleApi()
 
 // configure CORS
 const cors = corsMiddleware({
