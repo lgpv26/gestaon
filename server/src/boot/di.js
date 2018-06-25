@@ -1,9 +1,28 @@
 import config from '~server/config'
 import _ from 'lodash'
 
+const restify = require('restify')
+const corsMiddleware = require('restify-cors-middleware')
+
 module.exports = class DependencyInjection {
 
-    constructor(server){
+    constructor(){
+        const server = restify.createServer()
+
+        // configure CORS
+        const cors = corsMiddleware({
+            origins: ['*'],
+            allowHeaders: ['X-Requested-With', 'Authorization', 'Content-type', 'Accept']
+        })
+        server.pre(cors.preflight)
+        server.use(cors.actual)
+
+        // configure Restify plugins
+        server.use(restify.plugins.acceptParser(server.acceptable))
+        server.use(restify.plugins.queryParser())
+        server.use(restify.plugins.bodyParser())
+        server.use(restify.plugins.gzipResponse())
+
         this.server = server
     }
 

@@ -39,6 +39,7 @@ module.exports = (server, restify) => {
                data: token
             });
         }).catch((err) => {
+            console.log(err)
             return next(err);
         });
     });

@@ -62,8 +62,17 @@ module.exports = (server) => { return {
             let isValid = true
             let isAnonymous = false
 
+            // specific rules for specific destination
+            if(ctx.params.data.destination.includes('_OI')){
+                number = number.substring(1)
+            }
+
             if(number.charAt(0) === '0'){
                 number = number.substring(1)
+            }
+
+            if(number.length === 9){
+                number = "44" + number
             }
 
             if(_.includes(['anonymous','Anonymous'], number)){

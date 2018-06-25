@@ -99,6 +99,7 @@
                 return _.sumBy(this.orderProducts, (orderProduct) => {
                     return (orderProduct.unitPrice - orderProduct.unitDiscount) * orderProduct.quantity
                 })
+
             }
         },
         methods: {

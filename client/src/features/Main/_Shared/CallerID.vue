@@ -238,6 +238,7 @@
                 pointer-events: auto;
                 display: flex;
                 flex-direction: column;
+                width: 240px;
                 .call {
                     flex-shrink: 0;
                     pointer-events: auto;

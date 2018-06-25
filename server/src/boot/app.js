@@ -1,7 +1,6 @@
 // imports
 const config = require('../config/index')
-const restify = require('restify')
-const corsMiddleware = require('restify-cors-middleware')
+
 /*const PrettyLogger = require('pretty-logger'), log = new PrettyLogger()*/
 const mongoose = require('mongoose')
 const bluebird = require('bluebird')
@@ -10,10 +9,9 @@ const log = console.log
 
 // in-source imports
 const { BootError } = require('~errors')
-
 // dependency injection initialization
 const DI = require('./di')
-const di = new DI(restify.createServer())
+const di = new DI()
 
 // overall setup
 di.setInnkeeper()
@@ -25,20 +23,6 @@ di.setOAuth2()
 di.setMoleculer()
 di.setFCM()
 di.setGoogleApi()
-
-// configure CORS
-const cors = corsMiddleware({
-    origins: ['*'],
-    allowHeaders: ['X-Requested-With', 'Authorization', 'Content-type']
-})
-di.server.pre(cors.preflight)
-di.server.use(cors.actual)
-
-// configure Restify plugins
-di.server.use(restify.plugins.acceptParser(di.server.acceptable))
-di.server.use(restify.plugins.queryParser())
-di.server.use(restify.plugins.bodyParser())
-di.server.use(restify.plugins.gzipResponse())
 
 // attach models to di.server
 di.attachModels('mongodb') // attached to di.server.mongodb.{modelName}

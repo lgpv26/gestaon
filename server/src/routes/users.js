@@ -56,6 +56,37 @@ module.exports = (server, restify) => {
                 {
                     model: server.mysql.RequestClientPhone,
                     as: 'requestClientPhones'
+                },
+                {
+                    model: server.mysql.RequestPayment,
+                    as: "requestPayments",
+                    include: [{
+                        model: server.mysql.PaymentMethod,
+                        as: 'paymentMethod'
+                    },
+                        {
+                            model: server.mysql.RequestPaymentTransaction,
+                            as: 'requestPaymentTransactions',
+                            include: [{
+                                model: server.mysql.Transaction,
+                                as: 'transaction'
+                            }]
+                        },{
+                            model: server.mysql.RequestPaymentBill,
+                            as: 'requestPaymentBills'
+                        }]
+                },
+                {
+                    model: server.mysql.RequestOrder,
+                    as: "requestOrder",
+                    include: [{
+                        model: server.mysql.RequestOrderProduct,
+                        as: 'requestOrderProducts',
+                        include: [{
+                            model: server.mysql.Product,
+                            as: 'product'
+                        }]
+                    }]
                 }
             ]
         }).then((requests) => {
