@@ -128,6 +128,7 @@ module.exports = (server) => { return {
                 }
             })
         },
+        
         update(ctx){
             return server.mongodb.Call.update({_id: ctx.params.data.id, companyId: ctx.params.data.companyId}, {$set: ctx.params.data}).then((data) => {
                 if(!data){
