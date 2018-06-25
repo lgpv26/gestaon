@@ -588,12 +588,13 @@ module.exports = (server) => {
                 }))
                 
                 return Promise.all(promises).then((response) => {
-                    if(response && (parseFloat(response[0].creditLimit) >= (parseFloat(response[0].limitInUse) + parseFloat(response[1])))){
+                    return true
+                    /*if(response && (parseFloat(response[0].creditLimit) >= (parseFloat(response[0].limitInUse) + parseFloat(response[1])))){
                         return true
                     }
                     else{
                         throw new Error('Sem limite de credito')
-                    }
+                    }*/
                 })
             },
 

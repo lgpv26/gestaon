@@ -699,7 +699,6 @@ module.exports = (server) => {
                 throw new Error(err)
             })
         },
-
         checkLimit(ctx){
             if(!this._request.client.id) return true
             return ctx.call("data/client.get", {
@@ -708,12 +707,14 @@ module.exports = (server) => {
                 },
                 transaction: this._transaction
             }).then((client) => {
+                return true
+                /*
                 if(client && (parseFloat(client.creditLimit) >= parseFloat(client.limitInUse))){
                     return true
                 }
                 else{
                     throw new Error('Sem limite de credito')
-                }
+                }*/
             })
         },
 
