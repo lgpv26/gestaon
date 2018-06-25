@@ -8,14 +8,14 @@
                     <div class="search-input__item client" v-if="props.item.client">
                         <span class="detail__name" v-html="props.item.client.name"></span>
                         <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address + ', ' + ((props.item.client.address.number) ? props.item.client.address.number : 'SN') + ((props.item.client.address.complement) ? ' - ' + props.item.client.address.complement : '')"></span>
-                        <span class="detail__address" v-if="props.item.client.address.neighborhood" v-html="props.item.client.address.neighborhood + ((props.item.client.address.city) ? ' - ' + props.item.client.address.city : '') + ((props.item.client.address.state) ? '/' + props.item.client.address.state : '')"></span>
+                        <span class="detail__address" v-if="_.has(props.item,'client.address.neighborhood')" v-html="props.item.client.address.neighborhood + ((props.item.client.address.city) ? ' - ' + props.item.client.address.city : '') + ((props.item.client.address.state) ? '/' + props.item.client.address.state : '')"></span>
                         <span class="detail__phones" v-if="props.item.client.phones.length > 0">
                             <span v-for="(clientPhone, index) in props.item.client.phones" v-html="((index === 0) ? '' : ', ') + clientPhone.number"></span>
                         </span>
                     </div>
                     <div class="search-input__item address" v-if="props.item.address">
                         <span class="detail__address" v-html="props.item.address.name"></span>
-                        <span class="detail__address" v-html="props.item.address.neighborhood + ((props.item.address.city) ? ' - ' + props.item.address.city : '') + ((props.item.address.state) ? '/' + props.item.address.state : '')"></span>
+                        <span class="detail__address" v-if="_.has(props.item,'address.neighborhood')" v-html="props.item.address.neighborhood + ((props.item.address.city) ? ' - ' + props.item.address.city : '') + ((props.item.address.state) ? '/' + props.item.address.state : '')"></span>
                     </div>
                 </template>
                 <template slot="settings">

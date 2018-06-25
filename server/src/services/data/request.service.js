@@ -658,14 +658,14 @@ module.exports = (server) => { return {
             })
                 .then((clientAddress) => {
                     const name = (clientAddress.address.name) ? clientAddress.address.name : ''
-                    const number = (clientAddress.number) ? clientAddress.number : ''
-                    const complement = (clientAddress.complement) ? clientAddress.complement : ''
+                    const number = (clientAddress.number) ? ', ' + clientAddress.number : ''
+                    const complement = (clientAddress.complement) ? ' ' + clientAddress.complement : ''
                     const neighborhood = (clientAddress.address.neighborhood) ? clientAddress.address.neighborhood : ''
-                    const city = (clientAddress.address.city) ? clientAddress.address.city : ''
-                    const state = (clientAddress.address.state) ? clientAddress.address.state : ''
+                    const city = (clientAddress.address.city) ? ' ' + clientAddress.address.city : ''
+                    const state = (clientAddress.address.state) ? '/' + clientAddress.address.state : ''
                     const cep = (clientAddress.address.cep) ? clientAddress.address.cep : ''
 
-                    return server.googleMaps.geocode({ address: name + ', ' + number + ' - ' + complement + ' - ' + neighborhood + ' - ' + city + '/' + state + ' - ' + cep })
+                    return server.googleMaps.geocode({ address: name + number + complement + city + state + ' - ' + cep })
                         .asPromise()
                         .then((response) => {
                             if (response.length) return {}

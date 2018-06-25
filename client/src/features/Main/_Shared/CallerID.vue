@@ -192,7 +192,7 @@
         position: absolute;
         z-index: 500000;
         top: 75px;
-        bottom: 75px;
+        bottom: 15px;
         right: -240px;
         display: flex;
         flex-direction: row;

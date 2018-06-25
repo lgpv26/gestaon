@@ -139,7 +139,7 @@ module.exports = (server) => { return {
         remove(ctx){
             return server.mongodb.Device.findOneAndRemove({_id: ctx.params.data.id, companyId: ctx.params.data.companyId}).exec().then((data) => {
                 if(!data){
-                    throw new Error("Nenhum registro encontrado.") 
+                    throw new Error("Nenhum registro encontrado.")
                 }
                 return {
                     removedId: ctx.params.data.id
