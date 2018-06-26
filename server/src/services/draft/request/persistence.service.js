@@ -90,7 +90,7 @@ module.exports = (server) => {
                                         return ctx.call("draft/request/persistence.saveES", {
                                             requestOrderId: request.requestOrderId,
                                         }).then(() => {
-                                            if(request.status == 'pending' && request.userId){
+                                            if(request.status === 'pending' && request.userId){
                                                 return ctx.call("push-notification.push", {
                                                     data: {
                                                         userId: request.userId,
@@ -98,7 +98,7 @@ module.exports = (server) => {
                                                         message: 'Abra a notificação para ver mais detalhes',
                                                         payload: {
                                                             type: 'request.create',
-                                                            id: request.id
+                                                            id: '' + request.id
                                                         }
                                                     },
                                                     notRejectNotLogged: true

@@ -24,25 +24,45 @@ module.exports = (server) => { return {
                         return Promise.reject(new Error("User didn't logged in through the app before"))
                     }
                 }
-                const message = {
-                    to: userAccessToken.fcmToken, // required fill with device token or topics
-                    collapse_key: null,
-                    priority: 'HIGH',
-                    data: {},
+
+                let message = {
+                    data: ctx.params.data.payload,
+                    android: {
+                        priority: 'high'
+                    },
+                    token: userAccessToken.fcmToken
+                }
+
+                server.firebaseAdmin.messaging().send(message).then((response) => {
+                    console.log('Successfully sent message:', response)
+                }).catch((error) => {
+                    console.log('Error sending message:', error)
+                })
+
+                message = {
+                    data: ctx.params.data.payload,
                     notification: {
                         title: ctx.params.data.title,
-                        body: ctx.params.data.message,
-                        icon : 'icon_notification',
-                        color : '#059A79',
-                        sound : 'notification'
-                    }
+                        body: ctx.params.data.message
+                    },
+                    android: {
+                        priority: 'high',
+                        notification: {
+                            title: ctx.params.data.title,
+                            body: ctx.params.data.message,
+                            icon : 'icon_notification',
+                            color : '#059A79',
+                            sound : 'sound1.mp3'
+                        }
+                    },
+                    token: userAccessToken.fcmToken
                 }
-                if(_.get(ctx.params,'data.payload',false)){
-                    _.assign(message, {
-                        data: ctx.params.data.payload
-                    })
-                }
-                server.fcm.send(message)
+
+                server.firebaseAdmin.messaging().send(message).then((response) => {
+                    console.log('Successfully sent notification:', response)
+                }).catch((error) => {
+                    console.log('Error sending notification:', error)
+                })
             })
         }
     }

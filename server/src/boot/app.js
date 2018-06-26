@@ -15,6 +15,7 @@ const di = new DI()
 
 // overall setup
 di.setInnkeeper()
+di.setFirebaseAdmin()
 di.setSocketIO()
 di.setElasticSearch()
 di.setSequelize()

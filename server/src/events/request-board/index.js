@@ -253,7 +253,7 @@ module.exports = class RequestBoard {
                                             message: 'Abra a notificação para ver mais detalhes',
                                             payload: {
                                                 type: 'request.changeStatus',
-                                                id: request.id
+                                                id: '' + request.id
                                             }
                                         },
                                         notRejectNotLogged: true
@@ -271,7 +271,7 @@ module.exports = class RequestBoard {
                                                     message: 'Abra a notificação para ver mais detalhes',
                                                     payload: {
                                                         type: 'request.removed',
-                                                        id: request.id
+                                                        id: '' + request.id
                                                     }
                                                 },
                                                 notRejectNotLogged: true
@@ -390,7 +390,7 @@ module.exports = class RequestBoard {
                                             message: 'Abra a notificação para ver mais detalhes',
                                             payload: {
                                                 type: 'request.create',
-                                                id: request.id
+                                                id: '' + request.id
                                             }
                                         },
                                         notRejectNotLogged: true
@@ -402,7 +402,7 @@ module.exports = class RequestBoard {
                                             message: 'Abra a notificação para ver mais detalhes',
                                             payload: {
                                                 type: 'request.removed',
-                                                id: request.id
+                                                id: '' + request.id
                                             }
                                         },
                                         notRejectNotLogged: true
