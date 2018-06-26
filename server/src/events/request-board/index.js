@@ -374,7 +374,7 @@ module.exports = class RequestBoard {
                                 companyId: card.companyId,
                                 action: 'user_change',
                                 userId: evData.userId,
-                                status: _.first(request.requestTimeline).status
+                                status: (_.first(request.requestTimeline).status === 'in-displacement') ? 'pending' : _.first(request.requestTimeline).status
                             },
                             transaction: transaction
                         }).then((requestTimelineItem) => {

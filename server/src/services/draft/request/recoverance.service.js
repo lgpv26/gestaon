@@ -205,7 +205,7 @@ module.exports = (server) => {
             }
 
             if(_.has(ctx.params.request, "requestTimeline")){
-                _.set(request, 'responsibleUserId', _.get(_.first(ctx.params.request.requestTimeline), 'userId'))
+                _.set(request, 'responsibleUserId', _.get(_.last(ctx.params.request.requestTimeline), 'userId'))
             }
 
             _.set(request, 'status', ctx.params.request.status)

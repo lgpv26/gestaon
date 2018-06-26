@@ -76,7 +76,7 @@ module.exports = (server) => {
                                     clientId: (client) ? _.get(client, 'client.id') : null,
                                     requestOrderId: (order) ? _.get(order, 'order.id') : null,
                                     taskId: (task) ? _.get(task, 'task.id') : null,
-                                    deadlineDatetime: (this._request.deadlineDatetime) ? moment(this._request.deadlineDatetime) : moment().add(20, 'm'),
+                                    deadlineDatetime: (this._request.deadlineDatetime) ? moment(this._request.deadlineDatetime) : (!this._request.id) ?  moment().add(20, 'm') : (!this._oldRequest.isScheduled) ? this._oldRequest.deadlineDatetime :  moment().add(20, 'm'),
                                     isScheduled: (this._request.deadlineDatetime) ? true : false,
                                     obs: (this._request.obs) ? this._request.obs : null,
                                     status: (this._request.status) ? (this._request.client.id) ? this._request.status : 'finished' :  (this._request.client.id) ? 'pending' : 'finished'
@@ -338,7 +338,7 @@ module.exports = (server) => {
                     }],
                     transaction: this._transaction
                 }).then((request) => {
-                    if(this._request.id && (this._oldRequest.status == this._request.status) && (this._oldRequest.status != 'finished' || this._oldRequest.status != 'canceled')) {
+                    if(this._request.id && (this._oldRequest.status != 'finished' && this._oldRequest.status != 'canceled')) {
                         return ctx.call("request-board.reloadCard", {
                             request: request, 
                             companyId: this._companyId,

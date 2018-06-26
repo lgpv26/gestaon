@@ -660,7 +660,6 @@ module.exports = (server) => { return {
                     const name = (clientAddress.address.name) ? clientAddress.address.name : ''
                     const number = (clientAddress.number) ? ', ' + clientAddress.number : ''
                     const complement = (clientAddress.complement) ? ' ' + clientAddress.complement : ''
-                    const neighborhood = (clientAddress.address.neighborhood) ? clientAddress.address.neighborhood : ''
                     const city = (clientAddress.address.city) ? ' ' + clientAddress.address.city : ''
                     const state = (clientAddress.address.state) ? '/' + clientAddress.address.state : ''
                     const cep = (clientAddress.address.cep) ? clientAddress.address.cep : ''
