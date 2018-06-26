@@ -230,7 +230,7 @@ module.exports = (server) => {
                         name: "PADRÃO",
                         clientId: parseInt(client.client.id),
                         addressId: parseInt(client.address.id),
-                        number: (client.numero) ? parseInt(client.numero) : null,
+                        number: (client.numero) ? client.numero : null,
                         complement: (client.complemento.trim()) ? client.complemento : null
                     }
             })
@@ -254,7 +254,7 @@ module.exports = (server) => {
             ctx.params.data.forEach((client, index) => {
                 if(_.has(client, 'address') && !client.address.id){
                     const address = (client.endereco) ? client.endereco : '' 
-                    const number = (client.numero) ? parseInt(client.numero) : ''
+                    const number = client.numero ? client.numero : ''
                     const complement = (client.complemento) ? client.complemento : ''
                     const neighborhood =(client.bairro) ? client.bairro : ''
                     const city = (client.cidade) ? client.cidade : ''

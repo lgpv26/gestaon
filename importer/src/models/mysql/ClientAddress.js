@@ -26,7 +26,10 @@ module.exports = {
                     }
                 },
                 number: {
-                    type: Sequelize.INTEGER
+                    type: Sequelize.STRING,
+                    set(val) {
+                        this.setDataValue('number', (val == '' | val == null) ? null : val.toUpperCase().trim());
+                    }
                 },
                 complement: {
                     type: Sequelize.STRING,

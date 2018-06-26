@@ -291,7 +291,7 @@ module.exports = (server) => {
             const client = ctx.params.data
             const clientAddress = (client.address.id) ? [{
                 addressId: parseInt(client.address.id),
-                number: (client[parser.number]) ? parseInt(client[parser.number]) : null,
+                number: (client[parser.number]) ? client[parser.number] : null,
                 complement: (client[parser.complement]) ? client[parser.complement] : null,
                 name: (client[parser.ref]) ? client[parser.ref] : null
             }] : false
@@ -303,7 +303,7 @@ module.exports = (server) => {
             const client = ctx.params.data
             if(_.has(client, 'address') && !client.address.id){
                 const address = (client[parser.address]) ? client[parser.address] : '' 
-                const number = (client[parser.number]) ? parseInt(client[parser.number]) : ''
+                const number = (client[parser.number]) ? client[parser.number] : ''
                 const complement = (client[parser.complement]) ? client[parser.complement] : ''
                 const neighborhood =(client[parser.neighborhood]) ? client[parser.neighborhood] : ''
                 const city = (client[parser.city]) ? client[parser.city] : ''
