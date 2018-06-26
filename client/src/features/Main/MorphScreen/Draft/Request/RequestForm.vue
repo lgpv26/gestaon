@@ -187,10 +187,7 @@
                 })
             },
             isOrderFormAllowed(){
-                if(!this.client.name || (this.client.id && this.clientAddressId && this.clientPhoneId)){
-                    return true
-                }
-                return false
+                return !this.client.name || (this.client.id && this.clientAddressId)
             },
             totalToPay(){
                 return _.sumBy(this.orderProducts, (orderProduct) => {

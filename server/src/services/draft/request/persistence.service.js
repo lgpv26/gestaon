@@ -338,7 +338,7 @@ module.exports = (server) => {
                     }],
                     transaction: this._transaction
                 }).then((request) => {
-                    if(this._request.id && (this._oldRequest.status != 'finished' && this._oldRequest.status != 'canceled')) {
+                    if(this._request.id && (this._oldRequest.status !== 'finished' && this._oldRequest.status !== 'canceled')) {
                         return ctx.call("request-board.reloadCard", {
                             request: request, 
                             companyId: this._companyId,

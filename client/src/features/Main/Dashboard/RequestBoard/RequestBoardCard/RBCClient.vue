@@ -2,7 +2,15 @@
     <div>
         <div class="rbc-client" v-if="hasClient">
             <div class="tooltip-content">
-                <span v-for="clientPhone in client.clientPhones">{{ clientPhone.name }}: {{ utils.formatPhone(clientPhone.number) }}</span>
+                <div v-if="client.clientPhones.length">
+                    <div v-for="clientPhone in client.clientPhones">
+                        <span v-if="hasSelectedClientPhone"><i class="mi mi-done" style="position: relative; top: 3px; font-size: 15px"></i></span>
+                        <span>{{ clientPhone.name || 'PADRÃO' }}: {{ utils.formatPhone(clientPhone.number) }}</span>
+                    </div>
+                </div>
+                <div v-else>
+                    <span>Cliente sem telefone.</span>
+                </div>
                 <span v-if="client.clientGroupId">Grupo: {{ client.clientGroup.name }}</span>
             </div>
             <div class="tooltip-actions">
@@ -33,6 +41,13 @@
                 const client = _.get(this.card, 'request.client.id', false)
                 if(client){
                     return client
+                }
+                return false
+            },
+            hasSelectedClientPhone(){
+                const selectedClientPhoneId = _.get(this.card, 'request.requestClientPhones[0].clientPhoneId', false)
+                if(selectedClientPhoneId){
+                    return selectedClientPhoneId
                 }
                 return false
             },
