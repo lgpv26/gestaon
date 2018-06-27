@@ -2,16 +2,17 @@
     <div>
         <div class="rbc-client" v-if="hasClient">
             <div class="tooltip-content">
-                <div v-if="client.clientPhones.length">
+                <span v-if="client">{{client.name}}</span>
+                <div v-if="client.clientPhones.length" style="margin-top: 8px;">
                     <div v-for="clientPhone in client.clientPhones">
-                        <span v-if="hasSelectedClientPhone"><i class="mi mi-done" style="position: relative; top: 3px; font-size: 15px"></i></span>
+                        <span v-if="clientPhone.id === selectedClientPhone"><i class="mi mi-done" style="position: relative; top: 3px; font-size: 15px"></i></span>
                         <span>{{ clientPhone.name || 'PADRÃO' }}: {{ utils.formatPhone(clientPhone.number) }}</span>
                     </div>
                 </div>
-                <div v-else>
+                <div v-else style="margin-top: 8px;">
                     <span>Cliente sem telefone.</span>
                 </div>
-                <span v-if="client.clientGroupId">Grupo: {{ client.clientGroup.name }}</span>
+                <span v-if="client.clientGroupId" style="margin-top: 8px">Grupo: {{ client.clientGroup.name }}</span>
             </div>
             <div class="tooltip-actions">
                 <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: card.request.id, companyId: company.id })">Editar <icon-edit></icon-edit></a>
@@ -44,7 +45,7 @@
                 }
                 return false
             },
-            hasSelectedClientPhone(){
+            selectedClientPhone(){
                 const selectedClientPhoneId = _.get(this.card, 'request.requestClientPhones[0].clientPhoneId', false)
                 if(selectedClientPhoneId){
                     return selectedClientPhoneId
