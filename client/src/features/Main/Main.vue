@@ -242,14 +242,6 @@
                 } else {
                     console.log("%c" + msg, "color:" + color + ";font-weight:bold; background-color: " + bgc + ";");
                 }
-            },
-            systemInitialized(){
-                const vm = this
-                vm.$bus.$on('sound-play', () => {
-                    new Howl({
-                        src: [alarmSound]
-                    }).play();
-                })
             }
         },
         
@@ -369,12 +361,15 @@
                 ])
             }).then(() => {
                 if(window.isAppLoading()) {
-                    window.removeAppLoading();
+                    window.removeAppLoading()
                 }
-                vm.stopLoading();
-                vm.setSystemInitialized(true);
-                vm.$bus.$emit('system-initialized');
-                vm.systemInitialized();
+                vm.stopLoading()
+                vm.setSystemInitialized(true)
+                vm.$bus.$on('sound-play', () => {
+                    new Howl({
+                        src: [alarmSound]
+                    }).play();
+                })
             })
 
         }

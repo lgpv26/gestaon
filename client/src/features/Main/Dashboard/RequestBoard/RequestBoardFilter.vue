@@ -163,7 +163,6 @@
             ...mapGetters('data/client-groups',['clientGroupsSelectItems']),
             ...mapGetters('data/promotion-channels',['promotionChannelsSelectItems']),
             ...mapGetters('data/payment-methods',['paymentMethodsSelectItems']),
-
             ...mapFields([
                 'filters.dateCreated',
             ])

@@ -73,6 +73,7 @@
                 </div>
             </div>
             <div class="card__footer">
+                <a class="chat-button" v-if="false" href="javascript:void(0)" @click="$modal.show('request-chat')"><i class="mi mi-chat"></i></a>
                 <app-popover :placement="'bottom-start'" :verticalOffset="5" :contentStyle="popoverContentStyle">
                     <template slot="triggerer">
                         <span class="footer__location" ref="footerLocation">
@@ -626,11 +627,17 @@
         position: relative;
         display: flex;
         align-items: center;
-        color: var(--font-color)
+        color: var(--font-color);
+        font-weight: 600;
     }
 
-    .card__footer a {
-        font-weight: 600;
+    .card__footer a.chat-button {
+        margin: 0 8px 0 0;
+    }
+
+    .card__footer a.chat-button i {
+        font-size: 18px;
+        color: var(--font-color--2);
     }
 
     .card__footer span svg,
