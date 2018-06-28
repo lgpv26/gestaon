@@ -34,7 +34,7 @@
     "vue": "^2.3.3",
     "vue-color": "^2.4.1",
     "vue-flatpickr-component": "^7.0.2",
-    "vue-js-modal": "^1.2.3",
+    "vue-js-modal": "^1.3.15",
     "vue-pubnub": "^1.0.0",
     "vue-resize": "^0.4.2",
     "vue-resize-directive": "^1.0.0",

@@ -1,11 +1,11 @@
 <template>
-    <div class="request-board-card">
+    <div class="request-board-card" :class="{'request-board-card--in-displacement': form.status === 'in-displacement'}">
         <div class="request-board-card__loading" v-if="false">
             <span>Carregando...</span>
         </div>
         <div class="request-board-card__container">
             <div class="card__header">
-                <app-popover :contentStyle="popoverContentStyle">
+                <app-popover :contentStyle="popoverContentStyle" style="flex-grow: 1" :placement="'bottom-start'" :verticalOffset="5">
                     <template slot="triggerer">
                         <h3 class="card__client-name">{{ card.request.client.name }}</h3>
                     </template>
@@ -13,7 +13,7 @@
                         <app-rbc-client id="rbc-client" :card="card"></app-rbc-client>
                     </template>
                 </app-popover>
-                <app-popover :contentStyle="popoverContentStyle">
+                <app-popover :contentStyle="popoverContentStyle" :placement="'bottom-end'" :verticalOffset="5">
                     <template slot="triggerer">
                         <h3 class="card__order">{{ utils.formatMoney(orderSubtotal, 2,'R$ ','.',',') }}</h3>
                     </template>
@@ -28,7 +28,7 @@
                 <div class="card__timer">
                     <div class="timer__objects">
                         <div class="objects__timer">
-                            <app-popover :contentStyle="popoverContentStyle" :triggererStyle="{justifyContent: 'center'}">
+                            <app-popover :placement="'right'" :verticalOffset="5" :contentStyle="popoverContentStyle" :triggererStyle="{justifyContent: 'center'}">
                                 <template slot="triggerer">
                                     <span class="timer__hours">{{ moment(card.request.dateCreated).format("HH") }}</span>
                                     <span class="timer__minutes">{{ moment(card.request.dateCreated).format("mm") }}</span>
@@ -46,7 +46,7 @@
                             </div>
                             <div class="timeline__progress" v-for="(inProgressRequestTimelineItem, index) in inProgressRequestTimeline"
                                 :style="{left: inProgressRequestTimelineItem.left + 'px'}">
-                                <app-popover :contentStyle="popoverContentStyle" :triggererStyle="{justifyContent: 'center'}">
+                                <app-popover :contentStyle="popoverContentStyle" :verticalOffset="5" :triggererStyle="{justifyContent: 'center'}">
                                     <template slot="triggerer">
                                         <span class="progress__progress">{{ inProgressRequestTimelineItem.timeUntilNow }}</span>
                                         <request-board-icon-progress-shield></request-board-icon-progress-shield>
@@ -58,7 +58,7 @@
                             </div>
                         </div>
                         <div class="objects__deadline" ref="deadline" :class="{ over: deadline.isOver }">
-                            <app-popover :contentStyle="popoverContentStyle" :triggererStyle="{justifyContent: 'center'}">
+                            <app-popover :contentStyle="popoverContentStyle" :placement="'left'" :verticalOffset="20" :triggererStyle="{justifyContent: 'center'}">
                                 <template slot="triggerer">
                                     <span class="deadline__time">{{ deadline.time }}</span>
                                     <span class="deadline__label">min</span>
@@ -73,7 +73,8 @@
                 </div>
             </div>
             <div class="card__footer">
-                <app-popover :placement="'bottom-start'" :verticalOffset="5" :contentStyle="popoverContentStyle">
+                <a class="chat-button" href="javascript:void(0)" @click="$modal.show('request-chat')"><i class="mi mi-chat"></i></a>
+                <app-popover :placement="'top-start'" :verticalOffset="5" :contentStyle="popoverContentStyle">
                     <template slot="triggerer">
                         <span class="footer__location" ref="footerLocation">
                             <request-board-icon-location></request-board-icon-location>
@@ -383,12 +384,22 @@
     }
 </script>
 
-<style>
+<style lang="scss">
     .request-board-card {
         display: flex;
         background: var(--bg-color--2);
         box-shadow: var(--card-shadow);
         position: relative;
+    }
+
+    .request-board-card--in-displacement {
+        border: 1px dashed var(--bg-color--secondary);
+        a.footer__status span {
+            color: var(--bg-color--secondary);
+        }
+        a.footer__status .colorizable {
+            fill: var(--bg-color--secondary);
+        }
     }
 
     .request-board-card__container {
@@ -417,18 +428,21 @@
     .request-board-card .card__header {
         display: flex;
         flex-direction: row;
-        justify-content: center
     }
 
     .request-board-card .card__header h3.card__order {
         font-size: 14px;
         margin-left: 5px;
-        color: var(--font-color--primary)
+        color: var(--font-color--primary);
     }
 
     .request-board-card h3.card__client-name {
         color: var(--font-color--7);
         font-size: 14px;
+        white-space: nowrap;
+        max-width: 224px;
+        text-align: left;
+        overflow: hidden;
     }
 
     .request-board-card h3.card__task {
@@ -626,11 +640,17 @@
         position: relative;
         display: flex;
         align-items: center;
-        color: var(--font-color)
+        color: var(--font-color);
+        font-weight: 600;
     }
 
-    .card__footer a {
-        font-weight: 600;
+    .card__footer a.chat-button {
+        margin: 0 8px 0 0;
+    }
+
+    .card__footer a.chat-button i {
+        font-size: 18px;
+        color: var(--font-color--2);
     }
 
     .card__footer span svg,

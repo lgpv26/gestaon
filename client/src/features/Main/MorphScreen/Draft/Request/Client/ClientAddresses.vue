@@ -13,7 +13,7 @@
                     <li class="list__item" v-for="(clientAddress, index) in clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
                         <span style="cursor: pointer;" @click="select(clientAddress.id)">
                             {{ clientAddress.address.name }},
-                            {{ clientAddress.number.toString().trim() || "SN" }}
+                            {{ (_.get(clientAddress,'number',false) ? clientAddress.number.toString().trim() : "SN" ) }}
                         </span>
                         <span class="push-both-sides"></span>
                         <div class="item__check item__icon" @click="select(clientAddress.id)" style="cursor: pointer; margin-right: 10px;">

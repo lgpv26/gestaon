@@ -76,7 +76,7 @@
             filters: {
                 handler(newFilterValue){
                     const filterData = utils.removeReactivity(newFilterValue)
-                    this.load(newFilterValue)
+                    this.load(filterData)
                 },
                 deep: true
             }
@@ -86,6 +86,7 @@
                 console.log("Received requestBoardLoad", ev)
                 if(ev.success){
                     const vm = this
+                    vm.SET_SECTIONS([])
                     ev.evData.sections.forEach((section) => {
                         vm.ADD_SECTION(section)
                     })
@@ -238,11 +239,12 @@
                 viewport.style.display = 'initial';
             },
 
-            load(filterData = {}){
-                this.SET_SECTIONS([])
-                this.$socket.emit('request-board:load', {
+            load(filterData = { dateCreated: moment().startOf('day').toISOString() }){
+                const emitData = {
                     filter: btoa(JSON.stringify(filterData))
-                })
+                }
+                console.log("Emitted request-board:load", emitData)
+                this.$socket.emit('request-board:load', emitData)
             },
 
             /* In-component utilities */

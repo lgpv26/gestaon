@@ -1,5 +1,8 @@
 <template>
     <div>
+        <modal name="request-chat" :resizable="true" :width="860" :height="520" :minWidth="860" :minHeight="520" classes="app-modal" @before-open="beforeOpenRequestChat">
+            <app-request-chat :requestChat="requestChatModal.requestChat"></app-request-chat>
+        </modal>
         <modal name="user-form" :resizable="true" :width="600" :height="320" :minWidth="600" :minHeight="320" classes="app-modal" @before-open="beforeOpenUserForm">
             <app-user-form :user="userModal.user"></app-user-form>
         </modal>
@@ -25,6 +28,7 @@
     import DeviceFormComponent from "../../../components/Forms/DeviceForm.vue";
     import OnMapLoadFormComponent from "../../../components/Forms/OnMapLoadForm.vue";
     import GeofenceFormComponent from "../../../components/Forms/GeofenceForm.vue";
+    import RequestChatComponent from "../_Shared/RequestChat/RequestChat.vue";
 
     export default {
         components: {
@@ -32,7 +36,8 @@
             "app-user-form": UserFormComponent,
             "app-device-form": DeviceFormComponent,
             "app-on-map-load-form": OnMapLoadFormComponent,
-            "app-geofence-form": GeofenceFormComponent
+            "app-geofence-form": GeofenceFormComponent,
+            "app-request-chat": RequestChatComponent
         },
         data(){
             return {
@@ -40,7 +45,8 @@
                 userModal: { user: null },
                 deviceModal: { device: null },
                 onMapLoadModal: { defaultSettings: null },
-                geofenceModal: { geofence: null }
+                geofenceModal: { geofence: null },
+                requestChatModal: { requestChat: null }
             }
         },
         computed: {
@@ -66,6 +72,9 @@
             },
             beforeOpenGeofenceForm(event){
                 if(_.has(event.params, 'geofence')) this.deviceModal.geofence = event.params.geofence;
+            },
+            beforeOpenRequestChat(event){
+                if(_.has(event.params, 'requestChat')) this.requestChatModal = event.params.requestChat;
             },
         }
     }

@@ -133,22 +133,25 @@ module.exports = (server, restify) => {
                 {
                     model: server.mysql.RequestPayment,
                     as: "requestPayments",
-                    include: [{
-                        model: server.mysql.PaymentMethod,
-                        as: 'paymentMethod'
-                    },
-                    {
-                        model: server.mysql.RequestPaymentTransaction,
-                        as: 'requestPaymentTransactions',
-                        include: [{
-                            model: server.mysql.Transaction,
-                            as: 'transaction'
-                        }]
-                    },{
-                        model: server.mysql.RequestPaymentBill,
-                        as: 'requestPaymentBills'
-                    }]
-                },{
+                    include: [
+                        {
+                            model: server.mysql.PaymentMethod,
+                            as: 'paymentMethod'
+                        },
+                        {
+                            model: server.mysql.RequestPaymentTransaction,
+                            as: 'requestPaymentTransactions',
+                            include: [{
+                                model: server.mysql.Transaction,
+                                as: 'transaction'
+                            }]
+                        },{
+                            model: server.mysql.RequestPaymentBill,
+                            as: 'requestPaymentBills'
+                        }
+                    ]
+                },
+                {
                     model: server.mysql.RequestOrder,
                     as: "requestOrder",
                     include: [{
@@ -162,9 +165,9 @@ module.exports = (server, restify) => {
                 }
             ]
         }).then((request) => {
-            request.requestPayments.forEach((requestPayment, index) => {
+            /*request.requestPayments.forEach((requestPayment, index) => {
                 if(requestPayment.requestPaymentBills) _.set(request.requestPayments[index], 'deadlineDatetime', requestPayment.requestPaymentBills.deadlineDatetime)
-            })
+            })*/
             return res.send(200, {
                 data: request
             })
