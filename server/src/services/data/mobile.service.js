@@ -665,6 +665,31 @@ module.exports = (server) => {
                 }) 
             },
 
+            itemSend(ctx) {
+                return server.broker.call('data/request.sendChatItem', {
+                    data: ctx.params.data
+                }).then((requestChat) => {
+                    const room = _.get(server.io.sockets.adapter.rooms, '[company/' + ctx.params.companyId + '/request-board]', 0)
+                    if(room.length){
+                        return server.io.in('company/' +  ctx.params.companyId + '/request-chat/' + ctx.params.requestId + '/chat').emit('request-chat:itemReceived', new EventResponse({
+                            requestChat
+                        }))
+                    }
+                    else{
+                        return server.mongodb.Card.findOne({ requestId: parseInt(ctx.params.requestId) }, {}, { sort: { position: 1 } }, function (err, card) {
+                            return card
+                        }).then((card) => {
+                            _.set(card, 'chatUnRead', (card.chatUnRead + 1))
+                            card.save()
+                            server.io.in('company/' + ctx.params.companyId + '/request-board').emit('request-board:chat', new EventResponse({
+                                cardId: card._id,
+                                chatUnRead: card.chatUnRead
+                            }))
+                        })
+                    }                    
+                })
+            },
+
             /**
              * Commit persistence
              */

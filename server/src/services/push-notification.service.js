@@ -52,7 +52,7 @@ module.exports = (server) => { return {
                             body: ctx.params.data.message,
                             icon : 'icon_notification',
                             color : '#059A79',
-                            sound : 'sound1.mp3'
+                            sound : ctx.params.data.sound + '.mp3' || 'sound1.mp3'
                         }
                     },
                     token: userAccessToken.fcmToken

@@ -15,6 +15,10 @@ module.exports = {
             companyId: Number,
             createdBy: Number,
             requestId: Number,
+            chatUnRead:  {
+                type: Number,
+                default: 0
+            },
             section: {
                 type: mongoose.Schema.ObjectId,
                 ref: 'Section'

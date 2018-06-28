@@ -712,7 +712,24 @@ module.exports = (server) => { return {
             }).catch((err) => {
                 throw new Error("Erro timeline.")
             })
-        }
+        },
+
+        sendChatItem(ctx){
+            return server.mysql.RequestChatItem.create(ctx.params.data)
+            .then((createChat) => {
+                return server.mysql.RequestChatItem.findById(createChat.id, {
+                    include: [{
+                        model: server.mysql.User,
+                        as: "user",
+                        attributes: ['id', 'name','email','type']
+                    }]
+                }).then((response) => {
+                    return response
+                })               
+           }).catch((err) => {
+               throw new Error("Erro send chat.")
+           })
+       },
     }
 }
 }

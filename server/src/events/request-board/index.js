@@ -360,7 +360,8 @@ module.exports = class RequestBoard {
                     return vm.server.sequelize.transaction().then((transaction) => {
                         return vm.server.broker.call('data/request.update', {
                             data: {
-                                userId: evData.userId
+                                userId: evData.userId,
+                                status: (_.first(request.requestTimeline).status === 'in-displacement') ? 'pending' : _.first(request.requestTimeline).status
                             },
                             where: {
                                 id: request.id
@@ -403,7 +404,8 @@ module.exports = class RequestBoard {
                                             payload: {
                                                 type: 'request.removed',
                                                 id: '' + request.id
-                                            }
+                                            },
+                                            sound: 'deny1'
                                         },
                                         notRejectNotLogged: true
                                     })

@@ -140,6 +140,13 @@ module.exports = (server) => { return {
                                 model: server.mysql.PaymentMethod,
                                 as: 'paymentMethod'
                             }]
+                        },{
+                            model: server.mysql.RequestChatItem,
+                            as: "requestChatItems",
+                            include: [{
+                                model: server.mysql.User,
+                                as: "user",
+                            }]
                         }
                     ]
                 }).then((requestList) => {

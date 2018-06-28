@@ -42,10 +42,25 @@ module.exports = (server, restify) => {
             return res.send(200, new EventResponse(err))
         })
     })
+    
 
     server.patch('/mobile/requests/:id', (req, res, next) => {
         server.broker.call('data/mobile.requestFinish', {
             data: _.assign({id: req.params.id },
+                req.body),
+            requestId: req.params.id,
+            userId: req.auth.id,
+            companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
+        }).then((request) => {
+            return res.send(200, new EventResponse(request))
+        }).catch((err) => {
+            return res.send(200, new EventResponse(err))
+        })
+    })
+
+    server.post('/mobile/requests/:id/chat', (req, res, next) => {
+        server.broker.call('data/mobile.itemSend', {
+            data: _.assign({requestId: parseInt(req.params.id), userId: parseInt(req.auth.id) },
                 req.body),
             requestId: req.params.id,
             userId: req.auth.id,
