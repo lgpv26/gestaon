@@ -34,7 +34,7 @@ module.exports = class RequestBoard {
          * @param {object} evData = { cardId:Number }
          */
         vm.socket.instance.on('request-chat:load', (evData) => {
-            return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
+            return vm.server.mongodb.Card.findOne({requestId: evData.requestId}, {}, { sort: { position: 1 } }, function (err, card) {
                 return card
             }).then((card) => {
                 if(!card) return vm.socket.instance.emit('request-chat:load', new EventResponse(new Error('Erro ao recuperar o Card!')))
@@ -53,10 +53,12 @@ module.exports = class RequestBoard {
                             attributes: ['id', 'name','email','type']
                         }]        
                     }).then((requestChatItems) => {
+                        /*
                         vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('request-board:chat', new EventResponse({
                             cardId: evData.cardId,
                             chatUnRead: 0
                         }))
+                        */
                         return vm.socket.instance.emit('request-chat:load', new EventResponse(requestChatItems))
                 })
             })      
@@ -67,7 +69,7 @@ module.exports = class RequestBoard {
          * @param {object} evData = { draftId:Number }
          */
         vm.socket.instance.on('request-chat:leave', (evData) => {
-            return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
+            return vm.server.mongodb.Card.findOne({requestId: evData.requestId}, {}, { sort: { position: 1 } }, function (err, card) {
                 return card
             }).then((card) => {
                 if(!card) return vm.socket.instance.emit('request-chat:leave', new EventResponse(new Error('Erro ao recuperar o Card!')))
@@ -79,7 +81,7 @@ module.exports = class RequestBoard {
          * On send message
          */
         vm.socket.instance.on('request-chat:itemSend', (evData) => {
-            return vm.server.mongodb.Card.findOne({ _id: evData.cardId }, {}, { sort: { position: 1 } }, function (err, card) {
+            return vm.server.mongodb.Card.findOne({requestId: evData.requestId}, {}, { sort: { position: 1 } }, function (err, card) {
                 return card
             }).then((card) => {
                 if(!card) return vm.socket.instance.emit('request-chat:itemSend', new EventResponse(new Error('Erro ao recuperar o Card!')))
@@ -89,31 +91,35 @@ module.exports = class RequestBoard {
                             {requestId: parseInt(card.requestId), 
                             userId: vm.socket.user.id})
                     }).then((requestChat) => {
-                    vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat').emit('request-chat:itemSend', new EventResponse(requestChat))
-                    return vm.server.broker.call('data/request.getOne', {
-                        where: {
-                            id: parseInt(card.requestId),
-                            companyId: parseInt(card.companyId)
-                        }
-                    }).then((request) => {
-                        vm.server.broker.call("push-notification.push", {
-                            data: {
-                                userId: '' + request.userId,
-                                title: (evData.type == 'message' ) ? 'Nova mensagem no pedido #' + request.id + '.' : 'Um alerta foi enviado no pedido #' + request.id + '.',
-                                message: (evData.type == 'message' ) ? vm.socket.user.name + ': ' + _.truncate(requestChat.data, {
-                                    'length': 50,
-                                    'separator': ' ',
-                                    'omission': '...'
-                                  }) : 'Abra a notificação para ver mais detalhes',
-                                payload: {
-                                    type: 'request.chat',
-                                    id: '' + request.requestId
+                    requestChat = JSON.parse(JSON.stringify(requestChat))
+                    
+                    vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat').emit('request-chat:itemSend', new EventResponse( _.assign(requestChat, {tempId: evData.tempId})))
+                    if(evData.cardId){
+                        return vm.server.broker.call('data/request.getOne', {
+                            where: {
+                                id: parseInt(card.requestId),
+                                companyId: parseInt(card.companyId)
+                            }
+                        }).then((request) => {
+                            vm.server.broker.call("push-notification.push", {
+                                data: {
+                                    userId: '' + request.userId,
+                                    title: (evData.type == 'message' ) ? 'Nova mensagem no pedido #' + request.id + '.' : 'Um alerta foi enviado no pedido #' + request.id + '.',
+                                    message: (evData.type == 'message' ) ? vm.socket.user.name + ': ' + _.truncate(requestChat.data, {
+                                        'length': 50,
+                                        'separator': ' ',
+                                        'omission': '...'
+                                    }) : 'Abra a notificação para ver mais detalhes',
+                                    payload: {
+                                        type: 'request.chat',
+                                        id: '' + request.requestId
+                                    },
+                                    sound: (evData.type == 'message' ) ? 'message1' : 'deny2'
                                 },
-                                sound: (evData.type == 'message' ) ? 'message1' : 'deny2'
-                            },
-                            notRejectNotLogged: true
+                                notRejectNotLogged: true
+                            })
                         })
-                    })
+                    }
                 })
             })
         })
