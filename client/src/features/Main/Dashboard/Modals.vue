@@ -74,7 +74,7 @@
                 if(_.has(event.params, 'geofence')) this.deviceModal.geofence = event.params.geofence;
             },
             beforeOpenRequestChat(event){
-                if(_.has(event.params, 'requestChat')) this.requestChatModal = event.params.requestChat;
+                if(_.has(event.params, 'requestChat')) this.requestChatModal.requestChat = event.params.requestChat;
             },
         }
     }

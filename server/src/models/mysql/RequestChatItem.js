@@ -24,7 +24,7 @@ module.exports = {
                 },
                 data: {
                     type: Sequelize.STRING,
-                    set(val) {
+                    set(val){
                         this.setDataValue('data', (val == '' | val == null) ? null : val.trim());
                     }
                 },

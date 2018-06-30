@@ -170,7 +170,7 @@
                 'RESET_REQUESTS','ADD_REQUEST','SET_SECTION_REQUESTS','MOVE_CARD'
             ]),
             ...mapActions('request-board', [
-                'moveCard','updateCard','removeCard'
+                'moveCard','updateCard','removeCard','updateCardUnreadChatItemCount'
             ]),
 
             /* Sections */
@@ -238,7 +238,6 @@
                 const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
                 viewport.style.display = 'initial';
             },
-
             load(filterData = { dateCreated: moment().startOf('day').toISOString() }){
                 const emitData = {
                     filter: btoa(JSON.stringify(filterData))
@@ -258,7 +257,17 @@
             }
         },
         mounted(){
-            this.load()
+            const vm = this
+            vm.load()
+            vm.$options.sockets['request-board:chat'] = (ev) => {
+                if (ev.success) {
+                    vm.updateCardUnreadChatItemCount({
+                        cardId: ev.evData.cardId,
+                        unreadChatItemCount: ev.evData.unreadChatItemCount
+                    })
+                }
+                console.log("Received request-board:chat", ev)
+            }
         }
     }
 </script>

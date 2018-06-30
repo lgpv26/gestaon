@@ -197,20 +197,32 @@ module.exports = class RequestBoard {
                                             
                                         }
 
+                                        let soundToSend = 'message1'
+                                        if(evData.type === 'message'){
+                                        }
+                                        else if(evData.type === 'alert'){
+                                            soundToSend = 'horn1'
+                                        }
+                                        else {
+                                            soundToSend = 'deny2'
+                                        }
+
+
                                         vm.server.broker.call("push-notification.push", {
                                             data: {
                                                 userId: '' + request.userId,
-                                                title: (evData.type == 'message' ) ? 'Nova mensagem no pedido #' + request.id + '.' : 'Um alerta foi enviado no pedido #' + request.id + '.',
-                                                message: (evData.type == 'message' ) ? vm.socket.user.name + ': ' + _.truncate(requestChat.data, {
+                                                title: (evData.type === 'message' ) ? 'Nova mensagem no pedido #' + request.id + '.' : 'Um alerta foi enviado no pedido #' + request.id + '.',
+                                                message: (evData.type === 'message' ) ? vm.socket.user.name + ': ' + _.truncate(requestChat.data, {
                                                     'length': 50,
                                                     'separator': ' ',
                                                     'omission': '...'
-                                                }) : 'Abra a notificação para ver mais detalhes',
+                                                }) : 'Abra a notificação para ver o chat',
                                                 payload: {
                                                     type: 'request.chat',
-                                                    id: '' + request.requestId
+                                                    itemType: evData.type,
+                                                    id: '' + request.id
                                                 },
-                                                sound: (evData.type == 'message' ) ? 'message1' : 'deny2'
+                                                sound: soundToSend
                                             },
                                             notRejectNotLogged: true
                                         }) 

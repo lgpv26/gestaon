@@ -1,16 +1,16 @@
 <template>
     <div class="request-chat">
-        <h3 style="margin-bottom: 20px;">Chat pedido X</h3>
+        <h3 style="margin-bottom: 20px;">Chat do pedido {{ requestChat.requestId }}</h3>
         <div ref="scrollbar" style="width: 100%">
             <div class="scrollable-content">
                 <div class="chat-container" v-if="items.length">
-                    <div v-for="item in items" class="message" :class="{'received-message': item.author !== 1, 'sent-message': item.author === 1}">
-                        <h3 v-if="item.author !== 1" class="user-name">{{ item.user.name }}</h3>
-                        <span v-if="item.type === 'message'">{{ item.data }}</span>
+                    <div v-for="item in items" class="message" :class="{'received-message': item.user.id !== user.id, 'sent-message': item.user.id === user.id}">
+                        <h3 v-if="item.user.id !== user.id" class="user-name">{{ item.user.name }}</h3>
+                        <span v-if="item.type === 'message'"><pre>{{ item.data }}</pre></span>
                         <span v-if="item.type === 'alert'">
                             <i class="mi mi-notifications-active"></i>
                         </span>
-                        <span class="time">10:25</span>
+                        <span class="time">{{ moment(item.dateCreated).format('HH:mm') }}</span>
                     </div>
                 </div>
                 <div class="chat-container" v-else>
@@ -27,9 +27,11 @@
 </template>
 
 <script>
-    import { mapGetters, mapState, mapActions } from 'vuex';
-    import Scrollbar from 'smooth-scrollbar';
-    import _ from 'lodash';
+    import { mapGetters, mapState, mapActions } from 'vuex'
+    import Scrollbar from 'smooth-scrollbar'
+    import _ from 'lodash'
+    import moment from 'moment'
+    import shortid from 'shortid'
     export default {
         props: {
             value: {
@@ -44,32 +46,7 @@
         data(){
             return {
                 inputText: '',
-                items: [
-                    {
-                        author: 2,
-                        user: {
-                            name: "Mailon Ruan"
-                        },
-                        data: "Oi, como vai você?",
-                        type: 'message'
-                    },
-                    {
-                        author: 1,
-                        user: {
-                            name: "Thiago"
-                        },
-                        data: "Oi! Vou bem, e vc??",
-                        type: 'message'
-                    },
-                    {
-                        author: 1,
-                        user: {
-                            name: "Thiago"
-                        },
-                        data: "sound.mp3",
-                        type: 'alert'
-                    }
-                ],
+                items: [],
                 scrollbar: null
             }
         },
@@ -89,39 +66,98 @@
             sendMessage(){
                 this.inputText = this.inputText.trim()
                 if(this.inputText && this.inputText.length){
+                    const tempId = shortid.generate()
                     this.items.push({
-                        author: 1,
+                        tempId,
                         user: {
-                            name: "Thiago"
+                            id: this.user.id,
+                            name: this.user.name
                         },
                         data: this.inputText,
-                        type: 'message'
+                        type: 'message',
+                        dateCreated: moment()
                     })
+                    const emitData = {
+                        tempId,
+                        requestId: this.requestChat.requestId,
+                        cardId: this.requestChat.cardId,
+                        type: 'message',
+                        data: this.inputText
+                    }
+                    console.log("Emitting request-chat:itemSend", emitData)
+                    this.$socket.emit('request-chat:itemSend', emitData)
+
                     this.inputText = ''
                     this.updateScrollPosition()
                 }
             },
             sendAlert(){
+                const tempId = shortid.generate()
                 this.items.push({
-                    author: 1,
+                    tempId,
                     user: {
-                        name: "Thiago"
+                        id: this.user.id,
+                        name: this.user.name
                     },
-                    data: "sound.mp3",
-                    type: 'alert'
+                    data: "sound",
+                    type: 'alert',
+                    dateCreated: moment()
                 })
+                const emitData = {
+                    tempId,
+                    requestId: this.requestChat.requestId,
+                    cardId: this.requestChat.cardId,
+                    type: 'alert',
+                    data: 'sound'
+                }
+                console.log("Emitting request-chat:itemSend", emitData)
+                this.$socket.emit('request-chat:itemSend', emitData)
+
+                this.inputText = ''
                 this.updateScrollPosition()
+            },
+            load(){
+                const emitData = {
+                    requestId: this.requestChat.requestId,
+                    cardId: this.requestChat.cardId
+                }
+                console.log("Emitting request-chat:load", emitData)
+                this.$socket.emit('request-chat:load', emitData)
             }
         },
         mounted(){
+            const vm = this
             // initialize scrollbars
-            this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
+            vm.scrollbar = Scrollbar.init(vm.$refs.scrollbar, {
                 overscrollEffect: 'bounce',
                 alwaysShowTracks: true
             })
-            this.updateScrollPosition()
+            vm.load()
+            /*vm.updateScrollPosition()*/
+            vm.$options.sockets['request-chat:load'] = (ev) => {
+                console.log("Received request-chat:load", ev)
+                if (ev.success) {
+                    vm.items = _.map(_.reverse(ev.evData), (item) => {
+                        return item
+                    })
+                    vm.updateScrollPosition()
+                }
+            }
+            vm.$options.sockets['request-chat:itemSend'] = (ev) => {
+                console.log("Received request-chat:itemSend", ev)
+                if (ev.success && !_.find(vm.items, { tempId: ev.evData.tempId })) {
+                    vm.items.push(ev.evData)
+                    vm.updateScrollPosition()
+                }
+            }
         },
         beforeDestroy(){
+            const emitData = {
+                requestId: this.requestChat.requestId,
+                cardId: this.requestChat.cardId
+            }
+            console.log("Emitting request-chat:leave", emitData)
+            this.$socket.emit('request-chat:leave', emitData)
             this.scrollbar.destroy()
         }
     }
@@ -153,6 +189,15 @@
         padding: 10px 80px 10px 15px;
         margin-bottom: 8px;
         position: relative;
+        span pre {
+            margin-top: 0;
+            margin-bottom: 0;
+            white-space: -moz-pre-wrap; /* Mozilla, supported since 1999 */
+            white-space: -pre-wrap; /* Opera */
+            white-space: -o-pre-wrap; /* Opera */
+            white-space: pre-wrap; /* CSS3 - Text module (Candidate Recommendation) http://www.w3.org/TR/css3-text/#white-space */
+            word-wrap: break-word;
+        }
         .time {
             position: absolute  ;
             right: 7px;

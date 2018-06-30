@@ -72,8 +72,13 @@
                     <div class="timer__line"></div>
                 </div>
             </div>
+            <div class="card-unread-item-chat-count" v-if="card.request.unreadChatItemCount">{{ card.request.unreadChatItemCount }}</div>
             <div class="card__footer">
-                <a class="chat-button" href="javascript:void(0)" @click="$modal.show('request-chat')"><i class="mi mi-chat"></i></a>
+                <div style="display: flex; position: relative;">
+                    <a class="chat-button" href="javascript:void(0)" @click="$modal.show('request-chat', { requestChat: { requestId: card.request.id , cardId: card.id  } })">
+                        <i class="mi mi-chat"></i>
+                    </a>
+                </div>
                 <app-popover :placement="'top-start'" :verticalOffset="5" :contentStyle="popoverContentStyle">
                     <template slot="triggerer">
                         <span class="footer__location" ref="footerLocation">
@@ -459,6 +464,24 @@
 
     .request-board-card h3.card__task--add:hover {
         color: var(--font-color);
+    }
+
+    .card-unread-item-chat-count {
+        position: absolute;
+        background-color: var(--font-color--danger);
+        display: flex;
+        opacity: 0.9;
+        width: 14px;
+        color: rgb(255, 255, 255);
+        height: 14px;
+        left: 20px;
+        bottom: 18px;
+        z-index: 1;
+        justify-content: center;
+        align-items: center;
+        border-radius: 100%;
+        font-size: 8px;
+        pointer-events: none
     }
 
     /* middle */

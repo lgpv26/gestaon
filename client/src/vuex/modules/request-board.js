@@ -218,6 +218,17 @@ const mutations = {
             state.requests.splice(requestIndex, 1)
         }
     },
+    UPDATE_CARD_UNREAD_CHAT_ITEM_COUNT(state, { cardId, unreadChatItemCount }){
+        state.sections.forEach((section) => {
+            section.cards.forEach((stateCard) => {
+                if(stateCard.id === cardId){
+                    _.assign(stateCard.request, {
+                        unreadChatItemCount
+                    })
+                }
+            })
+        })
+    },
     updateField
 };
 
@@ -234,8 +245,11 @@ const actions = {
     },
     removeCard(context, cardId){
         context.commit('REMOVE_CARD', cardId)
+    },
+    updateCardUnreadChatItemCount(context, { cardId, unreadChatItemCount }){
+        context.commit('UPDATE_CARD_UNREAD_CHAT_ITEM_COUNT', { cardId, unreadChatItemCount })
     }
-};
+}
 
 export default {
     namespaced: true,
