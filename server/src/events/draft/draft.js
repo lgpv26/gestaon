@@ -37,10 +37,12 @@ module.exports = class Draft {
                 vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId)
                 resolve()
             }).then(() => {
-            
+
+                /*
                 const room = _.get(vm.server.io.sockets.adapter.rooms, '[company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId + ']', {length: 0})
                 if(room.length !== 1) return vm.socket.instance.emit('draft.load', new EventResponse(new Error ('Outro atendente já está com este rascunho aberto!')))
-                
+                */
+
                 // if from database, call the service
                 vm.server.broker.call('draft.get', {
                     where: {
