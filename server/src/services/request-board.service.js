@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import moment from 'moment'
 import {Op} from 'sequelize'
+import sequelize from 'sequelize'
 import EventResponse from '~server/models/EventResponse'
 import config from '~config'
 
@@ -143,15 +144,38 @@ module.exports = (server) => { return {
                         }
                     ]
                 }).then((requestList) => {
-                    return _.map(sections, (section) => {
-                        _.map(section.cards, (card) => {
-                            card.request = _.find(requestList, { id: card.requestId })
-                            return card
+                    requestList = JSON.parse(JSON.stringify(requestList))
+                    let promises = []
+                    requestList.forEach((request, index) => {
+                            promises.push(server.mysql.RequestChatItem.findAll({
+                                    where: {
+                                        requestId: request.id
+                                    },
+                                    attributes: ['id'],
+                                    include: [{
+                                        model: server.mysql.RequestChatItemRead,
+                                        as: 'usersRead'
+                                    }]
+                                }).then((chatItems) => {
+                                    const count = _.filter(chatItems, (chat) => {
+                                        if(!chat.usersRead.length && chat.userId !== ctx.params.userId) return chat
+                                    })
+                                    return _.set(requestList[index], 'unreadChatItemCount', count.length)
+                            })
+                        )
+                    })
+
+                    return Promise.all(promises).then(() => {
+                        return _.map(sections, (section) => {
+                            _.map(section.cards, (card) => {
+                                card.request = _.find(requestList, { id: card.requestId })
+                                return card
+                            })
+                            section.cards.sort(function(a, b){
+                                return a.position - b.position
+                            })
+                            return section
                         })
-                        section.cards.sort(function(a, b){
-                            return a.position - b.position
-                        })
-                        return section
                     })
                 })
             })

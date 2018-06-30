@@ -90,8 +90,31 @@ module.exports = (server, restify) => {
                 }
             ]
         }).then((requests) => {
-            return res.send(200, {
-                data: requests
+            requests = JSON.parse(JSON.stringify(requests))
+            let promises = []
+            requests.forEach((request, index) => {
+                    promises.push(server.mysql.RequestChatItem.findAll({
+                            where: {
+                                requestId: request.id
+                            },
+                            attributes: ['id'],
+                            include: [{
+                                model: server.mysql.RequestChatItemRead,
+                                as: 'usersRead'
+                            }]
+                        }).then((chatItems) => {
+                            const count = _.filter(chatItems, (chat) => {
+                                if(!chat.usersRead.length && chat.userId !== req.auth.id) return chat
+                            })
+                            return _.set(requests[index], 'unreadChatItemCount', count.length)
+                    })
+                )
+            })
+
+            return Promise.all(promises).then(() => {
+                return res.send(200, {
+                    data: requests
+                })
             })
         }).catch((err) => {
             console.log(err)
@@ -168,9 +191,26 @@ module.exports = (server, restify) => {
             /*request.requestPayments.forEach((requestPayment, index) => {
                 if(requestPayment.requestPaymentBills) _.set(request.requestPayments[index], 'deadlineDatetime', requestPayment.requestPaymentBills.deadlineDatetime)
             })*/
-            return res.send(200, {
-                data: request
-            })
+            request = JSON.parse(JSON.stringify(request))
+
+            return server.mysql.RequestChatItem.findAll({
+                        where: {
+                            requestId: request.id
+                        },
+                        attributes: ['id'],
+                        include: [{
+                            model: server.mysql.RequestChatItemRead,
+                            as: 'usersRead'
+                        }]
+                    }).then((chatItems) => {
+                        const count = _.filter(chatItems, (chat) => {
+                            if(!chat.usersRead.length && chat.userId !== req.auth.id) return chat
+                        })
+                        _.set(request, 'unreadChatItemCount', count.length)
+                        return res.send(200, {
+                            data: request
+                        })
+                })
         }).catch((err) => {
             console.log(err)
         })

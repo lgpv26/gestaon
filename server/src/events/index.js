@@ -28,8 +28,10 @@ module.exports = class Events {
      * set main socket.io events
      */
     _setListeners(){
+        const connectedSocketList = {}
         // for each connected user
         this.server.io.on('connection', (socket) => {
+            
             // get token and get connected user
             let token = socket.handshake.query.token
             socket = {
@@ -72,6 +74,8 @@ module.exports = class Events {
 
                     socket.instance.join('company/' + socket.activeCompany.id)
 
+                    connectedSocketList[socket.instance.id] = socket
+
                     // for the current user, join him to his tracking devices
                     socket.user.companies.forEach((company) => {
                         this.server.mongodb.Device.find({
@@ -88,12 +92,13 @@ module.exports = class Events {
                     this.events.forEach((event) => {
                         event.files.forEach((file) => {
                             const tEventFile = require('./' + event.directoryName + '/' + file)
-                            new tEventFile(this.server, socket)
+                            new tEventFile(this.server, socket, connectedSocketList)
                         })
                     })
                 }
             })
             socket.instance.on('disconnect', () => {
+                delete connectedSocketList[socket.instance.id]
             })
             socket.instance.on('join-company-room', (companyId) => {
                 // console.log(user.name + " joins device/" + deviceCode + ".")

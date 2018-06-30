@@ -66,8 +66,10 @@ module.exports = class RequestBoard {
                 data: {
                     filter: evData.filter || {},
                     companyId: vm.socket.activeCompany.id,
-                }
+                },
+                userId: vm.socket.user.id
             }).then((sections) => {
+
                 vm.socket.instance.emit('requestBoardLoad', new EventResponse({sections}))
             }).catch((err) => {
                 console.log(err)
