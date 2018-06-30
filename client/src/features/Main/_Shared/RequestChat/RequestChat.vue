@@ -215,6 +215,7 @@
         background: rgba(0,0,0,.3);
         h3.user-name {
             margin-bottom: 3px;
+            font-size: 10px;
         }
     }
     div.chat-container .sent-message {
