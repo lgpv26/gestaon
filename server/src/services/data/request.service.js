@@ -717,15 +717,14 @@ module.exports = (server) => { return {
         sendChatItem(ctx){
             return server.mysql.RequestChatItem.create(ctx.params.data)
             .then((createChat) => {
+                const createdRequestChatItem = JSON.parse(JSON.stringify(createChat))
                 return server.mysql.RequestChatItem.findById(createChat.id, {
                     include: [{
                         model: server.mysql.User,
                         as: "user",
                         attributes: ['id', 'name','email','type']
                     }]
-                }).then((response) => {
-                    return response
-                })               
+                })
            }).catch((err) => {
                throw new Error("Erro send chat.")
            })

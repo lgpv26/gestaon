@@ -51,7 +51,7 @@ module.exports = class RequestBoard {
                             model: vm.server.mysql.User,
                             as: "user",
                             attributes: ['id', 'name','email','type']
-                        }]        
+                        }]
                     }).then((requestChatItems) => {
                         /*
                         vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('request-board:chat', new EventResponse({
@@ -85,14 +85,14 @@ module.exports = class RequestBoard {
                 return card
             }).then((card) => {
                 if(!card) return vm.socket.instance.emit('request-chat:itemSend', new EventResponse(new Error('Erro ao recuperar o Card!')))
-                
+
                     return vm.server.broker.call('data/request.sendChatItem', {
                         data: _.assign(evData,
-                            {requestId: parseInt(card.requestId), 
+                            {requestId: parseInt(card.requestId),
                             userId: vm.socket.user.id})
                     }).then((requestChat) => {
                     requestChat = JSON.parse(JSON.stringify(requestChat))
-                    
+
                     vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat').emit('request-chat:itemSend', new EventResponse( _.assign(requestChat, {tempId: evData.tempId})))
                     if(evData.cardId){
                         return vm.server.broker.call('data/request.getOne', {
@@ -104,8 +104,8 @@ module.exports = class RequestBoard {
                             vm.server.broker.call("push-notification.push", {
                                 data: {
                                     userId: '' + request.userId,
-                                    title: (evData.type == 'message' ) ? 'Nova mensagem no pedido #' + request.id + '.' : 'Um alerta foi enviado no pedido #' + request.id + '.',
-                                    message: (evData.type == 'message' ) ? vm.socket.user.name + ': ' + _.truncate(requestChat.data, {
+                                    title: (evData.type === 'message' ) ? 'Nova mensagem no pedido #' + request.id + '.' : 'Um alerta foi enviado no pedido #' + request.id + '.',
+                                    message: (evData.type === 'message' ) ? vm.socket.user.name + ': ' + _.truncate(requestChat.data, {
                                         'length': 50,
                                         'separator': ' ',
                                         'omission': '...'
@@ -114,7 +114,7 @@ module.exports = class RequestBoard {
                                         type: 'request.chat',
                                         id: '' + request.requestId
                                     },
-                                    sound: (evData.type == 'message' ) ? 'message1' : 'deny2'
+                                    sound: (evData.type === 'message' ) ? 'message1' : 'deny2'
                                 },
                                 notRejectNotLogged: true
                             })

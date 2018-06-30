@@ -24,7 +24,8 @@ module.exports = function(server){
 
     server.get('/version', function(req, res, next){
         return res.send(200, {
-            version: server.version
+            version: server.version,
+            android: '0.0.10'
         });
     });
 
