@@ -14,6 +14,7 @@ export class RequestModel {
         deadlineDatetime = null,
         requestPayments = [],
         obs = '',
+        status = 'pending'
     } = {}){
         this.id = id
         this.activeStep = activeStep
@@ -26,6 +27,7 @@ export class RequestModel {
         this.deadlineDatetime = deadlineDatetime
         this.requestPayments = requestPayments
         this.obs = obs
+        this.status = status
     }
 }
 

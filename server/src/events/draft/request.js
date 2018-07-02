@@ -119,7 +119,10 @@ module.exports = class Request extends Draft {
                     as: 'clientGroup'
                 }]
             }).then((client) => {
-                vm.server.io.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.client.select', new EventResponse(client))
+                vm.server.io.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.client.select', new EventResponse({
+                    client,
+                    draftId: evData.draftId
+                }))
             })
         })
 
@@ -134,7 +137,10 @@ module.exports = class Request extends Draft {
                     id: evData.addressId
                 }
             }).then((address) => {
-                vm.server.io.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.address.select', new EventResponse(address))
+                vm.server.io.to('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId).emit('draft/request.address.select', new EventResponse({
+                    address,
+                    draftId: evData.draftId
+                }))
             })
         })
 

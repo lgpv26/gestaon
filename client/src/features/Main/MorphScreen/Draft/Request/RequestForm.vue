@@ -97,7 +97,14 @@
             <span class="push-both-sides"></span>
             <a style="margin-right: 20px;" @click="$emit('close')">Voltar</a>
             <span style="margin-right: 20px;">(Preencha os campos obrigatórios <em>*</em> para salvar)</span>
-
+            <app-request-status-select style="margin-right: 20px;" v-model="status" @change="sync($event,'status')"
+                :popoverProps="{ placement: 'top-start', verticalOffset: 10, useScroll: true, triggererStyle: { position: 'relative' }}">
+                <input type="text" style="cursor: pointer;" readonly :value="selectedRequestStatusName" placeholder="STATUS" />
+                <icon-dropdown style="position: absolute; top: 6px; right: 5px;"></icon-dropdown>
+                <template slot="item" slot-scope="itemProps">
+                    <span>{{itemProps.text }}</span>
+                </template>
+            </app-request-status-select>
             <a class="btn btn--primary persistence allowed" v-if="activeStep === 'client'" @click="persistClient({client,companyId: company.id})">Salvar Cliente</a>
             <a class="btn btn--primary persistence allowed" v-else-if="activeStep !== 'client'" @click="persistRequest({request: form, companyId: company.id})">Salvar Pedido</a>
         </div>
@@ -112,6 +119,7 @@
     import _ from 'lodash'
     import DraftMixin from '../DraftMixin'
 
+    import RequestStatusSelectComponent from '../_Shared/RequestStatusSelect.vue'
     import AccountSelectComponent from '../_Shared/AccountSelect.vue'
     import PaymentMethodsForm from './PaymentMethodsForm.vue'
 
@@ -130,6 +138,7 @@
 
     export default {
         components: {
+            'app-request-status-select': RequestStatusSelectComponent,
             'app-account-select': AccountSelectComponent,
             'app-client-summary': ClientSummary,
             'app-payment-methods-form': PaymentMethodsForm,
@@ -152,6 +161,7 @@
         },
         computed: {
             ...mapState('auth', ['user','company']),
+            ...mapState('data/request-status', ['requestStatusList']),
             ...mapState('data/accounts', ['accounts']),
             ...mapState('data/products', ['products']),
             ...mapState('data/payment-methods', ['paymentMethods']),
@@ -166,7 +176,8 @@
                 'form.client',
                 'form.order',
                 'form.order.orderProducts',
-                'form.requestPayments'
+                'form.requestPayments',
+                'form.status'
             ]),
             ...mapMultiRowFields({
                 requestPaymentRows: 'form.requestPayments'
@@ -175,6 +186,16 @@
                 const selectedAccount = _.find(this.accounts, {id: this.accountId})
                 if(selectedAccount){
                     return selectedAccount.name
+                }
+                return ''
+            },
+            selectedRequestStatusName(){
+                const selectedStatus = _.find(this.requestStatusList, {
+                    value: this.status
+                })
+                console.log("selectedRequestStatusName", selectedStatus)
+                if(selectedStatus){
+                    return selectedStatus.name
                 }
                 return ''
             },

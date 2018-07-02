@@ -29,7 +29,7 @@
             <td><money type="text" v-model="requestPaymentRow.amount" @input.native="inputRequestPaymentRow($event,'amount',index)" style="text-align: right;"></money></td>
             <td class="actions">
                 <app-switch v-if="requestPaymentRow.paymentMethod.id !== config.system.IDMappings.paymentMethods.bill" v-model="requestPaymentRow.paid"
-                    @change="toggleRequestPaymentRowPaid($event, index)" :title="'Marcar como pago '"
+                    @change="toggleRequestPaymentRowPaid($event, index)" :title="'Marcar como recebido'"
                     v-tippy="{ placement: 'right', theme: 'light', zIndex: 99999999, inertia: true, arrow: true, animation: 'perspective' }"></app-switch>
                 <app-switch :value="false" :disabled="true" v-else></app-switch>
                 <a href="javascript:void(0)" @click="remove(requestPaymentRow.id, index)" style="margin-left: 10px;">

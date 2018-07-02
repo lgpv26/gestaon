@@ -141,7 +141,7 @@
                         name: 'status'
                     },
                     {
-                        text: 'Pago',
+                        text: 'Recebido',
                         name: 'paid',
                         html: true
                     },
@@ -210,11 +210,11 @@
             actionsSelectItems(){
                 return [
                     {
-                        text: 'Marcar como pago',
+                        text: 'Marcar como recebido',
                         value: 'paid'
                     },
                     {
-                        text: 'Marcar como acertado',
+                        text: 'Marcar como conferido',
                         value: 'settled'
                     }
                 ]

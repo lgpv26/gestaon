@@ -279,8 +279,8 @@
              */
             vm.$options.sockets['draft/request.client.select'] = (ev) => {
                 console.log("Received draft/request.client.select", ev)
-                if (ev.success) {
-                    const draftData = ev.evData
+                if (ev.success && ev.evData.draftId === vm.activeMorphScreen.draft.draftId) {
+                    const draftData = ev.evData.client
                     if(_.get(draftData, 'clientAddresses', []).length){
                         this.clientAddressId = _.last(draftData.clientAddresses).id
                     }

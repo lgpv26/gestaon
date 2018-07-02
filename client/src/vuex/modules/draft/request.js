@@ -61,7 +61,8 @@ const state = {
         clientAddressId: null,
         clientPhoneId: null,
         accountId: null,
-        responsibleUserId: null
+        responsibleUserId: null,
+        status: null
     }
 }
 
