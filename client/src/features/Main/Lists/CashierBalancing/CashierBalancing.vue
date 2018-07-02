@@ -121,6 +121,10 @@
                         name: 'id',
                     },
                     {
+                        text: 'Endereço',
+                        name: 'clientAddress'
+                    },
+                    {
                         text: 'Nome',
                         name: 'name'
                     },
@@ -129,11 +133,11 @@
                         name: 'date',
                     },
                     {
-                        text: 'Grupo Cliente',
+                        text: 'Grupo',
                         name: 'clientGroup',
                     },
                     {
-                        text: 'Meio de Pagamento',
+                        text: 'Pagamento',
                         name: 'paymentMethod',
                     },
                     {
@@ -145,7 +149,7 @@
                         name: 'status'
                     },
                     {
-                        text: 'Recebido',
+                        text: 'Rec.',
                         name: 'paid',
                         html: true
                     },
@@ -228,7 +232,6 @@
             ...mapActions('draft/request',['runRequestRecoverance']),
             ...mapActions('toast',['showToast']),
             onGridScroll(ev){
-                console.log("INICIOOU 1")
                 this.$refs.filter.apply({
                     offset: Math.ceil(ev.from),
                     limit: Math.ceil(ev.to - ev.from)
@@ -268,15 +271,37 @@
                 CashierBalancingAPI.getList(requestParams).then(({data}) => {
                     console.log("getList",data)
                     this.items = _.map(data.list.rows, (row) => {
+                        const hasClientAddress = _.has(row,'request.requestClientAddresses[0].clientAddress.address')
+                        let clientAddress
+                        if(hasClientAddress){
+                            clientAddress = _.get(row,'request.requestClientAddresses[0].clientAddress')
+                            clientAddress = clientAddress.address.name + ', ' + clientAddress.number
+                        }
+                        else {
+                            clientAddress = '---'
+                        }
                         return {
                             id: row.id,
                             amount: row.amount,
                             formattedAmount: utils.formatMoney(row.amount, 2,'R$ ','.',','),
-                            date: moment(row.dateCreated).format("DD/MM/YYYY HH:mm"),
+                            date: moment(row.dateCreated).format("DD/MM HH:mm"),
                             paid: row.paid,
-                            name: _.get(row,'request.client.name', '---'),
+                            name: _.truncate(_.get(row,'request.client.name', '---'), {
+                                'length': 18,
+                                'separator': '',
+                                'omission': '...'
+                            }),
                             clientGroup: _.get(row,'request.client.clientGroup.name', '---'),
-                            paymentMethod: row.paymentMethod.name,
+                            paymentMethod: _.truncate(row.paymentMethod.name, {
+                                'length': 18,
+                                'separator': '',
+                                'omission': '...'
+                            }),
+                            clientAddress: _.truncate(clientAddress, {
+                                'length': 32,
+                                'separator': '',
+                                'omission': '...'
+                            }),
                             paymentMethodId: row.paymentMethod.id,
                             settled: row.settled,
                             requestId: row.requestId,

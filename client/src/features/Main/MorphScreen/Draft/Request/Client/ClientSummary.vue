@@ -5,7 +5,7 @@
                 <span style="margin-right: 0">{{ client.name }}</span>
                 <div class="mini-circle"></div>
                 <div>
-                    <span style="margin-right: 8px;">{{ selectedClientAddress.address.name + ', ' + selectedClientAddress.number }}</span>
+                    <span style="margin-right: 8px;">{{ selectedClientAddress.address.name + ', ' + selectedClientAddress.number + ((selectedClientAddress.complement) ? ' | ' + selectedClientAddress.complement : '') }}</span>
                 </div>
                 <!--<icon-edit style="width:10px;"></icon-edit>-->
             </div>

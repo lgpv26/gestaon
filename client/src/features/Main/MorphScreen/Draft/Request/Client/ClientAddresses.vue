@@ -14,6 +14,7 @@
                         <span style="cursor: pointer;" @click="select(clientAddress.id)">
                             {{ clientAddress.address.name }},
                             {{ (_.get(clientAddress,'number',false) ? clientAddress.number.toString().trim() : "SN" ) }}
+                            {{ (_.get(clientAddress,'complement',false) ? ' | ' + clientAddress.complement : "" ) }}
                         </span>
                         <span class="push-both-sides"></span>
                         <div class="item__check item__icon" @click="select(clientAddress.id)" style="cursor: pointer; margin-right: 10px;">

@@ -153,6 +153,18 @@ module.exports = (server) => {
                                     }
                                 ],
                                 where: clientWhere
+                            },
+                            {
+                                model: server.mysql.RequestClientAddress,
+                                as: "requestClientAddresses",
+                                include: [{
+                                    model: server.mysql.ClientAddress,
+                                    as: "clientAddress",
+                                    include:[{
+                                        model: server.mysql.Address,
+                                        as: "address"
+                                    }]
+                                }]
                             }
                         ],
                         where: {
