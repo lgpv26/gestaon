@@ -22,8 +22,9 @@
                     </template>
                 </app-popover>
             </div>
-            <!--<h3 class="card__task" v-if="hasTaskInstruction">{{ card.request.task.text }}</h3>
-            <h3 class="card__task--add" v-else @click="onAddTaskClick()">+ Incluir Tarefa ou Anotação</h3>-->
+            <h3 class="card__client-address" v-if="requestClientAddress">
+                {{ requestClientAddress }}
+            </h3>
             <div class="card__middle">
                 <div class="card__timer">
                     <div class="timer__objects">
@@ -229,8 +230,18 @@
         },
         computed: {
             ...mapState('data/users', ['users']),
-            hasTaskInstruction(){
-                return _.has(this.card, 'request.task.text')
+            requestClientAddress(){
+                if(this.card.request.requestClientAddresses.length){
+                    const firstClientAddress = _.first(this.card.request.requestClientAddresses).clientAddress
+                    const address = _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), {
+                        'length': 34,
+                        'separator': '',
+                        'omission': '...'
+                    }) + ' ' + firstClientAddress.number + ((firstClientAddress.complement) ? ' ' + firstClientAddress.complement : '')
+                    return address
+                }
+                return false
+
             },
             orderSubtotal(){
                 return _.sumBy(this.card.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
@@ -448,6 +459,13 @@
         max-width: 224px;
         text-align: left;
         overflow: hidden;
+    }
+
+    .request-board-card h3.card__client-address {
+        color: var(--font-color--7);
+        font-size: 11px;
+        font-weight: 600;
+        text-align: left;
     }
 
     .request-board-card h3.card__task {
