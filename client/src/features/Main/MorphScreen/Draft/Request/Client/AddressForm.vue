@@ -142,7 +142,7 @@
             vm.$options.sockets['draft/request.address.select'] = (ev) => {
                 console.log("Received draft/request.address.select", ev)
                 if (ev.success && ev.evData.draftId === vm.activeMorphScreen.draft.draftId) {
-                    vm.setClientAddressFormAddress(ev.evData)
+                    vm.setClientAddressFormAddress(ev.evData.address)
                     Vue.nextTick(() => {
                         vm.syncMultiple(_.map(vm.address, (v, k) => {
                             return {

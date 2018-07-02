@@ -330,7 +330,7 @@
                     error = "O valor a pagar deve coincidir com o valor total do pedido!"
                 }
 
-                
+
                 if(!error && vm.totalToPay <= 0){
                     error = "O valor total do pedido deve ser positivo!"
                 }
