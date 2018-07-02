@@ -334,6 +334,10 @@
                     error = "O valor total do pedido deve ser positivo!"
                 }
 
+                if(!error && vm.status === 'in-displacement'){
+                    error = "O status da entrega não pode ser salva como Em Deslocamento!"
+                }
+
                 if(error){
                     vm.showToast({
                         type: 'error',

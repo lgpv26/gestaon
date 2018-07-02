@@ -256,7 +256,7 @@ module.exports = (server) => {
          * @returns {Promise.<object>} request
          */
         dashboard(ctx) {
-            if(!this._request.client.id){
+            if(!this._request.client.id || (this._request.status === 'finished' || this._request.status === 'canceled')){
                 return true
             }
             else {

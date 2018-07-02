@@ -7,7 +7,9 @@
             <div class="morph-screen__item" v-for="screen in screens" ref="morphScreenItems" :key="screen.draft.draftId">
                 <div class="item__option" v-show="!screen.active" @click="selectDraft(screen)">
                     <h3 class="option__title">
-                        {{ getDraftDetails(screen.draft).text + " #" + screen.draft.draftId + " - " + getDraftDetails(screen.draft).formatedCreatedAt }}
+                        {{ getDraftDetails(screen.draft).formatedCreatedAt }}:
+                        <span style="color: #FFF; font-weight: 600; font-size: 16px;">{{ getDraftDetails(screen.draft).createdBy }}</span> criou rascunho
+                        <span style="color: #FFF; font-weight: 600; font-size: 16px;">#{{screen.draft.draftId}}</span>
                     </h3>
                 </div>
                 <transition name="fade">
@@ -55,7 +57,6 @@
         sockets: {
             draftCreated(socketData){
                 if(socketData.emittedBy !== this.user.id){
-                    console.log("acionou")
                     this.ADD_DRAFT(socketData.data)
                 }
             }
@@ -65,6 +66,9 @@
             ...mapState('morph-screen', ['screens','sourceEl','isShowing','sourceElBgColor','mimicBorderRadius']),
             ...mapState('auth', [
                 'user', 'token', 'company'
+            ]),
+            ...mapState('data/users', [
+                'users'
             ])
         },
         methods: {
@@ -73,12 +77,21 @@
             ...mapActions('loading', ['startLoading','setLoadingText']),
 
             getDraftDetails(draft){
+                let createdUserName
+                if(!_.isString(draft.createdBy)){
+                    createdUserName = _.find(this.users, {id: draft.createdBy}).name
+                }
+                else {
+                    createdUserName = draft.createdBy
+                }
+
                 switch(draft.type){
                     case "request":
                         return {
                             text: "Pedido",
                             entryComponent: 'request-form',
-                            formatedCreatedAt: moment(draft.createdAt).format('DD/MM HH:mm')
+                            createdBy: createdUserName,
+                            formatedCreatedAt: moment(draft.createdAt).format('HH:mm'),
                         }
                         break;
                     case "client":

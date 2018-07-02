@@ -248,18 +248,6 @@ module.exports = class RequestBoard {
                                         cardId: evData.cardId,
                                         requestTimelineItem
                                     }))
-                                    vm.server.broker.call("push-notification.push", {
-                                        data: {
-                                            userId: request.userId,
-                                            title: 'O Status do pedido #' + request.id + ' foi alterado.',
-                                            message: 'Abra a notificação para ver mais detalhes',
-                                            payload: {
-                                                type: 'request.changeStatus',
-                                                id: '' + request.id
-                                            }
-                                        },
-                                        notRejectNotLogged: true
-                                    })
                                     if(evData.status === 'finished' || evData.status === 'canceled'){
                                         return vm.server.broker.call('request-board.removeCard', {
                                             data: {
@@ -278,6 +266,20 @@ module.exports = class RequestBoard {
                                                 },
                                                 notRejectNotLogged: true
                                             })
+                                        })
+                                    }
+                                    else {
+                                        vm.server.broker.call("push-notification.push", {
+                                            data: {
+                                                userId: request.userId,
+                                                title: 'O Status do pedido #' + request.id + ' foi alterado.',
+                                                message: 'Abra a notificação para ver mais detalhes',
+                                                payload: {
+                                                    type: 'request.changeStatus',
+                                                    id: '' + request.id
+                                                }
+                                            },
+                                            notRejectNotLogged: true
                                         })
                                     }
                                 })                                
