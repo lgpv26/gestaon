@@ -39,6 +39,8 @@ module.exports = (server) => { return {
                     console.log('Error sending message:', error)
                 })
 
+                let sound = _.get(ctx.params.data,'sound','sound1') + '.mp3'
+
                 message = {
                     data: ctx.params.data.payload,
                     notification: {
@@ -52,7 +54,7 @@ module.exports = (server) => { return {
                             body: ctx.params.data.message,
                             icon : 'icon_notification',
                             color : '#059A79',
-                            sound : ctx.params.data.sound + '.mp3' || 'sound1.mp3'
+                            sound : sound
                         }
                     },
                     token: userAccessToken.fcmToken

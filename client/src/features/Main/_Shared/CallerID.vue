@@ -1,5 +1,5 @@
 <template>
-    <div id="caller-id" :class="{ open }">
+    <div id="caller-id" :class="{ open }" @mouseover="mouseOver($event)" @mouseleave="setTimeoutToClose()">
         <div class="opener" @click="toggleCallerID()">
             <icon-phone></icon-phone>
         </div>
@@ -10,7 +10,7 @@
             <div ref="scrollbar">
                 <div class="calls">
                     <div v-for="call in calls" class="call">
-                        <span class="number" v-if="!call.isAnonymous && call.isValid">{{ utils.formatPhone(call.number) }}</span>
+                        <a class="number clipboard" v-if="!call.isAnonymous && call.isValid" :data-clipboard-text="call.number">{{ utils.formatPhone(call.number) }}</a>
                         <span class="number anonymous" v-else-if="false">Privado</span>
                         <span class="number invalid" v-else-if="call.isAnonymous || !call.isValid">Não identificado</span>
                         <span class="number" v-else>Número desconhecido</span>
@@ -43,6 +43,8 @@
 
     import {createRequest} from '@/models/RequestModel'
 
+    import Clipboard from 'clipboard'
+
     export default {
         components: {
         },
@@ -50,6 +52,8 @@
             return {
                 open: false,
                 scrollbar: null,
+                timeoutInstance: null,
+                clipboardInstance: null
             }
         },
         computed: {
@@ -65,6 +69,21 @@
             ...mapActions('morph-screen', ['createDraft']),
             ...mapActions('caller-id', ['setCall','loadCalls']),
             ...mapActions('toast',['showToast']),
+            mouseOver(){
+                if(this.timeoutInstance){
+                    clearTimeout(this.timeoutInstance)
+                    this.timeoutInstance = null
+                }
+            },
+            setTimeoutToClose(timeout = 2000){
+                if(this.open === true){
+                    this.timeoutInstance = setTimeout(() => {
+                        clearTimeout(this.timeoutInstance)
+                        this.timeoutInstance = null
+                        this.open = false
+                    }, timeout)
+                }
+            },
             toggleCallerID(){
                 this.open = !this.open
             },
@@ -176,6 +195,7 @@
                     vm.open = true
                     vm.$bus.$emit('sound-play')
                     vm.setCall(ev.evData)
+                    vm.setTimeoutToClose(5000)
                 }
             }
         },
@@ -184,6 +204,10 @@
                 overscrollEffect: 'bounce',
                 alwaysShowTracks: true
             })
+            this.clipboardInstance = new Clipboard('.clipboard')
+        },
+        beforeDestroy(){
+            this.clipboardInstance.destroy()
         }
     }
 </script>
@@ -241,7 +265,6 @@
                 width: 240px;
                 .call {
                     flex-shrink: 0;
-                    pointer-events: auto;
                     background: rgb(30,30,30); /* For browsers that do not support gradients */
                     background: linear-gradient(to right, rgba(15,15,15,0), rgba(15,15,15,.6), rgba(15,15,15,1));
                     margin-bottom: 10px;
@@ -249,7 +272,13 @@
                     text-align: right;
                     display: flex;
                     flex-direction: column;
-                    span.number {
+                    a.number {
+                        pointer-events: auto;
+                        cursor: copy;
+                        width: auto;
+                        align-self: flex-end;
+                    }
+                    a.number, span.number {
                         font-size: 18px;
                         font-weight: 600;
                         color: var(--font-color--10)
@@ -277,7 +306,10 @@
                     }
                     a.start-service {
                         margin-top: 10px;
-                        color: var(--font-color--primary)
+                        color: var(--font-color--primary);
+                        pointer-events: auto;
+                        width: auto;
+                        align-self: flex-end;
                     }
                     a.start-service:hover {
                         color: var(--font-color--primary)

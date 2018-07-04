@@ -1,5 +1,5 @@
 <template>
-    <div class="popover-component">
+    <div :class="'popover-component popover-group--' + group" :data-open="visible" :data-group-level="groupLevel">
         <div ref="content" v-if="!useScroll" :style="[contentDefaultStyle, contentStyle]" class="popover-content popover-shadow"
              :class="{hidden: !visible && !forceVisible, 'content-padding': contentPadding}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
             <slot name="content"></slot>
@@ -26,6 +26,14 @@
 
     export default {
         props: {
+            group: {
+                default: 'x',
+                type: String
+            },
+            groupLevel: {
+                default: 0,
+                type: Number
+            },
             placement: {
                 default: 'bottom',
                 type: String
@@ -128,7 +136,14 @@
                 })
             },
             closePopover(){
-                this.visible = false
+                // check if there is popovers in higher hierarchy, so it can't close
+                const els = document.getElementsByClassName("popover-group--" + this.group)
+                const higherLevels = _.filter(els, (el) => {
+                    return (parseInt(el.getAttribute('data-group-level')) > this.groupLevel) && !!el.getAttribute('data-open')
+                })
+                if(!higherLevels.length){
+                    this.visible = false
+                }
             },
             attachContentToBody(){
                 document.body.appendChild(this.$refs.content)

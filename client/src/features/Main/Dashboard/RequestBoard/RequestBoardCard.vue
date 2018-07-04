@@ -355,7 +355,6 @@
                 })
 
                 // some variables
-                console.log(startDate, deliveryDate)
                 const deadlineToNowInSec = moment.duration(deliveryDate.diff(nowDate)).asSeconds()
                 const deadlineToStartInSec = moment.duration(deliveryDate.diff(startDate)).asSeconds()
                 const startToNowInSec = Math.abs(deadlineToStartInSec - deadlineToNowInSec)

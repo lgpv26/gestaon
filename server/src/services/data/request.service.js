@@ -729,6 +729,67 @@ module.exports = (server) => { return {
                throw new Error("Erro send chat.")
            })
        },
+
+        importPayment(ctx){
+            ctx.call('data/request.getList', {
+                include: [{
+                    model: server.mysql.RequestPayment,
+                    as: "requestPayments",
+                    include: [{
+                        model: server.mysql.RequestPaymentTransaction,
+                        as: 'requestPaymentTransactions',
+                        order: [['id', 'ASC']],
+                        include: [{
+                            model: server.mysql.Transaction,
+                            as: 'transaction',
+                            include: [{
+                                model: server.mysql.Account,
+                                as: 'account',
+                                include: [{
+                                    model: server.mysql.User,
+                                    as: 'user',
+                                }]
+                            }]
+                        }]
+                    }]
+                }]
+            }).then((requests) => {
+                requests = JSON.parse(JSON.stringify(requests))
+
+                let promises = []
+
+                requests.forEach((request, index) => {
+                    if(_.has(request, 'requestPayments') && request.requestPayments.length){
+                        request.requestPayments.forEach((requestPayment) => {
+                            const data = {}
+
+                            if(_.first(requestPayment.requestPaymentTransactions)){
+                                data.lastTriggeredUserId = _.first(requestPayment.requestPaymentTransactions).transaction.createdById,
+                                    data.lastReceivedFromUserId = _.first(requestPayment.requestPaymentTransactions).transaction.account.user.id,
+                                    data.receivedDate = (requestPayment.paidDatetime) ? requestPayment.paidDatetime : requestPayment.settledDatetime
+                            }
+
+                            console.log('Convertendo: #', (index + 1))
+                            promises.push(ctx.call('data/request.paymentMethodUpdate', {
+                                where: {
+                                    id: requestPayment.id
+                                },
+                                data
+                            }))
+
+                        })
+                    }
+
+                })
+
+                return Promise.all(promises).then(() => {
+                    return true
+                })
+
+            })
+
+        }
+
     }
 }
 }

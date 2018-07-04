@@ -55,7 +55,11 @@ module.exports = (server, restify) => {
                 },
                 {
                     model: server.mysql.RequestClientPhone,
-                    as: 'requestClientPhones'
+                    as: 'requestClientPhones',
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: 'clientPhone'
+                    }]
                 },
                 {
                     model: server.mysql.RequestPayment,
@@ -151,7 +155,11 @@ module.exports = (server, restify) => {
                 },
                 {
                     model: server.mysql.RequestClientPhone,
-                    as: 'requestClientPhones'
+                    as: 'requestClientPhones',
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: 'clientPhone'
+                    }]
                 },
                 {
                     model: server.mysql.RequestPayment,

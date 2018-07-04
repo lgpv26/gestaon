@@ -246,7 +246,6 @@ module.exports = (server, restify) => {
             });
         },
         updateOne: (req, res, next) => {
-            console.log(req.body);
             if(_.has(req.body, 'password')){
                 req.body.password = bcrypt.hashSync(req.body.password, 8);
             }
