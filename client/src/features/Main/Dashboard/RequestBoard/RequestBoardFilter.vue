@@ -5,7 +5,7 @@
                 <span class="target__title">Data</span>
                 <div class="target__amount">
                     <div></div>
-                    <app-datetime-selector class="input--borderless" v-model="dateCreated" :config="datetimeSelectorConfig" @on-change="onFilterChange($event)" placeholder="..."></app-datetime-selector>
+                    <app-datetime-selector class="input--borderless" v-model="deliveryDate" :config="datetimeSelectorConfig" @on-change="onFilterChange($event)" placeholder="..."></app-datetime-selector>
                 </div>
             </div>
         </div>
@@ -102,7 +102,6 @@
 
     export default {
         components: {
-
         },
         data(){
             return {
@@ -164,14 +163,14 @@
             ...mapGetters('data/promotion-channels',['promotionChannelsSelectItems']),
             ...mapGetters('data/payment-methods',['paymentMethodsSelectItems']),
             ...mapFields([
-                'filters.dateCreated',
+                'filters.deliveryDate',
             ])
         },
         methods: {
             ...mapMutations('request-board', ['SET_FILTER']),
             onFilterChange(ev){
                 /*setImmediate(() => {
-                    this.dateCreated
+                    this.deliveryDate
                 })*/
             },
             onFilter(type){

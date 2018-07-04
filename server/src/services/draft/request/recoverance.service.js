@@ -191,9 +191,9 @@ module.exports = (server) => {
             _.set(request, 'activeStep', (ctx.params.request.requestOrder) ? 'order' : 'client' )
             _.set(request, 'obs', ctx.params.request.obs)
 
-            if(_.has(ctx.params.request, "deadlineDatetime")){
-                _.set(request, 'deadlineDatetime', ctx.params.request.deadlineDatetime)
-                _.set(request, 'useSuggestedDeadlineDatetime', (ctx.params.request.isScheduled) ? false : true) 
+            if(_.has(ctx.params.request, "deliveryDate")){
+                _.set(request, 'deliveryDate', ctx.params.request.deliveryDate)
+                _.set(request, 'useSuggestedDeliveryDate', !ctx.params.request.isScheduled)
             }
 
             if(_.has(ctx.params.request, "requestClientPhones")){

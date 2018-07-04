@@ -18,7 +18,7 @@ module.exports = (server) => { return {
         load(ctx){
 
             const searchObj = {
-                dateCreated: null
+                deliveryDate: null
             }
 
             if(_.get(ctx.params,'data.filter',false)){
@@ -29,17 +29,17 @@ module.exports = (server) => { return {
 
             // set date created
 
-            if(_.get(searchObj,'dateCreated',false)){
+            if(_.get(searchObj,'deliveryDate',false)){
                 _.assign(where, {
-                    createdAt: {
-                        "$gte": moment(searchObj.dateCreated).startOf("day").toDate(),
-                        "$lte": moment(searchObj.dateCreated).endOf("day").toDate()
+                    deliveryDate: {
+                        "$gte": moment(searchObj.deliveryDate).startOf("day").toDate(),
+                        "$lte": moment(searchObj.deliveryDate).endOf("day").toDate()
                     }
                 })
             }
             else {
                 _.assign(where, {
-                    createdAt: {
+                    deliveryDate: {
                         "$gte": moment().startOf("day").toDate(),
                         "$lte": moment().endOf("day").toDate()
                     }
@@ -304,9 +304,7 @@ module.exports = (server) => { return {
             })
         },
         createCard(ctx){
-            //requestId
-            //position
-            //sectionId
+            console.log("Caiu aqui")
             return server.mongodb.Card.create(ctx.params.data).then((card) => {
                 if(!card) throw new Error ('Erro ao criar Card')
                 // check socket connections and emit 
@@ -336,7 +334,6 @@ module.exports = (server) => { return {
             return server.mongodb.Card.findOne({requestId: ctx.params.request.id})
             .then((card) => {
                 if(!card){
-                    console.log("CAPTUREI VOCÊ, SEU DANADO!!!", ctx.params, card)
                     throw new Error ('Erro ao atualizar Card')
                 }
                 // check socket connections and emit 
@@ -345,6 +342,21 @@ module.exports = (server) => { return {
             
                 server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardCardUpdate', new EventResponse(card))
 
+                return card
+            })
+        },
+        updateCardDeliveryDate(ctx){
+            return server.mongodb.Card.findOneAndUpdate({
+                requestId: ctx.params.request.id
+            }, {
+                $set: {
+                    deliveryDate: ctx.params.request.deliveryDate
+                }
+            }).then((card) => {
+                card = card.toJSON()
+                card.request = ctx.params.request
+                _.assign(card, { deliveryDate: ctx.params.request.deliveryDate })
+                server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardCardUpdate', new EventResponse(card))
                 return card
             })
         },

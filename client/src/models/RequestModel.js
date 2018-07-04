@@ -10,8 +10,8 @@ export class RequestModel {
         accountId = null,
         clientPhoneId = null,
         clientAddressId = null,
-        useSuggestedDeadlineDatetime = true,
-        deadlineDatetime = null,
+        useSuggestedDeliveryDate = true,
+        deliveryDate = null,
         requestPayments = [],
         obs = '',
         status = 'pending'
@@ -23,8 +23,8 @@ export class RequestModel {
         this.clientAddressId = clientAddressId
         this.clientPhoneId = clientPhoneId
         this.accountId = accountId
-        this.useSuggestedDeadlineDatetime = useSuggestedDeadlineDatetime
-        this.deadlineDatetime = deadlineDatetime
+        this.useSuggestedDeliveryDate = useSuggestedDeliveryDate
+        this.deliveryDate = deliveryDate
         this.requestPayments = requestPayments
         this.obs = obs
         this.status = status

@@ -42,7 +42,7 @@ module.exports = {
                         this.setDataValue('taskId', (val == '' | val == null) ? null : val);
                     }
                 },
-                deadlineDatetime: {
+                deliveryDate: {
                     type: TIMESTAMP
                 },
                 isScheduled: {

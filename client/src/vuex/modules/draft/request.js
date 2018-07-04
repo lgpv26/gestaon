@@ -25,8 +25,8 @@ import {createPaymentMethod} from '@/models/PaymentMethodModel'
 const state = {
     form: {
         activeStep: null,
-        useSuggestedDeadlineDatetime: false,
-        deadlineDatetime: null,
+        useSuggestedDeliveryDate: false,
+        deliveryDate: null,
         obs: '',
         client: {
             id: '',
@@ -284,7 +284,7 @@ const actions = {
                 return requestPayment
             }),
             accountId: request.accountId,
-            deadlineDatetime: ((request.useSuggestedDeadlineDatetime) ?  null : request.deadlineDatetime ),
+            deliveryDate: ((request.useSuggestedDeliveryDate) ?  null : request.deliveryDate ),
             responsibleUserId: request.responsibleUserId,
             obs: request.obs,
             status: request.status

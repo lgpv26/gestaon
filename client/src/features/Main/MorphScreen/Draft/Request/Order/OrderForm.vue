@@ -23,11 +23,11 @@
                             Hora da entrega
                         </label>
                         <div class="input-container">
-                            <span v-if="useSuggestedDeadlineDatetime">{{ suggestedDeadlineDatetime }}</span>
-                            <app-datetime-selector class="input--borderless" v-model="deadlineDatetime" @input="inputDeadlineDatetime($event)"
+                            <span v-if="useSuggestedDeliveryDate">{{ suggestedDeliveryDate }}</span>
+                            <app-datetime-selector class="input--borderless" v-model="deliveryDate" @input="inputDeliveryDate($event)"
                                 v-else :config="datetimeSelectorConfig" placeholder="..."></app-datetime-selector>
                             <span class="push-both-sides"></span>
-                            <a href="javascript:void(0)" v-if="!useSuggestedDeadlineDatetime" style="white-space: nowrap; margin-left: 10px;" @click="toggleSuggestedTime">SUGERIDO</a>
+                            <a href="javascript:void(0)" v-if="!useSuggestedDeliveryDate" style="white-space: nowrap; margin-left: 10px;" @click="toggleSuggestedTime">SUGERIDO</a>
                             <a href="javascript:void(0)" v-else style="white-space: nowrap; margin-left: 10px;" @click="toggleSuggestedTime">AGENDADO</a>
                         </div>
                     </div>
@@ -181,8 +181,8 @@
             ...mapState('data/users', ['users']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapFields([
-                'form.deadlineDatetime',
-                'form.useSuggestedDeadlineDatetime',
+                'form.deliveryDate',
+                'form.useSuggestedDeliveryDate',
                 'form.obs',
                 'form.order.promotionChannelId',
                 'form.responsibleUserId',
@@ -205,10 +205,10 @@
                     return "-- NENHUM --"
                 }
             },
-            suggestedDeadlineDatetime(){
-                const deadlineDatetime = moment(this.deadlineDatetime)
-                if(deadlineDatetime.isValid()){
-                    return deadlineDatetime.format("DD/MM/YYYY HH:mm:ss")
+            suggestedDeliveryDate(){
+                const deliveryDate = moment(this.deliveryDate)
+                if(deliveryDate.isValid()){
+                    return deliveryDate.format("DD/MM/YYYY HH:mm:ss")
                 }
                 else {
                     return "Carregando..."
@@ -219,26 +219,26 @@
             activateTab(tab){
                 this.activeTab = tab;
             },
-            inputDeadlineDatetime(value){
-                const deadlineDatetime = moment(value)
-                if(!this.useSuggestedDeadlineDatetime && deadlineDatetime.isValid()){
-                    this.sync(deadlineDatetime.toDate(), 'deadlineDatetime', 'request')
+            inputDeliveryDate(value){
+                const deliveryDate = moment(value)
+                if(!this.useSuggestedDeliveryDate && deliveryDate.isValid()){
+                    this.sync(deliveryDate.toDate(), 'deliveryDate', 'request')
                 }
             },
             toggleSuggestedTime(){
-                if(this.useSuggestedDeadlineDatetime){
-                    this.useSuggestedDeadlineDatetime = false
-                    this.deadlineDatetime = null
+                if(this.useSuggestedDeliveryDate){
+                    this.useSuggestedDeliveryDate = false
+                    this.deliveryDate = null
                     this.syncMultiple([
-                        { value: this.deadlineDatetime, path: 'deadlineDatetime', customBaseFormPath: 'request' },
-                        { value: this.useSuggestedDeadlineDatetime, path: 'useSuggestedDeadlineDatetime', customBaseFormPath: 'request' },
+                        { value: this.deliveryDate, path: 'deliveryDate', customBaseFormPath: 'request' },
+                        { value: this.useSuggestedDeliveryDate, path: 'useSuggestedDeliveryDate', customBaseFormPath: 'request' },
                     ])
                 }
                 else {
-                    this.useSuggestedDeadlineDatetime = true
+                    this.useSuggestedDeliveryDate = true
                     this.syncMultiple([
-                        { value: null, path: 'deadlineDatetime', customBaseFormPath: 'request' },
-                        { value: this.useSuggestedDeadlineDatetime, path: 'useSuggestedDeadlineDatetime', customBaseFormPath: 'request' },
+                        { value: null, path: 'deliveryDate', customBaseFormPath: 'request' },
+                        { value: this.useSuggestedDeliveryDate, path: 'useSuggestedDeliveryDate', customBaseFormPath: 'request' },
                     ])
                 }
             }
@@ -587,8 +587,8 @@
             })
             */
             vm.suggestedTimeInterval = setInterval(() => {
-                if(vm.useSuggestedDeadlineDatetime){
-                    vm.deadlineDatetime = moment().add(20, 'minutes').toDate()
+                if(vm.useSuggestedDeliveryDate){
+                    vm.deliveryDate = moment().add(20, 'minutes').toDate()
                 }
             }, 1000)
         },

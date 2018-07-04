@@ -76,10 +76,10 @@ module.exports = (server) => {
                                     clientId: (client) ? _.get(client, 'client.id') : null,
                                     requestOrderId: (order) ? _.get(order, 'order.id') : null,
                                     taskId: (task) ? _.get(task, 'task.id') : null,
-                                    deadlineDatetime: (this._request.deadlineDatetime) ? moment(this._request.deadlineDatetime) : (!this._request.id) ?  moment().add(20, 'm') : (!this._oldRequest.isScheduled) ? this._oldRequest.deadlineDatetime :  moment().add(20, 'm'),
-                                    isScheduled: (this._request.deadlineDatetime) ? true : false,
+                                    deliveryDate: (this._request.deliveryDate) ? moment(this._request.deliveryDate) : (!this._request.id) ?  moment().add(20, 'm') : (!this._oldRequest.isScheduled) ? this._oldRequest.deliveryDate :  moment().add(20, 'm'),
+                                    isScheduled: !!this._request.deliveryDate,
                                     obs: (this._request.obs) ? this._request.obs : null,
-                                    status: (this._request.status) ? (this._request.client.id) ? this._request.status : 'finished' :  (this._request.client.id) ? 'pending' : 'finished'
+                                    status: (this._request.status) ? (this._request.client.id) ? this._request.status : (this._request.status === 'finished' || this._request.status === 'canceled' ) ? this._request.status : 'finished' :  (this._request.client.id) ? 'pending' : 'finished'
                                 },
                                 transaction: this._transaction
                             }).then((request) => {
@@ -339,10 +339,19 @@ module.exports = (server) => {
                     transaction: this._transaction
                 }).then((request) => {
                     if(this._request.id && (this._oldRequest.status !== 'finished' && this._oldRequest.status !== 'canceled')) {
-                        return ctx.call("request-board.reloadCard", {
-                            request: request, 
-                            companyId: this._companyId,
-                        })
+                        if(request.deliveryDate === this._oldRequest.deliveryDate){
+                            return ctx.call("request-board.reloadCard", {
+                                request: request,
+                                companyId: this._companyId,
+                            })
+                        }
+                        else {
+                            console.log("Update deliveryDate")
+                            return ctx.call("request-board.updateCardDeliveryDate", {
+                                request: request,
+                                companyId: this._companyId
+                            })
+                        }
                     }
                     else{
                         return ctx.call("request-board.consultSectionOne", {
@@ -362,6 +371,7 @@ module.exports = (server) => {
                                     requestId: request.id,
                                     position: maxCardPosition,
                                     section: section.id,
+                                    deliveryDate: request.deliveryDate,
                                     createdBy: _.first(request.requestTimeline).triggeredBy,
                                     companyId: request.companyId
                                 },
@@ -458,7 +468,7 @@ module.exports = (server) => {
                         ctx.params.data.forEach((payment, index) => {
                             promises.push(new Promise((resolve, reject) => {
                                     const indexOldPayment = _.findIndex(this._oldRequest.requestPayments, (oldPayment) => {
-                                        return oldPayment.id == payment.id
+                                        return oldPayment.id === payment.id
                                     })
             
                                     if(indexOldPayment !== -1 && parseFloat(payment.amount) !== parseFloat(this._oldRequest.requestPayments[indexOldPayment].amount)){

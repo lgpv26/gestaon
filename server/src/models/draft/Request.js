@@ -36,7 +36,7 @@ module.exports = class Request extends Draft {
                         id: '',
                         name: ''
                     },
-                    deliveryDatetime: '',
+                    deliveryDate: '',
                     responsibleUser: '',
                     obs: ''
                 },

@@ -15,6 +15,7 @@ module.exports = {
             companyId: Number,
             createdBy: Number,
             requestId: Number,
+            deliveryDate: Date,
             chatUnRead:  {
                 type: Number,
                 default: 0

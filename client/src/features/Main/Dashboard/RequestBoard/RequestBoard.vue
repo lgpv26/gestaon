@@ -58,7 +58,7 @@
         computed: {
             ...mapFields([
                 'filters',
-                'filters.dateCreated',
+                'filters.deliveryDate',
             ]),
             ...mapState(['mainContentArea']),
             ...mapState('auth', ['user', 'token', 'company']),
@@ -134,19 +134,27 @@
             requestBoardCardCreate(request){
                 console.log("Received requestBoardCardCreate", request)
                 const card = request.data.card
-                const start = moment(this.dateCreated).startOf("day")
-                const finish = moment(this.dateCreated).endOf("day")
-                if(moment(card.createdAt).isBetween(start, finish, null, '[]')){
+                const start = moment(this.deliveryDate).startOf("day")
+                const finish = moment(this.deliveryDate).endOf("day")
+                if(moment(card.deliveryDate).isBetween(start, finish, null, '[]')){
                     this.ADD_REQUEST(card)
                 }
             },
             requestBoardCardUpdate(ev){
                 console.log("Received requestBoardCardUpdate", ev)
                 if(ev.success){
-                    this.updateCard({
-                        cardId: ev.evData.id,
-                        card: ev.evData
-                    })
+                    const card = ev.evData
+                    const start = moment(this.deliveryDate).startOf("day")
+                    const finish = moment(this.deliveryDate).endOf("day")
+                    if(moment(card.deliveryDate).isBetween(start, finish, null, '[]')){
+                        this.updateCard({
+                            cardId: card.id,
+                            card: card
+                        })
+                    }
+                    else {
+                        this.removeCard(card.id)
+                    }
                 }
             },
             requestBoardCardMove(ev){
@@ -238,7 +246,7 @@
                 const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
                 viewport.style.display = 'initial';
             },
-            load(filterData = { dateCreated: moment().startOf('day').toISOString() }){
+            load(filterData = { deliveryDate: moment().startOf('day').toISOString() }){
                 const emitData = {
                     filter: btoa(JSON.stringify(filterData))
                 }

@@ -2,6 +2,10 @@
     <div>
         <div class="rbc-progress">
             <div class="tooltip-content">
+                <div style="margin-bottom: 5px;">
+                    <span>Entrega: {{ moment(card.deliveryDate).format('DD/MM/YYYY HH:mm') }}</span>
+                    <span v-if="card.request.isScheduled">(<i class="mi mi-schedule"></i>)</span>
+                </div>
                 <div v-if="!deadline.isOver && card.request.status !== 'finished'">
                     <span>O pedido ainda está dentro do prazo!</span>
                 </div>

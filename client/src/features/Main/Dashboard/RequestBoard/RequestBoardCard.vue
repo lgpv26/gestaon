@@ -42,14 +42,16 @@
                         </div>
                         <div class="objects__timeline">
                             <div class="timeline__progress--current" v-if="!deadline.isOver && form.status !== 'finished'" :style="{left: current.left + 'px'}">
-                                <span class="progress__progress">{{ current.time }}</span>
+                                <span class="progress__progress">{{ current.time.value }}</span>
+                                <span class="progress__progress--unit">{{ current.time.abbUnit }}</span>
                                 <request-board-icon-progress-shield></request-board-icon-progress-shield>
                             </div>
                             <div class="timeline__progress" v-for="(inProgressRequestTimelineItem, index) in inProgressRequestTimeline"
                                 :style="{left: inProgressRequestTimelineItem.left + 'px'}">
                                 <app-popover :contentStyle="popoverContentStyle" :verticalOffset="5" :triggererStyle="{justifyContent: 'center'}">
                                     <template slot="triggerer">
-                                        <span class="progress__progress">{{ inProgressRequestTimelineItem.timeUntilNow }}</span>
+                                        <span class="progress__progress">{{ inProgressRequestTimelineItem.timeUntilNow.value }}</span>
+                                        <span class="progress__progress--unit">{{ inProgressRequestTimelineItem.timeUntilNow.abbUnit }}</span>
                                         <request-board-icon-progress-shield></request-board-icon-progress-shield>
                                     </template>
                                     <template slot="content">
@@ -58,11 +60,23 @@
                                 </app-popover>
                             </div>
                         </div>
-                        <div class="objects__deadline" ref="deadline" :class="{ over: deadline.isOver }">
+                        <div v-if="!card.request.isScheduled" class="objects__deadline" ref="deadline" :class="{ over: deadline.isOver }">
                             <app-popover :contentStyle="popoverContentStyle" :placement="'left'" :verticalOffset="20" :triggererStyle="{justifyContent: 'center'}">
                                 <template slot="triggerer">
-                                    <span class="deadline__time">{{ deadline.time }}</span>
-                                    <span class="deadline__label">min</span>
+                                    <span class="deadline__time">{{ deadline.time.value }}</span>
+                                    <span class="deadline__label">{{ deadline.time.abbUnit }}</span>
+                                </template>
+                                <template slot="content">
+                                    <app-rbc-deadline :card="card" :deadline="deadline" :overDeadlineRequestTimeline="overDeadlineRequestTimeline"></app-rbc-deadline>
+                                </template>
+                            </app-popover>
+                        </div>
+                        <div class="objects__timer" v-else :class="{ over: deadline.isOver }">
+                            <app-popover :contentStyle="popoverContentStyle" :placement="'left'" :verticalOffset="8" :triggererStyle="{justifyContent: 'center'}">
+                                <template slot="triggerer">
+                                    <span class="timer__hours">{{ moment(card.deliveryDate).format("HH") }}</span>
+                                    <span class="timer__minutes">{{ moment(card.deliveryDate).format("mm") }}</span>
+                                    <request-board-icon-timer></request-board-icon-timer>
                                 </template>
                                 <template slot="content">
                                     <app-rbc-deadline :card="card" :deadline="deadline" :overDeadlineRequestTimeline="overDeadlineRequestTimeline"></app-rbc-deadline>
@@ -209,11 +223,17 @@
                     time: null
                 },
                 current: {
-                    time: null
+                    time: {
+                        value: 0,
+                        abbUnit: ''
+                    }
                 },
                 deadline: {
                     isOver: false,
-                    time: null
+                    time: {
+                        value: 0,
+                        abbUnit: 'min'
+                    }
                 },
                 settings: {
                     deadlineInMinutes: 30
@@ -292,7 +312,7 @@
             }, 1000)
             const eachInterval = () => {
                 const startDate = moment(vm.card.request.dateCreated)
-                const deadlineDatetime = moment(vm.card.request.deadlineDatetime)
+                const deliveryDate = moment(vm.card.request.deliveryDate)
                 const nowDate = moment()
 
                 // mapping and filtering
@@ -300,60 +320,61 @@
                     // if(requestTimelineItem.action === 'create') return false
                     const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
                     /*const diffUntilTimelineItemInSec = moment.duration(requestTimelineItemDate.diff(startDate)).asSeconds()
-                    const diffUntilNowInSec = moment.duration(deadlineDatetime.diff(nowDate)).asSeconds()*/
+                    const diffUntilNowInSec = moment.duration(deliveryDate.diff(nowDate)).asSeconds()*/
 
-                    const deadlineToTimelineItemInSec = moment.duration(deadlineDatetime.diff(requestTimelineItemDate)).asSeconds()
+                    const deadlineToTimelineItemInSec = moment.duration(deliveryDate.diff(requestTimelineItemDate)).asSeconds()
 
                     return (deadlineToTimelineItemInSec > 0) && (requestTimelineItem.action !== 'create') && (requestTimelineItem.status !== 'finished')
                 }), (requestTimelineItem, index) => {
 
                     const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
-                    const deadlineToStartInSec = moment.duration(deadlineDatetime.diff(startDate)).asSeconds()
-                    const deadlineToTimelineItemInSec = moment.duration(deadlineDatetime.diff(requestTimelineItemDate)).asSeconds()
+                    const deadlineToStartInSec = moment.duration(deliveryDate.diff(startDate)).asSeconds()
+                    const deadlineToTimelineItemInSec = moment.duration(deliveryDate.diff(requestTimelineItemDate)).asSeconds()
                     const startToTimelineItemInSec = deadlineToStartInSec - deadlineToTimelineItemInSec
 
                     const percentage = (startToTimelineItemInSec / deadlineToStartInSec) * 100
                     const maxWidthInPxs = 200 // max width in pixels, of the progress bar
                     const leftInPxs = (maxWidthInPxs * percentage) / 100
 
-                    let timeUntilNow = Math.floor(startToTimelineItemInSec / 60)
+                    let timeUntilNow = startToTimelineItemInSec
                     if(timeUntilNow < 0) timeUntilNow = 0
 
                     return {
-                        timeUntilNow: timeUntilNow,
+                        timeUntilNow: utils.getShortTime(timeUntilNow),
                         left: leftInPxs,
                         data: requestTimelineItem
                     }
                 })
 
                 vm.overDeadlineRequestTimeline = _.filter(vm.card.request.requestTimeline, (requestTimelineItem) => {
-                    // if(requestTimelineItem.action === 'create') return false
-                    const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
 
-                    const deadlineToTimelineItemInSec = moment.duration(deadlineDatetime.diff(requestTimelineItemDate)).asSeconds()
+                    const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
+                    const deadlineToTimelineItemInSec = moment.duration(deliveryDate.diff(requestTimelineItemDate)).asSeconds()
 
                     return (deadlineToTimelineItemInSec <= 0) || (requestTimelineItem.status === 'finished')
                 })
 
                 // some variables
-                const deadlineToNowInSec = moment.duration(deadlineDatetime.diff(nowDate)).asSeconds()
-                const deadlineToStartInSec = moment.duration(deadlineDatetime.diff(startDate)).asSeconds()
-                const startToNowInSec = deadlineToStartInSec - deadlineToNowInSec
-                const startToNowInMin = Math.floor(Math.abs(startToNowInSec) / 60)
+                console.log(startDate, deliveryDate)
+                const deadlineToNowInSec = moment.duration(deliveryDate.diff(nowDate)).asSeconds()
+                const deadlineToStartInSec = moment.duration(deliveryDate.diff(startDate)).asSeconds()
+                const startToNowInSec = Math.abs(deadlineToStartInSec - deadlineToNowInSec)
+                const startToNowInMin = Math.floor(startToNowInSec / 60)
 
                 if(deadlineToNowInSec <= 0){
                     this.deadline.isOver = true
-                    const overTime = Math.floor(Math.abs(deadlineToNowInSec) / 60)
-                    if(overTime > 99){
-                        this.deadline.time = '+99'
+                    const overTimeInSec = Math.abs(deadlineToNowInSec)
+                    const overTimeInMin = Math.floor(overTimeInSec / 60)
+                    if(overTimeInMin > 99){
+                        this.deadline.time = utils.getShortTime(overTimeInSec)
                     }
                     else {
-                        this.deadline.time = startToNowInMin
+                        this.deadline.time = utils.getShortTime(startToNowInSec)
                     }
                 }
                 else {
                     this.deadline.isOver = false
-                    this.deadline.time = Math.floor(Math.abs(deadlineToStartInSec) / 60)
+                    this.deadline.time = utils.getShortTime(Math.abs(deadlineToStartInSec))
                 }
 
                 if(this.card.request.status !== 'finished' && !this.deadline.isOver){
@@ -362,7 +383,7 @@
                     const leftInPxs = (maxWidthInPxs * percentage) / 100
 
                     this.current = {
-                        time: startToNowInMin,
+                        time: utils.getShortTime(startToNowInSec),
                         left: leftInPxs
                     }
                 }
@@ -371,23 +392,9 @@
                     const lastTimelineItem = _.last(this.card.request.requestTimeline)
                     if(lastTimelineItem.status === 'finished'){
                         const finishedDate = moment(lastTimelineItem.dateCreated)
-                        const finishToStartInSec = moment.duration(finishedDate.diff(startDate)).asSeconds()
-                        const finishToStartInMin = Math.floor(Math.abs(finishToStartInSec) / 60)
-
-                        if(deadlineToStartInSec < finishToStartInSec){
-                            this.deadline.isOver = true
-                            if(finishToStartInMin > 99){
-                                this.deadline.time = '+99'
-                            }
-                            else {
-                                this.deadline.time = finishToStartInMin
-                            }
-                        }
-                        else {
-                            this.deadline.isOver = false
-                            this.deadline.time = finishToStartInMin
-                        }
-
+                        const finishToStartInSec = Math.abs(moment.duration(finishedDate.diff(startDate)).asSeconds())
+                        this.deadline.isOver = deadlineToStartInSec < finishToStartInSec
+                        this.deadline.time = utils.getShortTime(finishToStartInSec)
                     }
                 }
             }
@@ -555,6 +562,9 @@
         font-weight: 600;
         font-size: 12px;
     }
+    .card__middle .objects__timer.over .timer__hours, .card__middle .objects__timer.over .timer__minutes {
+        color: var(--font-color--danger)
+    }
     .card__middle .objects__timer .fill {
         fill: var(--bg-color)
     }
@@ -582,8 +592,15 @@
     .card__middle .objects__timeline .timeline__progress span.progress__progress {
         position: absolute;
         font-weight: 600;
-        font-size: 14px;
-        margin-top: -5px;
+        font-size: 12px;
+        margin-top: -8px;
+        color: var(--font-color--3)
+    }
+    .card__middle .objects__timeline .timeline__progress span.progress__progress--unit {
+        position: absolute;
+        font-weight: 600;
+        font-size: 9px;
+        margin-top: 3px;
         color: var(--font-color--3)
     }
     .card__middle .objects__timeline .timeline__progress .fill {
@@ -607,8 +624,15 @@
     .card__middle .objects__timeline .timeline__progress--current span.progress__progress {
         position: absolute;
         font-weight: 600;
-        font-size: 14px;
-        margin-top: -5px;
+        font-size: 12px;
+        margin-top: -8px;
+        color: var(--font-color--8)
+    }
+    .card__middle .objects__timeline .timeline__progress--current span.progress__progress--unit {
+        position: absolute;
+        font-weight: 600;
+        font-size: 9px;
+        margin-top: 3px;
         color: var(--font-color--8)
     }
     .card__middle .objects__timeline .timeline__progress--current .fill {

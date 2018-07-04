@@ -53,6 +53,57 @@ export default {
     * Get
     * */
 
+    getShortTime(seconds, pluralize = false){
+        if(seconds < 60){
+            seconds = Math.floor(seconds)
+            return {
+                value: seconds,
+                abbUnit: 'seg' + ((seconds > 1 && pluralize) ? 's' : ''),
+                unit: 'segundo' + ((seconds > 1 && pluralize) ? 's' : '')
+            }
+        }
+        let minutes = seconds / 60
+        if(minutes < 60){
+            minutes = Math.floor(minutes)
+            return {
+                value: minutes,
+                abbUnit: 'min' + ((minutes > 1 && pluralize) ? 's' : ''),
+                unit: 'minuto' + ((minutes > 1 && pluralize) ? 's' : '')
+            }
+        }
+        else if(minutes >= 60 && minutes < 60 * 24){
+            const hours = Math.floor(minutes / 60)
+            return {
+                value: hours,
+                abbUnit: 'hr' + ((hours > 1 && pluralize) ? 's' : ''),
+                unit: 'hora' + ((hours > 1 && pluralize) ? 's' : '')
+            }
+        }
+        else if(minutes >= 60 * 24 && minutes < 60 * 24 * 31){
+            const days = Math.floor((minutes / 60) / 24)
+            return {
+                value: days,
+                abbUnit: 'dia' + ((days > 1 && pluralize) ? 's' : ''),
+                unit: 'dia' + ((days > 1 && pluralize) ? 's' : '')
+            }
+        }
+        else if(minutes >= 60 * 24 * 31 && minutes < 60 * 24 * 31 * 12){
+            const months = Math.floor(((minutes / 60) / 24) / 31)
+            return {
+                value: months,
+                abbUnit: ((months <= 1) ? 'mês' : 'mes') + ((months > 1 && pluralize) ? '.' : ''),
+                unit: ((months <= 1) ? 'mês' : 'mes') + ((months > 1 && pluralize) ? 'es' : '')
+            }
+        }
+        else if(minutes >= 60 * 24 * 31 * 12){
+            const years = Math.floor((((minutes / 60) / 24) / 31) / 12)
+            return {
+                value: years,
+                abbUnit: 'ano' + ((years > 1 && pluralize) ? 's' : ''),
+                unit: 'ano' + ((years > 1 && pluralize) ? 's' : '')
+            }
+        }
+    },
     getShortString(str, max, add){
         add = add || '...';
         return (typeof str === 'string' && str.length > max ? str.substring(0,max).trim() + ' ' + add : str.trim());

@@ -129,8 +129,8 @@
                         name: 'name'
                     },
                     {
-                        text: 'Data/Hora',
-                        name: 'date',
+                        text: 'Data/Entrega',
+                        name: 'deliveryDate',
                     },
                     {
                         text: 'Grupo',
@@ -275,7 +275,11 @@
                         let clientAddress
                         if(hasClientAddress){
                             clientAddress = _.get(row,'request.requestClientAddresses[0].clientAddress')
-                            clientAddress = clientAddress.address.name + ', ' + clientAddress.number
+                            clientAddress = _.truncate(clientAddress.address.name, {
+                                'length': 32,
+                                'separator': '',
+                                'omission': '...'
+                            }) + ', ' + clientAddress.number
                         }
                         else {
                             clientAddress = '---'
@@ -284,7 +288,7 @@
                             id: row.id,
                             amount: row.amount,
                             formattedAmount: utils.formatMoney(row.amount, 2,'R$ ','.',','),
-                            date: moment(row.dateCreated).format("DD/MM HH:mm"),
+                            deliveryDate: moment(row.request.deliveryDate).format("DD/MM HH:mm"),
                             paid: row.paid,
                             name: _.truncate(_.get(row,'request.client.name', '---'), {
                                 'length': 18,
@@ -297,11 +301,7 @@
                                 'separator': '',
                                 'omission': '...'
                             }),
-                            clientAddress: _.truncate(clientAddress, {
-                                'length': 32,
-                                'separator': '',
-                                'omission': '...'
-                            }),
+                            clientAddress: clientAddress,
                             paymentMethodId: row.paymentMethod.id,
                             settled: row.settled,
                             requestId: row.requestId,

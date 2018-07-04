@@ -7,7 +7,7 @@ import utils from '@/utils'
 const state = {
     sections: [],
     filters: {
-        dateCreated: new Date()
+        deliveryDate: new Date()
     }
 };
 

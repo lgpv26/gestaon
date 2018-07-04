@@ -58,7 +58,7 @@ module.exports = (server) => {
                                     clientId: (client) ? _.get(client, 'client.id') : null,
                                     requestOrderId: (order) ? _.get(order, 'order.id') : null,
                                     taskId: (task) ? _.get(task, 'task.id') : null,
-                                    deadlineDatetime: moment(),
+                                    deliveryDate: moment(),
                                     isScheduled: false,
                                     obs: (this._request.obs) ? this._request.obs : null,
                                     status: this._request.status
