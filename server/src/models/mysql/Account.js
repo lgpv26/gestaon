@@ -47,7 +47,9 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Account, Transaction}) => {
+    postSettings: ({Account, Transaction, User}) => {
         Account.hasMany(Transaction, {as: 'transactions', foreignKey: 'accountId'})
+        Account.hasOne(User, {as: 'user', foreignKey: 'accountId'})
+
     }
 };

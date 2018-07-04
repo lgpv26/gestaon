@@ -164,4 +164,12 @@ module.exports = (server, restify) => {
         })
     })
 
+    server.post('/requests/importPayments', (req, res, next) => {
+        return server.broker.call('data/request.importPayment').then((request) => {
+            return res.send(200, request)
+        }).catch((err) => {
+            console.log(err)
+        })
+    })
+
 }

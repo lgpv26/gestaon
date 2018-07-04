@@ -29,6 +29,15 @@ module.exports = {
                         this.setDataValue('code', (val === '' || val === null) ? null : val.toUpperCase().trim());
                     }
                 },
+                lastTriggeredUserId: {
+                    type: Sequelize.INTEGER
+                },               
+                lastReceivedFromUserId: {
+                    type: Sequelize.INTEGER
+                },
+                receivedDate: {
+                    type: TIMESTAMP
+                },
                 paid: {
                     type: Sequelize.BOOLEAN,
                     default: false
@@ -63,10 +72,14 @@ module.exports = {
             })
         }
     },
-    postSettings: ({RequestPayment, Request, PaymentMethod, RequestPaymentBill, RequestPaymentTransaction}) => {
+    postSettings: ({RequestPayment, Request, PaymentMethod, RequestPaymentBill, RequestPaymentTransaction, User}) => {
         RequestPayment.belongsTo(Request, {as: 'request', foreignKey: 'requestId'})
         RequestPayment.belongsTo(PaymentMethod, {as: 'paymentMethod', foreignKey: 'paymentMethodId'})
         RequestPayment.hasOne(RequestPaymentBill, {as: 'requestPaymentBills', foreignKey: 'requestPaymentId'})
+
+        RequestPayment.belongsTo(User, {as: 'userTriggered', foreignKey: 'lastTriggeredUserId'})
+        RequestPayment.belongsTo(User, {as: 'userReceived', foreignKey: 'lastReceivedFromUserId'})
+
 
         RequestPayment.hasMany(RequestPaymentTransaction, {as: 'requestPaymentTransactions', foreignKey: 'requestPaymentId'})
     }
