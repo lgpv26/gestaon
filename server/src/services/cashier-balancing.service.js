@@ -234,7 +234,7 @@ module.exports = (server) => {
                         id: {
                             [Op.in]: ctx.params.data.requestPaymentIds
                         },
-                        paid: (ctx.params.persistence) ? true : false
+                        receivedDate: (ctx.params.persistence) ? true : null
                     },
                     include: [
                         {
@@ -303,8 +303,9 @@ module.exports = (server) => {
                                     transaction: this._transaction
                                 }).then(() => {
                                     return requestPayment.update({
-                                        paid: true,
-                                        paidDatetime: moment(),
+                                        lastTriggeredUserId: ctx.params.data.createdById,
+                                        lastReceivedFromUserId: requestPayment.request.userId, 
+                                        receivedDate: moment(),
                                     },{
                                         returning: true,
                                         plain: true,

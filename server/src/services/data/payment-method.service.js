@@ -12,6 +12,7 @@ module.exports = (server) => { return {
                         [Op.in]: [0,ctx.params.data.companyId]
                     }
                 },
+                attributes: ctx.params.attributes || null,
                 transaction: ctx.params.transaction || null
             }).then((paymentMethod) => {
                 return JSON.parse(JSON.stringify(paymentMethod))

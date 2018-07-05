@@ -275,6 +275,9 @@ module.exports = (server) => { return {
                                             requestPaymentId: paymentMethodReturn.id,
                                             deadlineDatetime: requestPayment.deadlineDatetime
                                         },
+                                        where: {
+                                            requestPaymentId: paymentMethodReturn.id
+                                        },
                                         requestPaymentId: paymentMethodReturn.id,
                                         transaction: ctx.params.transaction 
                                     })
@@ -374,7 +377,7 @@ module.exports = (server) => { return {
                 transaction: ctx.params.transaction || null
             }).then((paymentMethodUpdate) => {
                 if(parseInt(_.toString(paymentMethodUpdate)) < 1 ){
-                    console.log("Nenhum registro encontrado. Update.")
+                    console.log(ctx.params, "Nenhum registro encontrado. Update.")
                     throw new Error("Nenhum registro encontrado.")
                 }
                 return server.mysql.RequestPayment.findById(ctx.params.data.id, {
@@ -392,6 +395,7 @@ module.exports = (server) => { return {
                 where: ctx.params.where || {},
                 transaction: ctx.params.transaction
             }).then((bill) => {
+                console.log(bill)
                 if(bill){
                     return ctx.call("data/request.paymentBillUpdate", {
                         data: {

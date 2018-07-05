@@ -168,6 +168,7 @@ module.exports = (server) => {
              */
             getBills(ctx) {
                 return server.mysql.RequestPaymentBill.findAll({
+                    order: [['dateCreated', 'DESC']],
                     include: [{
                         model: server.mysql.RequestPaymentBillPayment,
                         as: 'requestPaymentBillPayments'
@@ -175,8 +176,7 @@ module.exports = (server) => {
                         model: server.mysql.RequestPayment,
                         as: 'requestPayments',
                         where: {
-                            paid: false,
-                            settled: true
+                            receivedDate: null,
                         },
                         include: [{
                                 model: server.mysql.PaymentMethod,
