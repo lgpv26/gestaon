@@ -159,9 +159,6 @@ module.exports = (server) => {
                                 model: server.mysql.Transaction,
                                 as: 'transaction'
                             }]
-                        },{
-                            model: server.mysql.RequestPaymentBill,
-                            as: 'requestPaymentBills'
                         }]
                     },{
                         model: server.mysql.RequestOrder,

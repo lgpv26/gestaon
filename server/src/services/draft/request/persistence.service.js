@@ -547,6 +547,7 @@ module.exports = (server) => {
                             companyId: this._companyId,
                             clientId: this._request.client.id,
                             createdById: this._userId,
+                            userId: this._request.responsibleUserId,
                             createdByAccountId: this._userAccountId,
                             accountId: (this._request.accountId) ? this._request.accountId : null,
                             transaction: this._transaction

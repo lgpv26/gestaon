@@ -19,9 +19,6 @@ module.exports = {
                 transactionId: {
                     type: Sequelize.INTEGER
                 },
-                requestPaymentBillPaymentId: {
-                    type: Sequelize.INTEGER
-                },
                 action: {
                     type: Sequelize.STRING
                 },
@@ -51,9 +48,8 @@ module.exports = {
             })
         }
     },
-    postSettings: ({RequestPaymentTransaction,RequestPayment,RequestPaymentBillPayment,Transaction}) => {
+    postSettings: ({RequestPaymentTransaction,RequestPayment,Transaction}) => {
         RequestPaymentTransaction.belongsTo(RequestPayment, {as: 'requestPayment', foreignKey: 'requestPaymentId'})
-        RequestPaymentTransaction.belongsTo(RequestPaymentBillPayment, {as: 'requestPaymentBillPayment', foreignKey: 'requestPaymentBillPaymentId'})
         RequestPaymentTransaction.belongsTo(Transaction, {as: 'transaction', foreignKey: 'transactionId'})
     }
 }

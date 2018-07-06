@@ -29,7 +29,10 @@ module.exports = {
                         this.setDataValue('code', (val === '' || val === null) ? null : val.toUpperCase().trim());
                     }
                 },
-                /*lastTriggeredUserId: {
+                billPaymentDate:{
+                    type: TIMESTAMP
+                },
+                lastTriggeredUserId: {
                     type: Sequelize.INTEGER
                 },               
                 lastReceivedFromUserId: {
@@ -37,7 +40,7 @@ module.exports = {
                 },
                 receivedDate: {
                     type: TIMESTAMP
-                },*/
+                },
                 paid: {
                     type: Sequelize.BOOLEAN,
                     default: false

@@ -167,39 +167,31 @@ module.exports = (server) => {
              * @returns {Promise.<Array>} requests
              */
             getBills(ctx) {
-                return server.mysql.RequestPaymentBill.findAll({
+                return server.mysql.RequestPayment.findAll({
+                    where: {
+                        billPaymentDate: null
+                    },
                     order: [['dateCreated', 'DESC']],
                     include: [{
-                        model: server.mysql.RequestPaymentBillPayment,
-                        as: 'requestPaymentBillPayments'
-                        }, {
-                        model: server.mysql.RequestPayment,
-                        as: 'requestPayments',
+                        model: server.mysql.PaymentMethod,
+                        as: 'paymentMethod',
                         where: {
-                            receivedDate: null,
-                        },
+                            autoPay: 0
+                        }
+                    },
+                    {
+                        model: server.mysql.Request,
+                        as: 'request',
+                        required: true,
                         include: [{
-                                model: server.mysql.PaymentMethod,
-                                as: 'paymentMethod',
-                                where: {
-                                    autoPay: 0
-                                }
+                            model: server.mysql.Client,
+                            as: 'client',
+                            where:{
+                                companyId: ctx.params.companyId,
+                                id: ctx.params.clientId
                             },
-                            {
-                                model: server.mysql.Request,
-                                as: 'request',
-                                required: true,
-                                include: [{
-                                    model: server.mysql.Client,
-                                    as: 'client',
-                                    where:{
-                                        companyId: ctx.params.companyId,
-                                        id: ctx.params.clientId
-                                    },
-                                    required: true
-                                }]
-                            }
-                        ]
+                            required: true
+                        }]
                     }]
                 }).then((bills) => {
                     return JSON.parse(JSON.stringify(bills))

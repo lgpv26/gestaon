@@ -164,6 +164,153 @@ module.exports = (server) => {
                 })  
             },
 
+            changeStatusNew(ctx) {
+                return new Promise((resolve, reject) => {
+                    const arrayQueue = _.values(_.groupBy(ctx.params.data, 'id'))
+                    const response = []
+                    arrayQueue.forEach((item) => {
+                        response.push(_.orderBy(item, ['actionDate'], ['ASC']))
+                    })
+                    resolve(response)
+                })
+                .then((response) => {
+                    const promises = []
+                    response.forEach((item, index) => {
+                        promises.push(new Promise((resolve, reject) => {
+                        
+                                let limit = 1
+                                let initialOffset = 0
+                                let limitReached = false
+
+                                const totalItemsLimit = item.length
+
+                                const listConsult = []
+                                let promiseResolution = []
+                                const bunch = function (offset) {
+                                    return new Promise((resolve, reject) => {
+
+                                        if ((offset + limit) >= totalItemsLimit) {
+                                            limitReached = true
+                                        }
+                                        console.log("Interação " + (offset + limit) + "/" + totalItemsLimit)
+
+                                        return server.broker.call('data/request.getOne', {
+                                            where: {
+                                                id: parseInt(item[offset].id),
+                                                companyId: parseInt(ctx.params.companyId)
+                                            },
+                                            include: [
+                                                {
+                                                    model: server.mysql.RequestTimeline,
+                                                    as: "requestTimeline"
+                                                }
+                                            ]
+                                        }).then((request) => {
+                                            if(!request) return reject({id: item[offset].id, tempId: item[offset].tempId, Error: 'Request não encontrado!', actionDate: item[offset].actionDate})
+                                            if(request.userId !== ctx.params.userId) return reject({id: item[offset].id, tempId: item[offset].tempId, Error: 'Este request não está mais com o atendente!', actionDate: item[offset].actionDate})
+                                            if((request.status === 'finished' || request.status === 'canceled')) return reject({id: item[offset].id, tempId: item[offset].tempId, Error: 'Este request está finalizado ou cancelado!', actionDate: item[offset].actionDate})
+
+                                            request.requestTimeline.sort((a,b) => {
+                                                return b.id - a.id
+                                            })
+                                            return server.sequelize.transaction().then((transaction) => {
+                                                return server.broker.call('data/request.update', {
+                                                    data: {
+                                                        status: item[offset].status
+                                                    },
+                                                    where: {
+                                                        id: item[offset].id
+                                                    },
+                                                    transaction: transaction
+                                                }).then(() => {
+                                                    return server.broker.call('data/request.createTimeline', {
+                                                        data: {
+                                                            requestId: item[offset].id,
+                                                            triggeredBy: ctx.params.userId,
+                                                            companyId: ctx.params.companyId,
+                                                            action: 'status_change',
+                                                            userId: _.first(request.requestTimeline).userId,
+                                                            status: item[offset].status,
+                                                            dateCreated: item[offset].actionDate
+                                                        },
+                                                        transaction: transaction
+                                                    }).then((requestTimelineItem) => {
+                                                        return transaction.commit().then(() => {
+                                                            return server.mongodb.Card.findOne({"requestId": parseInt(item[offset].id)}, {}, { sort: { position: 1 } }, function (err, card) {
+                                                                return card
+                                                            }).then((card) => {
+                                                                server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardRequestTimelineChangeStatus', new EventResponse({
+                                                                    cardId: card._id,
+                                                                    requestTimelineItem
+                                                                }))
+                    
+                                                                if(item[offset].status === 'finished' || item[offset].status === 'canceled'){
+                                                                    server.broker.call('request-board.removeCard', {
+                                                                        data: {
+                                                                            cardId: card._id
+                                                                        }
+                                                                    })
+                                                                }
+                                                                resolve({id: item[offset].id, tempId: item[offset].tempId, actionDate: item[offset].actionDate, processedDate: requestTimelineItem.dateCreated, status: requestTimelineItem.status})
+                                                            })
+                                                        })                                
+                                                    }).catch((err) => {
+                                                        return  transaction.rollback()
+                                                        .then(() =>{
+                                                            reject(_.assign({id: item[offset].id, tempId: item[offset].tempId, actionDate: item[offset].actionDate}, err))
+                                                        })
+                                                    })
+                                                }).catch((err) => {
+                                                    return  transaction.rollback()
+                                                    .then(() =>{
+                                                        reject(_.assign({id: item[offset].id, tempId: item[offset].tempId, actionDate: item[offset].actionDate}, err))
+                                                    })
+                                                })
+                                            })
+                                        })
+                                        
+                                    })
+                                    .then((reponsePromise) => {
+                                        offset += limit
+                                        if (!limitReached) {
+                                            promiseResolution.push(reponsePromise)
+                                            if((totalItemsLimit - (offset + limit)) === 0) limitReached = true 
+                                            bunch(offset)
+                                        }
+                                        else {
+                                            promiseResolution.push(reponsePromise)
+                                            console.log('Cabo o #', (index + 1))
+                                            resolve(promiseResolution)
+                                        }
+                                    })
+                                    .catch((err) => {
+                                        offset += limit
+                                        if (!limitReached) {
+                                            promiseResolution.push(err)
+                                            if((totalItemsLimit - (offset + limit)) === 0) limitReached = true 
+                                            bunch(offset)
+                                        }
+                                        else {
+                                            promiseResolution.push(err)
+                                            console.log('Cabo o #', (index + 1))
+                                            resolve(promiseResolution)
+                                        }
+                                    })
+                                }
+
+                                bunch(initialOffset)
+                            })
+                        )
+                    })
+
+                    return Promise.all(promises)
+                    .then((returnPromise) => {
+                        return returnPromise
+                    })
+
+                })
+            },
+
             changeStatus(ctx) {
                 return server.broker.call('data/request.getList', {
                     where: {
