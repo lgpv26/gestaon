@@ -29,6 +29,9 @@ module.exports = {
                         this.setDataValue('code', (val === '' || val === null) ? null : val.toUpperCase().trim());
                     }
                 },
+                billPaymentDate:{
+                    type: TIMESTAMP
+                },
                 lastTriggeredUserId: {
                     type: Sequelize.INTEGER
                 },               

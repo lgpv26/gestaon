@@ -225,6 +225,94 @@ module.exports = (server) => {
             })
 
         },
+
+        markAsReceived(ctx){
+            this._transaction = ctx.params.transaction || null
+
+            return ctx.call("cashier-balancing.setTransaction").then(() => {
+                return server.mysql.RequestPayment.findAll({
+                    where: {
+                        id: {
+                            [Op.in]: ctx.params.data.requestPaymentIds
+                        },
+                        receivedDate: (ctx.params.persistence) ? true : null
+                    },
+                    include: [
+                        {
+                            model: server.mysql.RequestPaymentTransaction,
+                            as: 'requestPaymentTransactions',
+                            include: [{
+                                model: server.mysql.Transaction,
+                                as: 'transaction'
+                            }]
+                        },
+                        {
+                            model: server.mysql.Request,
+                            as: 'request',
+                            where: {
+                                companyId: {
+                                    [Op.in]: [ctx.params.data.companyId]
+                                }
+                            },
+                            include: [{
+                                model: server.mysql.User,
+                                as: "responsibleUser",
+                                attributes: ['id', 'activeCompanyUserId', 'accountId', 'name', 'email']
+                            }]
+                        }
+                    ],
+                    transaction: this._transaction
+                }).then((requestPayments) => {
+                    const promises = _.map(requestPayments, (requestPayment) => {
+                        return new Promise((resolve, reject) => {
+                            resolve((ctx.params.data.accountId) ? ctx.params.data.accountId : requestPayment.request.responsibleUser.accountId)
+                        }).then((accountId) => {
+                        if(!accountId) return new Error("Error in markAsPaid, account Id is not null")
+                        return ctx.call('data/transaction.create', {
+                            data: {
+                                amount: Math.abs(requestPayment.amount),
+                                createdById: ctx.params.data.createdById,
+                                accountId: accountId,
+                                companyId: requestPayment.request.companyId,
+                                description: 'Recebido o pagamento ' + requestPayment.id + ' do pedido #' + requestPayment.request.id + ' por acerto de contas.',
+                            },
+                            transaction: this._transaction
+                        }).then((transaction) => {
+                                return server.mysql.RequestPaymentTransaction.create({
+                                    requestPaymentId: ctx.params.paymentMethodId,                    
+                                    requestPaymentId: requestPayment.id,
+                                    transactionId: transaction.id,
+                                    action: 'payment',
+                                    operation: null,
+                                    revert: false
+                                    }, {
+                                    transaction: this._transaction
+                                }).then(() => {
+                                    return requestPayment.update({
+                                        lastTriggeredUserId: ctx.params.data.createdById,
+                                        lastReceivedFromUserId: requestPayment.request.userId, 
+                                        receivedDate: (ctx.params.data.receivedDate) ? ctx.params.data.receivedDate : moment(),
+                                    },{
+                                        returning: true,
+                                        plain: true,
+                                        transaction: this._transaction
+                                    })
+                                })     
+                            })
+                        })
+                        return Promise.all(promises).then(() => {
+                            if(this._saveInRequest) {
+                                return true
+                            }
+                            else {
+                                return ctx.call("cashier-balancing.commit")
+                            }
+                        })
+                    })
+                })
+            })
+        },
+
         markAsPaid(ctx){
             this._transaction = ctx.params.transaction || null
 

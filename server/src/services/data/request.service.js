@@ -214,6 +214,9 @@ module.exports = (server) => { return {
                         if (requestPayment.id) {
                             paymentMethodsPromises.push(ctx.call("data/request.paymentMethodUpdate", {
                                 data: _.assign(requestPayment, {
+                                    lastTriggeredUserId: ctx.params.createdById,
+                                    lastReceivedFromUserId: (requestPayment.receivedDate) ? ctx.params.createdById : ctx.params.userId,
+                                    receivedDate: (requestPayment.receivedDate) ? requestPayment.receivedDate : null,
                                     paid: (requestPayment.paid) ? requestPayment.paid : false,
                                     requestId: ctx.params.requestId,
                                     paidDatetime: (requestPayment.paid) ? moment() : null,
@@ -225,34 +228,9 @@ module.exports = (server) => { return {
                                 },
                                 transaction: ctx.params.transaction 
                             }).then((paymentMethodReturn) => {
-                                if(!requestPayment.paid && !requestPayment.paymentMethod.autoPay) {
-                                    return ctx.call("data/request.setPaymentBill", {
-                                        data: {
-                                            deadlineDatetime: requestPayment.deadlineDatetime
-                                        },
-                                        where: {
-                                            requestPaymentId: paymentMethodReturn.id
-                                        },
-                                        requestPaymentId: paymentMethodReturn.id,
-                                        transaction: ctx.params.transaction 
-                                    })
-                                    .then(() => {
-                                        return ctx.call("data/client.get", {
-                                            where: {
-                                                id: ctx.params.clientId
-                                            },
-                                            transaction: ctx.params.transaction 
-                                        }).then((client) => {
-                                            if(!limitInUseChange[client.id]) limitInUseChange[client.id] = client.limitInUse
-                                            limitInUseChange[client.id] = parseFloat(limitInUseChange[client.id]) + parseFloat(paymentMethodReturn.amount) 
-                                        })
-                                    
-                                    })
-                                }
-                                else{
-                                    if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
-                                    return paymentMethodReturn
-                                }                                
+                                if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
+                                return paymentMethodReturn
+                                
                             }).catch((err) =>{
                                 //console.log(err) //comentar
                                 throw new Error(err)
@@ -262,6 +240,9 @@ module.exports = (server) => { return {
                         else {
                             paymentMethodsPromises.push(ctx.call("data/request.paymentMethodCreate", {
                                 data: _.assign(requestPayment, {
+                                    lastTriggeredUserId: ctx.params.createdById,
+                                    lastReceivedFromUserId: (requestPayment.receivedDate) ? ctx.params.createdById : ctx.params.userId,
+                                    receivedDate: (requestPayment.receivedDate) ? requestPayment.receivedDate : null,
                                     paid: (requestPayment.paid) ? requestPayment.paid : false,
                                     requestId: ctx.params.requestId,
                                     paidDatetime: (requestPayment.paid) ? moment() : null
@@ -269,35 +250,8 @@ module.exports = (server) => { return {
                                 createdById: ctx.params.createdById,
                                 transaction: ctx.params.transaction || null
                             }).then((paymentMethodReturn) => {
-                                if(!requestPayment.paid && !requestPayment.paymentMethod.autoPay) {
-                                    return ctx.call("data/request.setPaymentBill", {
-                                        data: {
-                                            requestPaymentId: paymentMethodReturn.id,
-                                            deadlineDatetime: requestPayment.deadlineDatetime
-                                        },
-                                        where: {
-                                            requestPaymentId: paymentMethodReturn.id
-                                        },
-                                        requestPaymentId: paymentMethodReturn.id,
-                                        transaction: ctx.params.transaction 
-                                    })
-                                    .then(() => {
-                                        return ctx.call("data/client.get", {
-                                            where: {
-                                                id: ctx.params.clientId
-                                            },
-                                            transaction: ctx.params.transaction 
-                                        }).then((client) => {
-                                            if(!limitInUseChange[client.id]) limitInUseChange[client.id] = client.limitInUse
-                                            limitInUseChange[client.id] = parseFloat(limitInUseChange[client.id]) + parseFloat(paymentMethodReturn.amount)
-                                        })
-                                    })
-                                        
-                                }
-                                else{
-                                    if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
-                                    return paymentMethodReturn
-                                }
+                                if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
+                                return paymentMethodReturn
                             }).catch((err) =>{
                                 //console.log(err) // COMENTAR
                                 throw new Error(err)
