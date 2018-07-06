@@ -42,6 +42,19 @@ module.exports = (server, restify) => {
             return res.send(200, new EventResponse(err))
         })
     })
+
+    server.post('/mobile/requests/status', (req, res, next) => {
+        const aaa = {
+            data: req.body,
+            userId: req.auth.id,
+            companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
+        }
+        server.broker.call('data/mobile.changeStatusNew', aaa).then((request) => {
+            return res.send(200, new EventResponse(request))
+        }).catch((err) => {
+            return res.send(200, new EventResponse(err))
+        })
+    })
     
 
     server.patch('/mobile/requests/:id', (req, res, next) => {
@@ -71,6 +84,7 @@ module.exports = (server, restify) => {
             return res.send(200, new EventResponse(err))
         })
     })
+
 /*
     server.post('/requests', (req, res, next) => {
         server.broker.call('data/request.create', {
