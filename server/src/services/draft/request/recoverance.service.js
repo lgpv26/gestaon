@@ -176,7 +176,7 @@ module.exports = (server) => {
             }).then((request) => {
                 return request
             }).catch((err) => {
-                console.log("Erro em: draft/request/recoverance.consultRequest")
+                console.log(err, "Erro em: draft/request/recoverance.consultRequest")
                 throw new Error(err)
             })
         },

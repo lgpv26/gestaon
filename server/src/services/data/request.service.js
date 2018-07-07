@@ -215,11 +215,11 @@ module.exports = (server) => { return {
                             paymentMethodsPromises.push(ctx.call("data/request.paymentMethodUpdate", {
                                 data: _.assign(requestPayment, {
                                     lastTriggeredUserId: ctx.params.createdById,
-                                    lastReceivedFromUserId: (requestPayment.receivedDate) ? ctx.params.createdById : ctx.params.userId,
-                                    receivedDate: (requestPayment.receivedDate) ? requestPayment.receivedDate : null,
-                                    paid: (requestPayment.paid) ? requestPayment.paid : false,
+                                    lastReceivedFromUserId: (requestPayment.received) ? ctx.params.createdById : null,
+                                    receivedDate: (requestPayment.received) ? (requestPayment.receivedDate) ? requestPayment.receivedDate : moment() : null,
+                                    received: (requestPayment.received) ? requestPayment.received : false,
+                                    deadlineDatetime: (requestPayment.deadlineDatetime) ? requestPayment.deadlineDatetime : null,
                                     requestId: ctx.params.requestId,
-                                    paidDatetime: (requestPayment.paid) ? moment() : null,
                                     dateRemoved: null
                                 }),
                                 createdById: ctx.params.createdById,
@@ -241,11 +241,11 @@ module.exports = (server) => { return {
                             paymentMethodsPromises.push(ctx.call("data/request.paymentMethodCreate", {
                                 data: _.assign(requestPayment, {
                                     lastTriggeredUserId: ctx.params.createdById,
-                                    lastReceivedFromUserId: (requestPayment.receivedDate) ? ctx.params.createdById : ctx.params.userId,
-                                    receivedDate: (requestPayment.receivedDate) ? requestPayment.receivedDate : null,
-                                    paid: (requestPayment.paid) ? requestPayment.paid : false,
+                                    lastReceivedFromUserId: (requestPayment.received) ? ctx.params.createdById : ctx.params.userId,
+                                    receivedDate: (requestPayment.received) ? (requestPayment.receivedDate) ? requestPayment.receivedDate : moment() : null,
+                                    received: (requestPayment.received) ? requestPayment.received : false,
+                                    deadlineDatetime: (requestPayment.deadlineDatetime) ? requestPayment.deadlineDatetime : null,
                                     requestId: ctx.params.requestId,
-                                    paidDatetime: (requestPayment.paid) ? moment() : null
                                 }),
                                 createdById: ctx.params.createdById,
                                 transaction: ctx.params.transaction || null
@@ -347,7 +347,7 @@ module.exports = (server) => { return {
         setPaymentBill(ctx){
             return ctx.call("data/request.getOneBill", {
                 where: ctx.params.where || {},
-                transaction: ctx.params.transaction
+                transaction: ctx.params.transaction 
             }).then((bill) => {
                 console.log(bill)
                 if(bill){
