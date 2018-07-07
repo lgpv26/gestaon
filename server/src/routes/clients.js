@@ -77,6 +77,17 @@ module.exports = (server, restify) => {
 
     server.patch('/clients/:id', clientsController.updateOne);
 
+    server.get('/clients/:id/requests/history', (req, res, next) => {
+        return server.broker.call('data/client.getRequestHistory', {
+            data: {
+                id: parseInt(req.params.id)
+            },
+            companyId: req.query.companyId
+        }).then((data) => {
+            return res.send(200, { data })
+        })
+    })
+
     server.get('/clients/:id/credit-info', (req, res, next) => {
         return server.broker.call('data/client.getCreditInfo', {
             clientId: req.params.id,

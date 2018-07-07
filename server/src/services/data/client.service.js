@@ -70,6 +70,53 @@ module.exports = (server) => {
             remove(ctx) {
 
             },
+            getRequestHistory(ctx){
+                return server.mysql.Request.findAll({
+                    where: {
+                        clientId: ctx.params.data.id,
+                        status: 'finished',
+
+                    },
+                    order: [
+                        ['deliveryDate', 'DESC']
+                    ],
+                    include: [
+                        {
+                            model: server.mysql.RequestOrder,
+                            as: 'requestOrder',
+                            include: [
+                                {
+                                    model: server.mysql.RequestOrderProduct,
+                                    as: 'requestOrderProducts'
+                                }
+                            ]
+                        },
+                        {
+                            model: server.mysql.RequestPayment,
+                            as: 'requestPayments',
+                            include: [
+                                {
+                                    model: server.mysql.PaymentMethod,
+                                    as: 'paymentMethod'
+                                }
+                            ]
+                        }
+                    ]
+                }).then((requestHistory) => {
+                    let lastDeliveryDate = null
+                    const daysAverage = _.meanBy(requestHistory,(requestHistoryItem) => {
+                        if(lastDeliveryDate){
+                            const diffBetweenLastDateInIteration = moment(requestHistoryItem.deliveryDate).diff(lastDeliveryDate, 'days')
+                            lastDeliveryDate = requestHistoryItem.deliveryDate
+                            return diffBetweenLastDateInIteration
+                        }
+                    })
+                    return {
+                        daysDifferenceAverageBetweenRequests,
+                        requestHistory
+                    }
+                })
+            },
             changeCreditLimit(ctx) {
                 return ctx.call("data/client.get", {
                     where: {

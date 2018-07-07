@@ -35,8 +35,8 @@
                 <input type="text" class="input--borderless search-input__field" v-else-if="selectedAddress" :value="selectedAddress.name" disabled />
             </div>
         </div>
-        <div class="search__action-button" ref="actionButton" >
-            <div style="width: 40px; height: 20px; display: flex; align-items: center; justify-content: center;" @click="addRequestDraft()">
+        <div class="search__action-button" ref="actionButton" @click="addRequestDraft()">
+            <div style="width: 40px; height: 20px; display: flex; align-items: center; justify-content: center;">
                 <icon-header-add></icon-header-add>
             </div>
             <app-dropdown-menu v-if="false" :menuList="menuList" placement="bottom-end" :verticalOffset="10">
@@ -320,7 +320,7 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 
     div.app-search {
         height: 32px;
@@ -369,10 +369,6 @@
     .search__search-input .search-input__item span {
         line-height: 150%;
         font-size: 13px;
-    }
-    .search__search-input .search-input__item span em {
-        font-style: initial;
-        color: red;
     }
     .search__search-input .search-input__settings {
         display: flex;
@@ -448,5 +444,14 @@
         border-bottom-right-radius: 32px;
         border-top-right-radius: 32px;
         cursor: pointer;
+        .colorizable {
+            fill: #FFFFFF;
+        }
+        &:hover {
+            background-color: #FFFFFF;
+            .colorizable {
+                fill: var(--font-color--primary)
+            }
+        }
     }
 </style>
