@@ -283,6 +283,7 @@ module.exports = (server, restify) => {
                             _.map(esRes.responses, (response, index) => { // first MAP to check 2 array (one about 'clients', two about 'address')
                                 if (parseInt(index) === 0) {
                                     let responseHits = []  // Array that will be returned by the client's data
+                                    if(!_.has(response, 'hits.hits')) return
                                     _.map(response.hits.hits, (hit, index) => {
                                         let address = {} // Object of the address to be returned
                                         if (hit._source.addresses) { //Check if the client has a registered address
@@ -320,6 +321,7 @@ module.exports = (server, restify) => {
                                 }
                                 else {
                                     let addresses = []
+                                    if(!_.has(response, 'hits.hits')) return
                                     _.map(response.hits.hits, (hit, index) => { //easy pizzy
                                         const addressId = parseInt(hit._id)
                                         addresses.push({ source: _.assign({}, { id: addressId }, hit._source) })

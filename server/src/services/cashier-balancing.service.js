@@ -228,14 +228,15 @@ module.exports = (server) => {
 
         markAsReceived(ctx){
             this._transaction = ctx.params.transaction || null
-
             return ctx.call("cashier-balancing.setTransaction").then(() => {
                 return server.mysql.RequestPayment.findAll({
                     where: {
                         id: {
                             [Op.in]: ctx.params.data.requestPaymentIds
                         },
-                        receivedDate: (ctx.params.persistence) ? true : null
+                        received: {
+                            [Op.or]: [false, null]
+                        }
                     },
                     include: [
                         {
@@ -264,15 +265,11 @@ module.exports = (server) => {
                     transaction: this._transaction
                 }).then((requestPayments) => {
                     const promises = _.map(requestPayments, (requestPayment) => {
-                        return new Promise((resolve, reject) => {
-                            resolve((ctx.params.data.accountId) ? ctx.params.data.accountId : requestPayment.request.responsibleUser.accountId)
-                        }).then((accountId) => {
-                        if(!accountId) return new Error("Error in markAsPaid, account Id is not null")
                         return ctx.call('data/transaction.create', {
                             data: {
                                 amount: Math.abs(requestPayment.amount),
                                 createdById: ctx.params.data.createdById,
-                                accountId: accountId,
+                                accountId: (ctx.params.data.accountId) ? ctx.params.data.accountId : requestPayment.request.responsibleUser.accountId,
                                 companyId: requestPayment.request.companyId,
                                 description: 'Recebido o pagamento ' + requestPayment.id + ' do pedido #' + requestPayment.request.id + ' por acerto de contas.',
                             },
@@ -282,16 +279,18 @@ module.exports = (server) => {
                                     requestPaymentId: ctx.params.paymentMethodId,                    
                                     requestPaymentId: requestPayment.id,
                                     transactionId: transaction.id,
-                                    action: 'payment',
+                                    action: 'received',
                                     operation: null,
                                     revert: false
                                     }, {
                                     transaction: this._transaction
                                 }).then(() => {
+                                    
                                     return requestPayment.update({
                                         lastTriggeredUserId: ctx.params.data.createdById,
                                         lastReceivedFromUserId: requestPayment.request.userId, 
                                         receivedDate: (ctx.params.data.receivedDate) ? ctx.params.data.receivedDate : moment(),
+                                        received: (ctx.params.data.received) ? ctx.params.data.received : false
                                     },{
                                         returning: true,
                                         plain: true,
@@ -300,14 +299,8 @@ module.exports = (server) => {
                                 })     
                             })
                         })
-                        return Promise.all(promises).then(() => {
-                            if(this._saveInRequest) {
-                                return true
-                            }
-                            else {
-                                return ctx.call("cashier-balancing.commit")
-                            }
-                        })
+                    return Promise.all(promises).then(() => {
+                        return ctx.call("cashier-balancing.commit")
                     })
                 })
             })
@@ -322,7 +315,7 @@ module.exports = (server) => {
                         id: {
                             [Op.in]: ctx.params.data.requestPaymentIds
                         },
-                        receivedDate: (ctx.params.persistence) ? true : null
+                        received: (ctx.params.persistence) ? true : null
                     },
                     include: [
                         {

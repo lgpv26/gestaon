@@ -69,7 +69,7 @@ module.exports = (server) => {
                                     }).then(() => {
                                         return server.mysql.RequestPayment.update({
                                             lastTriggeredUserId: ctx.params.createdById,
-                                            lastReceivedFromUserId: (bill.receivedDate) ? bill.lastTriggeredUserId : bill.request.userId,
+                                            lastReceivedFromUserId: (bill.received) ? bill.lastTriggeredUserId : bill.request.userId,
                                             billPaymentDate: (ctx.params.data.billPaymentDate) ? ctx.params.data.billPaymentDate : moment()
                                         }, {
                                             where: {
