@@ -10,13 +10,10 @@ module.exports = (server, restify) => {
 
     server.use(basePath(
         '/mobile', authGuard
-    ));
-    
-
-    /* CRUD */
+    ))
 
     server.post('/mobile/requests', (req, res, next) => {
-        server.broker.call('data/mobile.createRequest', {
+        server.broker.call('data/mobile.settings', {
             data: req.body,
             userAccountId: req.auth.accountId,
             userId: req.auth.id,

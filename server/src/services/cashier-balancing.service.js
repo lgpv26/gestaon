@@ -386,6 +386,7 @@ module.exports = (server) => {
                                     return requestPayment.update({
                                         lastTriggeredUserId: ctx.params.data.createdById,
                                         lastReceivedFromUserId: requestPayment.request.userId, 
+                                        received: true,
                                         receivedDate: moment(),
                                     },{
                                         returning: true,

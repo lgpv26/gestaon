@@ -22,16 +22,14 @@
                 <span v-else>---</span>
             </td>
             <td>
-                <input type="text" v-model="requestPaymentRow.code" v-if="requestPaymentRow.paymentMethod.id === config.system.IDMappings.paymentMethods.bill"
+                <input type="text" v-model="requestPaymentRow.code" v-if="requestPaymentRow.paymentMethod.hasDeadline"
                 @input="inputRequestPaymentRow($event,'code',index)" style="text-transform: initial" />
                 <span v-else>---</span>
             </td>
             <td><money type="text" v-model="requestPaymentRow.amount" @input.native="inputRequestPaymentRow($event,'amount',index)" style="text-align: right;"></money></td>
             <td class="actions">
-                <app-switch v-if="requestPaymentRow.paymentMethod.id !== config.system.IDMappings.paymentMethods.bill" v-model="requestPaymentRow.paid"
-                    @change="toggleRequestPaymentRowPaid($event, index)" :title="'Marcar como recebido'"
-                    v-tippy="{ placement: 'right', theme: 'light', zIndex: 99999999, inertia: true, arrow: true, animation: 'perspective' }"></app-switch>
-                <app-switch :value="false" :disabled="true" v-else></app-switch>
+                <app-switch v-model="requestPaymentRow.received"
+                    @change="toggleRequestPaymentRowReceived($event, index)" :title="'Marcar como recebido'" v-tippy="{ placement: 'right', theme: 'light', zIndex: 99999999, inertia: true, arrow: true, animation: 'perspective' }"></app-switch>
                 <a href="javascript:void(0)" @click="remove(requestPaymentRow.id, index)" style="margin-left: 10px;">
                     <icon-remove></icon-remove>
                 </a>
@@ -122,9 +120,9 @@
         },
         methods: {
             ...mapActions('draft/request', ['addRequestPayment', 'removeRequestPayment']),
-            toggleRequestPaymentRowPaid(value,index){
-                this.requestPayments[index].paid = value
-                this.sync(value,'requestPayments[' + index + '].paid')
+            toggleRequestPaymentRowReceived(value,index){
+                this.requestPayments[index].received = value
+                this.sync(value,'requestPayments[' + index + '].received')
             },
             inputRequestPaymentRow(ev,field,index){
                 if(ev.isTrusted){

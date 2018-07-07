@@ -28,13 +28,8 @@
                     <h3>15 min</h3>
                 </div>
                 -->
-                <template slot="paid" slot-scope="slotProps">
-                    <a href="javascript:void(0)" :class="{active: slotProps.item.paid}" style="width: 32px">
-                        <icon-check></icon-check>
-                    </a>
-                </template>
-                <template slot="settled" slot-scope="slotProps">
-                    <a href="javascript:void(0)" :class="{active: slotProps.item.settled}" style="width: 50px">
+                <template slot="received" slot-scope="slotProps">
+                    <a href="javascript:void(0)" :class="{active: slotProps.item.received}" style="width: 32px">
                         <icon-check></icon-check>
                     </a>
                 </template>
@@ -63,11 +58,12 @@
                             </template>
                         </app-select>
                     </div>
-                    <div class="group" v-if="form.action === 'settled'">
+                    <div class="group" v-if="form.action === 'received'">
                         <span>No horário:</span>
-                        <app-datetime-selector class="input--borderless" v-model="form.settledDatetime" :config="datetimeSelectorConfig" placeholder="HORÁRIO ATUAL"></app-datetime-selector>
-                        <a href="javascript:void(0)" v-if="form.settledDatetime" @click="form.settledDatetime = null"><icon-remove></icon-remove></a>
+                        <app-datetime-selector class="input--borderless" v-model="form.receivedDate" :config="datetimeSelectorConfig" placeholder="HORÁRIO ATUAL"></app-datetime-selector>
+                        <a href="javascript:void(0)" v-if="form.receivedDate" @click="form.receivedDate = null"><icon-remove></icon-remove></a>
                     </div>
+                    <!--
                     <div class="group" v-if="form.action === 'settled'">
                         <span>Conta:</span>
                         <app-account-select v-model="form.account" :items="accountsSelectItems"
@@ -82,6 +78,7 @@
                             </template>
                         </app-account-select>
                     </div>
+                    -->
                     <a class="btn btn--primary" @click="submit()">Confirmar</a>
                 </div>
             </div>
@@ -149,13 +146,8 @@
                         name: 'status'
                     },
                     {
-                        text: 'Pago',
-                        name: 'paid',
-                        html: true
-                    },
-                    {
-                        text: 'Conf.',
-                        name: 'settled',
+                        text: 'Rec.',
+                        name: 'received',
                         html: true
                     },
                     {
@@ -174,8 +166,8 @@
                 },
                 form: {
                     account: null,
-                    action: null,
-                    settledDatetime: null,
+                    action: 'received',
+                    receivedDate: null,
                     dateCreated: [[]],
                     dateCreatedToSend: [[]],
                     clientGroup: [],
@@ -218,12 +210,8 @@
             actionsSelectItems(){
                 return [
                     {
-                        text: 'Marcar como pago',
-                        value: 'paid'
-                    },
-                    {
-                        text: 'Marcar como conferido',
-                        value: 'settled'
+                        text: 'Marcar como recebido',
+                        value: 'received'
                     }
                 ]
             },
@@ -289,7 +277,7 @@
                             amount: row.amount,
                             formattedAmount: utils.formatMoney(row.amount, 2,'R$ ','.',','),
                             deliveryDate: moment(row.request.deliveryDate).format("DD/MM HH:mm"),
-                            paid: row.paid,
+                            received: row.received,
                             name: _.truncate(_.get(row,'request.client.name', '---'), {
                                 'length': 18,
                                 'separator': '',
@@ -332,38 +320,14 @@
                     })
                     return
                 }
-                if(vm.form.action === 'paid'){
-                    CashierBalancingAPI.markAsPaid({
+                if(vm.form.action === 'received'){
+                    CashierBalancingAPI.markAsReceived({
+                        receivedDate: vm.form.receivedDate,
                         requestPaymentIds: _.map(_.filter(vm.selectedItems, (selectedItem) => {
-                            if(selectedItem.paymentMethodId === config.system.IDMappings.paymentMethods.bill){
-                                return false
-                            }
                             return selectedItem
                         }), (selectedItem) => {
                             return selectedItem.id
-                        }),
-                        accountId: vm.form.account
-                    }, {
-                        companyId: vm.company.id
-                    }).then((res) => {
-                        vm.selectedItems = []
-                        vm.$refs.filter.apply()
-                    })
-                }
-                else if(vm.form.action === 'settled'){
-                    if(!vm.form.account){
-                        vm.showToast({
-                            type: 'error',
-                            message: "Você deve selecionar uma conta de destino!"
                         })
-                        return
-                    }
-                    CashierBalancingAPI.markAsSettled({
-                        settledDatetime: vm.form.settledDatetime,
-                        requestPaymentIds: _.map(vm.selectedItems, (selectedItem) => {
-                            return selectedItem.id
-                        }),
-                        accountId: vm.form.account
                     }, {
                         companyId: vm.company.id
                     }).then((res) => {

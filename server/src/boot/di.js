@@ -82,12 +82,7 @@ module.exports = class DependencyInjection {
         this.server.sequelize = new Sequelize(config.database.dbName, config.database.user, config.database.password, {
             logging: false,
             host: config.database.host,
-            dialect: config.database.dialect,
-            pool: {
-                max: 5,
-                min: 0,
-                idle: 10000
-            }
+            dialect: config.database.dialect
         })
         
         return this.server.sequelize

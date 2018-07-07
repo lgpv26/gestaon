@@ -6,25 +6,80 @@ import {Op} from 'sequelize'
 
 module.exports = (server, restify) => {
 
-    const authGuard = require('./../middlewares/auth-guard.middleware')(server, restify);
+    const authGuard = require('./../middlewares/auth-guard.middleware')(server, restify)
 
-    const usersController = require('./../controllers/users.controller')(server, restify);
+    const usersController = require('./../controllers/users.controller')(server, restify)
 
     /* Authentication */
 
-    server.post('/authenticate', usersController.authenticate);
+    server.post('/authenticate', usersController.authenticate)
 
     /* Registration */
 
-    server.post('/register', usersController.register);
+    server.post('/register', usersController.register)
 
     /* Forgot your password */
 
-    server.post('/forgot-password', usersController.forgotPassword);
+    server.post('/forgot-password', usersController.forgotPassword)
 
     /* Me */
 
-    server.get('/me', authGuard, usersController.me);
+    server.get('/me', authGuard, usersController.me)
+
+    /* User setting */
+    server.post('/me/setting', authGuard, (req, res, next) => {
+        const userSetting = _.assign(req.body, {
+            userId: req.auth.id
+        })
+        server.mysql.UserSetting.upsert(userSetting).then((userSetting) => {
+            res.send(200, {
+                data: userSetting
+            })
+        }).catch((err) => {
+            next(err)
+        })
+    })
+
+    /* User settings */
+    server.post('/me/settings', authGuard, (req, res, next) => {
+        server.mysql.User.findOne({
+            where: {
+                id: req.auth.id
+            },
+            include: [
+                {
+                    model: server.mysql.UserSetting,
+                    as : 'userSettings'
+                }
+            ]
+        }).then((user) => {
+            const userSettings = req.body
+            userSettings.map((userSetting) => {
+                _.assign(userSetting, {
+                    userId: user.id
+                })
+                return userSetting
+            })
+            return server.sequelize.transaction(function (t) {
+                return server.mysql.UserSetting.destroy({
+                    where: {
+                        userId: user.id
+                    },
+                    transaction: t
+                }).then(() => {
+                    return server.mysql.UserSetting.bulkCreate(userSettings, {
+                        transaction: t
+                    }).then((response) => {
+                        res.send(200, {
+                            data: response
+                        })
+                    }).catch((error) => {
+                        next(error)
+                    })
+                })
+            })
+        })
+    })
 
     /* My requests */
 

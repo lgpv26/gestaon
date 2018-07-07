@@ -6,14 +6,14 @@ import generateCode from 'nanoid/generate'
 
 export class RequestPaymentModel {
     constructor({ id = null, deadlineDatetime = null, amount = 0,
-            code = generateCode('ABCDEFGHIJKLMNOPQRSTUVXYWZ0123456789',5), nextInstallments = [], paymentMethod = {}, paid = false } = {}){
+            code = generateCode('ABCDEFGHIJKLMNOPQRSTUVXYWZ0123456789',5), nextInstallments = [], paymentMethod = {}, received = false } = {}){
         this.id = id
         this.deadlineDatetime = deadlineDatetime
         this.amount = amount
         this.code = code
         this.nextInstallments = _.assign(this.nextInstallments, nextInstallments)
         this.paymentMethod = _.assign(this.paymentMethod,createPaymentMethod(paymentMethod))
-        this.paid = paid
+        this.received = received
     }
 }
 

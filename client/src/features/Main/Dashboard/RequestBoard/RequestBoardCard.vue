@@ -72,7 +72,7 @@
                             </app-popover>
                         </div>
                         <div class="objects__timer" v-else :class="{ over: deadline.isOver }">
-                            <app-popover :contentStyle="popoverContentStyle" :placement="'left'" :verticalOffset="8" :triggererStyle="{justifyContent: 'center'}">
+                            <app-popover :contentStyle="popoverContentStyle" :placement="'left'" :verticalOffset="20" :triggererStyle="{justifyContent: 'center'}">
                                 <template slot="triggerer">
                                     <span class="timer__hours">{{ moment(card.deliveryDate).format("HH") }}</span>
                                     <span class="timer__minutes">{{ moment(card.deliveryDate).format("mm") }}</span>

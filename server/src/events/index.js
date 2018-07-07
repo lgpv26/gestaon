@@ -1,6 +1,8 @@
 import fs from 'fs'
 import path from 'path'
 import _ from 'lodash'
+import config from '../config'
+import EventResponse from '../models/EventResponse'
 
 module.exports = class Events {
 
@@ -10,6 +12,7 @@ module.exports = class Events {
      */
     constructor(server){
         this.server = server
+        this._versionInterval = null
         this.events = fs.readdirSync(path.join(__dirname, '/')).filter((fileName) => {
             return fileName !== 'index.js'
         }).map((directory) => {
@@ -31,7 +34,17 @@ module.exports = class Events {
         const connectedSocketList = {}
         // for each connected user
         this.server.io.on('connection', (socket) => {
-            
+
+            if(!!this._versionInterval){
+                clearInterval(this._versionInterval)
+            }
+
+            this._versionTimeInterval = setInterval(() => {
+                socket.instance.emit('version', new EventResponse({
+                    android: config.mainServer.androidVersion
+                }))
+            }, 1000 * 10)
+
             // get token and get connected user
             let token = socket.handshake.query.token
             socket = {
@@ -98,6 +111,9 @@ module.exports = class Events {
                 }
             })
             socket.instance.on('disconnect', () => {
+                if(!!this._versionInterval){
+                    clearInterval(this._versionInterval)
+                }
                 delete connectedSocketList[socket.instance.id]
             })
             socket.instance.on('join-company-room', (companyId) => {

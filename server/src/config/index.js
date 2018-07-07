@@ -10,7 +10,8 @@ const config = {
         debug: {
             protocols: false
         },
-        version: packageJSON.version
+        version: packageJSON.version,
+        androidVersion: '0.0.13'
     },
     requestBoard: {
         defaultPosition: 65535

@@ -1,6 +1,8 @@
 const fs = require('fs'),
     path = require('path')
 
+import config from '../config'
+
 import {HTTPError} from '~errors'
 
 module.exports = function(server){
@@ -25,7 +27,7 @@ module.exports = function(server){
     server.get('/version', function(req, res, next){
         return res.send(200, {
             version: server.version,
-            android: '0.0.12'
+            android: config.mainServer.androidVersion
         });
     });
 

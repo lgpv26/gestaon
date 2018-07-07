@@ -26,7 +26,7 @@ module.exports = (server) => { return {
         },
         /**
          * @param {Object} data, {Object} transaction
-         * @returns {Promise.<Object>} request 
+         * @returns {Promise.<Object>} request
          */
         create(ctx) {
             return server.mysql.Request.create(ctx.params.data, {
@@ -40,7 +40,7 @@ module.exports = (server) => { return {
         },
         /**
          * @param {Object} data, {Object} where, {Object} transaction
-         * @returns {Promise.<Object>} request 
+         * @returns {Promise.<Object>} request
          */
         update(ctx) {
             return server.mysql.Request.update(ctx.params.data, {
@@ -76,7 +76,7 @@ module.exports = (server) => { return {
         },
         /**
          * @param {Object} data, {Object} transaction
-         * @returns {Promise.<Object>} requestOrder 
+         * @returns {Promise.<Object>} requestOrder
          */
         requestOrderCreate(ctx) {
             return server.mysql.RequestOrder.create(ctx.params.data, {
@@ -90,7 +90,7 @@ module.exports = (server) => { return {
         },
         /**
          * @param {Object} data, {Object} where, {Object} transaction
-         * @returns {Promise.<Object>} requestOrder 
+         * @returns {Promise.<Object>} requestOrder
          */
         requestOrderUpdate(ctx) {
             return server.mysql.RequestOrder.update(ctx.params.data, {
@@ -116,7 +116,7 @@ module.exports = (server) => { return {
         setRequestOrderProducts(ctx) {
             return ctx.call("data/product.saveProducts", {
                 data: ctx.params.data,
-                companyId: ctx.params.companyId, 
+                companyId: ctx.params.companyId,
                 transaction: ctx.params.transaction
             }).then((orderProductWithProduct) => {
                  let orderProducts = _.map(orderProductWithProduct, orderProduct => {
@@ -125,7 +125,7 @@ module.exports = (server) => { return {
                     })
                 })
 
-                
+
                 return ctx.call("data/request.saveRequestOrderProducts", {
                     data: orderProducts,
                     requestOrderId: parseInt(ctx.params.requestOrderId),
@@ -134,20 +134,20 @@ module.exports = (server) => { return {
                     return orderProducts
                 }).catch((err) => {
                     throw new Error("Nenhum registro encontrado.")
-                }) 
+                })
             }).catch((err) => {
                 //console.log('AQUI')  COMENTAR
-                throw new Error(err)                    
+                throw new Error(err)
             })
         },
         /**
          * @param {Object} data, {Int} requestOrderId, {Object} transaction
          * @returns {Promise.<Array>} RequestOrderProducts
-         */            
+         */
         saveRequestOrderProducts(ctx) {
             /*
             * Delete all
-            */ 
+            */
             return server.mysql.RequestOrderProduct.destroy({
                 where: {
                     requestOrderId: ctx.params.requestOrderId
@@ -162,7 +162,7 @@ module.exports = (server) => { return {
                     if (!response) {
                         console.log('Registro não encontrado. data/request.saveRequestOrderProducts')
                         throw new Error("Nenhum registro encontrado.")
-                    }                  
+                    }
                     return response
                 }).catch((err) => {
                     console.log(err)
@@ -182,7 +182,7 @@ module.exports = (server) => { return {
         },
         /**
          * @param {Object} data, {Object} requestId, {Object} transaction (optional)
-         * @returns {Promise.<Array>} paymentMethods 
+         * @returns {Promise.<Array>} paymentMethods
          */
         setPaymentMethods(ctx) {
             let revertTransactions = []
@@ -204,12 +204,12 @@ module.exports = (server) => { return {
                     alreadyPaid: ctx.params.alreadyPaid,
                     createdById: ctx.params.createdById,
                     requestId: ctx.params.requestId,
-                    transaction: ctx.params.transaction 
+                    transaction: ctx.params.transaction
                 }).then(() => {
                     const limitInUseChange = {}
                     let paymentMethodsPromises = []
                     let paymentsPaids = []
-                    
+
                     ctx.params.data.forEach((requestPayment) => {
                         if (requestPayment.id) {
                             paymentMethodsPromises.push(ctx.call("data/request.paymentMethodUpdate", {
@@ -226,7 +226,7 @@ module.exports = (server) => { return {
                                 where: {
                                     id: requestPayment.id
                                 },
-                                transaction: ctx.params.transaction 
+                                transaction: ctx.params.transaction
                             }).then((paymentMethodReturn) => {
                                 if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
                                 return paymentMethodReturn
@@ -260,7 +260,7 @@ module.exports = (server) => { return {
                         }
                     })
                     return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
-                        
+
                         const updateLimitInUsePromise = []
                         _.forEach(_.keys(limitInUseChange),(clientId) => {
                             updateLimitInUsePromise.push(server.mysql.Client.update({
@@ -272,7 +272,7 @@ module.exports = (server) => { return {
                                 transaction: ctx.params.transaction
                             }))
                         })
-                        
+
                         return Promise.all(paymentMethodsPromises).then(() => {
                         if(paymentsPaids.length){
                             return ctx.call("cashier-balancing.markAsPaid", {
@@ -358,7 +358,7 @@ module.exports = (server) => { return {
                         where: {
                             requestPaymentId: ctx.params.requestPaymentId
                         },
-                        transaction: ctx.params.transaction 
+                        transaction: ctx.params.transaction
                     })
                 }
                 else{
@@ -367,7 +367,7 @@ module.exports = (server) => { return {
                             requestPaymentId: ctx.params.requestPaymentId,
                             deadlineDatetime: ctx.params.data.deadlineDatetime
                         },
-                        transaction: ctx.params.transaction 
+                        transaction: ctx.params.transaction
                     })
                 }
             })
@@ -423,7 +423,7 @@ module.exports = (server) => { return {
                 throw new Error(err) // COMENTAR
             })
         },
-        
+
         revertTransaction(ctx){
             if (ctx.params.changePaid.length) {
                 ctx.params.data = _.concat(ctx.params.data, ctx.params.changePaid)
@@ -493,7 +493,7 @@ module.exports = (server) => { return {
                 let settledsRevert = _.filter(requestPayment.requestPaymentTransactions, (requestPaymentTransaction) => {
                     return requestPaymentTransaction.action === 'settle'
                 })
-                
+
 
                 if (settledsRevert.length) {
                     const settledTransaction = _.takeRight(settledsRevert, 2)
@@ -586,7 +586,7 @@ module.exports = (server) => { return {
                     })
                 )
             })
-            
+
             return Promise.all(promises).then(() => {
                 return server.mysql.RequestClientAddress.destroy({
                     where: {
@@ -724,6 +724,7 @@ module.exports = (server) => { return {
                             if(_.first(requestPayment.requestPaymentTransactions)){
                                 data.lastTriggeredUserId = _.first(requestPayment.requestPaymentTransactions).transaction.createdById,
                                     data.lastReceivedFromUserId = _.first(requestPayment.requestPaymentTransactions).transaction.account.user.id,
+                                    data.received = true
                                     data.receivedDate = (requestPayment.paidDatetime) ? requestPayment.paidDatetime : requestPayment.settledDatetime
                             }
 

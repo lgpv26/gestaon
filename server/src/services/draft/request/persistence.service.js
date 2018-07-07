@@ -346,7 +346,6 @@ module.exports = (server) => {
                             })
                         }
                         else {
-                            console.log("Update deliveryDate")
                             return ctx.call("request-board.updateCardDeliveryDate", {
                                 request: request,
                                 companyId: this._companyId

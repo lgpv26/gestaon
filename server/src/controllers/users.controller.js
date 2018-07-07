@@ -86,26 +86,32 @@ module.exports = (server, restify) => {
                     id: req.auth.id,
                     status: 'activated'
                 },
-                include: [{
-                    model: server.mysql.CompanyUser,
-                    as: 'userCompanies',
-                    include: [
-                        {
-                            model:server.mysql.Company,
-                            as:'company',
-                            include: [
-                                {
-                                    model: server.mysql.CompanySetting,
-                                    as:'companySettings'
-                                }
-                            ],
-                        },
-                        {
-                            model:server.mysql.CompanyUserPermission,
-                            as:'permissions'
-                        }
-                    ]
-                }]
+                include: [
+                    {
+                        model: server.mysql.CompanyUser,
+                        as: 'userCompanies',
+                        include: [
+                            {
+                                model:server.mysql.Company,
+                                as:'company',
+                                include: [
+                                    {
+                                        model: server.mysql.CompanySetting,
+                                        as:'companySettings'
+                                    }
+                                ],
+                            },
+                            {
+                                model:server.mysql.CompanyUserPermission,
+                                as:'permissions'
+                            }
+                        ]
+                    },
+                    {
+                        model: server.mysql.UserSetting,
+                        as: 'userSettings'
+                    }
+                ]
             }).then((user) => {
                 if(!user){
                     return next(

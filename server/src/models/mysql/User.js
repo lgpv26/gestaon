@@ -93,9 +93,10 @@ module.exports = {
             })
         };
     },
-    postSettings({User, CompanyUser, Company, UserAccessToken, UserRefreshToken, Request, Account, RequestTimeline, CreditLog, RequestChatItem}){
+    postSettings({User, UserSetting, CompanyUser, Company, UserAccessToken, UserRefreshToken, Request, Account, RequestTimeline, CreditLog, RequestChatItem}){
         User.belongsToMany(Company, {through: CompanyUser, as: 'companies', foreignKey: 'userId'});
         User.hasMany(CompanyUser, {as: 'userCompanies', foreignKey: 'userId'});
+        User.hasMany(UserSetting, {as: 'userSettings', foreignKey: 'userId'});
         User.hasMany(UserAccessToken, {as: 'userAccessTokens', foreignKey: 'userId'});
         User.hasMany(UserRefreshToken, {as: 'userRefreshTokens', foreignKey: 'userId'});
         User.belongsTo(Account, {as: 'account', foreignKey: 'accountId'});

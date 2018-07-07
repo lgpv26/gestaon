@@ -10,7 +10,7 @@ module.exports = (server, restify) => {
             if (typeof req.query.actingCities !== "undefined") {
                 req.query.actingCities.forEach(function (actingCity, index) {
                     actingCitiesString += " " + actingCity;
-                });
+                })
                 actingCitiesString = utils.removeDiacritics(actingCitiesString.trim());
             }
             server.elasticSearch.search(
@@ -43,10 +43,8 @@ module.exports = (server, restify) => {
                 },
                 function (esErr, esRes, esStatus) {
                     if (esErr) {
-                        console.error("Search error: ", esErr);
-                        return next(
-                            new restify.ResourceNotFoundError("Erro no ElasticSearch.")
-                        );
+                        console.error("Search error: ", esErr)
+                        return next("Erro no ElasticSearch.")
                     }
                     else {
                         let dataSearch = []
@@ -171,7 +169,7 @@ module.exports = (server, restify) => {
                     transaction: t
                 }).then((address) => {
                     if (!address) {
-                        return new restify.ResourceNotFoundError("Registro não encontrado.");
+                        return Promise.reject("Registro não encontrado.")
                     }
                     return server.elasticSearch.delete({
                         index: 'main',
@@ -221,9 +219,7 @@ module.exports = (server, restify) => {
                 }, function (esErr, esRes) {
                     if (esErr) {
                         console.error(esErr);
-                        return next(
-                            new restify.ResourceNotFoundError(esErr)
-                        );
+                        return next("Registro não encontrado.")
                     }
                     return res.send(200, {
                         data: esRes
