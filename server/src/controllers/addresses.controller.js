@@ -50,7 +50,7 @@ module.exports = (server, restify) => {
                     }
                     else {
                         let dataSearch = []
-                        if(!_.has(response, 'hits.hits')) {
+                        if(!_.has(esRes, 'hits.hits')) {
                             return  res.send(200, {
                                 data: dataSearch
                             })
