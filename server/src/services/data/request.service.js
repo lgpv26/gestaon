@@ -689,6 +689,7 @@ module.exports = (server) => { return {
        },
 
         importPayment(ctx){
+            console.log("Teste")
             ctx.call('data/request.getList', {
                 include: [{
                     model: server.mysql.RequestPayment,
