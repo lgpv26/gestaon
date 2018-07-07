@@ -689,7 +689,6 @@ module.exports = (server) => { return {
        },
 
         importPayment(ctx){
-            console.log("Teste")
             ctx.call('data/request.getList', {
                 include: [{
                     model: server.mysql.RequestPayment,
@@ -724,9 +723,9 @@ module.exports = (server) => { return {
 
                             if(_.first(requestPayment.requestPaymentTransactions)){
                                 data.lastTriggeredUserId = _.first(requestPayment.requestPaymentTransactions).transaction.createdById,
-                                    data.lastReceivedFromUserId = _.first(requestPayment.requestPaymentTransactions).transaction.account.user.id,
-                                    data.received = true
-                                    data.receivedDate = (requestPayment.paidDatetime) ? requestPayment.paidDatetime : requestPayment.settledDatetime
+                                data.lastReceivedFromUserId = _.first(requestPayment.requestPaymentTransactions).transaction.account.user.id,
+                                data.received = (requestPayment.settledDatetime) ? true : (requestPayment.paidDatetime) ? true : false
+                                data.receivedDate = (requestPayment.settledDatetime) ? requestPayment.settledDatetime : (requestPayment.paidDatetime) ? requestPayment.paidDatetime : null
                             }
 
                             console.log('Convertendo: #', (index + 1))
