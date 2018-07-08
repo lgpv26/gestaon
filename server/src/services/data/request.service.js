@@ -124,8 +124,6 @@ module.exports = (server) => { return {
                         productId: parseInt(orderProduct.product.id),
                     })
                 })
-
-
                 return ctx.call("data/request.saveRequestOrderProducts", {
                     data: orderProducts,
                     requestOrderId: parseInt(ctx.params.requestOrderId),

@@ -31,9 +31,11 @@ module.exports = (server, restify) => {
         const userSetting = _.assign(req.body, {
             userId: req.auth.id
         })
-        server.mysql.UserSetting.upsert(userSetting).then((userSetting) => {
+        server.sequelize.transaction((t) => {
+            return server.mysql.UserSetting.upsert(userSetting)
+        }).then((result) => {
             res.send(200, {
-                data: userSetting
+                data: result
             })
         }).catch((err) => {
             next(err)
