@@ -152,6 +152,9 @@
             ...mapActions('data/promotion-channels',{
                 'loadAllPromotionChannels': 'loadAll'
             }),
+            ...mapActions('data/products',{
+                'loadAllProducts': 'loadAll'
+            }),
             ...mapActions('loading', [
                 'setLoadingText','startLoading', 'stopLoading'
             ]),
@@ -357,6 +360,7 @@
                     vm.loadAllPaymentMethods({ companyId: vm.company.id }),
                     vm.loadAllPromotionChannels({ companyId: vm.company.id }),
                     vm.loadAllAccounts({ companyId: vm.company.id }),
+                    vm.loadAllProducts({ companyId: vm.company.id }),
                     vm.loadMorphScreenData(vm.company.id)
                 ])
             }).then(() => {

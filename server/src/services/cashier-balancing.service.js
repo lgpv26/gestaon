@@ -22,9 +22,10 @@ module.exports = (server) => {
 
             const searchObj = {
                 requestId: null,
-                dateCreated: null,
+                deliveryDate: null,
                 responsibleUser: null,
                 clientGroup: null,
+                product: null,
                 paymentMethod: null,
                 status: null,
                 paid: null
@@ -37,6 +38,7 @@ module.exports = (server) => {
             const where = {}
             const clientWhere = {}
             const requestWhere = {}
+            const productWhere = {}
 
             // set requestId
 
@@ -70,32 +72,51 @@ module.exports = (server) => {
                 }
             }
 
+            // set product filter
+
+            if(_.get(searchObj,'product',false)){
+                if(_.isArray(searchObj.product) && searchObj.product.length){
+                    productWhere.productId = {
+                        [Op.or]: searchObj.product
+                    }
+                }
+                else{
+                    productWhere.productId = searchObj.product
+                }
+            }
+
             // set created dates filter
 
-            if(_.get(searchObj,'dateCreated',false)){
-                if(_.isArray(searchObj.dateCreated) && searchObj.dateCreated.length){
-                    where.dateCreated = {
-                        [Op.or]: _.map(searchObj.dateCreated, (oneDateCreatedFromArray) => {
-                            if(_.isArray(oneDateCreatedFromArray)){ // its a date interval
+            if(_.get(searchObj,'deliveryDate',false)){
+                if(_.isArray(searchObj.deliveryDate) && searchObj.deliveryDate.length){
+                    requestWhere.deliveryDate = {
+                        [Op.or]: _.map(searchObj.deliveryDate, (oneDeliveryDateFromArray) => {
+                            if(_.isArray(oneDeliveryDateFromArray)){ // its a date interval
                                 return {
-                                    [Op.gte]: moment(_.first(oneDateCreatedFromArray)).startOf("day").toDate(),
-                                    [Op.lte]: moment(_.last(oneDateCreatedFromArray)).endOf("day").toDate()
+                                    [Op.gte]: moment(_.first(oneDeliveryDateFromArray)).startOf("day").toDate(),
+                                    [Op.lte]: moment(_.last(oneDeliveryDateFromArray)).endOf("day").toDate()
                                 }
                             }
                             else {
                                 return {
-                                    [Op.gte]: moment(oneDateCreatedFromArray).startOf("day").toDate(),
-                                    [Op.lte]: moment(oneDateCreatedFromArray).endOf("day").toDate()
+                                    [Op.gte]: moment(oneDeliveryDateFromArray).startOf("day").toDate(),
+                                    [Op.lte]: moment(oneDeliveryDateFromArray).endOf("day").toDate()
                                 }
                             }
                         })
                     }
                 }
-                else if(moment(searchObj.dateCreated).isValid()) {
-                    where.dateCreated = {
-                        [Op.gte]: moment(searchObj.dateCreated).startOf("day").toDate(),
-                        [Op.lte]: moment(searchObj.dateCreated).endOf("day").toDate()
+                else if(moment(searchObj.deliveryDate).isValid()) {
+                    requestWhere.deliveryDate = {
+                        [Op.gte]: moment(searchObj.deliveryDate).startOf("day").toDate(),
+                        [Op.lte]: moment(searchObj.deliveryDate).endOf("day").toDate()
                     }
+                }
+            }
+            else {
+                requestWhere.deliveryDate = {
+                    [Op.gte]: moment().startOf("day").toDate(),
+                    [Op.lte]: moment().endOf("day").toDate()
                 }
             }
 
@@ -227,8 +248,7 @@ module.exports = (server) => {
         },
 
         markAsReceived(ctx){
-            this._transaction = ctx.params.transaction || null
-            return ctx.call("cashier-balancing.setTransaction").then(() => {
+            return server.sequelize.transaction((t) => {
                 return server.mysql.RequestPayment.findAll({
                     where: {
                         id: {
@@ -285,7 +305,6 @@ module.exports = (server) => {
                                     }, {
                                     transaction: this._transaction
                                 }).then(() => {
-                                    
                                     return requestPayment.update({
                                         lastTriggeredUserId: ctx.params.data.createdById,
                                         lastReceivedFromUserId: requestPayment.request.userId, 
@@ -299,284 +318,7 @@ module.exports = (server) => {
                                 })     
                             })
                         })
-                    return Promise.all(promises).then(() => {
-                        return ctx.call("cashier-balancing.commit")
-                    })
-                })
-            })
-        },
-
-        markAsPaid(ctx){
-            this._transaction = ctx.params.transaction || null
-
-            return ctx.call("cashier-balancing.setTransaction").then(() => {
-                return server.mysql.RequestPayment.findAll({
-                    where: {
-                        id: {
-                            [Op.in]: ctx.params.data.requestPaymentIds
-                        },
-                        received: (ctx.params.persistence) ? true : null
-                    },
-                    include: [
-                        {
-                            model: server.mysql.RequestPaymentTransaction,
-                            as: 'requestPaymentTransactions',
-                            include: [{
-                                model: server.mysql.Transaction,
-                                as: 'transaction'
-                            }]
-                        },
-                        {
-                            model: server.mysql.Request,
-                            as: 'request',
-                            where: {
-                                companyId: {
-                                    [Op.in]: [ctx.params.data.companyId]
-                                }
-                            },
-                            include: [{
-                                model: server.mysql.User,
-                                as: "responsibleUser"
-                            }]
-                        }
-                    ],
-                    transaction: this._transaction
-                }).then((requestPayments) => {
-                    const accountBalances = {}
-                    const promises = _.map(requestPayments, (requestPayment) => {
-                        return new Promise((resolve, reject) => {
-                            if(requestPayment.settled){
-                                const data = _.filter(requestPayment.requestPaymentTransactions, (paymentTransaction) => {
-                                    if(paymentTransaction.action == 'settle' && paymentTransaction.operation == 'add' && !paymentTransaction.revert){
-                                        return paymentTransaction
-                                    }
-                                })
-                                resolve((data.length) ? data[0].transaction.accountId : null)
-                            }
-                            else{
-                                resolve((ctx.params.data.accountId) ? ctx.params.data.accountId : requestPayment.request.responsibleUser.accountId)
-                            }
-                        }).then((accountId) => {
-                        if(!accountId) return new Error("Error in markAsPaid, account Id is not null")
-                        return ctx.call('data/transaction.create', {
-                            data: {
-                                amount: Math.abs(requestPayment.amount),
-                                createdById: ctx.params.data.createdById,
-                                accountId: accountId,
-                                companyId: requestPayment.request.companyId,
-                                description: 'Adição do valor do pagamento do pedido #' + requestPayment.request.id + ' na conta de destino',
-                            },
-                            transaction: this._transaction
-                        }).then((transaction) => {
-                            return server.mysql.Account.findById(transaction.accountId, {
-                                transaction: this._transaction
-                            }).then((account) => {
-                                if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
-                                accountBalances[account.id] = (parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount))
-                                return server.mysql.RequestPaymentTransaction.create({
-                                    requestPaymentId: ctx.params.paymentMethodId,                    
-                                    requestPaymentId: requestPayment.id,
-                                    transactionId: transaction.id,
-                                    action: 'payment',
-                                    operation: null,
-                                    revert: false
-                                    }, {
-                                    transaction: this._transaction
-                                }).then(() => {
-                                    return requestPayment.update({
-                                        lastTriggeredUserId: ctx.params.data.createdById,
-                                        lastReceivedFromUserId: requestPayment.request.userId, 
-                                        received: true,
-                                        receivedDate: moment(),
-                                    },{
-                                        returning: true,
-                                        plain: true,
-                                        transaction: this._transaction
-                                    })
-                                })                            
-                            })
-                        })
-                    })
-                })
-                    return Promise.all(promises).then(() => {
-                        const updateAccountBalancesPromise = []
-                        _.forEach(_.keys(accountBalances),(accountId) => {
-                            updateAccountBalancesPromise.push(server.mysql.Account.update({
-                                balance: accountBalances[accountId]
-                                }, {
-                                where: {
-                                    id: parseInt(accountId)
-                                },
-                                transaction: this._transaction
-                            }))
-                        })
-                        return Promise.all(updateAccountBalancesPromise).then(() => {
-                            if(this._saveInRequest) {
-                                return true
-                            }
-                            else {
-                                return ctx.call("cashier-balancing.commit")
-                            }
-                        }).catch(() => {
-                            console.log("Erro em: cashier-balancing.markAsPaid")
-                            if(this._saveInRequest) {
-                                return new Error("Error in markAsPaid")
-                            }
-                            else {
-                                return ctx.call("cashier-balancing.rollback")
-                            }
-                        })
-                    })
-                })
-            })
-        },
-        markAsSettled(ctx){
-            this._transaction = ctx.params.transaction || null
-
-            return ctx.call("cashier-balancing.setTransaction").then(() => {
-                return server.mysql.RequestPayment.findAll({
-                    include: [
-                        {
-                            model: server.mysql.Request,
-                            as: 'request',
-                            include: [
-                                {
-                                    model: server.mysql.User,
-                                    as: 'responsibleUser'
-                                }
-                            ],
-                            where: {
-                                companyId: {
-                                    [Op.in]: [ctx.params.data.companyId]
-                                }
-                            }
-                        },
-                        {
-                            model: server.mysql.RequestPaymentTransaction,
-                            as: 'requestPaymentTransactions'
-                        }
-                    ],
-                    where: {
-                        id: {
-                            [Op.in]: ctx.params.data.requestPaymentIds
-                        }
-                    },
-                    transaction: this._transaction
-                }).then((requestPayments) => {
-                    let requestPaymentsToMarkAsSettled = _.filter(requestPayments, (requestPayment) => {
-                        requestPayment.requestPaymentTransactions.sort((a, b) => { return new Date(a.dateCreated) - new Date(b.dateCreated) })
-                        if(!requestPayment.requestPaymentTransactions.length){
-                            return true
-                        }
-                        return _.last(requestPayment.requestPaymentTransactions).action !== 'settle'
-                    })
-
-                    const transactionPromises = []
-                    const accountBalances = {}
-
-                    _.forEach(requestPaymentsToMarkAsSettled, (requestPaymentToMarkAsSettled) => {
-                        const iterationPromises = []
-                        iterationPromises.push(ctx.call('data/transaction.create', {
-                            data: {
-                                amount: Math.abs(requestPaymentToMarkAsSettled.amount),
-                                createdById: ctx.params.data.createdById,
-                                accountId: ctx.params.data.accountId,
-                                companyId: ctx.params.data.companyId,
-                                description: 'Adição do valor do acerto de contas na conta de destino',
-                            },
-                            transaction: this._transaction
-                        }).then((transaction) => {
-                                return server.mysql.Account.findById(ctx.params.data.accountId, {
-                                    transaction: this._transaction
-                                }).then((account) => {
-                                    if(requestPaymentToMarkAsSettled.paid){
-                                        if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
-                                        accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
-                                    }
-                                    return server.mysql.RequestPaymentTransaction.create({
-                                        requestPaymentId: requestPaymentToMarkAsSettled.id,
-                                        transactionId: transaction.id,
-                                        action: 'settle',
-                                        operation: 'add',
-                                        revert: false
-                                    },{
-                                        transaction: this._transaction
-                                    })
-                                })
-                        }))
-                        iterationPromises.push(ctx.call('data/transaction.create', {
-                            data: {
-                                amount: -Math.abs(requestPaymentToMarkAsSettled.amount),
-                                createdById: ctx.params.data.createdById,
-                                accountId: requestPaymentToMarkAsSettled.request.responsibleUser.accountId,
-                                companyId: ctx.params.data.companyId,
-                                description: 'Redução do valor do acerto de contas na conta de origem',
-                            },
-                            transaction: this._transaction
-                        }).then((transaction) => {
-                            return server.mysql.Account.findById(requestPaymentToMarkAsSettled.request.responsibleUser.accountId, {
-                                transaction: this._transaction
-                            }).then((account) => {
-                                if(requestPaymentToMarkAsSettled.paid){
-                                    if(!accountBalances[account.id]) accountBalances[account.id] = account.balance
-                                    accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transaction.amount)
-                                }
-                                    return server.mysql.RequestPaymentTransaction.create({
-                                        requestPaymentId: requestPaymentToMarkAsSettled.id,
-                                        transactionId: transaction.id,
-                                        action: 'settle',
-                                        operation: 'remove',
-                                        revert: false
-                                    }, {
-                                    transaction: this._transaction
-                                }).then(() => {
-                                    return server.mysql.RequestPayment.update({
-                                        settled: true,
-                                        settledDatetime: ctx.params.data.settledDatetime || new Date()
-                                    },
-                                    {
-                                        where: {
-                                            id: requestPaymentToMarkAsSettled.id
-                                        },                                   
-                                        transaction: this._transaction
-                                    })
-                                })
-                            })
-                        }))
-                        transactionPromises.push(
-                            Promise.all(iterationPromises)
-                        )
-                    })
-
-                    return Promise.all(transactionPromises).then((res) => {
-                        const updateAccountBalancesPromise = []
-                        _.forEach(_.keys(accountBalances),(accountId) => {
-                            updateAccountBalancesPromise.push(server.mysql.Account.update({
-                                balance: accountBalances[accountId]
-                            }, {
-                                where: {
-                                    id: parseInt(accountId)
-                                },
-                                transaction: this._transaction
-                            }))
-                        })
-                        return Promise.all(updateAccountBalancesPromise).then(() => {
-                            if(this._saveInRequest) {
-                                return true
-                            }
-                            else {
-                                return ctx.call("cashier-balancing.commit")
-                            }
-                        }).catch(() => {
-                            console.log("Erro em: cashier-balancing.markAsSettled")
-                            if(this._saveInRequest) {
-                                return new Error("Error in markAsSettled")
-                            }
-                            else {
-                                return ctx.call("cashier-balancing.rollback")
-                            }
-                        })
-                    })
+                    return Promise.all(promises)
                 })
             })
         },

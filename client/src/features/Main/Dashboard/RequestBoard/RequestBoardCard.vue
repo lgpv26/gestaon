@@ -105,7 +105,7 @@
                     </template>
                 </app-popover>
                 <span class="push-both-sides"></span>
-                <app-popover :placement="'bottom-center'" :verticalOffset="5" :horizontalOffset="20" :contentStyle="dropdownMenuPopoverContentStyle">
+                <app-popover :placement="'bottom-start'" :verticalOffset="5" :horizontalOffset="18" :contentStyle="dropdownMenuPopoverContentStyle">
                     <template slot="triggerer">
                         <a class="footer__status ignore">
                             <request-board-icon-status></request-board-icon-status>
@@ -116,7 +116,7 @@
                         <app-rbc-status id="rbc-status" :cardId="card.id" v-model="form.status"></app-rbc-status>
                     </template>
                 </app-popover>
-                <app-popover :placement="'bottom-start'" :verticalOffset="5" :horizontalOffset="18" :useScroll="true">
+                <app-popover :placement="'bottom-start'" :verticalOffset="1" :horizontalOffset="19" :useScroll="true">
                     <template slot="triggerer">
                         <a class="footer__responsible-user ignore"><request-board-icon-flag></request-board-icon-flag> {{ responsibleUserName }}</a>
                     </template>

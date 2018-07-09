@@ -47,7 +47,7 @@
                 <div class="right-side">
                     <div class="group">
                         <span>Com selecionados:</span>
-                        <app-select v-model="form.action" :items="actionsSelectItems" title="Ação">
+                        <app-select v-model="form.action" :items="actionsSelectItems" :popoverProps="{placement:'top-start', horizontalOffset: -15}" title="Ação">
                             <a href="javascript:void(0)" v-if="!form.action">-- Selecione --</a>
                             <a href="javascript:void(0)" v-else>{{ _.find(actionsSelectItems, {value: form.action}).text }}</a>
                             <template slot="section" slot-scope="sectionProps">
@@ -157,8 +157,8 @@
                     }
                 ],
                 filterForm: {
-                    dateCreated: [[]],
-                    dateCreatedToSend: [[]],
+                    deliveryDate: [[]],
+                    deliveryDateToSend: [[]],
                     clientGroup: [],
                     paymentMethod: [],
                     responsibleUser: [],
@@ -168,8 +168,8 @@
                     account: null,
                     action: 'received',
                     receivedDate: null,
-                    dateCreated: [[]],
-                    dateCreatedToSend: [[]],
+                    deliveryDate: [[]],
+                    deliveryDateToSend: [[]],
                     clientGroup: [],
                     paymentMethod: [],
                     responsibleUser: [],
@@ -244,6 +244,7 @@
                 }
             },
             search({ filterData = {}, params = {} }){
+                console.log(filterData)
                 const requestParams = {
                     /*offset: Math.ceil(ev.from),
                     limit: Math.ceil(ev.to - ev.from),*/

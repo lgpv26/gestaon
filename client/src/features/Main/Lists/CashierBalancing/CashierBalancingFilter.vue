@@ -7,11 +7,11 @@
                 <div class="dot-separator primary" v-if="selectedDays" style="margin: 0 10px;"></div>
                 <span class="primary" v-if="selectedDays">{{ selectedDays }} dia(s)</span>
             </a>
-            <app-datetime-selector ref="createdDateSelector" class="input--borderless" :value="form.dateCreated[0]"
+            <app-datetime-selector ref="createdDateSelector" class="input--borderless" :value="form.deliveryDate[0]"
                                    @input="onCreatedDateChange($event)" :config="filterDatetimeSelectorConfig" placeholder="..."></app-datetime-selector>
         </li>
-        <li>
-            <app-select v-model="form.clientGroup" :items="clientGroupsSelectItems" :multiple="true" :verticalOffset="5" title="Grupo do cliente"
+        <li v-if="false">
+            <app-select v-model="form.clientGroup" :popoverProps="{placement:'bottom-start'}" :items="clientGroupsSelectItems" :multiple="true" :verticalOffset="5" title="Grupo do cliente"
                         @change="onFilterChange($event)">
                 <a class="btn btn--border-only">
                     Grupo
@@ -32,7 +32,7 @@
             </app-select>
         </li>
         <li>
-            <app-select v-model="form.paymentMethod" :items="paymentMethodsSelectItems" :multiple="true" :verticalOffset="5" title="Meio de pagamento"
+            <app-select v-model="form.paymentMethod" :popoverProps="{placement:'bottom-start'}" :items="paymentMethodsSelectItems" :multiple="true" :verticalOffset="5" title="Meio de pagamento"
                         @change="onFilterChange($event)">
                 <a class="btn btn--border-only">
                     <icon-flag style="margin-right: 10px;"></icon-flag>
@@ -53,8 +53,30 @@
                 </template>
             </app-select>
         </li>
+        <li v-if="false">
+            <app-select v-model="form.product" :popoverProps="{placement:'bottom-start'}" :items="productsSelectItems" :multiple="true" :verticalOffset="5" title="Responsável"
+                        @change="onFilterChange($event)">
+                <a class="btn btn--border-only">
+                    <icon-flag style="margin-right: 10px;"></icon-flag>
+                    Produto
+                    <div class="dot-separator primary" v-if="form.product.length" style="margin: 0 10px;"></div>
+                    <span class="primary" v-if="form.product.length === 1">
+                        {{ _.find(productsSelectItems, { value: _.first(form.product) }).text }}
+                    </span>
+                    <span class="primary" v-else-if="form.product.length">
+                        {{ form.product.length }}
+                    </span>
+                </a>
+                <template slot="section" slot-scope="sectionProps">
+                    <h3 style="text-align: left;">{{ sectionProps.text }}</h3>
+                </template>
+                <template slot="item" slot-scope="itemProps">
+                    <span>{{itemProps.text }}</span>
+                </template>
+            </app-select>
+        </li>
         <li>
-            <app-select v-model="form.responsibleUser" :items="usersSelectItems" :multiple="true" :verticalOffset="5" title="Responsável"
+            <app-select v-model="form.responsibleUser" :popoverProps="{placement:'bottom-start'}" :items="usersSelectItems" :multiple="true" :verticalOffset="5" title="Responsável"
                         @change="onFilterChange($event)">
                 <a class="btn btn--border-only">
                     <icon-flag style="margin-right: 10px;"></icon-flag>
@@ -76,7 +98,7 @@
             </app-select>
         </li>
         <li>
-            <app-select v-model="form.status" :items="requestStatusListSelectItems" :multiple="true" :verticalOffset="5" title="Status"
+            <app-select v-model="form.status" :popoverProps="{placement:'bottom-start'}" :items="requestStatusListSelectItems" :multiple="true" :verticalOffset="5" title="Status"
                         @change="onFilterChange($event)">
                 <a class="btn btn--border-only">
                     <icon-status style="margin-right: 10px;"></icon-status>
@@ -114,10 +136,11 @@
         data(){
             return {
                 form: {
-                    dateCreated: [[]],
-                    dateCreatedToSend: [[]],
+                    deliveryDate: [[]],
+                    deliveryDateToSend: [[]],
                     clientGroup: [],
                     paymentMethod: [],
+                    product: [],
                     responsibleUser: [],
                     status: []
                 },
@@ -141,11 +164,13 @@
             ...mapState('data/client-groups',['clientGroups']),
             ...mapState('data/payment-methods',['paymentMethods']),
             ...mapState('data/request-status',['requestStatusList']),
+            ...mapState('data/products',['products']),
 
             ...mapGetters('data/request-status',['requestStatusListSelectItems']),
             ...mapGetters('data/users',['usersSelectItems']),
             ...mapGetters('data/client-groups',['clientGroupsSelectItems']),
             ...mapGetters('data/payment-methods',['paymentMethodsSelectItems']),
+            ...mapGetters('data/products',['productsSelectItems']),
         },
         methods: {
             ...mapActions('toast',['showToast']),
@@ -160,15 +185,15 @@
 
                     value = [_.first(values),_.last(values)]
 
-                    this.form.dateCreatedToSend = value
+                    this.form.deliveryDateToSend = value
                     this.selectedDays = moment(value[1]).diff(moment(value[0]), 'days') + 1
                 }
                 else if(value.trim() !== ''){
-                    this.form.dateCreatedToSend = value
+                    this.form.deliveryDateToSend = value
                     this.selectedDays = 1
                 }
                 else {
-                    this.form.dateCreatedToSend = [[]]
+                    this.form.deliveryDateToSend = [[]]
                     this.selectedDays = 0
                 }
                 this.onFilterChange()
@@ -193,27 +218,27 @@
             },
             clearCreatedDateFilter(){
                 this.selectedDays = 0
-                this.form.dateCreated = [[]]
+                this.form.deliveryDate = [[]]
             },
             openCreatedDateSelector(){
                 this.$refs.createdDateSelector.fp.open()
             },
             apply(params = {}){
                 const filterData = utils.removeReactivity(this.form)
-                if(!filterData.dateCreatedToSend[0] || !filterData.dateCreatedToSend[0].length){
+                if(!filterData.deliveryDateToSend[0] || !filterData.deliveryDateToSend[0].length){
                     _.assign(filterData,{
-                        dateCreated: null
+                        deliveryDate: null
                     })
                 }
-                else if(!_.isArray(filterData.dateCreatedToSend)){
+                else if(!_.isArray(filterData.deliveryDateToSend)){
                     _.assign(filterData,{
-                        dateCreated: filterData.dateCreatedToSend
+                        deliveryDate: filterData.deliveryDateToSend
                     })
                 }
                 else {
-                    const values = filterData.dateCreatedToSend
+                    const values = filterData.deliveryDateToSend
                     if(values.length > 1){
-                        filterData.dateCreated = [[_.first(values),_.last(values)]]
+                        filterData.deliveryDate = [[_.first(values),_.last(values)]]
                     }
                 }
 

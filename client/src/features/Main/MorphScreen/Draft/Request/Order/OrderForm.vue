@@ -11,7 +11,7 @@
                             Canal de divulgação
                         </label>
                         <span class="push-both-sides"></span>
-                        <app-promotion-channel-select v-model="promotionChannelId" @change="sync($event,'promotionChannelId')">
+                        <app-promotion-channel-select :popoverProps="{placement:'top-start', verticalOffset: 5}" v-model="promotionChannelId" @change="sync($event,'promotionChannelId')">
                             <div class="select-triggerer">
                                 <span>{{ selectedPromotionChannelName }}</span>
                                 <icon-dropdown></icon-dropdown>
@@ -44,7 +44,7 @@
                             Responsável
                         </label>
                         <span class="push-both-sides"></span>
-                        <app-user-select v-model="responsibleUserId" @change="sync($event,'responsibleUserId','request')">
+                        <app-user-select :popoverProps="{placement:'top-start', verticalOffset: 5}" v-model="responsibleUserId" @change="sync($event,'responsibleUserId','request')">
                             <div class="select-triggerer">
                                 <span>{{ selectedResponsibleUserName }}</span>
                                 <icon-dropdown></icon-dropdown>

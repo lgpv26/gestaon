@@ -1,5 +1,5 @@
 <template>
-    <app-popover>
+    <app-popover v-bind="popoverProps" useScroll="true">
         <template slot="triggerer">
             <slot></slot>
         </template>
@@ -51,7 +51,7 @@
     import Vue from 'vue'
 
     export default {
-        props: ['value'],
+        props: ['value','popoverProps'],
         data(){
             return {
                 adding: false,

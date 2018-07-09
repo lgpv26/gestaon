@@ -4,7 +4,7 @@
              :class="{hidden: !visible && !forceVisible, 'content-padding': contentPadding}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
             <slot name="content"></slot>
         </div>
-        <div ref="content" v-else :style="[contentDefaultStyle, contentStyle]" style="height: 280px;" class="popover-content popover-shadow"
+        <div ref="content" v-else :style="[contentDefaultStyle, contentStyle]" style="max-height: 280px;" class="popover-content popover-shadow"
              :class="{hidden: !visible && !forceVisible}" @mouseover="onMouseOver($event)" @mouseleave="onMouseLeave($event)">
             <div :class="{'content-padding': contentPadding}">
                 <slot name="content"></slot>
@@ -154,7 +154,7 @@
                     placement: this.placement,
                     modifiers: {
                         flip: {
-                            enabled: false
+                            enabled: true
                         },
                         offset: {
                             offset: this.horizontalOffset + ',' + this.verticalOffset

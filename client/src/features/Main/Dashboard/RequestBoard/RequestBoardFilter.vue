@@ -9,7 +9,7 @@
                 </div>
             </div>
         </div>
-        <app-select class="request-board__filter" v-model="requestBoardFilter.form.clientGroups" :title="'Grupo do cliente'"
+        <app-select class="request-board__filter" v-model="requestBoardFilter.form.clientGroups" :popoverProps="{placement: 'bottom-start'}" :title="'Grupo do cliente'"
             @unselect="onFilter('clientGroups')" @select="onFilter('clientGroups')" :items="clientGroupsSelectItems" :multiple="true" :verticalOffset="15">
             <div class="filter-item__target">
                 <span class="target__title">Grupo</span>
@@ -30,7 +30,7 @@
                 <span>{{itemProps.text }}</span>
             </template>
         </app-select>
-        <app-select class="request-board__filter" v-model="requestBoardFilter.form.responsibleUsers" :title="'Responsável'"
+        <app-select class="request-board__filter" v-model="requestBoardFilter.form.responsibleUsers" :popoverProps="{placement: 'bottom-start'}" :title="'Responsável'"
                     @unselect="onFilter('responsibleUsers')" @select="onFilter('responsibleUsers')" :multiple="true" :items="usersSelectItems" :verticalOffset="15">
             <div class="filter-item__target">
                 <span class="target__title">Responsável</span>
@@ -48,7 +48,7 @@
                 <span>{{itemProps.text }}</span>
             </template>
         </app-select>
-        <app-select class="request-board__filter" v-model="requestBoardFilter.form.promotionChannels"
+        <app-select class="request-board__filter" v-model="requestBoardFilter.form.promotionChannels" :popoverProps="{placement: 'bottom-start'}"
                     @unselect="onFilter('promotionChannels')" @select="onFilter('promotionChannels')" :title="'Canal de divulgação'" :multiple="true" :items="promotionChannelsSelectItems" :verticalOffset="15">
             <div class="filter-item__target">
                 <span class="target__title">Canal</span>
@@ -66,7 +66,7 @@
                 <span>{{itemProps.text }}</span>
             </template>
         </app-select>
-        <app-select class="request-board__filter" v-model="requestBoardFilter.form.status"
+        <app-select class="request-board__filter" v-model="requestBoardFilter.form.status" :popoverProps="{placement: 'bottom-start'}"
                     @unselect="onFilter('status')" @select="onFilter('status')"  :title="'Status do pedido'" :multiple="true" :items="requestStatusListSelectItems" :verticalOffset="15">
             <div class="filter-item__target">
                 <span class="target__title">Status</span>

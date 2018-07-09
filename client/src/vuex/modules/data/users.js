@@ -19,7 +19,7 @@ const getters = {
 
 const mutations = {
     SET_ALL(state, users){
-        state.users = users
+        state.users = _.orderBy(users, [user => user.name], ['asc'])
     },
     SET_ONE(state, user){
         const stateUserIndex = _.findIndex(state.users, { id: user.id })

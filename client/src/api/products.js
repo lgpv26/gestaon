@@ -5,8 +5,8 @@ export default {
     search(params = {}){
         return Vue.http.get(config.apiBaseUrl + '/products/search', { params }).then((response) => response.json());
     },
-    getAll(){
-        return Vue.http.get(config.apiBaseUrl + '/products').then((response) => response.json());
+    getList(params = {}){
+        return Vue.http.get(config.apiBaseUrl + '/products', { params }).then((response) => response.json())
     },
     getOne(id, params = {}){
         return Vue.http.get(config.apiBaseUrl + '/products/' + id, { params }).then((response) => response.json());

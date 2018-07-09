@@ -26,39 +26,12 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.post('/cashier-balancing/mark-as-paid', (req, res, next) => {
-        return server.broker.call('cashier-balancing.markAsPaid', {
-            data: _.assign({
-                companyId: parseInt(req.query.companyId),
-                createdById: parseInt(req.auth.id)
-            }, req.body)
-        }).then((data) => {
-            return res.send(200, { data })
-        }).catch((err) => {
-            return next(err)
-        })
-    })
-
     server.post('/cashier-balancing/mark-as-received', (req, res, next) => {
         return server.broker.call('cashier-balancing.markAsReceived', {
             data: _.assign({
                 companyId: parseInt(req.query.companyId),
                 createdById: parseInt(req.auth.id),
                 received: true
-            }, req.body)
-        }).then((data) => {
-            return res.send(200, { data })
-        }).catch((err) => {
-            return next(err)
-        })
-    })
-
-
-    server.post('/cashier-balancing/mark-as-settled', (req, res, next) => {
-        return server.broker.call('cashier-balancing.markAsSettled', {
-            data: _.assign({
-                createdById: parseInt(req.auth.id),
-                companyId: parseInt(req.query.companyId)
             }, req.body)
         }).then((data) => {
             return res.send(200, { data })

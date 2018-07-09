@@ -46,7 +46,7 @@ module.exports = {
     },
     postSettings: ({RequestOrder,RequestOrderProduct,Product, PromotionChannel}) => { 
         RequestOrder.hasMany(RequestOrderProduct, {as: 'requestOrderProducts', foreignKey: 'requestOrderId'})
-        RequestOrder.belongsToMany(Product, {through: RequestOrderProduct, as: 'products', foreignKey: 'requestOrderId'})
+        /*RequestOrder.belongsToMany(Product, {through: RequestOrderProduct, as: 'products', foreignKey: 'requestOrderId'})*/
 
         RequestOrder.belongsTo(PromotionChannel, {as: 'promotionChannel', foreignKey: 'promotionChannelId'})
     }

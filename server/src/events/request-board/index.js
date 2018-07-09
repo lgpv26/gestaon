@@ -256,6 +256,7 @@ module.exports = class RequestBoard {
                                                 data: {
                                                     userId: request.userId,
                                                     title: 'O pedido #' + request.id + ' foi encerrado.',
+                                                    sound: 'deny1',
                                                     message: 'Abra a notificação para ver mais detalhes',
                                                     payload: {
                                                         type: 'request.removed',
