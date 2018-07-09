@@ -71,7 +71,7 @@ module.exports = (server) => { return {
                 return true
             }).catch((err) => {
                 console.log("ERRO: Remove draft - draft.remove")
-                throw new Error(err)
+                return Promise.reject('Erro ao remover o rascunho do pedido.')
             })
         }
     }

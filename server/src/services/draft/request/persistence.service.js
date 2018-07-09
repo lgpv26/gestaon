@@ -6,7 +6,6 @@ import EventResponse from '~server/models/EventResponse'
 module.exports = (server) => { 
     //PRIVATES
     let _request = null
-    let _transaction = null
 
     let _companyId = null
     let _userId = null
@@ -23,136 +22,142 @@ module.exports = (server) => {
          * @param {Object} request, {Int} companyId, {Int} userId, {Int} draftId
          * @returns {Promise.<object>} request
          */
-        start(ctx){
-            //SET PRIVATES
-            this._request = ctx.params.request
-            this._companyId = ctx.params.companyId
-            this._userId = ctx.params.userId
-            this._userAccountId = ctx.params.userAccountId
-            this._draftId = ctx.params.draftId
-           
-            return ctx.call("draft/request/persistence.checkTempIds").then(() => {
-             //START
+            start(ctx) {
+                //SET PRIVATES
+                this._request = ctx.params.request
+                this._companyId = ctx.params.companyId
+                this._userId = ctx.params.userId
+                this._userAccountId = ctx.params.userAccountId
+                this._draftId = ctx.params.draftId
 
-                return ctx.call("draft/request/persistence.consultRequest").then(() => {
-                    return ctx.call("draft/request/persistence.setTransaction").then(() => {
-                        let promises = []
+                return ctx.call("draft/request/persistence.checkTempIds").then(() => {
+                    //START
 
-                        //SAVE INITIAL CLIENT 
-                        if(_.has(this._request, "client")){
-                            promises.push(ctx.call("draft/client/persistence.start", {
-                                client: this._request.client,
-                                companyId: this._companyId,
-                                transaction: this._transaction
-                            }).then((client) => {
-                                _.set(this._request, 'client', client)
-                                return {client}
-                            }).catch((err) => {
-                                console.log("Erro em: draft/client/persistence.start")
-                                throw new Error(err)
-                            }))
-                        }
-                        //SAVE INITIAL REQUEST ORDER 
-                        if(_.has(this._request, "order")){
-                            promises.push(ctx.call("draft/request/persistence.setOrder").then((order) => {
-                                return {order}
-                            }).catch((err) => {
-                                console.log("Erro em: draft/request/persistence.setOrder")
-                                throw new Error(err)
-                            }))
-                        }
-                        
-                        return Promise.all(promises).then((result) => {
-                            // SET RESULT'S PROMISES
-                            const client = _.find(result, 'client')
-                            const order = _.find(result, 'order')
-                            const task = _.find(result, 'task')
-                            
-                            // SET REQUEST'S DATA
-                            return ctx.call("draft/request/persistence.setRequest", {
-                                data: {
+                    return ctx.call("draft/request/persistence.consultRequest").then(() => {
+
+                        return server.sequelize.transaction((t) => {
+                            let promises = []
+
+                            //SAVE INITIAL CLIENT 
+                            if (_.has(this._request, "client")) {
+                                promises.push(ctx.call("draft/client/persistence.start", {
+                                    client: this._request.client,
                                     companyId: this._companyId,
-                                    userId: (this._request.responsibleUserId) ? this._request.responsibleUserId : this._userId,
-                                    clientId: (client) ? _.get(client, 'client.id') : null,
-                                    requestOrderId: (order) ? _.get(order, 'order.id') : null,
-                                    taskId: (task) ? _.get(task, 'task.id') : null,
-                                    deliveryDate: (this._request.deliveryDate) ? moment(this._request.deliveryDate) : (!this._request.id) ?  moment().add(20, 'm') : (!this._oldRequest.isScheduled) ? this._oldRequest.deliveryDate :  moment().add(20, 'm'),
-                                    isScheduled: !!this._request.deliveryDate,
-                                    obs: (this._request.obs) ? this._request.obs : null,
-                                    status: (this._request.status) ? (this._request.client.id) ? this._request.status : (this._request.status === 'finished' || this._request.status === 'canceled' ) ? this._request.status : 'finished' :  (this._request.client.id) ? 'pending' : 'finished'
-                                },
-                                transaction: this._transaction
-                            }).then((request) => {
+                                }).then((client) => {
+                                    _.set(this._request, 'client', client)
+                                    return { client }
+                                }).catch((err) => {
+                                    console.log("Erro em: draft/client/persistence.start")
+                                    return Promise.reject(err)
+                                }))
+                            }
+
+                            //SAVE INITIAL REQUEST ORDER 
+                            if (_.has(this._request, "order")) {
+                                promises.push(ctx.call("draft/request/persistence.setOrder")
+                                    .then((order) => {
+                                        return { order }
+                                    }).catch((err) => {
+                                        console.log("Erro em: draft/request/persistence.setOrder")
+                                        return Promise.reject(err)
+                                    }))
+                            }
+
+                            return Promise.all(promises).then((result) => {
+                                //console.log(result)
+                                // SET RESULT'S PROMISES
+                                const client = _.find(result, 'client')
+                                const order = _.find(result, 'order')
+                                const task = _.find(result, 'task')
+                                // SET REQUEST'S DATA
+                                return ctx.call("draft/request/persistence.setRequest", {
+                                    data: {
+                                        companyId: this._companyId,
+                                        userId: (this._request.responsibleUserId) ? this._request.responsibleUserId : this._userId,
+                                        clientId: (client) ? _.get(client, 'client.id') : null,
+                                        requestOrderId: (order) ? _.get(order, 'order.id') : null,
+                                        taskId: (task) ? _.get(task, 'task.id') : null,
+                                        deliveryDate: (this._request.deliveryDate) ? moment(this._request.deliveryDate) : (!this._request.id) ? moment().add(20, 'm') : (!this._oldRequest.isScheduled) ? this._oldRequest.deliveryDate : moment().add(20, 'm'),
+                                        isScheduled: !!this._request.deliveryDate,
+                                        obs: (this._request.obs) ? this._request.obs : null,
+                                        status: (this._request.status) ? (this._request.client.id) ? this._request.status : (this._request.status === 'finished' || this._request.status === 'canceled') ? this._request.status : 'finished' : (this._request.client.id) ? 'pending' : 'finished'
+                                    }
+                                }).then((request) => {
+                                    //ALL OK - COMMIT
+                                    return request
+                                }).catch((err) => {
+                                    console.log("Erro em: draft/request/persistence.setRequest")
+                                    return Promise.reject(err)
+                                })
+                            }).catch((err) => {
+                                console.log("Erro em: draft/request/persistence.setRequest promise all")
+                                return Promise.reject(err)
+                            })
+                        }).then((request) => {
+                            console.log("Commit everything!")
+                            console.log("Removing draft...")
+                            return ctx.call("draft.remove", {
+                                data: {
+                                    draftId: this._draftId,
+                                    companyId: this._companyId,
+                                    emittedBy: this._userId
+                                }
+                            }).then(() => {
+                                console.log("Remove draft!")
+
                                 return ctx.call("draft/request/persistence.dashboard", {
                                     data: request
                                 }).then(() => {
-                                    return ctx.call("draft/request/persistence.commit").then(() => {
-                                        return ctx.call("draft/request/persistence.saveES", {
-                                            requestOrderId: request.requestOrderId,
-                                        }).then(() => {
-                                            if(request.status === 'pending' && request.userId){
-                                                return ctx.call("push-notification.push", {
-                                                    data: {
-                                                        userId: request.userId,
-                                                        title: 'Novo pedido #' + request.id,
-                                                        message: 'Abra a notificação para ver mais detalhes',
-                                                        payload: {
-                                                            type: 'request.create',
-                                                            id: '' + request.id
-                                                        }
-                                                    },
-                                                    notRejectNotLogged: true
-                                                }).then(() => {
-                                                    return new EventResponse(request) 
-                                                }).catch((err) => {
-                                                    console.log(err)
-                                                })
-                                            }
-                                            return new EventResponse(request) 
-                                        }).catch((err) => {
-                                            console.log("Erro em: draft/request/persistence.saveES")
-                                            throw new Error(err)
-                                        })
+                                    return ctx.call("draft/request/persistence.saveES", {
+                                        requestOrderId: request.requestOrderId,
+                                    }).then(() => {
+                                        if (request.status === 'pending' && request.userId) {
+                                            return ctx.call("push-notification.push", {
+                                                data: {
+                                                    userId: request.userId,
+                                                    title: 'Novo pedido #' + request.id,
+                                                    message: 'Abra a notificação para ver mais detalhes',
+                                                    payload: {
+                                                        type: 'request.create',
+                                                        id: '' + request.id
+                                                    }
+                                                },
+                                                notRejectNotLogged: true
+                                            }).then(() => {
+                                                return new EventResponse(request)
+                                            }).catch((err) => {
+                                                return new EventResponse(new Error("Erro ao enviar o pedido ao entregador!"))
+                                            })
+                                        }
+                                        return new EventResponse(request)
                                     }).catch((err) => {
-                                        console.log(err, "Erro em: draft/request/persistence.commit")
-                                        return ctx.call("draft/request/persistence.rollback").then(() => {
-                                            return new EventResponse(err)
-                                        }) 
+                                        console.log("Erro em: draft/request/persistence.saveES")
+                                        return new EventResponse(new Error(err))
                                     })
                                 }).catch((err) => {
                                     console.log("Erro em: draft/request/persistence.dashboard")
-                                    return ctx.call("draft/request/persistence.rollback").then(() => {
-                                        return new EventResponse(err)
-                                    }) 
-                                })                            
+                                    return new EventResponse(new Error(err))
+                                })
+
                             }).catch((err) => {
-                                console.log("Erro em: draft/request/persistence.setRequest")
-                                return ctx.call("draft/request/persistence.rollback").then(() => {
-                                    return new EventResponse(err)
-                                })         
+                                return new EventResponse(new Error(err))
                             })
                         }).catch((err) => {
-                            console.log("Erro em: draft/request/persistence.setRequest (promise all)")
-                            return ctx.call("draft/request/persistence.rollback").then(() => {
-                                return new EventResponse(err)
-                            }) 
+                            console.log(err)
+                            return new EventResponse(new Error(err))
                         })
+
+
+                    }).catch((err) => {
+                        console.log("Erro em: draft/request/persistence.removeTempIds")
+                        return new EventResponse(new Error("Erro ao consultar."))
                     })
                 }).catch((err) => {
                     console.log("Erro em: draft/request/persistence.removeTempIds")
-                    return new EventResponse(err)    
+                    return new EventResponse(err)
                 })
-            })
         },
-        /**
-         * @returns {Promise} set transaction
-         */ 
-        setTransaction() {
-            return server.sequelize.transaction().then((transaction) => {
-                this._transaction = transaction
-            })
-        },
-        
+       
         consultRequest(ctx){
             if(!this._request.id) return true
             return ctx.call("data/request.getOne", {
@@ -270,9 +275,11 @@ module.exports = (server) => {
                         include: [{
                             model: server.mysql.User,
                             as: "triggeredByUser",
+                            attributes: ['id', 'name', 'email', 'activeCompanyUserId']
                         },{
                             model: server.mysql.User,
                             as: "user",
+                            attributes: ['id', 'name', 'email', 'activeCompanyUserId']
                         }]
                     },
                     {
@@ -335,8 +342,7 @@ module.exports = (server) => {
                             model: server.mysql.PaymentMethod,
                             as: 'paymentMethod'
                         }]
-                    }],
-                    transaction: this._transaction
+                    }]
                 }).then((request) => {
                     if(this._request.id && (this._oldRequest.status !== 'finished' && this._oldRequest.status !== 'canceled')) {
                         if(request.deliveryDate === this._oldRequest.deliveryDate){
@@ -378,19 +384,20 @@ module.exports = (server) => {
                             }).then((card) => {
                                 return card
                             }).catch((err) => {
-                                console.log(err)
+                                console.log("Erro em: draft/request/persistence.dashboard createCard")
+                                return Promise.reject(err)
                             })
                         })
                     }
                 }).catch((err) => {
-                    console.log(err)
-                    throw new Error(err)
+                    console.log("Erro em: draft/request/persistence.dashboard consult do request")
+                    return Promise.reject("Erro ao consultar o pedido para criar o card.")
                 })
             }
         },
 
         setRequest(ctx){
-            return ctx.call("draft/request/persistence.saveRequest",{
+            return ctx.call("draft/request/persistence.saveRequest", {
                 data: ctx.params.data
             }).then((request) => {
                 let promises = []
@@ -401,9 +408,8 @@ module.exports = (server) => {
                             companyId: this._companyId,
                             action: (this._request.id) ? 'recoverance_save' : 'create',
                             userId: (this._request.responsibleUserId) ? this._request.responsibleUserId : this._userId,
-                            status: (this._request.status) ? (this._request.client.id) ? this._request.status : 'finished' :  (this._request.client.id) ? 'pending' : 'finished'
-                        },
-                        transaction: this._transaction
+                            status: (this._request.status) ? (this._request.client.id) ? this._request.status : this._request.status : (this._request.client.id) ? 'pending' : 'finished'
+                        }
                     })
                 )
 
@@ -421,8 +427,7 @@ module.exports = (server) => {
                             data: [_.assign({clientAddressId: clientAddressSelect.id,
                                 requestId: request.id
                             })],
-                            requestId: request.id,
-                            transaction: this._transaction
+                            requestId: request.id
                         })
                     )
                 }
@@ -433,22 +438,21 @@ module.exports = (server) => {
                             data: [_.assign({clientPhoneId: clientPhoneSelect.id,
                                 requestId: request.id
                             })],
-                            requestId: request.id,
-                            transaction: this._transaction
+                            requestId: request.id
                         })
                     )
                 }
 
                 return Promise.all(promises).then(() => {
                     return request
-                }).catch((err) => {
+                }).catch((error) => {
                     console.log("Erro em: data/request.setRequest - PROMISE ALL")
-                    throw Error(err)
+                    return Promise.reject(error)
                 })         
-            }).catch((err) => {
-                console.log(err, "Erro em: data/request.saveRequest")
-                throw Error(err)
-            })  
+            }).catch((error) => {
+                console.log("Erro em: data/request.saveRequest")
+                return Promise.reject(error)
+            }) 
         },
 
         setPaymentMethods(ctx){
@@ -534,41 +538,21 @@ module.exports = (server) => {
                         })
                     }
                 }).then(() => {
-                    return new Promise((resolve, reject) => {
-                        return ctx.call("data/request.setPaymentMethods", {
-                            data: ctx.params.data,
-                            removeRequestPayments: (removeRequestPayments) ? removeRequestPayments : [],
-                            alreadyPaid: _.map(alreadyPaid, (paid) => {
-                                return paid.id
-                            }),
-                            changePaid: changePaid,
-                            requestId: ctx.params.requestId,
-                            companyId: this._companyId,
-                            clientId: this._request.client.id,
-                            createdById: this._userId,
-                            userId: this._request.responsibleUserId,
-                            createdByAccountId: this._userAccountId,
-                            accountId: (this._request.accountId) ? this._request.accountId : null,
-                            transaction: this._transaction
-                        })
-                        .then(() => {
-                            if(changePaid.length  || removeRequestPayments.length){
-                                return ctx.call("draft/request/persistence.checkLimit")
-                                .then(() => {
-                                    resolve()
-                                }).catch((err) => {
-                                reject(err)
-                                }) 
-                            }
-                            else {
-                                resolve()
-                            }
-                        })
-                        .catch((err) => {
-                            reject(err)
-                            //return new Error (err)
-                        })       
-                    })
+                    return ctx.call("data/request.setPaymentMethods", {
+                        data: ctx.params.data,
+                        removeRequestPayments: (removeRequestPayments) ? removeRequestPayments : [],
+                        alreadyPaid: _.map(alreadyPaid, (paid) => {
+                            return paid.id
+                        }),
+                        changePaid: changePaid,
+                        requestId: ctx.params.requestId,
+                        companyId: this._companyId,
+                        clientId: this._request.client.id,
+                        createdById: this._userId,
+                        userId: this._request.responsibleUserId,
+                        createdByAccountId: this._userAccountId,
+                        accountId: (this._request.accountId) ? this._request.accountId : null
+                    })  
                 })
         },
 
@@ -581,49 +565,55 @@ module.exports = (server) => {
                     where: {
                         id: this._request.id,
                         companyId: this._companyId
-                    },
-                    transaction: this._transaction
+                    }
                 }).then((request) => {
                     return request
                 }).catch((err) => {
                     console.log("Erro em: data/request.update")
-                    throw new Error(err)
+                    return Promise.reject(err)
                 })   
             }
             else { // create request
                 return ctx.call("data/request.create", {
-                    data: ctx.params.data,
-                    transaction: this._transaction
+                    data: ctx.params.data
                 }).then((request) => {
                     return request
                 }).catch((err) => {
                     console.log("Erro em: data/request.create")
-                    throw new Error(err)
+                    return Promise.reject(err)
                 })   
             }
         },
 
         setOrder(ctx){
-            return ctx.call("draft/request/persistence.saveOrder").then((order) => {
-                let promisses = []
+            return ctx.call("draft/request/persistence.saveOrder")
+            .then((order) => {
+                return new Promise((resolve,reject) => {
+                    if(!_.has(this._request.order, "orderProducts")){
+                        return resolve()
+                    }
                     
-                if(_.has(this._request.order, "orderProducts")){
-                    promisses.push(ctx.call("draft/request/persistence.setOrderProducts", {
+                    return ctx.call("draft/request/persistence.setOrderProducts", {
                         data: {
                             requestOrderId: order.id
                         }
                     }).then((orderProducts) => {
                         _.set(order, "orderProducts", orderProducts)
+                        resolve()
                     }).catch((err) => {
                         console.log("Erro em: draft/request/persistence.setOrderProducts")
-                        throw new Error(err)
+                        return reject(err)
                     })
-                )
-                }
-
-                return Promise.all(promisses).then(() => {
-                    return order
                 })
+                .then(() => {
+                    return order
+                }).catch((err) => {
+                    console.log("Erro em: draft/request/persistence.setOrderProducts")
+                    return Promise.reject(err)
+                })
+            }).catch((err) => {
+                console.log("Erro em: draft/request/persistence.setOrder")
+                return Promise.reject(err)
             })
         },
 
@@ -700,13 +690,12 @@ module.exports = (server) => {
                     })
                 }),
                 companyId: this._companyId, 
-                requestOrderId: ctx.params.data.requestOrderId,
-                transaction: this._transaction
+                requestOrderId: ctx.params.data.requestOrderId
             }).then((orderProducts) => {
                 return orderProducts
             }).catch((err) => {
                 console.log("Erro em: data/request.setRequestOrderProducts")
-                throw new Error(err)
+                return Promise.reject(err)
             })
         },
         checkLimit(ctx){
@@ -714,8 +703,7 @@ module.exports = (server) => {
             return ctx.call("data/client.get", {
                 where: {
                     id: this._request.client.id
-                },
-                transaction: this._transaction
+                }
             }).then((client) => {
                 return true
                 /*
@@ -734,24 +722,23 @@ module.exports = (server) => {
                     data: this._request.order,
                     where: {
                         id: this._request.order.id
-                    },
-                    transaction: this._transaction
+                    }
                 }).then((requestOrder) => {
+                    
                     return requestOrder
                 }).catch((err) => {
-                    console.log("Erro em: data/request.requestOrderUpdate")
-                    throw new Error(err)
+                    console.log("Erro em: draft/request/persistence.saveOrder")
+                    return Promise.reject(err)
                 })   
             }
             else { // create order
                 return ctx.call("data/request.requestOrderCreate", {
-                    data: this._request.order,
-                    transaction: this._transaction
+                    data: this._request.order
                 }).then((requestOrder) => {
                     return requestOrder
                 }).catch((err) => {
-                    console.log("Erro em: data/request.requestOrderCreate")
-                    throw new Error(err)
+                    console.log("Erro em: draft/request/persistence.saveOrder")
+                    return Promise.reject(err)
                 })   
             }
         },
@@ -782,7 +769,7 @@ module.exports = (server) => {
                     if (esErr) {
                         console.log(esErr, "Erro em: draft/request/persistence.saveES")
                         console.log('Erro ao salvar dados no ElasticSearch!')
-                        return new Error('Erro ao salvar dados no ElasticSearch!')
+                        return Promise.reject('Erro ao salvar dados no ElasticSearch!')
                     }
                     return true
                 })
@@ -819,7 +806,7 @@ module.exports = (server) => {
                             suppliers: [{
                                 supplierProductId: null,
                                 supplierId: null,
-                                name: 'SEM SUPPLIER CADASTRADO',
+                                name: 'SEM FORNECEDOR CADASTRADO',
                                 obs: null,
                                 quantity: null,
                                 price: null
@@ -832,8 +819,8 @@ module.exports = (server) => {
                 return products
             }).catch((err) => {
                 console.log("Erro em: data/request.getRequestOrder")
-                throw new Error(err)
-            })
+                return Promise.reject("Erro ao preparar elasticsearch")
+            })  
         },
 
         /**
