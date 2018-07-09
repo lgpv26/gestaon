@@ -8,8 +8,7 @@ module.exports = (server) => { return {
         getOne(ctx) {
             return server.mysql.Request.findOne({
                 where: ctx.params.where || {},
-                include: ctx.params.include || [],
-                transaction: ctx.params.transaction || null
+                include: ctx.params.include || []
             }).then((request) => {
                 return JSON.parse(JSON.stringify(request))
             })
@@ -29,13 +28,12 @@ module.exports = (server) => { return {
          * @returns {Promise.<Object>} request
          */
         create(ctx) {
-            return server.mysql.Request.create(ctx.params.data, {
-                transaction: ctx.params.transaction
-            }).then((request) => {
+            return server.mysql.Request.create(ctx.params.data)
+            .then((request) => {
                 return JSON.parse(JSON.stringify(request))
             }).catch(() => {
-                console.log("Nenhum registro encontrado. Create.")
-                throw new Error("Nenhum registro encontrado.")
+                console.log("Erro em: data/request.update")
+                return Promise.reject('Erro ao criar o pedido.')
             })
         },
         /**
@@ -44,16 +42,14 @@ module.exports = (server) => { return {
          */
         update(ctx) {
             return server.mysql.Request.update(ctx.params.data, {
-                where: ctx.params.where || {},
-                transaction: ctx.params.transaction || null
+                where: ctx.params.where || {}
             }).then((updated) => {
                 if (parseInt(_.toString(updated)) < 1 ) {
                     console.log("Nenhum registro encontrado. Update.")
-                    throw new Error("Nenhum registro encontrado.")
+                    return Promise.reject('Erro ao atualizar o pedido.')
                 }
-                return server.mysql.Request.findById(ctx.params.data.id, {
-                        transaction: ctx.params.transaction
-                }).then((request) => {
+                return server.mysql.Request.findById(ctx.params.data.id)
+                .then((request) => {
                     return JSON.parse(JSON.stringify(request))
                 })
             })
@@ -68,8 +64,7 @@ module.exports = (server) => { return {
         getRequestOrder(ctx){
             return server.mysql.RequestOrder.findOne({
                 where: ctx.params.where || {},
-                include: ctx.params.include || [],
-                transaction: ctx.params.transaction || null
+                include: ctx.params.include || []
             }).then((requestOrder) => {
                 return JSON.parse(JSON.stringify(requestOrder))
             })
@@ -79,13 +74,12 @@ module.exports = (server) => { return {
          * @returns {Promise.<Object>} requestOrder
          */
         requestOrderCreate(ctx) {
-            return server.mysql.RequestOrder.create(ctx.params.data, {
-                transaction: ctx.params.transaction
-            }).then((client) => {
-                return JSON.parse(JSON.stringify(client))
+            return server.mysql.RequestOrder.create(ctx.params.data)
+            .then((requestOrder) => {
+                return JSON.parse(JSON.stringify(requestOrder))
             }).catch(() => {
-                console.log("Nenhum registro encontrado. Create.")
-                throw new Error("Nenhum registro encontrado.")
+                console.log('Erro no requestOrderCreate em request service') //comentar
+                return Promise.reject('Erro ao criar a lista de produtos do pedido.')
             })
         },
         /**
@@ -94,16 +88,14 @@ module.exports = (server) => { return {
          */
         requestOrderUpdate(ctx) {
             return server.mysql.RequestOrder.update(ctx.params.data, {
-                where: ctx.params.where || {},
-                transaction: ctx.params.transaction || null
+                where: ctx.params.where || {}
             }).then((updated) => {
                 if (parseInt(_.toString(updated)) < 1 ) {
-                    console.log("Nenhum registro encontrado. Update.")
-                    throw new Error("Nenhum registro encontrado.")
+                    console.log('Erro no requestOrderCreate em request service') //comentar
+                    return Promise.reject('Erro ao atualizar a lista de produtos do pedido.')
                 }
-                return server.mysql.RequestOrder.findById(ctx.params.data.id, {
-                        transaction: ctx.params.transaction
-                }).then((requestOrder) => {
+                return server.mysql.RequestOrder.findById(ctx.params.data.id)
+                .then((requestOrder) => {
                     return JSON.parse(JSON.stringify(requestOrder))
                 })
             })
@@ -114,66 +106,36 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} RequestOrderProducts
          */
         setRequestOrderProducts(ctx) {
-            return ctx.call("data/product.saveProducts", {
-                data: ctx.params.data,
-                companyId: ctx.params.companyId,
-                transaction: ctx.params.transaction
-            }).then((orderProductWithProduct) => {
-                 let orderProducts = _.map(orderProductWithProduct, orderProduct => {
-                    return _.assign(orderProduct, {
-                        productId: parseInt(orderProduct.product.id),
-                    })
-                })
-                return ctx.call("data/request.saveRequestOrderProducts", {
-                    data: orderProducts,
-                    requestOrderId: parseInt(ctx.params.requestOrderId),
-                    transaction: ctx.params.transaction
-                }).then((orderProducts) => {
-                    return orderProducts
-                }).catch((err) => {
-                    throw new Error("Nenhum registro encontrado.")
-                })
-            }).catch((err) => {
-                //console.log('AQUI')  COMENTAR
-                throw new Error(err)
-            })
-        },
-        /**
-         * @param {Object} data, {Int} requestOrderId, {Object} transaction
-         * @returns {Promise.<Array>} RequestOrderProducts
-         */
-        saveRequestOrderProducts(ctx) {
             /*
             * Delete all
             */
             return server.mysql.RequestOrderProduct.destroy({
                 where: {
                     requestOrderId: ctx.params.requestOrderId
-                },
-                transaction: ctx.params.transaction
+                }
             }).then(() => {
-                return server.mysql.RequestOrderProduct.bulkCreate(ctx.params.data, {
+                return server.mysql.RequestOrderProduct.bulkCreate(_.map(ctx.params.data, (requestOrder) => {
+                    requestOrder.productId = requestOrder.product.id
+                    return requestOrder
+                }), {
                     updateOnDuplicate: ['requestOrderId', 'productId', 'price', 'quantity', 'dateUpdate', 'dateRemoved'],
-                    returning: true,
-                    transaction: ctx.params.transaction
+                    returning: true
                 }).then((response) => {
-                    if (!response) {
-                        console.log('Registro não encontrado. data/request.saveRequestOrderProducts')
-                        throw new Error("Nenhum registro encontrado.")
-                    }
                     return response
-                }).catch((err) => {
-                    console.log(err)
+                }).catch((error) => {
+                    console.log("Erro: no bulkCreate do data/request.setRequestOrderProducts")
+                    return Promise.reject("Erro ao salvar os produtos do pedido")
                 })
             }).catch((err) => {
-                console.log(err)
+                console.log('Erro no saveRequestOrderProducts em request service ao destroy order products') //comentar
+                return Promise.reject(err)
             })
         },
+    
         requestMethodGetOne(ctx){
             return server.mysql.RequestPayment.findOne({
                 where: ctx.params.where || {},
-                include: ctx.params.include || [],
-                transaction: ctx.params.transaction || null
+                include: ctx.params.include || []
             }).then((requestPayment) => {
                 return JSON.parse(JSON.stringify(requestPayment))
             })
@@ -192,8 +154,7 @@ module.exports = (server) => { return {
                             return removeRequestPayment.id
                         })
                     }
-                },
-                transaction: ctx.params.transaction || null
+                }
             }).then(() => {
                 return ctx.call("data/request.revertTransaction", {
                     data: revertTransactions,
@@ -223,15 +184,14 @@ module.exports = (server) => { return {
                                 createdById: ctx.params.createdById,
                                 where: {
                                     id: requestPayment.id
-                                },
-                                transaction: ctx.params.transaction
+                                }
                             }).then((paymentMethodReturn) => {
                                 if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
                                 return paymentMethodReturn
                                 
-                            }).catch((err) =>{
-                                //console.log(err) //comentar
-                                throw new Error(err)
+                            }).catch((err) => {
+                                console.log("Erro em: data/request.paymentMethodUpdate")
+                                return Promise.reject(err)
                             })
                             )
                         }
@@ -245,43 +205,29 @@ module.exports = (server) => { return {
                                     deadlineDatetime: (requestPayment.deadlineDatetime) ? requestPayment.deadlineDatetime : null,
                                     requestId: ctx.params.requestId,
                                 }),
-                                createdById: ctx.params.createdById,
-                                transaction: ctx.params.transaction || null
+                                createdById: ctx.params.createdById
                             }).then((paymentMethodReturn) => {
                                 if(paymentMethodReturn.paid) paymentsPaids.push(paymentMethodReturn.id)
                                 return paymentMethodReturn
-                            }).catch((err) =>{
-                                //console.log(err) // COMENTAR
-                                throw new Error(err)
-                            })
+                            }).catch((err) => {
+                                console.log("Erro em: data/request.paymentMethodCreate")
+                                return Promise.reject(err)
+                            }) 
                             )
                         }
                     })
+
                     return Promise.all(paymentMethodsPromises).then((paymentMethods) => {
-
-                        const updateLimitInUsePromise = []
-                        _.forEach(_.keys(limitInUseChange),(clientId) => {
-                            updateLimitInUsePromise.push(server.mysql.Client.update({
-                                limitInUse: limitInUseChange[clientId]
-                                }, {
-                                where: {
-                                    id: parseInt(clientId)
-                                },
-                                transaction: ctx.params.transaction
-                            }))
-                        })
-
-                        return Promise.all(paymentMethodsPromises).then(() => {
                         if(paymentsPaids.length){
-                            return ctx.call("cashier-balancing.markAsPaid", {
+                            return ctx.call("cashier-balancing.markAsReceived", {
                                 data: {
                                     requestPaymentIds: _.pullAll(paymentsPaids, ctx.params.alreadyPaid),
                                     companyId: ctx.params.companyId,
                                     createdById: ctx.params.createdById,
-                                    accountId: ctx.params.accountId
+                                    accountId: ctx.params.accountId,
+                                    received: true
                                 },
-                                persistence: true,
-                                transaction: ctx.params.transaction || null
+                                persistence: true
                             }).then(() => {
                                 return paymentMethods
                             })
@@ -289,15 +235,14 @@ module.exports = (server) => { return {
                         else {
                             return paymentMethods
                         }
-                        })
-                    }).catch((err) => {
-                        console.log('Erro payment methods em request service', err)
-                        throw new Error(err)
                     })
+                }).catch((err) => {
+                    console.log('Erro payment methods em request service')
+                    return Promise.reject(err)
                 })
             }).catch((err) => {
-                console.log('ERRO: revertTransaction do setPaymentMethods', err)
-                return new Error("ERRO: revertTransaction do setPaymentMethods")
+                console.log('ERRO: revertTransaction do setPaymentMethods')
+                return Promise.reject(err)
             })
         },
 
@@ -306,16 +251,16 @@ module.exports = (server) => { return {
          * @returns {Promise.<Object>} paymentMethod
          */
         paymentMethodCreate(ctx){
-            return server.mysql.RequestPayment.create(ctx.params.data, {
-                transaction: ctx.params.transaction || null
-            }).then((paymentMethod) => {
+            return server.mysql.RequestPayment.create(ctx.params.data)
+            .then((paymentMethod) => {
                 if(!paymentMethod){
                     console.log("Nenhum registro encontrado. Create.")
-                    throw new Error("Nenhum registro encontrado.")
+                    return Promise.reject('Erro ao criar a forma de pagamento.')
                 }
                 return JSON.parse(JSON.stringify(paymentMethod))
             }).catch((err) => {
-                throw new Error(err) // COMENTAR
+                console.log('ERRO: data.request.paymentMethodCreate')
+                return Promise.reject(err)
             })
         },
         /**
@@ -325,100 +270,19 @@ module.exports = (server) => { return {
         paymentMethodUpdate(ctx){
             return server.mysql.RequestPayment.update(ctx.params.data, {
                 where: ctx.params.where || {},
-                paranoid: false,
-                transaction: ctx.params.transaction || null
-            }).then((paymentMethodUpdate) => {
-                if(parseInt(_.toString(paymentMethodUpdate)) < 1 ){
-                    console.log(ctx.params, "Nenhum registro encontrado. Update.")
-                    throw new Error("Nenhum registro encontrado.")
-                }
-                return server.mysql.RequestPayment.findById(ctx.params.data.id, {
-                    transaction: ctx.params.transaction
-                }).then((paymentMethod) => {
-                    return JSON.parse(JSON.stringify(paymentMethod))
-                })
-            }).catch((err) => {
-                throw new Error(err) // COMENTAR
-            })
-        },
-
-        setPaymentBill(ctx){
-            return ctx.call("data/request.getOneBill", {
-                where: ctx.params.where || {},
-                transaction: ctx.params.transaction 
-            }).then((bill) => {
-                console.log(bill)
-                if(bill){
-                    return ctx.call("data/request.paymentBillUpdate", {
-                        data: {
-                            deadlineDatetime: ctx.params.data.deadlineDatetime
-                        },
-                        where: {
-                            requestPaymentId: ctx.params.requestPaymentId
-                        },
-                        transaction: ctx.params.transaction
-                    })
-                }
-                else{
-                    return ctx.call("data/request.paymentBillCreate", {
-                        data: {
-                            requestPaymentId: ctx.params.requestPaymentId,
-                            deadlineDatetime: ctx.params.data.deadlineDatetime
-                        },
-                        transaction: ctx.params.transaction
-                    })
-                }
-            })
-        },
-
-        getOneBill(ctx){
-            return server.mysql.RequestPaymentBill.findOne({
-                where: ctx.params.where || {},
-                include: ctx.params.include || [],
-                transaction: ctx.params.transaction || null
-            }).then((requestPaymentBill) => {
-                return JSON.parse(JSON.stringify(requestPaymentBill))
-            })
-        },
-
-        /**
-         * @param {Object} data, {Object} transaction
-         * @returns {Promise.<Object>} paymentMethod
-         */
-        paymentBillCreate(ctx){
-            return server.mysql.RequestPaymentBill.create(ctx.params.data, {
-                transaction: ctx.params.transaction || null
-            }).then((paymentMethod) => {
-                if(!paymentMethod){
-                    console.log("Nenhum registro encontrado. Create.")
-                    throw new Error("Nenhum registro encontrado.")
-                }
-                return JSON.parse(JSON.stringify(paymentMethod))
-            }).catch((err) => {
-                throw new Error(err) // COMENTAR
-            })
-        },
-        /**
-         * @param {Object} where, {Object} transaction
-         * @returns {Promise.<Object>} paymentMethod
-         */
-        paymentBillUpdate(ctx){
-            return server.mysql.RequestPaymentBill.update(ctx.params.data, {
-                where: ctx.params.where || {},
-                paranoid: false,
-                transaction: ctx.params.transaction || null
+                paranoid: false
             }).then((paymentMethodUpdate) => {
                 if(parseInt(_.toString(paymentMethodUpdate)) < 1 ){
                     console.log("Nenhum registro encontrado. Update.")
-                    throw new Error("Nenhum registro encontrado.")
+                    return Promise.reject("Erro ao atualizar a forma de pagamento")
                 }
-                return server.mysql.RequestPaymentBill.findById(ctx.params.data.id, {
-                    transaction: ctx.params.transaction
-                }).then((paymentMethod) => {
+                return server.mysql.RequestPayment.findById(ctx.params.data.id)
+                .then((paymentMethod) => {
                     return JSON.parse(JSON.stringify(paymentMethod))
                 })
             }).catch((err) => {
-                throw new Error(err) // COMENTAR
+                console.log('ERRO: data.request.paymentMethodUpdate')
+                return Promise.reject(err)
             })
         },
 
@@ -482,7 +346,7 @@ module.exports = (server) => { return {
                         return accountBalances[response.account.id] = parseFloat(accountBalances[response.account.id]) + parseFloat(response.transaction.amount)
                     }).catch((err) => {
                         console.log("Erro: revertTransaction in if paid", err)
-                        throw new Error(err) // COMENTAR
+                        return Promise.reject(err)
                     })
                     )
                 }
@@ -522,7 +386,7 @@ module.exports = (server) => { return {
                                 }
                             }).catch((err) => {
                                 console.log("Erro: revertTransaction in if paid", err)
-                                throw new Error(err) // COMENTAR
+                                return Promise.reject(err)
                             })
                             )
 
@@ -531,39 +395,7 @@ module.exports = (server) => { return {
                 }
             })
 
-            return Promise.all(promises).then(() => {
-                const updateAccountBalancesPromise = []
-                _.forEach(_.keys(accountBalances), (accountId) => {
-                    updateAccountBalancesPromise.push(server.mysql.Account.update({
-                        balance: accountBalances[accountId]
-                    }, {
-                            where: {
-                                id: parseInt(accountId)
-                            },
-                            transaction: ctx.params.transaction
-                        }))
-                })
-                return Promise.all(updateAccountBalancesPromise)
-                /*
-                .then(() => {
-                    const updateClientLimitPromise = []
-                    
-                    _.forEach(_.keys(limitInUseChange), (clientId) => {
-                        updateClientLimitPromise.push(server.mysql.Client.update({
-                            limitInUse: limitInUseChange[clientId]
-                        }, {
-                                where: {
-                                    id: parseInt(clientId)
-                                },
-                                transaction: ctx.params.transaction
-                            }))
-                    })
-                    return Promise.all(updateClientLimitPromise)
-                    
-                })*/
-            }).catch((err) => {
-                console.log('error: ', err)
-            })
+            return Promise.all(promises)
         },
         // request-client-address
         /**
@@ -574,8 +406,7 @@ module.exports = (server) => { return {
             const promises = []
             ctx.params.data.forEach((clientAddress, index) => {
                 promises.push(ctx.call("data/request.getGeo", {
-                        clientAddressId: clientAddress.clientAddressId,
-                        transaction: ctx.params.transaction
+                        clientAddressId: clientAddress.clientAddressId
                     }).then((geo) => {
                         if (!_.isEmpty(geo)) {
                             _.set(ctx.params.data[index], 'lat', geo.lat)
@@ -589,16 +420,15 @@ module.exports = (server) => { return {
                 return server.mysql.RequestClientAddress.destroy({
                     where: {
                         requestId: ctx.params.requestId
-                    },
-                    transaction: ctx.params.transaction
+                    }
                 }).then(() => {
                     return server.mysql.RequestClientAddress.bulkCreate(ctx.params.data, {
-                        updateOnDuplicate: ['requestId', 'clientAddressId', 'type', 'lat', 'lng', 'dateUpdated', 'dateRemoved', 'status'],
-                        transaction: ctx.params.transaction
+                        updateOnDuplicate: ['requestId', 'clientAddressId', 'type', 'lat', 'lng', 'dateUpdated', 'dateRemoved', 'status']
                     }).then((response) => {
                         return response
                     }).catch((error) => {
-                        return error
+                        console.log("Erro: no bulkCreate do data/request.setRequestClientAddresses")
+                        return Promise.reject("Erro ao salvar o endereço do cliente no pedido")
                     })
                 })
             })
@@ -609,8 +439,7 @@ module.exports = (server) => { return {
                 include: [{
                     model: server.mysql.Address,
                     as: 'address'
-                }],
-                transaction: ctx.params.transaction
+                }]
             })
                 .then((clientAddress) => {
                     const name = (clientAddress.address.name) ? clientAddress.address.name : ''
@@ -627,8 +456,9 @@ module.exports = (server) => { return {
                             const geo = _.first(response.json.results)
                             return { lat: geo.geometry.location.lat, lng: geo.geometry.location.lng }
                         })
-                        .catch((err) => {
-                            console.log(err);
+                        .catch((error) => {
+                            console.log("Erro: no geo code")
+                            return Promise.reject("Erro ao salvar o endereço do cliente no pedido")
                         })
                 })
         },
@@ -641,8 +471,7 @@ module.exports = (server) => { return {
             return server.mysql.RequestClientPhone.destroy({
                 where: {
                     requestId: ctx.params.requestId
-                },
-                transaction: ctx.params.transaction
+                }
             }).then(() => {
                 return server.mysql.RequestClientPhone.bulkCreate(ctx.params.data, {
                     updateOnDuplicate: ['requestId', 'clientPhoneId', 'type', 'dateUpdated', 'dateRemoved', 'status'],
@@ -650,7 +479,8 @@ module.exports = (server) => { return {
                 }).then((response) => {
                     return response
                 }).catch((error) => {
-                    return error
+                    console.log("Erro: no bulkCreate do data/request.setRequestClientPhones")
+                    return Promise.reject("Erro ao salvar o telefone do cliente no pedido")
                 })
             })
         },
@@ -661,13 +491,13 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} requests
          */
         createTimeline(ctx){
-             return server.mysql.RequestTimeline.create(ctx.params.data, {
-                transaction: ctx.params.transaction || null
-            }).then((response) => {
+             return server.mysql.RequestTimeline.create(ctx.params.data)
+             .then((response) => {
                 return response
             }).catch((err) => {
-                throw new Error("Erro timeline.")
-            })
+                console.log("Erro em: data/request.createTimeline")
+                return Promise.reject('Erro ao salvar a timeline.')
+            }) 
         },
 
         sendChatItem(ctx){

@@ -304,7 +304,6 @@ module.exports = (server) => { return {
             })
         },
         createCard(ctx){
-            console.log("Caiu aqui")
             return server.mongodb.Card.create(ctx.params.data).then((card) => {
                 if(!card) throw new Error ('Erro ao criar Card')
                 // check socket connections and emit 
@@ -326,8 +325,8 @@ module.exports = (server) => { return {
                     return card
                 })
             }).catch((err) => {
-                console.log(err)
-                return err
+                console.log("Erro em: request-board.createCard")
+                return Promise.reject("Pedido está Ok, porém houve um erro ao criar o card!")
             })
         },
         reloadCard(ctx){
@@ -345,6 +344,7 @@ module.exports = (server) => { return {
                 return card
             })
         },
+        
         updateCardDeliveryDate(ctx){
             return server.mongodb.Card.findOneAndUpdate({
                 requestId: ctx.params.request.id

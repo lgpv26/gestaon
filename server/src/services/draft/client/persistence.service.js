@@ -1,11 +1,11 @@
 const _ = require('lodash')
 const sequelize = require('sequelize')
 const Op = require('sequelize').Op
+import EventResponse from '~server/models/EventResponse'
 
 module.exports = (server) => { 
     //PRIVATES
     let _client = null
-    let _transaction = null
     let _saveInRequest = null
     let _companyId = null
 
@@ -19,11 +19,11 @@ module.exports = (server) => {
         start(ctx){
             //SET PRIVATES
             this._client = ctx.params.client
-            this._transaction = ctx.params.transaction || null
             this._companyId = ctx.params.companyId
+            this._saveInRequest = (ctx.params.saveInRequest) ? true : false
 
             return ctx.call("draft/client/persistence.checkTempIds").then(() => {
-                return ctx.call("draft/client/persistence.setTransaction").then(() => {
+                return server.sequelize.transaction((t) => {
                     
                     //SAVE INITIAL CLIENT 
                     return ctx.call("draft/client/persistence.saveClient").then((client) => {
@@ -64,29 +64,30 @@ module.exports = (server) => {
                         this._client = client
                         
                         return Promise.all(clientPromisses).then(() => {
-                            if(this._saveInRequest) {
-                                return this._client
-                            }
-                            else{
-                                return ctx.call("draft/client/persistence.commit").then(() => {
-                                    return ctx.call("draft/client/persistence.saveES")
-                                    .then(() => {
-                                       return this._client
-                                    })
-                                })
-                            }
+                            return this._client
                         })
                     }).catch((err) => {
                         console.log(err, "Erro em: draft/client/persistence.saveClient")
-                        if(_saveInRequest) {
-                            throw new Error(err)
-                        }
-                        else{
-                            return ctx.call("draft/client/persistence.rollback", {
-                                error: err
-                            })
-                        }
+                        return Promise.reject("Erro ao salvar o cliente.")
                     }) 
+                }).then((client) => {
+                    //COMMIT
+                    if(this._saveInRequest) {
+                        return client
+                    }
+                    else {
+                        return ctx.call("draft/client/persistence.saveES")
+                        .then(() => {
+                            return client
+                        })
+                    }
+                }).catch((err) => {
+                    if(this._saveInRequest) {
+                        return Promise.reject(err)
+                    }
+                    else{
+                        return new EventResponse(new Error(err))
+                    }
                 })
             })
         },
@@ -95,8 +96,8 @@ module.exports = (server) => {
          */ 
         setTransaction() {
             if(!this._transaction){
-                return server.sequelize.transaction().then((transaction) => {
-                    this._transaction = transaction
+                return server.sequelize.transaction((t) => {
+                    this._transaction = t
                     this._saveInRequest = false
                 })
             }
@@ -125,26 +126,24 @@ module.exports = (server) => {
                         where: {
                             id: this._client.id,
                             companyId: this._companyId 
-                        },
-                        transaction: this._transaction
+                        }
                     }).then((client) => {
                         return client
                     }).catch((err) => {
                         console.log("Erro em: data/client.update")
-                        throw new Error(err)
+                        return Promise.reject(err)
                     })   
                 }
                 else { // create client
                     return ctx.call("data/client.create", {
                         data: _.assign(this._client, {
                             companyId: this._companyId
-                        }),
-                        transaction: this._transaction
+                        })
                     }).then((client) => {
                         return client
                     }).catch((err) => {
                         console.log("Erro em: data/client.create")
-                        throw new Error(err)
+                        return Promise.reject(err)
                     })   
                 }
             }
@@ -158,8 +157,7 @@ module.exports = (server) => {
                 data: _.assign(this._client.clientAddresses, {
                     clientId: ctx.params.data.clientId,
                     companyId: this._companyId
-                }),
-                transaction: this._transaction
+                })
             }).then((clientAddresses) => {
                 return clientAddresses
             })
@@ -175,8 +173,7 @@ module.exports = (server) => {
                         clientId: ctx.params.data.clientId,
                     })
                 }),
-                clientId: ctx.params.data.clientId,
-                transaction: this._transaction
+                clientId: ctx.params.data.clientId
             }).then((clientPhones) => {
                 return clientPhones
             })
@@ -194,8 +191,7 @@ module.exports = (server) => {
                     })
                 }),
                 clientId: ctx.params.data.clientId,
-                companyId: this._companyId,
-                transaction: this._transaction
+                companyId: this._companyId
             }).then((clientCustomFields) => {
                 return clientCustomFields
             })
@@ -214,12 +210,13 @@ module.exports = (server) => {
                         console.log(esErr, "Erro em: draft/client/persistence.setES")
                         console.log('Erro ao salvar dados no ElasticSearch!')
                         new Error('Erro ao salvar dados no ElasticSearch!')
+                        return Promise.reject("Erro ao salvar dados no ElasticSearch!")
                     }
                     return true
                 })
             }).catch((err) => {
                 console.log("Erro em: draft/client/persistence.saveES (general)")
-                throw new Error(err)
+                return Promise.reject(err)
             })                
         },
         
@@ -249,9 +246,6 @@ module.exports = (server) => {
 
             return Promise.all(removeTemps).then(() => {
                 return true
-            }).catch((err) => {
-                console.log("Erro em: draft/client/persistence.checkTempIds")
-                throw new Error(err)
             })
         },
 

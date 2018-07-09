@@ -32,16 +32,16 @@ module.exports = (server) => { return {
          * @returns {Promise.<Object>} product
          */
         create(ctx){
-            return server.mysql.Product.create(ctx.params.data, {
-                transaction: ctx.params.transaction
-            }).then((product) => {
+            return server.mysql.Product.create(ctx.params.data)
+            .then((product) => {
                 if(!product){
                     console.log("Nenhum registro encontrado. Create.")
-                    throw new Error("Nenhum registro encontrado.")
+                    return Promise.reject('Erro ao criar o produto')
                 }
                 return JSON.parse(JSON.stringify(product))
             }).catch((err) => {
-                throw new Error(err) // COMENTAR
+                console.log('Erro no create em product service') //comentar
+                return Promise.reject(err)
             })
         },
         /**
@@ -50,20 +50,19 @@ module.exports = (server) => { return {
          */
         update(ctx){
             return server.mysql.Product.update(ctx.params.data, {
-                where: ctx.params.where || {},
-                transaction: ctx.params.transaction
+                where: ctx.params.where || {}
             }).then((productUpdate) => {
                 if(parseInt(_.toString(productUpdate)) < 1 ){
                     console.log("Nenhum registro encontrado. Update.")
-                    throw new Error("Nenhum registro encontrado.")
+                    return Promise.reject('Erro ao atualizar o produto')
                 }
-                return server.mysql.Product.findById(ctx.params.data.id, {
-                    transaction: ctx.params.transaction
-                }).then((product) => {
+                return server.mysql.Product.findById(ctx.params.data.id)
+                .then((product) => {
                     return JSON.parse(JSON.stringify(product))
                 })
             }).catch((err) => {
-                throw new Error(err) // COMENTAR
+                console.log('Erro no update em product service') //comentar
+                return Promise.reject(err)
             })
         },
         remove(ctx){
@@ -83,13 +82,12 @@ module.exports = (server) => { return {
                         }),
                         where: {
                             id: orderProduct.product.id
-                        },
-                        transaction: ctx.params.transaction
+                        }
                     }).then((product) => {
                         return _.assign(orderProduct, { product: product })
                     }).catch((err) =>{
-                        //console.log(err) //comentar
-                        throw new Error(err)
+                        console.log('Erro no saveProducts em product service') //comentar
+                        return Promise.reject(err)
                     })
                     )
                 }
@@ -99,13 +97,12 @@ module.exports = (server) => { return {
                             companyId: ctx.params.companyId,
                             price: orderProduct.unitPrice,
                             quantity: orderProduct.quantity
-                        }),
-                        transaction: ctx.params.transaction
+                        })
                     }).then((product) => {
                         return _.assign(orderProduct, { product: product })
                     }).catch((err) =>{
-                        //console.log(err) // COMENTAR
-                        throw new Error(err)
+                        console.log('Erro no saveProducts em product service') //comentar
+                        return Promise.reject(err)
                     })
                     )
                 }
@@ -114,8 +111,8 @@ module.exports = (server) => { return {
             return Promise.all(productsPromises).then((products) => {
                 return products
             }).catch((err) => {
-                console.log('')
-                throw new Error(err)
+                console.log('Erro no saveProducts em product service, promise all') //comentar
+                return Promise.reject(err)
             })
         }
     }
