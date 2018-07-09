@@ -113,7 +113,6 @@ module.exports = class RequestBoard {
          * On section move
          */
         this.socket.instance.on('request-board:section-move', (evData) => {
-            console.log("Section moved", evData)
             vm.server.broker.call('request-board.moveSection', {
                 data: {
                     companyId: vm.socket.activeCompany.id,
@@ -131,7 +130,6 @@ module.exports = class RequestBoard {
          * On card move
          */
         this.socket.instance.on('request-board:card-move', (evData) => {
-            console.log("Card moved", evData)
             vm.server.broker.call('request-board.moveCard', {
                 data: {
                     location: evData.location,

@@ -21,11 +21,10 @@ module.exports = (server) => { return {
                         return "User didn't logged in through the app before"
                     }
                     else{
-                        return Promise.reject(new Error("User didn't logged in through the app before"))
+                        return Promise.reject("User didn't logged in through the app before")
                     }
                 }
-
-                let message = {
+                const message = {
                     data: ctx.params.data.payload,
                     android: {
                         priority: 'high'
@@ -33,15 +32,11 @@ module.exports = (server) => { return {
                     token: userAccessToken.fcmToken
                 }
 
-                server.firebaseAdmin.messaging().send(message).then((response) => {
-                    console.log('Successfully sent message:', response)
-                }).catch((error) => {
-                    console.log('Error sending message:', error)
-                })
+                const sendMessage = server.firebaseAdmin.messaging().send(message)
 
                 let sound = _.get(ctx.params.data,'sound','sound1') + '.mp3'
 
-                message = {
+                const notification = {
                     data: ctx.params.data.payload,
                     notification: {
                         title: ctx.params.data.title,
@@ -60,11 +55,9 @@ module.exports = (server) => { return {
                     token: userAccessToken.fcmToken
                 }
 
-                server.firebaseAdmin.messaging().send(message).then((response) => {
-                    console.log('Successfully sent notification:', response)
-                }).catch((error) => {
-                    console.log('Error sending notification:', error)
-                })
+                const sendNotification = server.firebaseAdmin.messaging().send(notification)
+
+                return Promise.all([sendMessage, sendNotification])
             })
         }
     }

@@ -24,7 +24,7 @@ module.exports = (server) => {
 
             return ctx.call("draft/client/persistence.checkTempIds").then(() => {
                 return server.sequelize.transaction((t) => {
-                    
+
                     //SAVE INITIAL CLIENT 
                     return ctx.call("draft/client/persistence.saveClient").then((client) => {
                         let clientPromisses = []
@@ -69,7 +69,7 @@ module.exports = (server) => {
                     }).catch((err) => {
                         console.log(err, "Erro em: draft/client/persistence.saveClient")
                         return Promise.reject("Erro ao salvar o cliente.")
-                    }) 
+                    })
                 }).then((client) => {
                     //COMMIT
                     if(this._saveInRequest) {
@@ -91,28 +91,13 @@ module.exports = (server) => {
                 })
             })
         },
-        /**
-         * @returns {Promise} set transaction
-         */ 
-        setTransaction() {
-            if(!this._transaction){
-                return server.sequelize.transaction((t) => {
-                    this._transaction = t
-                    this._saveInRequest = false
-                })
-            }
-            else {
-                this._saveInRequest = true
-                return true
-            }
-        },
 
         /**
          * SAVE (create or update) INITIAL DATA CLIENT
          * @returns {Promise.<object>} client
          */    
         saveClient(ctx){
-            if(this._saveInRequest && (this._client.name == '' | this._client.name == null) && !this._client.id){
+            if(this._saveInRequest && (this._client.name === '' || this._client.name === null) && !this._client.id){
                 return {
                     id: null
                 }
@@ -372,23 +357,6 @@ module.exports = (server) => {
                 
                 return _.concat(clientES, addressesES)
             })
-        },
-
-        /**
-         * Commit persistence
-         */
-        commit() {
-            console.log("Commit everything!")
-            this._transaction.commit()
-        },
-
-        /**
-         * Rollback persistence
-         */
-        rollback(ctx) {
-            console.log("Oh God, just rollback!")
-            this._transaction.rollback()
-            return Promise.reject(ctx.params.error)
         }
     }
 }}

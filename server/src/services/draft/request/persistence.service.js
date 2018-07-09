@@ -104,7 +104,6 @@ module.exports = (server) => {
                                 }
                             }).then(() => {
                                 console.log("Remove draft!")
-
                                 return ctx.call("draft/request/persistence.dashboard", {
                                     data: request
                                 }).then(() => {
@@ -126,7 +125,7 @@ module.exports = (server) => {
                                             }).then(() => {
                                                 return new EventResponse(request)
                                             }).catch((err) => {
-                                                return new EventResponse(new Error("Erro ao enviar o pedido ao entregador!"))
+                                                return new EventResponse(new Error("Erro ao enviar a notificação para o entregador!"))
                                             })
                                         }
                                         return new EventResponse(request)
@@ -138,7 +137,6 @@ module.exports = (server) => {
                                     console.log("Erro em: draft/request/persistence.dashboard")
                                     return new EventResponse(new Error(err))
                                 })
-
                             }).catch((err) => {
                                 return new EventResponse(new Error(err))
                             })
@@ -146,8 +144,6 @@ module.exports = (server) => {
                             console.log(err)
                             return new EventResponse(new Error(err))
                         })
-
-
                     }).catch((err) => {
                         console.log("Erro em: draft/request/persistence.removeTempIds")
                         return new EventResponse(new Error("Erro ao consultar."))
@@ -821,37 +817,7 @@ module.exports = (server) => {
                 console.log("Erro em: data/request.getRequestOrder")
                 return Promise.reject("Erro ao preparar elasticsearch")
             })  
-        },
-
-        /**
-         * Commit persistence
-         */
-        commit(ctx) {
-            console.log("Commiting...")
-            
-            this._transaction.commit().then(() => {
-                console.log("Commit everything!")
-                console.log("Removing draft...")
-                return ctx.call("draft.remove", {
-                    data: {
-                        draftId: this._draftId,
-                        companyId: this._companyId,
-                        emittedBy: this._userId
-                    }
-                }).then(() => {
-                    console.log("Remove draft!")
-                    return true
-                })
-               return
-            })            
-        },
-
-        /**
-         * Rollback persistence
-         */
-        rollback() {
-            console.log("Oh God, just rollback!")
-            this._transaction.rollback()
         }
+
     }
 }}

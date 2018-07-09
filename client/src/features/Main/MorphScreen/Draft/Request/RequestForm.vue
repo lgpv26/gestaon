@@ -105,8 +105,10 @@
                     <span>{{itemProps.text }}</span>
                 </template>
             </app-request-status-select>
-            <a class="btn btn--primary persistence allowed" v-if="activeStep === 'client'" @click="persistClient({client,companyId: company.id})">Salvar Cliente</a>
-            <a class="btn btn--primary persistence allowed" v-else-if="activeStep !== 'client'" @click="persistRequest({request: form, companyId: company.id})">Salvar Pedido</a>
+            <a class="btn btn--primary persistence allowed" v-if="activeStep === 'client' && !persistingClient" @click="persistClient({client,companyId: company.id})">Salvar Cliente</a>
+            <a class="btn btn--primary persistence not-allowed" v-else-if="activeStep === 'client' && persistingClient">Salvando...</a>
+            <a class="btn btn--primary persistence allowed" v-else-if="activeStep !== 'client' && !persistingRequest" @click="persistRequest({request: form, companyId: company.id})">Salvar Pedido</a>
+            <a class="btn btn--primary persistence not-allowed" v-else-if="activeStep !== 'client' && persistingRequest">Salvando...</a>
         </div>
     </div>
 </template>
@@ -151,6 +153,8 @@
             return {
                 scrollbar: null,
                 formPath: 'request',
+                persistingClient: false,
+                persistingRequest: false,
                 datetimeSelectorConfig: {
                     dateFormat: 'd/m/Y H:i',
                     locale: Portuguese,
@@ -285,6 +289,7 @@
             },
             persistClient(){
                 const vm = this
+                vm.persistingClient = true
                 vm.runClientPersistence({
                     client: vm.client,
                     companyId: vm.company.id
@@ -299,11 +304,13 @@
                     }
                     console.log("Emitting draft/request.client.select", emitData)
                     vm.$socket.emit('draft/request.client.select', emitData)
+                    vm.persistingClient = false
                 }).catch((err) => {
                     vm.showToast({
                         type: 'error',
                         message: err
                     })
+                    vm.persistingClient = false
                 })
             },
             persistRequest(){
@@ -347,6 +354,7 @@
                     return false
                 }
 
+                vm.persistingRequest = true
                 vm.runRequestPersistence({
                     draftId: vm.activeMorphScreen.draft.draftId,
                     request: vm.form,
@@ -365,11 +373,13 @@
                     else {
                         vm.showError(response.error.message)
                     }
+                    vm.persistingRequest = false
                 }).catch((err) => {
                     vm.showToast({
                         type: 'error',
                         message: err
                     })
+                    vm.persistingRequest = false
                 })
             }
         },
@@ -476,6 +486,10 @@
 
             a.persistence.allowed {
                 color: #FFF;
+            }
+            a.persistence.not-allowed {
+                color: #FFF;
+                cursor: not-allowed
             }
         }
     }
