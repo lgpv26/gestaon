@@ -468,6 +468,7 @@
             padding: 0 20px;
             align-items: center;
             flex-shrink: 0;
+
             span em {
                 background-color: transparent;
                 color: var(--font-color--danger)
