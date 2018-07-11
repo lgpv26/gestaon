@@ -29,7 +29,7 @@
                     </a>
                 </template>
                 <template slot="actions" slot-scope="slotProps">
-                    <a href="javascript:void(0)" class="edit-row" @click.stop="recover(slotProps.row.id)">
+                    <a href="javascript:void(0)" class="edit-row" @click.stop="recover(slotProps.row.payload.requestId)">
                         <icon-edit></icon-edit>
                     </a>
                 </template>
@@ -110,7 +110,10 @@
                     {
                         text: 'Nº',
                         name: 'id',
-                        width: 50
+                        width: 80,
+                        style: {
+                            'justify-content': 'center'
+                        },
                     },
                     {
                         text: 'Endereço',
@@ -124,7 +127,7 @@
                     {
                         text: 'Data/Entrega',
                         name: 'deliveryDate',
-                        width: 140
+                        width: 120
                     },
                     {
                         text: 'Grupo',
@@ -133,6 +136,7 @@
                     {
                         text: 'Pagamento',
                         name: 'paymentMethod',
+                        width: 170
                     },
                     {
                         text: 'Valor',
@@ -266,14 +270,16 @@
 
                 this.loading = true
                 CashierBalancingAPI.getList(requestParams).then(({data}) => {
-                    console.log("getList",data)
                     this.rows = _.map(data.list.rows, (row) => {
                         return {
                             id: row.id,
                             columns: [
                                 {
                                     column: 'id',
-                                    text: row.id
+                                    text: row.id,
+                                    style: {
+                                        'justify-content': 'center'
+                                    }
                                 },
                                 {
                                     column: 'clientAddress',
@@ -332,6 +338,7 @@
                                 }
                             ],
                             payload: {
+                                requestId: row.requestId,
                                 amount: row.amount,
                                 received: row.received
                             }
