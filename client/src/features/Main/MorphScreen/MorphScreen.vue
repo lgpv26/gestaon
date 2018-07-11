@@ -16,6 +16,7 @@
                     <div class="morph-screen__container" v-if="screen.active" ref="container">
                         <app-draft :details="getDraftDetails(screen.draft)" :screen="screen" @closeDraft="closeDraft()" @closeMorphScreen="closeMorphScreen($event)"></app-draft>
                     </div>
+                    
                 </transition>
             </div>
         </div>
