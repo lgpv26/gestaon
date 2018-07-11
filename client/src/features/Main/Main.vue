@@ -22,10 +22,9 @@
                     </header>
                     <app-menu></app-menu>
                     <span class="push-both-sides"></span>
-                    <div class="sidebar-widgets">
-                    </div>
+                    <div class="sidebar-widgets"></div>
                 </div>
-                <div class="main-column">
+                <div class="main-column" :style="{ width: (dimensions.window.width - 60) + 'px' }">
                     <header class="main-column__header">
                         <div class="header__container" v-if="$route.name === 'dashboard'">
                             <app-request-board-filter></app-request-board-filter>
@@ -110,6 +109,7 @@
             ...mapState(['app', 'system']),
             ...mapState('auth', ['user','token','company']),
             ...mapState('morph-screen', ['screens']),
+            ...mapState(['dimensions']),
             shortCompanyName(){
                 if(_.has(this.company, 'name')){
                     const words = _.upperCase(this.company.name).split(" ");
@@ -237,9 +237,9 @@
                     case "end":      color = "Orchid";     bgc = "MediumVioletRed"; break;
                     default: color = color;
                 }
-                if (typeof msg == "object") {
+                if (typeof msg === "object") {
                     console.log(msg);
-                } else if (typeof color == "object") {
+                } else if (typeof color === "object") {
                     console.log("%c" + msg, "color: PowderBlue;font-weight:bold; background-color: RoyalBlue;");
                     console.log(color);
                 } else {
@@ -257,6 +257,7 @@
 
             const socket = io(config.socketServer + '?token=' + vm.token.accessToken)
             localStorage.debug = false
+
             Vue.use(VueSocketio, socket)
 
             /* if user disconnected / reconnected from socket server */
@@ -265,7 +266,7 @@
                 vm.setLoadingText("Tentando reconectar (" + attemptNumber + ").")
                 vm.startLoading()
                 console.log("Trying reconnection.")
-            });
+            })
 
             socket.on('disconnect', (reason) => {
                 vm.setLoadingText("Desconectado.")
@@ -319,7 +320,7 @@
                         socket.on('connect', () => {
                             vm.log("Socket connection succeeded.", "info");
                             resolve("Socket connection succeeded.");
-                        });
+                        })
                     }
                 });
             }).then(() => {
@@ -375,7 +376,6 @@
                     }).play();
                 })
             })
-
         }
     }
 </script>

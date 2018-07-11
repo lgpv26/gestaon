@@ -30,7 +30,7 @@
     import moment from 'moment';
     import _ from 'lodash';
 
-    import GridComponent from '../../../../components/Utilities/Grid.vue'
+    import GridComponent from '../../../../components/Utilities/TableGrid.vue'
 
     export default {
         components: {

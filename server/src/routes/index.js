@@ -32,8 +32,36 @@ module.exports = function(server){
     });
 
     server.get('/lala', function(req, res, next){
-        const error = new HTTPError('Token inválido', 401)
-        return next(error)
+        return server.mysql.RequestPayment.findAll({
+            limit: 10,
+            include: [
+                {
+                    model: server.mysql.Request,
+                    as: 'request',
+                    required: true,
+                    include: [
+                        {
+                            model: server.mysql.RequestOrder,
+                            as: 'requestOrder',
+                            required: true,
+                            include: [
+                                {
+                                    model: server.mysql.RequestOrderProduct,
+                                    as: 'requestOrderProducts',
+                                    where: {
+                                        productId: 14
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }).then((result) => {
+            res.send(200, result)
+        }).catch((err) => {
+            next(err)
+        })
     });
 
     server.on('restifyError', function (req, res, err, cb) {

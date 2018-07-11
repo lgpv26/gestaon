@@ -132,6 +132,7 @@ di.server.broker.start().then(() => {
                         }
                         return resolve()
                     }).then(() => {
+
                         mongoose.Promise = bluebird
                         let mongoDbCredentials = {}
                         if(process.env.NODE_ENV === 'production'){

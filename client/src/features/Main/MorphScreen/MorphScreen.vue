@@ -59,6 +59,11 @@
                 if(socketData.emittedBy !== this.user.id){
                     this.ADD_DRAFT(socketData.data)
                 }
+            },
+            version(ev){
+                if(ev.success && (this.app.version !== ev.evData.webApp)){
+                    location.reload(true)
+                }
             }
         },
         computed: {
@@ -69,7 +74,8 @@
             ]),
             ...mapState('data/users', [
                 'users'
-            ])
+            ]),
+            ...mapState(['app'])
         },
         methods: {
             ...mapMutations('morph-screen', ['SET_ALL_MS_SCREENS','SET_MS','SHOW_MS', 'ADD_DRAFT', 'REMOVE_DRAFT']),
@@ -166,12 +172,7 @@
             closeDraft(){
                 const vm = this;
                 const allAnimationsCompleted = [];
-                let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen);
-                vm.$socket.emit('draft:presence', {
-                    draftId: vm.activeMorphScreen.draft.draftId,
-                    userId: vm.user.id,
-                    leave: true
-                });
+                let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen)
                 setImmediate(() => {
                     vm.SET_MS({
                         draftId: vm.activeMorphScreen.draft.draftId,
@@ -220,14 +221,10 @@
                         });
                     })
                 });
-                Promise.all(allAnimationsCompleted).then(() => {
+                return Promise.all(allAnimationsCompleted).then(() => {
                     vm.$refs.morphScreen.style.overflowY = 'overlay';
-                    /*setTimeout(() => {
-                        vm.SET_MS_SCREEN(_.assign({}, screen, { active: true }));
-                        vm.$refs.morphScreenItems[activeScreenIndex].classList.add('active');
-                    }, 300);
-                    */
-                });
+                    return true
+                })
             },
             selectDraft(screen, ignoreAnimating = false){
                 const vm = this;
@@ -332,16 +329,8 @@
              * If screen param is defined, close the draftScreen too
              * @param options:Object
              */
-            closeMorphScreen(options = {}){
+            closeMorphScreen(params = {}){
                 const vm = this;
-                const screen = _.get(options,'screen', false)
-                /*if(screen) {
-                    vm.$socket.emit('draft:presence', {
-                        draftId: vm.activeMorphScreen.draft.draftId,
-                        userId: vm.user.id,
-                        leave: true
-                    });
-                }*/
                 vm.contentEl.classList.remove('unfocused');
                 const animation = anime.timeline().add({
                     targets: vm.contentEl,
@@ -360,7 +349,7 @@
                         value: [1, 0]
                     }
                 })
-                if(!screen){
+                if(!_.has(params,'draftId') && !params.draftId){
                     animation.add({
                         targets: vm.$refs.morphScreen.querySelectorAll('.morph-screen__item'),
                         duration: 300,
@@ -373,15 +362,15 @@
                 }
                 animation.finished.then(() => {
                     vm.SHOW_MS(false)
-                    if(screen){
+                    if(_.has(params,'draftId') && params.draftId){
                         vm.SET_MS({
-                            draftId: screen.draft.draftId,
+                            draftId: params.draftId,
                             screen: {
                                 active: false
                             }
                         })
-                        if(_.get(options,'remove',false)){
-                            vm.REMOVE_DRAFT(screen.draft.draftId)
+                        if(params.remove){
+                            vm.REMOVE_DRAFT(params.draftId)
                         }
                     }
                 })
@@ -402,7 +391,7 @@
                     let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen);
                     vm.$refs.morphScreenItems[activeScreenIndex].style.height = windowHeight + 'px';
                 }
-            },
+            }
         },
         created(){
             const vm = this

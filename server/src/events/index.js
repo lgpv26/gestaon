@@ -39,8 +39,11 @@ module.exports = class Events {
                 clearInterval(this._versionInterval)
             }
 
+            const webAppVersion = require('../../../client/package.json').version
             this._versionTimeInterval = setInterval(() => {
+                console.log("Emitting")
                 socket.instance.emit('version', new EventResponse({
+                    webApp: webAppVersion,
                     android: config.mainServer.androidVersion
                 }))
             }, 1000 * 10)

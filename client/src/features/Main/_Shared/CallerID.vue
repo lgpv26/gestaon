@@ -62,7 +62,7 @@
             ...mapState('morph-screen', ['isShowing']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             canCreateDraft(){
-                return !this.activeMorphScreen && !this.isShowing
+                return !this.isShowing
             }
         },
         methods: {
@@ -109,12 +109,14 @@
                 }
             },
             createRequestDraftToNewClient(call){
+                console.log(call.destination)
                 const createDraftArgs = { body: {
                     type: 'request',
                     createdBy: this.user.id,
                     data: {
                         request: createRequest({
                             activeStep: 'client',
+                            phoneLine: call.destination,
                             client: {
                                 clientPhones: [
                                     {
@@ -149,6 +151,7 @@
                         data: {
                             request: createRequest({
                                 activeStep: 'client',
+                                phoneLine: call.destination,
                                 client
                             })
                         }

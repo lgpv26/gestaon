@@ -53,11 +53,12 @@
                     </div>
                 </div>
             </div>
-            <div v-if="false" class="form__side-column" style="display: flex; flex-direction: column;">
+            <!--
+            <div class="form__side-column" style="display: flex; flex-direction: column;">
                 <div class="reports">
                     <div class="side-column__tabs">
                         <ul>
-                            <li :class="{ active: activeTab === 'chart' }" @click="activateTab('chart')">Gráfico</li>
+                            <li v-if="false" :class="{ active: activeTab === 'chart' }" @click="activateTab('chart')">Gráfico</li>
                             <li :class="{ active: activeTab === 'history' }" @click="activateTab('history')">Histórico de compras</li>
                         </ul>
                     </div>
@@ -128,6 +129,7 @@
                     </div>
                 </div>
             </div>
+            -->
     </div>
 </template>
 
@@ -162,7 +164,7 @@
         mixins: [DraftMixin],
         data(){
             return {
-                activeTab: 'chart',
+                activeTab: 'history',
                 productChart: null,
                 datetime: null,
                 datetimeSelectorConfig: {
@@ -634,10 +636,6 @@
     /**
     Main column
      */
-
-    div.ms-form form .form__side-column {
-        width: 400px;
-    }
 
     .form__side-column .reports .form-group {
         border-top-left-radius: 0;

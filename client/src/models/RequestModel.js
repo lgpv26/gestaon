@@ -14,6 +14,7 @@ export class RequestModel {
         deliveryDate = null,
         requestPayments = [],
         obs = '',
+        phoneLine = null,
         status = 'pending'
     } = {}){
         this.id = id
@@ -27,6 +28,7 @@ export class RequestModel {
         this.deliveryDate = deliveryDate
         this.requestPayments = requestPayments
         this.obs = obs
+        this.phoneLine = phoneLine
         this.status = status
     }
 }

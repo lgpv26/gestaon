@@ -1,5 +1,5 @@
 <template>
-    <app-popover v-bind="popoverProps" useScroll="true">
+    <app-popover v-bind="popoverProps" :useScroll="true">
         <template slot="triggerer">
             <slot></slot>
         </template>

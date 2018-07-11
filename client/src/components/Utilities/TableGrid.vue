@@ -100,9 +100,7 @@
                 }
                 this.$emit('input', this.form.selectedItems)
             },
-
             calculateScrollPosition(ev = false){
-
                 let currentScrollPercentage,
                     visibleAreaHeight = 0,
                     visibleItems = 0

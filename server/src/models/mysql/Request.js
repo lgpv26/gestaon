@@ -39,7 +39,7 @@ module.exports = {
                     type: Sequelize.INTEGER,
                     allowNull: true,
                     set(val) {
-                        this.setDataValue('taskId', (val == '' | val == null) ? null : val);
+                        this.setDataValue('taskId', (val === '' || val === null) ? null : val);
                     }
                 },
                 deliveryDate: {
@@ -49,10 +49,16 @@ module.exports = {
                     type: Sequelize.BOOLEAN,
                     defaultValue: false
                 },
+                phoneLine: {
+                    type: Sequelize.STRING,
+                    set(val) {
+                        this.setDataValue('phoneLine', (val === '' || val === null) ? null : val)
+                    }
+                },
                 obs: {
                     type: Sequelize.STRING,
                     set(val) {
-                        this.setDataValue('obs', (val == '' | val == null) ? null : val.toUpperCase().trim());
+                        this.setDataValue('obs', (val === '' || val === null) ? null : val.toUpperCase().trim());
                     }
                 },
                 dateUpdated: {

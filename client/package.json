@@ -1,7 +1,7 @@
 {
-  "name": "blue-agile-tracker",
-  "description": "Blue Agile Tracker client",
-  "version": "1.0.0",
+  "name": "gestaon-client",
+  "description": "GestaON client",
+  "version": "0.0.1",
   "author": "Thiago Yoithi <thyoity@gmail.com>",
   "private": true,
   "scripts": {

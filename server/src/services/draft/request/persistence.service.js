@@ -79,6 +79,7 @@ module.exports = (server) => {
                                         taskId: (task) ? _.get(task, 'task.id') : null,
                                         deliveryDate: (this._request.deliveryDate) ? moment(this._request.deliveryDate) : (!this._request.id) ? moment().add(20, 'm') : (!this._oldRequest.isScheduled) ? this._oldRequest.deliveryDate : moment().add(20, 'm'),
                                         isScheduled: !!this._request.deliveryDate,
+                                        phoneLine: (this._request.phoneLine) ? this._request.phoneLine : null,
                                         obs: (this._request.obs) ? this._request.obs : null,
                                         status: (this._request.status) ? (this._request.client.id) ? this._request.status : (this._request.status === 'finished' || this._request.status === 'canceled') ? this._request.status : 'finished' : (this._request.client.id) ? 'pending' : 'finished'
                                     }

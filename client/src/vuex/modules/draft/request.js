@@ -28,6 +28,7 @@ const state = {
         useSuggestedDeliveryDate: false,
         deliveryDate: null,
         obs: '',
+        phoneLine: null,
         client: {
             id: '',
             name: '',
@@ -287,6 +288,7 @@ const actions = {
             deliveryDate: ((request.useSuggestedDeliveryDate) ?  null : request.deliveryDate ),
             responsibleUserId: request.responsibleUserId,
             obs: request.obs,
+            phoneLine: request.phoneLine,
             status: request.status
         }
         return RequestsAPI.persistence(draftId, sendData, {

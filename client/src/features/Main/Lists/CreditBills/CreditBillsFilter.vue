@@ -105,7 +105,7 @@
     import _ from 'lodash';
 
     import CashierBalancingAPI from '../../../../api/cashier-balancing'
-    import GridComponent from '../../../../components/Utilities/Grid.vue'
+    import GridComponent from '../../../../components/Utilities/TableGrid.vue'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
     export default {

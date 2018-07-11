@@ -11,8 +11,9 @@
 
 <script>
     import store from './vuex/store'
-    import { mapState } from 'vuex'
+    import { mapState, mapMutations } from 'vuex'
     import LoadingComponent from "./components/Utilities/Loading.vue"
+    import { version } from '../package.json'
 
     export default {
         store,
@@ -21,15 +22,37 @@
         },
         data: function(){
             return {
-                
             }
         },
         computed: {
             ...mapState([
-                'app'
+                'app',
+                'dimensions'
             ])
         },
         methods: {
+            ...mapMutations([
+                'SET_WINDOW_DIMENSIONS',
+                'SET_APP_VERSION'
+            ]),
+            setWindowDimensions(event) {
+                this.SET_WINDOW_DIMENSIONS({
+                    width: document.documentElement.clientWidth,
+                    height: document.documentElement.clientHeight
+                })
+            }
+        },
+        created(){
+            this.SET_APP_VERSION(version)
+        },
+        mounted(){
+            this.$nextTick(() => {
+                window.addEventListener('resize', this.setWindowDimensions)
+                this.setWindowDimensions()
+            })
+        },
+        beforeDestroy() {
+            window.removeEventListener('resize', this.setWindowDimensions)
         }
     }
 </script>

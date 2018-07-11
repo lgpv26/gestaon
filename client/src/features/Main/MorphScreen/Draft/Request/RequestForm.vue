@@ -197,7 +197,6 @@
                 const selectedStatus = _.find(this.requestStatusList, {
                     value: this.status
                 })
-                console.log("selectedRequestStatusName", selectedStatus)
                 if(selectedStatus){
                     return selectedStatus.name
                 }
@@ -366,7 +365,6 @@
                             message: "Pedido salvo com sucesso!"
                         })
                         vm.$emit('close', {
-                            screen: vm.activeMorphScreen,
                             remove: true
                         })
                     }

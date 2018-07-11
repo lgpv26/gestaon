@@ -11,11 +11,14 @@
                 <span class="summary__info">Iniciado às <em>{{ formatedCreatedAt }}</em> por <em>{{ draftCreatedBy }}</em></span>
             </div>
             <span class="push-both-sides"></span>
-            <div class="header__tags" v-if="tags.length">
+            <div class="header__tags" v-if="tags.length && _.first(tags)">
                 <span>Termos da busca: </span>
                 <ul>
                     <li class="copiable-content" v-for="tag in tags" :data-clipboard-text="tag"><span>{{ tag }}</span><icon-copy></icon-copy></li>
                 </ul>
+            </div>
+            <div class="header__phone-line" v-if="_.get(draft, 'data.request.phoneLine', false)">
+                <span>Linha: <em>{{ draft.data.request.phoneLine }}</em></span>
             </div>
             <div class="header__actions">
                 <a @click="load()" style="margin-right: 20px; font-size: 34px; position: relative; top: 3px;"><i class="mi mi-refresh"></i></a>
@@ -40,7 +43,7 @@
         <div v-if="errorMessage" class="load-error-container">
             <h3>{{ errorMessage }}</h3>
         </div>
-        <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent" @remove="remove()" @close="$emit('closeMorphScreen', $event)"></component>
+        <component :is="'app-' + details.entryComponent" v-show="draft" ref="draftRootComponent" @remove="remove()" @close="emitDraftLeave(); leaveDraftAndCloseMorphScreen($event)"></component>
     </div>
 </template>
 
@@ -66,6 +69,7 @@
         },
         data(){
             return {
+                currentDraft: null,
                 selectedContent: null,
                 clipboardInstance: null,
                 isPersisting: false,
@@ -117,6 +121,7 @@
                 const vm = this
 
                 // clean all promises and event listeners
+
                 vm.loadPromises = []
                 if(vm.$options.sockets['draft.load']){
                     delete vm.$options.sockets['draft.load'] // remove previous set listener if existent
@@ -192,8 +197,7 @@
                         type: 'success',
                         message: "Rascunho removido!"
                     })
-                    vm.$emit('closeMorphScreen', {
-                        screen: vm.activeMorphScreen,
+                    vm.leaveDraftAndCloseMorphScreen({
                         remove: true
                     })
                 }).catch((err) => {
@@ -203,35 +207,57 @@
                     })
                 })
             },
-            leaveDraft(){
+            emitDraftLeave(){
                 const emitData = {
-                    draftId: this.activeMorphScreen.draft.draftId
+                    draftId: this.currentDraft.draftId
                 }
                 console.log("Emitting to draft.leave", emitData)
                 this.$socket.emit('draft.leave', emitData)
+            },
+            leaveDraft(){
+                this.emitDraftLeave()
                 this.$emit('closeDraft')
+            },
+            leaveDraftAndCloseMorphScreen(ev = {}){
+                const closeMorphScreenEvData = _.assign({
+                    draftId: this.currentDraft.draftId,
+                    remove: false
+                }, ev)
+                this.$emit('closeMorphScreen', closeMorphScreenEvData)
+            },
+            connect(){
+                if(this.activeMorphScreen){
+                    setTimeout(() => {
+                        this.load()
+                    }, 200)
+                }
             }
-
         },
         created(){
             const vm = this
             /**
              * Load draft again on reconnect
              */
-            vm.$socket.on('reconnect', (reason) => {
-                vm.load()
-            })
+            vm.$socket.on('connect', this.connect)
             vm.load()
         },
         mounted(){
             const vm = this
             vm.clipboardInstance = new Clipboard('.copiable-content')
+            vm.currentDraft = JSON.parse(JSON.stringify(this.activeMorphScreen.draft))
+        },
+        beforeDestroy(){
+            this.$socket.removeListener('connect', this.connect)
         }
     }
 </script>
 
 <style>
     @import '../../../../assets/styles/draft.scss';
+
+    #draft .header__phone-line {
+        margin-left: 40px;
+    }
 
     .loading-container, .load-error-container {
         display: flex;

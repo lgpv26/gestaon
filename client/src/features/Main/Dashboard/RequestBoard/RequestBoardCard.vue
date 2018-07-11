@@ -22,9 +22,14 @@
                     </template>
                 </app-popover>
             </div>
-            <h3 class="card__client-address" v-if="requestClientAddress">
-                {{ requestClientAddress }}
-            </h3>
+            <div style="display: flex; flex-direction: row;">
+                <h3 class="card__client-address" v-if="requestClientAddress">
+                    {{ requestClientAddress }}
+                </h3>
+                <h3 class="card__phone-line" v-if="card.request.phoneLine">
+                    {{ card.request.phoneLine }}
+                </h3>
+            </div>
             <div class="card__middle">
                 <div class="card__timer">
                     <div class="timer__objects">
@@ -468,10 +473,21 @@
     }
 
     .request-board-card h3.card__client-address {
+        flex-grow: 1;
         color: var(--font-color--7);
         font-size: 11px;
         font-weight: 600;
         text-align: left;
+    }
+
+    .request-board-card h3.card__phone-line {
+        flex-grow: 1;
+        color: var(--font-color--7);
+        font-size: 11px;
+        font-weight: 600;
+        text-align: right;
+        width: 120px;
+        margin-left: 10px;
     }
 
     .request-board-card h3.card__task {

@@ -187,6 +187,10 @@ module.exports = (server) => {
 
             _.set(request, 'activeStep', (ctx.params.request.requestOrder) ? 'order' : 'client' )
             _.set(request, 'obs', ctx.params.request.obs)
+            _.set(request, 'phoneLine', ctx.params.request.phoneLine)
+            if(_.has(ctx.params.request, "phoneLine")){
+                _.set(request, 'phoneLine', ctx.params.request.phoneLine)
+            }
 
             if(_.has(ctx.params.request, "deliveryDate")){
                 _.set(request, 'deliveryDate', ctx.params.request.deliveryDate)

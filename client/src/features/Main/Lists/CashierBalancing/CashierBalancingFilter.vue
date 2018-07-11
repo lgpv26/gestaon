@@ -117,6 +117,14 @@
                 </template>
             </app-select>
         </li>
+        <li>
+            <a class="btn btn--primary" v-if="!loading" style="color: #FFF;" @click="apply()">
+                OK
+            </a>
+            <a class="btn btn--primary" v-else style="color: #FFF;">
+                ...
+            </a>
+        </li>
     </ul>
 </template>
 <script>
@@ -127,12 +135,13 @@
     import _ from 'lodash';
 
     import CashierBalancingAPI from '../../../../api/cashier-balancing'
-    import GridComponent from '../../../../components/Utilities/Grid.vue'
+    import GridComponent from '../../../../components/Utilities/TableGrid.vue'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
     export default {
         components: {
         },
+        props: ['loading'],
         data(){
             return {
                 form: {

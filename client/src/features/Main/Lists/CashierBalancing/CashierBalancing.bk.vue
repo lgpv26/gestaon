@@ -28,18 +28,13 @@
                     <h3>15 min</h3>
                 </div>
                 -->
-                <template slot="paid" slot-scope="slotProps">
-                    <a href="javascript:void(0)" :class="{active: slotProps.item.paid}" style="width: 32px">
-                        <icon-check></icon-check>
-                    </a>
-                </template>
-                <template slot="settled" slot-scope="slotProps">
-                    <a href="javascript:void(0)" :class="{active: slotProps.item.settled}" style="width: 50px">
+                <template slot="received" slot-scope="slotProps">
+                    <a href="javascript:void(0)" :class="{active: slotProps.item.received}" style="width: 32px">
                         <icon-check></icon-check>
                     </a>
                 </template>
                 <template slot="actions" slot-scope="slotProps">
-                    <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: card.request.id, companyId: company.id })" style="width: 32px;">
+                    <a href="javascript:void(0)" @click="runRequestRecoverance({ requestId: slotProps.item.requestId, companyId: company.id })" style="width: 32px;">
                         <icon-edit></icon-edit>
                     </a>
                 </template>
@@ -52,7 +47,7 @@
                 <div class="right-side">
                     <div class="group">
                         <span>Com selecionados:</span>
-                        <app-select v-model="form.action" :items="actionsSelectItems" title="Ação">
+                        <app-select v-model="form.action" :items="actionsSelectItems" :popoverProps="{placement:'top-start', horizontalOffset: -15}" title="Ação">
                             <a href="javascript:void(0)" v-if="!form.action">-- Selecione --</a>
                             <a href="javascript:void(0)" v-else>{{ _.find(actionsSelectItems, {value: form.action}).text }}</a>
                             <template slot="section" slot-scope="sectionProps">
@@ -63,14 +58,16 @@
                             </template>
                         </app-select>
                     </div>
-                    <div class="group" v-if="form.action === 'settled'">
+                    <div class="group" v-if="form.action === 'received'">
                         <span>No horário:</span>
-                        <app-datetime-selector class="input--borderless" v-model="form.settledDatetime" :config="datetimeSelectorConfig" placeholder="HORÁRIO ATUAL"></app-datetime-selector>
-                        <a href="javascript:void(0)" v-if="form.settledDatetime" @click="form.settledDatetime = null"><icon-remove></icon-remove></a>
+                        <app-datetime-selector class="input--borderless" v-model="form.receivedDate" :config="datetimeSelectorConfig" placeholder="HORÁRIO ATUAL"></app-datetime-selector>
+                        <a href="javascript:void(0)" v-if="form.receivedDate" @click="form.receivedDate = null"><icon-remove></icon-remove></a>
                     </div>
+                    <!--
                     <div class="group" v-if="form.action === 'settled'">
                         <span>Conta:</span>
-                        <app-select v-model="form.account" :items="accountsSelectItems" title="Conta">
+                        <app-account-select v-model="form.account" :items="accountsSelectItems"
+                            :popoverProps="{ placement:'top-start', verticalOffset: 15, useScroll: true }">
                             <a href="javascript:void(0)" v-if="!form.account">-- Selecione --</a>
                             <a href="javascript:void(0)" v-else>{{ _.find(accountsSelectItems, {value: form.account}).text }}</a>
                             <template slot="section" slot-scope="sectionProps">
@@ -79,8 +76,9 @@
                             <template slot="item" slot-scope="itemProps">
                                 <span>{{itemProps.text }}</span>
                             </template>
-                        </app-select>
+                        </app-account-select>
                     </div>
+                    -->
                     <a class="btn btn--primary" @click="submit()">Confirmar</a>
                 </div>
             </div>
@@ -90,19 +88,22 @@
 <script>
     import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
 
+    import config from '../../../../config';
     import utils from '../../../../utils/index';
     import moment from 'moment';
     import _ from 'lodash';
 
     import CashierBalancingAPI from '../../../../api/cashier-balancing'
-    import CashierBalancingFilter from './CreditBillsFilter.vue'
-    import GridComponent from '../../../../components/Utilities/TableGrid.vue'
+    import CashierBalancingFilter from './CashierBalancingFilter.vue'
+    import { GridCore } from '../../../../components/Utilities/Grid/index'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
+    import AccountSelectComponent from '../../MorphScreen/Draft/_Shared/AccountSelect.vue'
 
     export default {
         components: {
             'app-cashier-balancing-filter': CashierBalancingFilter,
-            'app-grid': GridComponent
+            'app-grid': GridCore,
+            'app-account-select': AccountSelectComponent
         },
         data(){
             return {
@@ -117,19 +118,23 @@
                         name: 'id',
                     },
                     {
+                        text: 'Endereço',
+                        name: 'clientAddress'
+                    },
+                    {
                         text: 'Nome',
                         name: 'name'
                     },
                     {
-                        text: 'Data/Hora',
-                        name: 'date',
+                        text: 'Data/Entrega',
+                        name: 'deliveryDate',
                     },
                     {
-                        text: 'Grupo Cliente',
+                        text: 'Grupo',
                         name: 'clientGroup',
                     },
                     {
-                        text: 'Meio de Pagamento',
+                        text: 'Pagamento',
                         name: 'paymentMethod',
                     },
                     {
@@ -141,13 +146,8 @@
                         name: 'status'
                     },
                     {
-                        text: 'Recebido',
-                        name: 'paid',
-                        html: true
-                    },
-                    {
-                        text: 'Acert.',
-                        name: 'settled',
+                        text: 'Rec.',
+                        name: 'received',
                         html: true
                     },
                     {
@@ -157,8 +157,8 @@
                     }
                 ],
                 filterForm: {
-                    dateCreated: [[]],
-                    dateCreatedToSend: [[]],
+                    deliveryDate: [[]],
+                    deliveryDateToSend: [[]],
                     clientGroup: [],
                     paymentMethod: [],
                     responsibleUser: [],
@@ -166,10 +166,10 @@
                 },
                 form: {
                     account: null,
-                    action: null,
-                    settledDatetime: null,
-                    dateCreated: [[]],
-                    dateCreatedToSend: [[]],
+                    action: 'received',
+                    receivedDate: null,
+                    deliveryDate: [[]],
+                    deliveryDateToSend: [[]],
                     clientGroup: [],
                     paymentMethod: [],
                     responsibleUser: [],
@@ -211,11 +211,7 @@
                 return [
                     {
                         text: 'Marcar como recebido',
-                        value: 'paid'
-                    },
-                    {
-                        text: 'Marcar como conferido',
-                        value: 'settled'
+                        value: 'received'
                     }
                 ]
             },
@@ -224,7 +220,6 @@
             ...mapActions('draft/request',['runRequestRecoverance']),
             ...mapActions('toast',['showToast']),
             onGridScroll(ev){
-                console.log("INICIOOU 1")
                 this.$refs.filter.apply({
                     offset: Math.ceil(ev.from),
                     limit: Math.ceil(ev.to - ev.from)
@@ -235,8 +230,8 @@
                     case "pending":
                         return "Pendente"
                         break;
-                    case "sent":
-                        return "Enviado"
+                    case "in-displacement":
+                        return "Em deslocamento"
                         break;
                     case "canceled":
                         return "Cancelado"
@@ -249,6 +244,7 @@
                 }
             },
             search({ filterData = {}, params = {} }){
+                console.log(filterData)
                 const requestParams = {
                     /*offset: Math.ceil(ev.from),
                     limit: Math.ceil(ev.to - ev.from),*/
@@ -262,27 +258,41 @@
 
                 this.loadingList = true
                 CashierBalancingAPI.getList(requestParams).then(({data}) => {
-
+                    console.log("getList",data)
                     this.items = _.map(data.list.rows, (row) => {
-                        let settled = false
-                        if(row.requestPaymentTransactions.length) {
-                            row.requestPaymentTransactions.sort((a, b) => {
-                                return new Date(a.dateCreated) - new Date(b.dateCreated)
-                            })
-                            if(_.last(row.requestPaymentTransactions).action === 'settle.origin' || _.last(row.requestPaymentTransactions).action === 'settle.destination'){
-                                settled = true
-                            }
+                        const hasClientAddress = _.has(row,'request.requestClientAddresses[0].clientAddress.address')
+                        let clientAddress
+                        if(hasClientAddress){
+                            clientAddress = _.get(row,'request.requestClientAddresses[0].clientAddress')
+                            clientAddress = _.truncate(clientAddress.address.name, {
+                                'length': 32,
+                                'separator': '',
+                                'omission': '...'
+                            }) + ', ' + clientAddress.number
+                        }
+                        else {
+                            clientAddress = '---'
                         }
                         return {
                             id: row.id,
                             amount: row.amount,
                             formattedAmount: utils.formatMoney(row.amount, 2,'R$ ','.',','),
-                            date: moment(row.dateCreated).format("DD/MM/YYYY HH:mm"),
-                            paid: row.paid,
-                            name: row.request.client.name,
+                            deliveryDate: moment(row.request.deliveryDate).format("DD/MM HH:mm"),
+                            received: row.received,
+                            name: _.truncate(_.get(row,'request.client.name', '---'), {
+                                'length': 18,
+                                'separator': '',
+                                'omission': '...'
+                            }),
                             clientGroup: _.get(row,'request.client.clientGroup.name', '---'),
-                            paymentMethod: row.paymentMethod.name,
-                            settled,
+                            paymentMethod: _.truncate(row.paymentMethod.name, {
+                                'length': 18,
+                                'separator': '',
+                                'omission': '...'
+                            }),
+                            clientAddress: clientAddress,
+                            paymentMethodId: row.paymentMethod.id,
+                            settled: row.settled,
                             requestId: row.requestId,
                             status: this.getStatus(row.request.status)
                         }
@@ -311,33 +321,14 @@
                     })
                     return
                 }
-                if(vm.form.action === 'paid'){
-                    CashierBalancingAPI.markAsPaid({
-                        requestPaymentIds: _.map(vm.selectedItems, (selectedItem) => {
+                if(vm.form.action === 'received'){
+                    CashierBalancingAPI.markAsReceived({
+                        receivedDate: vm.form.receivedDate,
+                        requestPaymentIds: _.map(_.filter(vm.selectedItems, (selectedItem) => {
+                            return selectedItem
+                        }), (selectedItem) => {
                             return selectedItem.id
-                        }),
-                        accountId: vm.form.account
-                    }, {
-                        companyId: vm.company.id
-                    }).then((res) => {
-                        vm.selectedItems = []
-                        vm.$refs.filter.apply()
-                    })
-                }
-                else if(vm.form.action === 'settled'){
-                    if(!vm.form.account){
-                        vm.showToast({
-                            type: 'error',
-                            message: "Você deve selecionar uma conta de destino!"
                         })
-                        return
-                    }
-                    CashierBalancingAPI.markAsSettled({
-                        settledDatetime: vm.form.settledDatetime,
-                        requestPaymentIds: _.map(vm.selectedItems, (selectedItem) => {
-                            return selectedItem.id
-                        }),
-                        accountId: vm.form.account
                     }, {
                         companyId: vm.company.id
                     }).then((res) => {

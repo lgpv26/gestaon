@@ -361,11 +361,14 @@ li.router-link-active svg.icon {
 }
 
 [data-scrollbar].sticky .scrollbar-track, [scrollbar].sticky .scrollbar-track, scrollbar.sticky .scrollbar-track {
-    background: transparent;
+    background: var(--bg-color);
+    border-radius: 5px;
 }
 
 [data-scrollbar].sticky .scrollbar-track .scrollbar-thumb, [scrollbar].sticky .scrollbar-track .scrollbar-thumb {
     /*background: transparent;*/
+    background-color: var(--bg-color--1);
+
 }
 
 .highcharts-credits {

@@ -81,17 +81,13 @@
             this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
                 overscrollEffect: 'bounce',
                 alwaysShowTracks: true
-            });
-            const emitData = { draftId: this.activeMorphScreen.draft.draftId, userId: this.user.id};
-            console.log("Emitting draft:presence", emitData);
-            this.$socket.emit('draft:presence', emitData);
-
+            })
             setTimeout(() => {
-                this.stopLoading();
+                this.stopLoading()
             }, 100)
         },
         updated(){
-            this.scrollbar.update();
+            this.scrollbar.update()
         }
     }
 </script>

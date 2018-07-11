@@ -7,21 +7,28 @@ import modules from './modules'
 Vue.use(Vuex);
 
 export default new Vuex.Store({
-  state: {
-    app: {
-      title: "ERP",
-      header: "request-board"
+    state: {
+        app: {
+            title: "ERP",
+            header: "request-board",
+            version: null
+        },
+        system: {
+            initialized: false
+        },
+        mainContentArea: {
+            height: 0,
+            width: 0
+        },
+        dimensions: {
+            window: {
+                width: 0,
+                height: 0
+            }
+        }
     },
-    system: {
-      initialized: false
-    },
-    mainContentArea: {
-      height: 0,
-      width: 0
-    }
-  },
-  mutations,
-  actions,
-  modules,
-  strict: true
+    mutations,
+    actions,
+    modules,
+    strict: true
 })
