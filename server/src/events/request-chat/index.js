@@ -11,12 +11,11 @@ module.exports = class RequestBoard {
      * @param {Object} server
      * @param {Object} socket = { instance, user, activeCompany, activeUserCompany}
      */
-    constructor(server, socket, connectedSocketList) {
+    constructor(server, socket) {
         // global variabels
         this.server = server
         this.socket = socket
 
-        this.connectedSocketList = connectedSocketList
 
         this._defaultPosition = 65535
 
@@ -41,59 +40,67 @@ module.exports = class RequestBoard {
             }).then((card) => {
                 if(!card) return vm.socket.instance.emit('request-chat:load', new EventResponse(new Error('Erro ao recuperar o Card!')))
                 vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat')
+
                     // if from database, call the service
-                    return vm.server.mysql.RequestChatItem.findAll({
-                        where: {
-                            requestId: parseInt(card.requestId)
-                        },
-                        order: [['dateCreated', 'DESC']],
-                        include: [{
-                            model: vm.server.mysql.User,
-                            as: "user",
-                            attributes: ['id', 'name','email','type']
-                        }]
-                    }).then((requestChatItems) => {
-                        let read =[]
-                        let promise = []
+                return vm.server.broker.call('socket.control', {
+                    userId: vm.socket.user.id,
+                    socketId: vm.socket.instance.id,
+                    companyId: vm.socket.activeCompany.id
+                }).then(() => {
+                        return vm.server.mysql.RequestChatItem.findAll({
+                            where: {
+                                requestId: parseInt(card.requestId)
+                            },
+                            order: [['dateCreated', 'DESC']],
+                            include: [{
+                                model: vm.server.mysql.User,
+                                as: "user",
+                                attributes: ['id', 'name','email','type']
+                            }]
+                        }).then((requestChatItems) => {
+                            let read =[]
+                            let promise = []
 
-                        requestChatItems.forEach((chatItem) => {
-                            promise.push(vm.server.mysql.RequestChatItemRead.findOne({
-                                    where: {
-                                        userId: vm.socket.user.id,
-                                        requestChatItemId: chatItem.id
-                                    }
-                                }).then((chat) => {
-                                    if(!chat && chatItem.userId !== vm.socket.user.id) read.push({requestChatItemId: chatItem.id, userId: vm.socket.user.id})
-                                })
-                            )
-                        })
+                            requestChatItems.forEach((chatItem) => {
+                                promise.push(vm.server.mysql.RequestChatItemRead.findOne({
+                                        where: {
+                                            userId: vm.socket.user.id,
+                                            requestChatItemId: chatItem.id
+                                        }
+                                    }).then((chat) => {
+                                        if(!chat && chatItem.userId !== vm.socket.user.id) read.push({requestChatItemId: chatItem.id, userId: vm.socket.user.id})
+                                    })
+                                )
+                            })
 
-                        return Promise.all(promise).then(() => {
-                            return vm.server.mysql.RequestChatItemRead.bulkCreate(read)
-                            .then(() => {
-                                return vm.server.mysql.Request.findOne({
-                                    where: {
-                                        id: parseInt(card.requestId)
-                                    },
-                                    attributes: ['id','userId']
-                                }).then((request) => {
-                                    if(request.userId !== vm.socket.user.id){
-                                        vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('request-board:chat', new EventResponse({
+                            return Promise.all(promise).then(() => {
+                                return vm.server.mysql.RequestChatItemRead.bulkCreate(read)
+                                .then(() => {
+                                    return vm.server.mysql.Request.findOne({
+                                        where: {
+                                            id: parseInt(card.requestId)
+                                        },
+                                        attributes: ['id','userId']
+                                    }).then((request) => {
+
+                                        if(request.userId === vm.socket.user.id){
+                                            vm.socket.instance.emit('request:unreadChatItemCountUpdate', new EventResponse({
+                                                requestId: request.id,
+                                                unreadChatItemCount: 0
+                                            }))
+                                        }
+                                        
+                                        vm.socket.instance.emit('request-board:chat', new EventResponse({
                                             cardId: card._id,
                                             unreadChatItemCount: 0
                                         }))
+                                        
                                         return vm.socket.instance.emit('request-chat:load', new EventResponse(requestChatItems))
-                                    }
-                                    else{
-                                        vm.socket.instance.emit('request:unreadChatItemCountUpdate', new EventResponse({
-                                            requestId: request.id,
-                                            unreadChatItemCount: 0
-                                        }))
-                                        return vm.socket.instance.emit('request-chat:load', new EventResponse(requestChatItems))
-                                    }
-                            })                            
-                        })                       
-                    })   
+                                    
+                                })                            
+                            })                       
+                        })   
+                    })
                 })
             })      
         })
@@ -108,6 +115,12 @@ module.exports = class RequestBoard {
             }).then((card) => {
                 if(!card) return vm.socket.instance.emit('request-chat:leave', new EventResponse(new Error('Erro ao recuperar o Card!')))
                 vm.socket.instance.leave('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat')
+                
+                return vm.server.broker.call('socket.control', {
+                    userId: vm.socket.user.id,
+                    socketId: vm.socket.instance.id,
+                    companyId: vm.socket.activeCompany.id
+                })
             })
         })
 
@@ -134,23 +147,24 @@ module.exports = class RequestBoard {
                         }
                     }).then((request) => {
                         request = JSON.parse(JSON.stringify(request))
-                        const room = _.get(vm.server.io.sockets.adapter.rooms, '[company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat]', {length: 0})
+                        const room = _.get(vm.server.io.sockets.adapter.rooms, '[company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat]', 0)
                         let promises = []
                         let read = []
 
-                        let chatRoomOnline = false
-                        
-                        if(room.length){
+                        let responsableSocketRoomOnline = false
+
+                        if(room){
                             _.forEach(_.keys(room.sockets),(socketId) => {
-                                const socket = this.connectedSocketList[socketId]
-
-                                if(socket.user.id === request.userId) chatRoomOnline = true
-
                                 promises.push(new Promise((resolve, reject) => {
-                                        if(socket.user.id !== requestChat.userId) resolve({requestChatItemId: requestChat.id, userId: socket.user.id})
-                                        resolve()
-                                    }).then((response) => {
-                                        if(response) return read.push(response)
+                                        this.server.redisClient.get("socket:" + socketId)
+                                        .then((userId) => {
+                                            if(!userId) return resolve()
+                                            userId = parseInt(userId)
+
+                                            if(userId === request.userId) responsableSocketRoomOnline = true
+                                            if(userId !== requestChat.userId) read.push({requestChatItemId: requestChat.id, userId: userId})
+                                            resolve()                                
+                                        })
                                     })
                                 )
                             })
@@ -163,38 +177,71 @@ module.exports = class RequestBoard {
                                     where: {
                                         requestId: request.id
                                     },
-                                    attributes: ['id'],
+                                    attributes: ['id', 'userId', 'requestId'],
                                     include: [{
                                         model: vm.server.mysql.RequestChatItemRead,
-                                        as: 'usersRead'
+                                        as: 'usersRead',
+                                        attributes: ['id', 'userId']
                                     }]
                                 }).then((chatItems) => {
                                     chatItems = JSON.parse(JSON.stringify(chatItems))
-                                    const count = _.filter(chatItems, (chat) => {
-                                        if(!chat.usersRead.length) return chat
-                                    })
+
                                     vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat').emit('request-chat:itemSend', new EventResponse( _.assign(requestChat, {tempId: evData.tempId})))
+                                    const requestBoardRoom = _.get(vm.server.io.sockets.adapter.rooms, '[company/' + vm.socket.activeCompany.id + '/request-board]', {length: 0})
 
-                                    if(count && vm.socket.user.id === request.userId) {
-                                            vm.server.io.in('company/' + vm.socket.activeCompany.id + '/request-board').emit('request-board:chat', new EventResponse({
-                                            cardId: card._id,
-                                            unreadChatItemCount: count.length
-                                        }))
-                                    }
-                                        
-                                    if(vm.socket.user.id !== request.userId){
-
-                                        if(!chatRoomOnline){
-                                            const socket = _.find(this.connectedSocketList, (connected) => {
-                                                return connected.user.id === request.userId
+                                    if(requestBoardRoom.length){
+                                        _.forEach(_.keys(requestBoardRoom.sockets), (socketId) => {
+                                            return new Promise((resolve, reject) => {   
+                                                this.server.redisClient.get("socket:" + socketId, (err, redisConsult) => {
+                                                    if (err) {
+                                                        resolve()
+                                                    }
+                                                    else {
+                                                        if(!redisConsult) return resolve()
+                                                        resolve(parseInt(redisConsult))
+                                                    }
+                                                })
+                                            }).then((userId) => {
+                                                if(!userId) return 
+                                                
+                                                const count = _.filter(_.filter(chatItems, (filter) => {
+                                                    if(filter.userId !== userId) return filter
+                                                }), (chat) => {
+                                                    const read = _.find(chat.usersRead, {userId: userId})
+                                                    if(!read) return chat
+                                                })
+           
+                                                _.forEach(_.groupBy(count, 'requestId'), (chatUnread, requestId) => {
+                                                    if(card.requestId === parseInt(requestId) && chatUnread.length){
+                                                            vm.server.broker.call('socket.checkSocketId', {
+                                                                userId: _.first(chatUnread).userId
+                                                            }).then((userSocketId) => {
+                                                                vm.server.io.sockets.sockets[userSocketId].in('company/' + vm.socket.activeCompany.id + '/request-board').emit('request-board:chat', new EventResponse({
+                                                                    cardId: card._id,
+                                                                    unreadChatItemCount: chatUnread.length
+                                                                }))
+                                                            })
+                                                    }
+                                                })
                                             })
-                                            if(socket){
-                                                socket.instance.emit('request:unreadChatItemCountUpdate', new EventResponse({
+                                        })
+                                    }
+                                    if(vm.socket.user.id !== request.userId){
+                                        if(!responsableSocketRoomOnline){
+                                            vm.server.broker.call('socket.checkSocketId', {
+                                                userId: request.userId
+                                            }).then((responsableSocketId) => {
+                                                const responsableChatUnread = _.filter(_.filter(chatItems, (filter) => {
+                                                    if(filter.userId !== request.userId) return filter
+                                                }), (chat) => {
+                                                    const read = _.find(chat.usersRead, {userId: request.userId})
+                                                    if(!read) return chat
+                                                })
+                                                vm.server.io.sockets.sockets[responsableSocketId].emit('request:unreadChatItemCountUpdate', new EventResponse({
                                                     requestId: request.id,
-                                                    unreadChatItemCount: count.length
-                                                }))
-                                            }
-                                            
+                                                    unreadChatItemCount: responsableChatUnread.length
+                                                }))  
+                                            })
                                         }
 
                                         let soundToSend = 'message1'

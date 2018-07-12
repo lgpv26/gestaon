@@ -35,7 +35,13 @@ module.exports = class Draft {
         vm.socket.instance.on('draft.load', (evData) => {
             return new Promise((resolve, reject) => {
                 vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId)
-                resolve()
+                return vm.server.broker.call('socket.control', {
+                    userId: vm.socket.user.id,
+                    socketId: vm.socket.instance.id,
+                    companyId: vm.socket.activeCompany.id
+                }).then(() => {
+                    resolve()
+                })
             }).then(() => {
 
                 /*
@@ -62,7 +68,12 @@ module.exports = class Draft {
          */
         vm.socket.instance.on('draft.leave', (evData) => {
             vm.socket.instance.leave('company/' + vm.socket.activeCompany.id + '/draft/' + evData.draftId)
-            vm.draft = {}
+
+            return vm.server.broker.call('socket.control', {
+                userId: vm.socket.user.id,
+                socketId: vm.socket.instance.id,
+                companyId: vm.socket.activeCompany.id
+            })
         })
 
         /**
