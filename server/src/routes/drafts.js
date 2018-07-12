@@ -64,7 +64,20 @@ module.exports = (server, restify) => {
                 emittedBy: req.auth.id
             }
         }).then((draft) => {
-            return res.send(200, { data: draft })
+            return server.broker.call('socket.checkSocketId', {
+                userId: req.auth.id
+            }).then((socketId) => {
+                if(!socketId) return Promise.resolve()
+                server.io.sockets.sockets[socketId].leave('company/' + req.query.companyId + '/draft/' + req.params.draftId)
+                return server.broker.call('socket.control', {
+                    userId: req.auth.id,
+                    socketId: socketId,
+                    companyId: req.query.companyId,
+                    ignore: (socketId) ? false : true
+                }).then(() => {
+                    return res.send(200, { data: draft })
+                })
+            })
         }).catch((err) => {
             return next(new HTTPError(err.message, 500))
         })

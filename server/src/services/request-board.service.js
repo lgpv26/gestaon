@@ -148,17 +148,21 @@ module.exports = (server) => { return {
                     let promises = []
                     requestList.forEach((request, index) => {
                             promises.push(server.mysql.RequestChatItem.findAll({
-                                    where: {
-                                        requestId: request.id
-                                    },
-                                    attributes: ['id'],
-                                    include: [{
-                                        model: server.mysql.RequestChatItemRead,
-                                        as: 'usersRead'
-                                    }]
-                                }).then((chatItems) => {
-                                    const count = _.filter(chatItems, (chat) => {
-                                        if(!chat.usersRead.length && chat.userId !== ctx.params.userId) return chat
+                                where: {
+                                    requestId: request.id
+                                },
+                                attributes: ['id', 'userId'],
+                                include: [{
+                                    model: server.mysql.RequestChatItemRead,
+                                    as: 'usersRead',
+                                    attributes: ['id', 'userId']
+                                }]
+                            }).then((chatItems) => {
+                                    const count = _.filter(_.filter(chatItems, (filter) => {
+                                        if(filter.userId !== ctx.params.userId) return filter
+                                    }), (chat) => {
+                                        const read = _.find(chat.usersRead, {userId: ctx.params.userId})
+                                        if(!read) return chat
                                     })
                                     return _.set(requestList[index], 'unreadChatItemCount', count.length)
                             })
@@ -303,6 +307,16 @@ module.exports = (server) => { return {
                 }
             })
         },
+
+        getCard(ctx) {
+            console.log(ctx.params.where)
+            return server.mongodb.Card.findOne(ctx.params.where).then((card) => {
+                console.log(card)
+                if(!card) return null
+                return card.toJSON()
+            })
+        },
+
         createCard(ctx){
             return server.mongodb.Card.create(ctx.params.data).then((card) => {
                 if(!card) throw new Error ('Erro ao criar Card')

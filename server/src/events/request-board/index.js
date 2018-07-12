@@ -62,17 +62,24 @@ module.exports = class RequestBoard {
 
         this.socket.instance.on('request-board:load', (evData) => {
             vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/request-board') // subscribe the user to its request-board company channel
-            vm.server.broker.call('request-board.load', {
-                data: {
-                    filter: evData.filter || {},
-                    companyId: vm.socket.activeCompany.id,
-                },
-                userId: vm.socket.user.id
-            }).then((sections) => {
 
-                vm.socket.instance.emit('requestBoardLoad', new EventResponse({sections}))
-            }).catch((err) => {
-                console.log(err)
+            return vm.server.broker.call('socket.control', {
+                userId: vm.socket.user.id,
+                socketId: vm.socket.instance.id,
+                companyId: vm.socket.activeCompany.id
+            }).then(() => {
+                vm.server.broker.call('request-board.load', {
+                    data: {
+                        filter: evData.filter || {},
+                        companyId: vm.socket.activeCompany.id,
+                    },
+                    userId: vm.socket.user.id
+                }).then((sections) => {
+
+                    vm.socket.instance.emit('requestBoardLoad', new EventResponse({sections}))
+                }).catch((err) => {
+                    console.log(err)
+                })
             })
         })
 

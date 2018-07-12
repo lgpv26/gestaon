@@ -105,38 +105,41 @@ module.exports = (server) => {
                                 }
                             }).then(() => {
                                 console.log("Remove draft!")
-                                return ctx.call("draft/request/persistence.dashboard", {
-                                    data: request
-                                }).then(() => {
-                                    return ctx.call("draft/request/persistence.saveES", {
-                                        requestOrderId: request.requestOrderId,
+                                return ctx.call("draft/request/persistence.removeRoom")
+                                .then(() => {
+                                    return ctx.call("draft/request/persistence.dashboard", {
+                                        data: request
                                     }).then(() => {
-                                        if (request.status === 'pending' && request.userId) {
-                                            return ctx.call("push-notification.push", {
-                                                data: {
-                                                    userId: request.userId,
-                                                    title: 'Novo pedido #' + request.id,
-                                                    message: 'Abra a notificação para ver mais detalhes',
-                                                    payload: {
-                                                        type: 'request.create',
-                                                        id: '' + request.id
-                                                    }
-                                                },
-                                                notRejectNotLogged: true
-                                            }).then(() => {
-                                                return new EventResponse(request)
-                                            }).catch((err) => {
-                                                return new EventResponse(new Error("Erro ao enviar a notificação para o entregador!"))
-                                            })
-                                        }
-                                        return new EventResponse(request)
+                                        return ctx.call("draft/request/persistence.saveES", {
+                                            requestOrderId: request.requestOrderId,
+                                        }).then(() => {
+                                            if (request.status === 'pending' && request.userId) {
+                                                return ctx.call("push-notification.push", {
+                                                    data: {
+                                                        userId: request.userId,
+                                                        title: 'Novo pedido #' + request.id,
+                                                        message: 'Abra a notificação para ver mais detalhes',
+                                                        payload: {
+                                                            type: 'request.create',
+                                                            id: '' + request.id
+                                                        }
+                                                    },
+                                                    notRejectNotLogged: true
+                                                }).then(() => {
+                                                    return new EventResponse(request)
+                                                }).catch((err) => {
+                                                    return new EventResponse(new Error("Erro ao enviar o pedido ao entregador!"))
+                                                })
+                                            }
+                                            return new EventResponse(request)
+                                        }).catch((err) => {
+                                            console.log("Erro em: draft/request/persistence.saveES")
+                                            return new EventResponse(new Error(err))
+                                        })
                                     }).catch((err) => {
-                                        console.log("Erro em: draft/request/persistence.saveES")
+                                        console.log("Erro em: draft/request/persistence.dashboard")
                                         return new EventResponse(new Error(err))
                                     })
-                                }).catch((err) => {
-                                    console.log("Erro em: draft/request/persistence.dashboard")
-                                    return new EventResponse(new Error(err))
                                 })
                             }).catch((err) => {
                                 return new EventResponse(new Error(err))
@@ -391,6 +394,23 @@ module.exports = (server) => {
                     return Promise.reject("Erro ao consultar o pedido para criar o card.")
                 })
             }
+        },
+
+        removeRoom(ctx){
+            return ctx.call('socket.checkSocketId', {
+                userId: this._userId
+            }).then((socketId) => {
+                if(!socketId) return Promise.resolve()
+                server.io.sockets.sockets[socketId].leave('company/' + this._companyId + '/draft/' + this._draftId)
+                return ctx.call('socket.control', {
+                    userId: this._userId,
+                    socketId: socketId,
+                    companyId: this._companyId,
+                    ignore: (socketId) ? false : true
+                }).then(() => {
+                    return Promise.resolve()
+                })
+            })
         },
 
         setRequest(ctx){

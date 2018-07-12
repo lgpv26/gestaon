@@ -16,6 +16,7 @@ const di = new DI()
 // overall setup
 di.setInnkeeper()
 di.setFirebaseAdmin()
+di.setRedis()
 di.setSocketIO()
 di.setElasticSearch()
 di.setSequelize()
@@ -71,11 +72,26 @@ const connectToMySQL = new Promise((resolve, reject) => {
     })
 })
 
+const connectToRedis = new Promise((resolve, reject) => { 
+    if(config.redis.active){ 
+        di.server.redisClient.on('ready', () => { 
+            log(chalk.green('Successfully connected to Redis server')) 
+            resolve() 
+        }) 
+        di.server.redisClient.on('error', (err) => { 
+            log(chalk.red(new BootError('Redis is not connected! Message: ' + err.message + " (" + err.name + ")" ))) 
+            resolve() 
+        }) 
+    } 
+    else resolve() 
+})  
+
 // load services (Moleculer)
 di.server.broker.createService(require('../services/auth.service')(di.server))
 di.server.broker.createService(require('../services/request-board.service')(di.server))
 di.server.broker.createService(require('../services/push-notification.service')(di.server))
 di.server.broker.createService(require('../services/cashier-balancing.service')(di.server))
+di.server.broker.createService(require('../services/socket.service')(di.server))
 
 di.server.broker.createService(require('../services/data/user.service')(di.server))
 di.server.broker.createService(require('../services/data/call.service')(di.server))
@@ -109,62 +125,67 @@ else{
 
 // starts callback chain until server starts, or shutdown if the procedure fails
 di.server.broker.start().then(() => {
-    connectToMySQL.then((databaseCreated) => {
-        di.server.elasticSearch.ping({
-            requestTimeout: config.elasticSearch.requestTimeout
-        }, function (error) {
-            if (error) {
-                log(chalk.red(new BootError('ElasticSearch is down!')))
-            } else {
-                log(chalk.green('Successfully connected to ElasticSearch server'))
-                // guarantee MySQL structure
-                return di.server.sequelize.authenticate({
-                    logging: false
-                }).then(() => {
-                    log(chalk.green("Successfully connected to MySQL server"));
-                    return new Promise((resolve, reject) => {
-                        if(databaseCreated){
-                            return require("~utils/first-seed.js")(di.server).then(() => {
-                                resolve()
-                            }).catch((err) => {
-                                reject(err)
-                            });
-                        }
-                        return resolve()
+    di.server.broker.call('socket.cleanRedis') 
+    .then(() => { 
+        connectToMySQL.then((databaseCreated) => {
+            di.server.elasticSearch.ping({
+                requestTimeout: config.elasticSearch.requestTimeout
+            }, function (error) {
+                if (error) {
+                    log(chalk.red(new BootError('ElasticSearch is down!')))
+                } else {
+                    log(chalk.green('Successfully connected to ElasticSearch server'))
+                    // guarantee MySQL structure
+                    return di.server.sequelize.authenticate({
+                        logging: false
                     }).then(() => {
+                        log(chalk.green("Successfully connected to MySQL server"));
+                        return new Promise((resolve, reject) => {
+                            if(databaseCreated){
+                                return require("~utils/first-seed.js")(di.server).then(() => {
+                                    resolve()
+                                }).catch((err) => {
+                                    reject(err)
+                                });
+                            }
+                            return resolve()
+                        }).then(() => {
 
-                        mongoose.Promise = bluebird
-                        let mongoDbCredentials = {}
-                        if(process.env.NODE_ENV === 'production'){
-                            mongoDbCredentials = {
-                                auth: {
-                                    user: config.mongoDb.user,
-                                    password: config.mongoDb.password
+                            mongoose.Promise = bluebird
+                            let mongoDbCredentials = {}
+                            if(process.env.NODE_ENV === 'production'){
+                                mongoDbCredentials = {
+                                    auth: {
+                                        user: config.mongoDb.user,
+                                        password: config.mongoDb.password
+                                    }
                                 }
                             }
-                        }
-                        return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
-                            promiseLibrary: bluebird,
-                            ...mongoDbCredentials
-                        }).then(() => {
-                            log(chalk.green("Successfully connected to MongoDB server"))
-                            // finally, initialize di.server
-                            di.server.listen(config.mainServer.port, () => {
-                                log(
-                                    chalk.blue(
-                                        "Server " +
-                                        chalk.black.bold.bgBlue(" v" + config.mainServer.version + " ") +
-                                        " running on port: " +
-                                        chalk.black.bold.bgBlue(" " + config.mainServer.port + " ")
-                                    )
-                                )
-                            })
+                            return connectToRedis.then(() => { 
+                                return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
+                                    promiseLibrary: bluebird,
+                                    ...mongoDbCredentials
+                                }).then(() => {
+                                    log(chalk.green("Successfully connected to MongoDB server"))
+                                    // finally, initialize di.server
+                                    di.server.listen(config.mainServer.port, () => {
+                                        log(
+                                            chalk.blue(
+                                                "Server " +
+                                                chalk.black.bold.bgBlue(" v" + config.mainServer.version + " ") +
+                                                " running on port: " +
+                                                chalk.black.bold.bgBlue(" " + config.mainServer.port + " ")
+                                            )
+                                        )
+                                    })
+                                })
+                            }) 
                         })
+                    }).catch((err) => {
+                        log(new BootError(err.message + " (" + err.name + ")"))
                     })
-                }).catch((err) => {
-                    log(new BootError(err.message + " (" + err.name + ")"))
-                })
-            }
+                }
+            })
         })
     })
 }).catch((err) => {

@@ -3,3 +3,7 @@
 client/src/config.developer\.js
 server/src/config/config.developer\.js
 \.vscode/launch\.json
+
+client/package-lock\.json
+
+server/package-lock\.json

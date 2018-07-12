@@ -62,7 +62,9 @@ const config = {
         {name: 'osmand', port: 6055, debug: false}*/
     ],
     redis: {
-        active: false
+        active: true,
+        host: '127.0.0.1',
+        port: 6379
     }
 }
 
