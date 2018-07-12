@@ -31,10 +31,8 @@ module.exports = class Events {
      * set main socket.io events
      */
     _setListeners(){
-        const connectedSocketList = {}
         // for each connected user
         this.server.io.on('connection', (socket) => {
-
             if(!!this._versionInterval){
                 clearInterval(this._versionInterval)
             }
@@ -85,39 +83,78 @@ module.exports = class Events {
                     })
                     if(!socket.activeCompany) socket.activeCompany =  _.first(socket.user.companies)
 
-                    // join the user to its company events
+                    return this.server.broker.call('socket.active', {
+                        userId: socket.user.id,
+                        activeSocketId: socket.instance.id
+                    }).then(() => {
+                        return this.server.broker.call('socket.consult', {
+                            key: 'userId:' + socket.user.id
+                        }).then((consult) => {
+                            const roomsConsult = consult.rooms
+                            socket.instance.join('company/' + socket.activeCompany.id)
 
-                    socket.instance.join('company/' + socket.activeCompany.id)
+                            return new Promise((resolve, reject) => {
+                                 // join the user to its company events
+                                if(roomsConsult) {
+                                    const promises = []
+                                    const rooms = roomsConsult.split(",")
+                                    rooms.forEach((room) => {
+                                        promises.push(new Promise((resolve, reject) => {
+                                            socket.instance.join(room)
+                                            resolve()
+                                        }))
+                                    })
 
-                    connectedSocketList[socket.instance.id] = socket
-
-                    // for the current user, join him to his tracking devices
-                    socket.user.companies.forEach((company) => {
-                        this.server.mongodb.Device.find({
-                            companyId: company.id
-                        }).exec().then((devices) => {
-                            devices.forEach((device) => {
-                                socket.instance.join('device/' + device.code)
+                                    return Promise.all(promises).then(() => {
+                                        resolve()
+                                    })                                    
+                                }
+                                else{        
+                                    return this.server.broker.call('socket.control', {
+                                        userId: socket.user.id,
+                                        socketId: socket.instance.id,
+                                        companyId: socket.activeCompany.id
+                                    }).then(() => {
+                                        resolve() 
+                                    })
+                                }
+                            }).then(() => {
+                                // for the current user, join him to his tracking devices
+                                socket.user.companies.forEach((company) => {
+                                    this.server.mongodb.Device.find({
+                                        companyId: company.id
+                                    }).exec().then((devices) => {
+                                        devices.forEach((device) => {
+                                            socket.instance.join('device/' + device.code)
+                                        })
+                                    }).catch((err) => {
+                                        console.log(err)
+                                    })
+                                })
+                                // Importing all events
+                                this.events.forEach((event) => {
+                                    event.files.forEach((file) => {
+                                        const tEventFile = require('./' + event.directoryName + '/' + file)
+                                        new tEventFile(this.server, socket)
+                                    })
+                                })
                             })
-                        }).catch((err) => {
-                            console.log(err)
-                        })
-                    })
-                    // Importing all events
-                    this.events.forEach((event) => {
-                        event.files.forEach((file) => {
-                            const tEventFile = require('./' + event.directoryName + '/' + file)
-                            new tEventFile(this.server, socket, connectedSocketList)
-                        })
-                    })
+                            
+                        }) 
+                    })   
                 }
             })
+
             socket.instance.on('disconnect', () => {
                 if(!!this._versionInterval){
                     clearInterval(this._versionInterval)
                 }
-                delete connectedSocketList[socket.instance.id]
+                
+                this.server.broker.call('socket.remove', {
+                    activeSocketId: socket.instance.id
+                })
             })
+
             socket.instance.on('join-company-room', (companyId) => {
                 // console.log(user.name + " joins device/" + deviceCode + ".")
                 socket.join('company/' + companyId)
@@ -135,6 +172,7 @@ module.exports = class Events {
                 socket.leave('device/' + deviceCode)
             })
         })
+
     }
 
 }
