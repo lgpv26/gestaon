@@ -1,0 +1,328 @@
+<template>
+    <div id="app-device-details" v-show="selectedDevice">
+        <app-panel-loading :loading="loading" text="Carregando rotas..."></app-panel-loading>
+        <h3 class="device-name">{{ selectedDevice.name }} <small>( <strong>{{ selectedDevice.code }}</strong> )</small></h3>
+        <div scrollbar ref="scrollbar" style="width: 100%">
+            <div class="scrollable-content">
+                <div class="device-details-sections">
+                    <div class="table">
+                        <table>
+                            <tbody class="parent">
+                            <tr>
+                                <td style="width: 145px;">Horário</td>
+                                <td>{{ lastTime }}</td>
+                            </tr>
+                            <tr>
+                                <td>Status</td>
+                                <td>{{ deviceState }}</td>
+                            </tr>
+                            <tr v-if="address">
+                                <td>Endereço</td>
+                                <td>{{ address }}</td>
+                            </tr>
+                            <tr>
+                                <td>Velocidade</td>
+                                <td>{{ speed }} km/h</td>
+                            </tr>
+                            <tr v-if="battery">
+                                <td>Bateria</td>
+                                <td>{{ battery }}%</td>
+                            </tr>
+                            <tr>
+                                <td>Direção</td>
+                                <td>{{ direction }}</td>
+                            </tr>
+                            <tr v-if="baseDistance">
+                                <td>Distância > Base</td>
+                                <td>{{ baseDistance }} m</td>
+                            </tr>
+                            <tr v-if="altitude">
+                                <td>Altitude</td>
+                                <td>{{ altitude }}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="device-details-section">
+                        <h3>Detalhes</h3>
+                        <div class="table">
+                            <table>
+                                <tbody class="parent">
+                                    <tr>
+                                        <td style="width: 145px;">Nome</td>
+                                        <td>{{ selectedDevice.name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Código</td>
+                                        <td>{{ selectedDevice.code }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Telefone</td>
+                                        <td>{{ selectedDevice.phoneNumber }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Protocolo</td>
+                                        <td>{{ protocol }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!--
+                    <div class="device-details-section" v-if="hasPermission('devices.command')">
+                        <h3>Comandos</h3>
+                        <div class="device-details-section-content">
+                            <app-select class="command-selector" :options="commandOptions" position="top" v-model="selectedCommand"></app-select>
+                            <a @click="sendCommand()" class="button">Enviar Comando</a>
+                        </div>
+                    </div>
+                    -->
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    import moment from 'moment';
+    import _ from 'lodash';
+    import utils from '../../../../utils/index';
+    import geolib from 'geolib/dist/geolib';
+    import Scrollbar from 'smooth-scrollbar';
+
+    import DevicesAPI from '../../../../api/devices';
+
+    import { mapGetters, mapState, mapActions } from 'vuex';
+
+    export default {
+        data(){
+            return {
+                loading: false,
+                scrollbar: null,
+                commands: [],
+                commandOptions: [],
+                selectedCommand: null
+            }
+        },
+        watch: {
+            selectedDevice(device){
+                if(!device){
+                    return;
+                }
+                switch(device.protocol){
+                    case "osmand":
+                        this.commandOptions = [
+                            {
+                                text: 'Enviar teste',
+                                value: 'test'
+                            }
+                        ];
+                        break;
+                    case "gps103":
+                        this.commandOptions = [
+                            {
+                                text: 'Status',
+                                value: 'status'
+                            }
+                        ];
+                        break;
+                    case "tlt2h":
+                        this.commandOptions = [
+                            {
+                                text: 'Status',
+                                value: 'status'
+                            }
+                        ];
+                        break;
+                }
+            }
+        },
+        computed: {
+            ...mapState('auth', [
+                'company'
+            ]),
+            ...mapState('tracker', [
+                'devices'
+            ]),
+            ...mapGetters('auth', ['hasPermission']),
+            ...mapGetters('tracker', [
+                'selectedDevice',
+                'devicesSelectOptions'
+            ]),
+            deviceState(){
+                if(_.has(this.selectedDevice, 'lastPosition.deviceState'))
+                    return this.selectedDevice.lastPosition.deviceState;
+                else
+                    return '---';
+            },
+            address(){
+                if(_.has(this.selectedDevice, 'lastPosition.address'))
+                    return this.selectedDevice.lastPosition.address;
+                else
+                    return false;
+            },
+            lastTime(){
+                if(_.has(this.selectedDevice, 'lastPosition.generatedAt'))
+                    return moment(this.selectedDevice.lastPosition.generatedAt).format('DD/MM HH:mm:ss');
+                else
+                    return '---';
+            },
+            battery(){
+                if(_.has(this.selectedDevice, 'lastPosition.battery'))
+                    return this.selectedDevice.lastPosition.battery;
+                else
+                    return false;
+
+            },
+            speed(){
+                if(_.has(this.selectedDevice, 'lastPosition.speed'))
+                    return Math.round(this.selectedDevice.lastPosition.speed);
+                else
+                    return 0;
+            },
+            altitude(){
+                if(_.has(this.selectedDevice, 'lastPosition.altitude'))
+                    return parseInt(this.selectedDevice.lastPosition.altitude);
+                else
+                    return false;
+            },
+            direction(){
+                if(_.has(this.selectedDevice, 'lastPosition.bearing'))
+                    return utils.getDirection(this.selectedDevice.lastPosition.bearing);
+                else
+                    return '---';
+            },
+            protocol(){
+                if(_.has(this.selectedDevice, 'protocol'))
+                    switch(this.selectedDevice.protocol){
+                        case "osmand":
+                            return "OsmAnd";
+                            break;
+                        case "gps103":
+                            return "GPS103";
+                            break;
+                        case "tlt2h":
+                            return "TLT2H";
+                            break;
+                        case "agiliza":
+                            return "AgilizaGPS";
+                            break;
+                    }
+                else
+                    return '---';
+            },
+            baseDistance(){
+                if(_.has(this.selectedDevice, 'lastPosition')){
+                    return geolib.getDistance(
+                        { latitude: parseFloat(this.selectedDevice.lastPosition.latitude), longitude: parseFloat(this.selectedDevice.lastPosition.longitude)},
+                        { latitude: -23.4134652, longitude: -51.9035723}
+                    );
+                }
+                else {
+                    return false;
+                }
+            }
+        },
+        methods: {
+            ...mapActions('tracker', []),
+            sendCommand(){
+                if(!this.selectedCommand){
+                    console.log("Nenhum comando selecionado.");
+                    return;
+                }
+                DevicesAPI.sendCommand(this.selectedDevice.id, {
+                    command: this.selectedCommand
+                }, {
+                    companyId: this.company.id
+                }).then((response) => {
+                    console.log(response);
+                }).catch((err) => {
+                    console.log(err);
+                });
+            }
+        },
+        created(){
+        },
+        mounted(){
+            // initialize scrollbars
+            this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
+                overscrollEffect: 'bounce'
+            });
+        }
+    }
+</script>
+
+<style scoped>
+    h3 {
+        text-transform: uppercase;
+        padding: 15px 20px;
+        margin-bottom: 0;
+        color: #FFF;
+    }
+
+    h3.device-name {
+        padding: 15px 20px;
+        margin-bottom: 0;
+    }
+
+    h3 > small {
+        font-size: 10px;
+    }
+
+    h3 > small > strong {
+        color: greenyellow;
+    }
+
+    #app-device-details {
+        display: flex;
+        flex-shrink: 0;
+        flex-direction: column;
+        background: #36373F;
+        position: relative;
+        min-width: 320px;
+    }
+
+    #app-device-details div.device-details-sections {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 40px;
+    }
+
+    #app-device-details div.device-details-section {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+    }
+
+    #app-device-details div.device-details-section > div.device-details-section-content {
+        padding: 0 20px;
+        display: flex;
+        flex-direction: row;
+    }
+
+    #app-device-details div.device-details-section > div.device-details-section-content .command-selector {
+        flex-grow: 1;
+        margin-right: 20px;
+    }
+
+    thead th {
+        color: #FFF;
+        font-weight: bold;
+        padding-bottom: 5px;
+    }
+
+    tbody td {
+        color: #EEE;
+        padding: 5px 20px 5px;
+        cursor: pointer;
+    }
+
+    div.device-details {
+        position: relative;
+    }
+
+    div.device-details a.edit-button {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+</style>

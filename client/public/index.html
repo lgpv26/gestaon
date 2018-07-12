@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet" href="<%= BASE_URL %>css/loading.css" />
+
+    <link rel="icon" href="<%= BASE_URL %>favicon/favicon.ico">
+    <title>GestaON</title>
+</head>
+<body>
+<!-- app loading screen -->
+<div id="app-loading" class="app-loading">
+    <div class="app-loading__container">
+        <div class="spinner">
+            <div class="spinner__wrapper">
+                <div class="cssload-inner cssload-one"></div>
+                <div class="cssload-inner cssload-two"></div>
+                <div class="cssload-inner cssload-three"></div>
+            </div>
+        </div>
+        <h3 id="app-loading-text"></h3>
+    </div>
+</div>
+<script src="<%= BASE_URL %>js/index.js"></script>
+<div id="app"></div>
+<!-- built files will be auto injected -->
+</body>
+</html>

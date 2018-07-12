@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="28px" viewBox="0 0 32 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs></defs>
+    <g id="Atendimento-Screen" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Atendimento-1" transform="translate(-1146.000000, -42.000000)" fill="#3A3F4B">
+            <g id="header-request">
+                <g id="count-draft" transform="translate(1135.000000, 42.000000)">
+                    <g id="ic-list-draft" transform="translate(11.000000, 0.000000)">
+                        <rect class="colorizable" id="Shape" x="2" y="0" width="28" height="4" rx="2"></rect>
+                        <rect class="colorizable" id="Shape" x="0" y="12" width="32" height="4" rx="2"></rect>
+                        <rect class="colorizable" id="Shape" x="2" y="24" width="28" height="4" rx="2"></rect>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
