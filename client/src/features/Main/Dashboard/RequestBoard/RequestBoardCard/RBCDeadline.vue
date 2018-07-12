@@ -10,7 +10,7 @@
                     <span>O pedido ainda está dentro do prazo!</span>
                 </div>
                 <div v-else-if="overDeadlineRequestTimeline.length">
-                    <div v-for="(overDeadlineTimelineItem, index) in recentFirstOverDeadlineRequestTimeline"
+                    <div v-for="(overDeadlineTimelineItem, index) in recentFirstOverDeadlineRequestTimeline" :key="index"
                          v-if="(index === 0 || index === 1 || index === 2) " class="over-deadline-timeline-item">
                         <span v-if="overDeadlineTimelineItem.action === 'user_change'">{{ getUserName(overDeadlineTimelineItem.triggeredBy) }} mudou o responsável</span>
                         <span v-else-if="overDeadlineTimelineItem.action === 'status_change'">{{ getUserName(overDeadlineTimelineItem.triggeredBy) }} mudou o status</span>
@@ -86,16 +86,12 @@
                 switch(status){
                     case "pending":
                         return "Pendente"
-                        break;
                     case "in-displacement":
                         return "Em deslocamento"
-                        break;
                     case "canceled":
                         return "Cancelado"
-                        break;
                     case "finished":
                         return "Finalizado"
-                        break;
                     default:
                         return "---"
                 }

@@ -112,8 +112,8 @@ import PermissionComponent from './components/Utilities/Permission.vue';
 Vue.component("app-permission", PermissionComponent);
 import ScrollableComponent from './components/Utilities/Scrollable.vue';
 Vue.component("app-scrollable", ScrollableComponent);
-import DatetimePickerComponent from './components/Inputs/DatetimePicker.vue';
-Vue.component("app-datetime-picker", DatetimePickerComponent);
+/*import DatetimePickerComponent from './components/Inputs/DatetimePicker.vue';
+Vue.component("app-datetime-picker", DatetimePickerComponent);*/
 import CheckboxInputComponent from './components/Inputs/CheckboxInput.vue';
 Vue.component("app-checkbox", CheckboxInputComponent)
 import PopoverComponent from './components/Utilities/Popover.vue'

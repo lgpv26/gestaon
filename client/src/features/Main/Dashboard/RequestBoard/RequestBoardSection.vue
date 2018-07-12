@@ -28,7 +28,7 @@
                         :style="{'padding-bottom': options.gutterSize + 'px', 'padding-left': options.gutterSize + 'px'}"
                         @input="onCardDraggableInput($event, section)" @start="onCardDragStart($event, section)" @end="onCardDragEnd($event, section)"
                         @change="onCardPositionChange($event, section)">
-                        <div class="request-card" v-for="card in section.cards" v-show="card.state.showCard" @mousedown="onMouseDown(section)" :key="card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
+                        <div class="request-card" v-for="card in section.cards" v-show="card.state.showCard" @mousedown="onMouseDown(section)" :key="'card-' + card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
                             <app-request-board-card class="request-card__main" :card="card" :isDragging="isDraggingCard" @click="requestCardClicked(card, $event)"></app-request-board-card>
                         </div>
                     </app-draggable>

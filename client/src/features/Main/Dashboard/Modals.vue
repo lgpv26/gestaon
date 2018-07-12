@@ -7,8 +7,9 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex';
-    import RequestChatComponent from "../_Shared/RequestChat/RequestChat.vue";
+    import { mapState } from 'vuex'
+    import _ from 'lodash'
+    import RequestChatComponent from "../_Shared/RequestChat/RequestChat.vue"
 
     export default {
         components: {

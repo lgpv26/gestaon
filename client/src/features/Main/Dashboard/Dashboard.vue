@@ -29,6 +29,9 @@
                     width: document.getElementById('main-content-area').clientWidth
                 })
             }
+        },
+        mounted(){
+            this.mainContentContainerResized()
         }
     }
 </script>

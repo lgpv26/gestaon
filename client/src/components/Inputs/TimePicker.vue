@@ -13,9 +13,7 @@
     </div>
 </template>
 <script>
-    import Popper from 'popper.js';
-    import moment from 'moment';
-    import _ from 'lodash';
+    import moment from 'moment'
     export default {
         data(){
             return {

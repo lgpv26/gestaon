@@ -2,7 +2,7 @@
     <div id="request-panel" ref="requestPanel">
         <app-draggable class="board" ref="board" :value="sections" :options="sectionDraggableOptions"
             @input="onSectionDraggableInput($event)" @start="onSectionDragStart" @end="onSectionDragEnd" :move="onSectionMove">
-            <app-request-board-section ref="sections" v-for="section in sections" :key="section.id" :data-id="section.id" :class="{dragging: isDraggingSection}"
+            <app-request-board-section ref="sections" v-for="section in sections" :key="'section-' + section.id" :data-id="section.id" :class="{dragging: isDraggingSection}"
                     :scrollables="scrollables" :options="boardOptions" :section="section"
                     @updateScrolls="updateScrolls()">
             </app-request-board-section>

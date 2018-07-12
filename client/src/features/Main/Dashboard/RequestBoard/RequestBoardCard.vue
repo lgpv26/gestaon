@@ -51,7 +51,7 @@
                                 <span class="progress__progress--unit">{{ current.time.abbUnit }}</span>
                                 <request-board-icon-progress-shield></request-board-icon-progress-shield>
                             </div>
-                            <div class="timeline__progress" v-for="(inProgressRequestTimelineItem, index) in inProgressRequestTimeline" :key="index"
+                            <div class="timeline__progress" v-for="(inProgressRequestTimelineItem, index) in inProgressRequestTimeline" :key="'ti' + index"
                                 :style="{left: inProgressRequestTimelineItem.left + 'px'}">
                                 <app-popover :contentStyle="popoverContentStyle" :verticalOffset="5" :triggererStyle="{justifyContent: 'center'}">
                                     <template slot="triggerer">

@@ -11,7 +11,7 @@
     </div>
 </template>
 <script>
-    import { mapState } from 'vuex'
+    import _ from 'lodash'
     import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 
     export default {

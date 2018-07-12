@@ -4,7 +4,8 @@
     </div>
 </template>
 <script>
-    import { mapState } from 'vuex';
+    import _ from 'lodash'
+    import { mapState } from 'vuex'
 
     export default {
         props: {
@@ -24,12 +25,11 @@
         },
         watch: {
             permissions(permissions){
-                const vm = this;
-                console.log(permissions);
+                const vm = this
+                console.log(permissions)
                 vm.hasPermission = _.some(permissions, (permission) => {
-                    return permission === vm.permission;
-                });
-                console.log(vm.hasPermission);
+                    return permission === vm.permission
+                })
             }
         }
     }

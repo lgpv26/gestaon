@@ -109,7 +109,9 @@
             },
             onClick(ev){
                 const vm = this;
-                if(vm.isShowing && (vm.$refs.target === ev.target || vm.$refs.target.contains(ev.target))){}
+                if(vm.isShowing && (vm.$refs.target === ev.target || vm.$refs.target.contains(ev.target))){
+                    // do nothing
+                }
                 else if(vm.isShowing && vm.$refs.container && ((vm.$refs.container !== ev.target && !vm.$refs.container.contains(ev.target)) ||
                     ev.target === vm.$refs.closeButton || vm.$refs.closeButton.contains(ev.target))){
                     vm.closeSearch();
