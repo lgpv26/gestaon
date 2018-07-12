@@ -42,6 +42,10 @@ module.exports = class DependencyInjection {
             pingTimeout: 8000
         })
         this.server.io.sockets.setMaxListeners(0)
+        const redisAdapter = require('socket.io-redis')
+        
+        this.server.io.adapter(redisAdapter({ host: config.redis.host, port: config.redis.port }))
+
         return this.server.io
     }
 
@@ -97,6 +101,17 @@ module.exports = class DependencyInjection {
         })
         
         return this.server.sequelize
+    }
+
+    setRedis() {
+        const Redis = require('ioredis')
+        // load Redis
+        if(config.redis.active){
+            this.server.redisClient = new Redis({
+                port: config.redis.port,          // Redis port
+                host: config.redis.host,                // Redis host
+              })
+        }
     }
 
     setOAuth2(){
