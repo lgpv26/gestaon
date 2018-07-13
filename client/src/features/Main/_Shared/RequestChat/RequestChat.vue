@@ -4,7 +4,7 @@
         <div ref="scrollbar" style="width: 100%">
             <div class="scrollable-content">
                 <div class="chat-container" v-if="items.length">
-                    <div v-for="item in items" class="message" :class="{'received-message': item.user.id !== user.id, 'sent-message': item.user.id === user.id}">
+                    <div v-for="(item, index) in items" class="message" :key="index" :class="{'received-message': item.user.id !== user.id, 'sent-message': item.user.id === user.id}">
                         <h3 v-if="item.user.id !== user.id" class="user-name">{{ item.user.name }}</h3>
                         <span v-if="item.type === 'message'"><pre>{{ item.data }}</pre></span>
                         <span v-if="item.type === 'alert'">
@@ -58,7 +58,7 @@
             ...mapActions('tracker', ['loadDevices']),
             ...mapActions('toast', ['showToast','showError']),
             updateScrollPosition(){
-                setImmediate(() => {
+                this.$nextTick(() => {
                     this.scrollbar.update()
                     this.scrollbar.setPosition(0, 9999999)
                 })

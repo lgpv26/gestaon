@@ -6,7 +6,7 @@ const state = {
 }
 
 const getters = {
-    nType(state,getters){
+    nType(state){
         switch(state.type){
             case "error":
                 return "danger";

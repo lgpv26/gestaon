@@ -97,7 +97,7 @@
                 this.setLoadingText("Tentando realizar o login...");
                 this.startLoading();
                 this.authenticate(this.form)
-                    .then((data)=>{
+                    .then(()=>{
                         this.setLoadingText("Sucesso! Aguarde...");
                         setTimeout(() => {
                             if(this.authenticated){

@@ -1,4 +1,4 @@
-export class ProductModel {
+export default class ProductModel {
     constructor({ id = null, name = '', price = 0 } = {}){
         this.id = id
         this.name = name

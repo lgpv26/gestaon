@@ -1,6 +1,4 @@
-import _ from 'lodash'
-
-export class PaymentMethodModel {
+export default class PaymentMethodModel {
     constructor({ id = null, name = '', rule = '', hasDeadline = false, tax = 0, taxUnit = 'flat', autoPay = true } = {}){
         this.id = id
         this.name = name

@@ -1,26 +1,24 @@
-import Vue from 'vue'
-
 import _ from 'lodash'
-import utils from '@/utils/index'
+import utils from '../../../utils/index'
 import { getField, updateField } from 'vuex-map-fields'
 import shortid from 'shortid'
 
-import ClientsAPI from '@/api/clients'
-import RequestsAPI from '@/api/requests'
+import ClientsAPI from '../../../api/clients'
+import RequestsAPI from '../../../api/requests'
 
-import {createRequest} from '@/models/RequestModel'
+import {createRequest} from '../../../models/RequestModel'
 
-import {createClient} from '@/models/ClientModel'
-import {createClientAddress} from '@/models/ClientAddressModel'
-import {createClientAddressForm} from '@/models/ClientAddressFormModel'
-import {createAddress} from '@/models/AddressModel'
+import {createClient} from '../../../models/ClientModel'
+import {createClientAddress} from '../../../models/ClientAddressModel'
+import {createClientAddressForm} from '../../../models/ClientAddressFormModel'
+import {createAddress} from '../../../models/AddressModel'
 
-import {createOrder} from '@/models/OrderModel'
-import {createOrderProduct} from '@/models/OrderProductModel'
-import {createProduct} from '@/models/ProductModel'
+import {createOrder} from '../../../models/OrderModel'
+import {createOrderProduct} from '../../../models/OrderProductModel'
+import {createProduct} from '../../../models/ProductModel'
 
-import {createRequestPayment} from '@/models/RequestPaymentModel'
-import {createPaymentMethod} from '@/models/PaymentMethodModel'
+import {createRequestPayment} from '../../../models/RequestPaymentModel'
+import {createPaymentMethod} from '../../../models/PaymentMethodModel'
 
 const state = {
     form: {
@@ -69,7 +67,7 @@ const state = {
 
 const getters = {
     getField,
-    isClientSummaryAvailable(state, getters){
+    isClientSummaryAvailable(state){
         if(state.form.activeStep === 'client') return false
         if(state.form.client.id){
             return true
@@ -119,17 +117,6 @@ const clientMutations = {
             state.form.client.clientPhones.splice(index, 1)
         }
     },
-    ADD_CLIENT_PHONE(state, clientPhone = {}){
-        clientPhone.id = 'tmp/' + shortid.generate()
-        state.form.client.clientPhones.push(clientPhone)
-    },
-    REMOVE_CLIENT_PHONE(state, clientPhoneId){
-        const index = _.findIndex(state.form.client.clientPhones, {id: clientPhoneId})
-        if(index !== -1){
-            state.form.client.clientPhones.splice(index, 1)
-        }
-    },
-
     REMOVE_CLIENT_CUSTOM_FIELD(state, clientCustomFieldId){
         const index = _.findIndex(state.form.client.clientCustomFields, {id: clientCustomFieldId})
         if(index !== -1){

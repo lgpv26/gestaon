@@ -128,14 +128,12 @@
     </ul>
 </template>
 <script>
-    import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
+    import {  mapGetters, mapState, mapActions } from 'vuex';
 
     import utils from '../../../../utils/index';
     import moment from 'moment';
     import _ from 'lodash';
 
-    import CashierBalancingAPI from '../../../../api/cashier-balancing'
-    import GridComponent from '../../../../components/Utilities/TableGrid.vue'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
     export default {
@@ -183,7 +181,7 @@
         },
         methods: {
             ...mapActions('toast',['showToast']),
-            onFilterChange(ev){
+            onFilterChange(){
                 this.$emit('clean-selection')
                 this.apply()
             },
@@ -211,16 +209,12 @@
                 switch(status){
                     case "pending":
                         return "Pendente"
-                        break;
                     case "sent":
                         return "Enviado"
-                        break;
                     case "canceled":
                         return "Cancelado"
-                        break;
                     case "finished":
                         return "Finalizado"
-                        break;
                     default:
                         return "---"
                 }

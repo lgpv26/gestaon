@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { createOrderProduct } from './OrderProductModel'
 
-export class OrderModel {
+export default class OrderModel {
     constructor({
         id = null,
         orderProducts = [],

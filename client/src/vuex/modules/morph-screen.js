@@ -8,10 +8,10 @@ const state = () => ({
 });
 
 const getters = {
-    activeMorphScreen(state, getters){
+    activeMorphScreen(state){
         return _.find(state.screens, { active: true })
     },
-    tags(state, getters){
+    tags(state){
         if(state.searchData && state.searchData.tags && state.searchData.tags.length){
             return state.searchData.tags
         }

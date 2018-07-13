@@ -54,13 +54,13 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash'
     import config from '../../../../../../config'
     import ProductSelect from '../../_Shared/ProductSelect.vue'
     import ProductInput from './ProductInput.vue'
-    import utils from '@/utils/index'
+    import utils from '../../../../../../utils/index'
 
     import DraftMixin from '../../DraftMixin'
 

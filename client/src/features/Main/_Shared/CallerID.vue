@@ -9,14 +9,14 @@
             </div>
             <div ref="scrollbar">
                 <div class="calls">
-                    <div v-for="call in calls" class="call">
+                    <div v-for="(call, index) in calls" :key="index" class="call">
                         <a class="number clipboard" v-if="!call.isAnonymous && call.isValid" :data-clipboard-text="call.number">{{ utils.formatPhone(call.number) }}</a>
                         <span class="number anonymous" v-else-if="false">Privado</span>
                         <span class="number invalid" v-else-if="call.isAnonymous || !call.isValid">Não identificado</span>
                         <span class="number" v-else>Número desconhecido</span>
                         <span class="time">{{ moment(call.createdAt).format("DD/MM/YYYY HH:mm:ss") }}</span>
                         <span class="destination">{{ call.destination }}</span>
-                        <div v-if="call.clients.length" v-for="client in call.clients">
+                        <div v-if="call.clients.length" v-for="(client, index) in call.clients" :key="index">
                             <div class="client existent-client">
                                 <span style="font-weight: bold;">{{ client.name }}</span>
                             </div>
@@ -36,12 +36,12 @@
     import _ from 'lodash'
     import shortid from 'shortid'
 
-    import ClientsAPI from '@/api/clients'
+    import ClientsAPI from '../../../api/clients'
 
     import { mapGetters, mapActions, mapState } from 'vuex'
     import Scrollbar from 'smooth-scrollbar'
 
-    import {createRequest} from '@/models/RequestModel'
+    import {createRequest} from '../../../models/RequestModel'
 
     import Clipboard from 'clipboard'
 

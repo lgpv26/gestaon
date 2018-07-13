@@ -65,13 +65,10 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
 
     import _ from 'lodash';
-    import utils from '@/utils';
-    import AddressesAPI from '@/api/addresses';
-    import ClientAPI from '@/api/clients';
     import AddressForm from './AddressForm.vue';
     import Vue from 'vue';
 

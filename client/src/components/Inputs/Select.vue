@@ -5,16 +5,16 @@
         </template>
         <template slot="content">
             <div class="select-input__container" style="width: 240px;">
-                <div class="container__section" v-show="sections && sections.length > 0" v-for="section in sections">
+                <div class="container__section" v-show="sections && sections.length > 0" v-for="(section, index) in sections" :key="index">
                     <slot name="section" :text="section.text"></slot>
-                    <div class="section__item" v-for="item in section.items">
+                    <div class="section__item" v-for="(item, index) in section.items" :key="index">
                         <slot name="item" :text="item.text"></slot>
                         <span class="push-both-sides"></span>
                         OK
                     </div>
                 </div>
                 <div class="container__items" v-show="items && items.length > 0">
-                    <div class="items__item" v-for="item in items" @click="itemSelected(item)">
+                    <div class="items__item" v-for="(item, index) in items" :key="index" @click="itemSelected(item)">
                         <slot name="item" :text="item.text" :active="(!multiple && item.value === value) || (multiple && value.length && value[value.indexOf(item.value)])"></slot>
                         <span class="push-both-sides"></span>
                         <span v-if="(!multiple && item.value === value) || (multiple && value.length && value[value.indexOf(item.value)])">
@@ -36,7 +36,6 @@
     import Vue from 'vue';
     import _ from 'lodash';
     import Popper from 'popper.js';
-    import utils from '../../utils/index';
     export default {
         data(){
             return {
@@ -50,17 +49,17 @@
         computed: {
         },
         methods: {
-            onMouseOver(ev){
+            onMouseOver(){
                 if(this.closeTimeout){
                     clearTimeout(this.closeTimeout);
                 }
             },
-            onMouseLeave(ev){
+            onMouseLeave(){
                 this.closeTimeout = setTimeout(() => {
                     this.closeSelect();
                 }, 1200);
             },
-            onClickTarget(ev){
+            onClickTarget(){
                 this.openSelect();
             },
             onClick(ev){

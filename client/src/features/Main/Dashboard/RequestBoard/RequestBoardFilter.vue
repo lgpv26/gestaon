@@ -88,14 +88,11 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import Vue from 'vue'
-    import _ from 'lodash';
-    import utils from '@/utils'
+    import { mapMutations, mapState, mapGetters } from 'vuex';
     import { createHelpers } from 'vuex-map-fields'
 
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
-    const { mapFields, mapMultiRowFields } = createHelpers({
+    const { mapFields } = createHelpers({
         getterType: 'request-board/getField',
         mutationType: 'request-board/updateField',
     })
@@ -168,10 +165,7 @@
         },
         methods: {
             ...mapMutations('request-board', ['SET_FILTER']),
-            onFilterChange(ev){
-                /*setImmediate(() => {
-                    this.deliveryDate
-                })*/
+            onFilterChange(){
             },
             onFilter(type){
                 switch(type){

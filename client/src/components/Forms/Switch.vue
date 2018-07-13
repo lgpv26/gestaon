@@ -8,7 +8,6 @@
 </template>
 
 <script>
-
     export default {
         props: {
             value: null,
@@ -20,7 +19,7 @@
             }
         },
         methods: {
-            toggle(ev){
+            toggle(){
                 if(!this.disabled) {
                     if (this.$refs.switch.classList.contains('on')) {
                         this.on = false;

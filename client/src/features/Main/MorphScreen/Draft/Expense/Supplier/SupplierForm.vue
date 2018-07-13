@@ -216,14 +216,12 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import { mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import utils from '@/utils/index';
+    import utils from '../../../../../../utils/index';
     import SupplierAddressForm from './SupplierAddressForm.vue';
-    import SearchComponent from '@/components/Inputs/Search.vue';
-    import ClientsAPI from '@/api/clients';
-    import ServiceAPI from '@/api/service';
-    import Vue from 'vue';
+    import SearchComponent from '../../../../../../components/Inputs/Search.vue';
+    import ServiceAPI from '../../../../../../api/service'
 
     export default {
         components: {
@@ -610,7 +608,7 @@
 
             commitTrustedSocketChanges(ev, mapping){
                 if(ev.isTrusted){
-                    setImmediate(() => {
+                    this.$nextTick(() => {
                         this.commitSocketChanges(mapping);
                     });
                 }
@@ -633,7 +631,7 @@
             },
             syncClientPhoneTrustedEvent(ev, mapping){
                 if(ev.isTrusted){
-                    setImmediate(() => {
+                    this.$nextTick(() => {
                         this.syncClientPhoneForm(mapping);
                     });
                 }

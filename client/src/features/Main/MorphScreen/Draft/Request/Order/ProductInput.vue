@@ -25,20 +25,11 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import { createHelpers } from 'vuex-map-fields'
-    import { Select } from "@/components/Inputs/Select/index"
-    import _ from 'lodash'
-    import utils from '@/utils/index'
-    import ProductsAPI from '@/api/products'
-    import SearchComponent from '@/components/Inputs/Search.vue'
+    import { mapState, mapGetters, mapActions } from 'vuex'
+    import ProductsAPI from '../../../../../../api/products'
+    import SearchComponent from '../../../../../../components/Inputs/Search.vue'
 
-    import {createProduct} from '@/models/ProductModel'
-
-    const { mapFields } = createHelpers({
-        getterType: 'draft/request/getField',
-        mutationType: 'draft/request/updateField',
-    })
+    import {createProduct} from '../../../../../../models/ProductModel'
 
     export default {
         components: {
@@ -90,7 +81,7 @@
                             vm.search.items = data
                             /* vm.search.items = [] */
                             vm.$refs.search.search()
-                        }).catch((err) => {
+                        }).catch(() => {
                             vm.search.items = []
                         })
                     },

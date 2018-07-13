@@ -10,7 +10,7 @@
                         <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address + ', ' + ((props.item.client.address.number) ? props.item.client.address.number : 'SN') + ((props.item.client.address.complement) ? ' - ' + props.item.client.address.complement : '')"></span>
                         <span class="detail__address" v-if="_.has(props.item,'client.address.neighborhood')" v-html="props.item.client.address.neighborhood + ((props.item.client.address.city) ? ' - ' + props.item.client.address.city : '') + ((props.item.client.address.state) ? '/' + props.item.client.address.state : '')"></span>
                         <span class="detail__phones" v-if="props.item.client.phones.length > 0">
-                            <span v-for="(clientPhone, index) in props.item.client.phones" v-html="((index === 0) ? '' : ', ') + clientPhone.number"></span>
+                            <span v-for="(clientPhone, index) in props.item.client.phones" :key="index" v-html="((index === 0) ? '' : ', ') + clientPhone.number"></span>
                         </span>
                     </div>
                     <div class="search-input__item address" v-if="props.item.address">
@@ -62,18 +62,16 @@
 </template>
 
 <script>
-    import DraftsAPI from '../../../api/drafts';
     import ServiceAPI from '../../../api/service';
     import ClientsAPI from '../../../api/clients';
     import AddressesAPI from '../../../api/addresses';
     import SearchComponent from '../../../components/Inputs/Search.vue';
-    import DropdownMenuComponent from "@/components/Utilities/DropdownMenu.vue";
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import DropdownMenuComponent from "../../../components/Utilities/DropdownMenu.vue";
+    import { mapMutations, mapState, mapActions } from 'vuex';
     import _ from 'lodash';
-    import markjs from 'mark.js';
 
-    import {createRequest} from '@/models/RequestModel'
-    import {createClientAddressForm} from '@/models/ClientAddressFormModel'
+    import {createRequest} from '../../../models/RequestModel'
+    import {createClientAddressForm} from '../../../models/ClientAddressFormModel'
 
     export default {
         components: {
@@ -252,7 +250,7 @@
                     vm.searchItems = _.concat(clients, addresses)
                     searchComponent.search()
 
-                }).catch((err) => {
+                }).catch(() => {
                     vm.searchItems = []
                 })
             },
@@ -299,7 +297,7 @@
             vm.$options.sockets['draft.create'] = (ev) => {
                 if (ev.success) {
                     vm.ADD_DRAFT(ev.evData)
-                    setImmediate(() => {
+                    vm.$nextTick(() => {
                         if (ev.evData.createdBy === vm.user.id) {
                             vm.SET_SEARCH_DATA({
                                 text: vm.inputValue

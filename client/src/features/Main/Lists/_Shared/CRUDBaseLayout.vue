@@ -78,7 +78,7 @@
         methods: {
             updateResizeListeners(){
                 const vm = this
-                setImmediate(() => {
+                vm.$nextTick(() => {
                     if(this.resizeSensor) this.resizeSensor.detach()
                     this.resizeSensor = new ResizeSensor(vm.$refs.table, () => {
                         console.log("Mudou de tamanho")

@@ -43,13 +43,11 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
-    import utils from '@/utils/index'
+    import utils from '../../../../../../utils/index'
     import _ from 'lodash'
     import DraftMixin from '../../DraftMixin'
-
-    import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
     const { mapFields } = createHelpers({
         getterType: 'draft/request/getField',

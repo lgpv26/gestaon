@@ -27,7 +27,7 @@
         });
     }
 
-    function objectLoad(e){
+    function objectLoad(){
         if(_.has(this.contentDocument, 'defaultView') && this.contentDocument.defaultView){
             this.contentDocument.defaultView.__resizeTrigger__ = this.__resizeElement__;
             this.contentDocument.defaultView.addEventListener('resize', resizeListener);

@@ -1,6 +1,4 @@
-import _ from 'lodash'
-
-export class AddressModel {
+export default class AddressModel {
     constructor({ id = null, name = '', cep = '', neighborhood = '', city = '', state = '' } = {}){
         this.id = id
         this.name = name

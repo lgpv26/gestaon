@@ -35,7 +35,7 @@
                 'SET_WINDOW_DIMENSIONS',
                 'SET_APP_VERSION'
             ]),
-            setWindowDimensions(event) {
+            setWindowDimensions() {
                 this.SET_WINDOW_DIMENSIONS({
                     width: document.documentElement.clientWidth,
                     height: document.documentElement.clientHeight

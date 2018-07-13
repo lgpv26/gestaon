@@ -11,9 +11,7 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import _ from 'lodash';
-    import utils from '../../../../../../utils/index';
+    import { mapState, mapActions } from 'vuex';
 
     export default {
         props: ['value'],

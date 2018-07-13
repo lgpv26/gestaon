@@ -6,7 +6,7 @@
         <template slot="content">
             <div>
                 <h3 v-if="showTitle">Grupo de clientes</h3>
-                <div v-for="clientGroup in clientGroups" class="item">
+                <div v-for="(clientGroup, index) in clientGroups" :key="index" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === clientGroup.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 24px; top: 0; cursor: pointer; font-weight: bold;" @click="editing = false">
@@ -45,10 +45,7 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
+    import { mapState } from 'vuex'
 
     export default {
         props: ['value','popoverProps','showTitle'],
@@ -77,7 +74,6 @@
                 this.adding = true
             },
             edit(clientGroup){
-                return
                 this.adding = false
                 this.editing = clientGroup.id
                 this.editForm.name = clientGroup.name

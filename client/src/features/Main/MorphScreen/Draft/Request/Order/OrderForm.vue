@@ -134,14 +134,12 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import { mapState, mapGetters } from 'vuex';
     import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash';
     import moment from 'moment';
-    import Highcharts from 'highcharts';
     import OrderProductsForm from './OrderProductsForm.vue';
     import EmployeeInput from './EmployeeInput.vue';
-    import StorageInput from './StorageInput.vue';
     import DraftMixin from '../../DraftMixin'
 
     import PromotionChannelSelectComponent from '../../_Shared/PromotionChannelSelect.vue'

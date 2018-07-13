@@ -1,4 +1,3 @@
-import GeofencesAPI from '../../api/geofences';
 import DevicesAPI from '../../api/devices';
 import moment from 'moment';
 import _ from 'lodash';
@@ -142,7 +141,7 @@ const actions = {
         });
     },
     updateDevice(context,device){
-        return DevicesAPI.updateOne(device.data.id,device.form).then((result) => {
+        return DevicesAPI.updateOne(device.data.id,device.form).then(() => {
             return DevicesAPI.getOne(device.data.id).then((deviceResult) => {
                 context.commit('updateDevice',deviceResult.data);
                 return deviceResult;

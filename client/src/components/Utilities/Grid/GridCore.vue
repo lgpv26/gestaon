@@ -7,7 +7,7 @@
             <div class="grid__section" v-if="false"></div>
             <div class="grid__section">
                 <div class="grid__header" :style="{ left: (- grid.x) + 'px', padding: '0 ' + grid.settings.horizontalPadding + 'px' }">
-                    <div class="header__column" v-for="column in grid.columns" :style="[{ 'width': column.width + 'px', 'height': column.height + 'px' }, column.style]">
+                    <div class="header__column" v-for="(column, index) in grid.columns" :key="index" :style="[{ 'width': column.width + 'px', 'height': column.height + 'px' }, column.style]">
                         <div v-if="column.name === 'check'" class="check" :class="{active: form.selectedList.length && (form.selectedList.length === grid.rows.length) }" @click="checkAll()"></div>
                         <span v-else>{{ column.text }}</span>
                     </div>
@@ -15,8 +15,8 @@
                 <div class="grid__main__container" ref="scrollbar">
                     <div :style="{ width: (gridFullWidth + (grid.settings.horizontalPadding * 2)) + 'px', 'min-width': '100%' }">
                         <div class="grid__body">
-                            <div class="body__row" v-for="row in grid.rows" :class="{active: _.find(form.selectedList, { id: row.id })}" :style="{ 'height': row.height + 'px' }" @click="rowClick(row)">
-                                <div class="row__column" v-for="rowColumn in row.columns"
+                            <div class="body__row" v-for="(row, index) in grid.rows" :key="index" :class="{active: _.find(form.selectedList, { id: row.id })}" :style="{ 'height': row.height + 'px' }" @click="rowClick(row)">
+                                <div class="row__column" v-for="(rowColumn, index) in row.columns" :key="index"
                                      :style="[{ width: getColumn(rowColumn.column).width + 'px', 'left': getColumnLeftSpace(rowColumn.column) + 'px' }, rowColumn.style]">
                                     <div v-if="rowColumn.column === 'check'" class="check" :class="{active: _.find(form.selectedList, { id: row.id })}"></div>
                                     <div v-else-if="rowColumn.html">
@@ -40,14 +40,11 @@
 </template>
 
 <script>
-    import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
+    import {  mapState } from 'vuex';
 
-    import utils from '../../../utils/index'
-    import moment from 'moment'
     import _ from 'lodash'
 
     import Scrollbar from 'smooth-scrollbar'
-    import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 
     export default {
         props: ['columns', 'rows', 'value', 'loading'],
@@ -133,8 +130,8 @@
         },
         methods: {
             reload(){
-                if(!!this.scrollbar){
-                    setImmediate(() => {
+                if(this.scrollbar){
+                    this.$nextTick(() => {
                         // this.scrollbar.setPosition(0,0)
                         this.scrollbar.update()
                     })

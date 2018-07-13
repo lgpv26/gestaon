@@ -24,11 +24,10 @@
 </template>
 
 <script>
-    import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
-    import _ from 'lodash';
-    import anime from 'animejs';
-    import moment from 'moment';
-    import Scrollbar from 'smooth-scrollbar';
+    import { mapState, mapGetters, mapActions, mapMutations } from 'vuex'
+    import _ from 'lodash'
+    import anime from 'animejs'
+    import moment from 'moment'
 
     import Draft from "./Draft/Draft.vue";
 
@@ -100,28 +99,24 @@
                             createdBy: createdUserName,
                             formatedCreatedAt: moment(draft.createdAt).format('HH:mm'),
                         }
-                        break;
                     case "client":
                         return {
                             text: "Cliente",
                             entryComponent: 'client-form',
                             formatedCreatedAt: moment(draft.createdAt).format('DD/MM HH:mm')
                         }
-                        break;
                     case "accounts":
                         return {
                             text: "Plano de contas",
                             entryComponent: 'accounts-form',
                             formatedCreatedAt: moment(draft.createdAt).format('DD/MM HH:mm')
                         }
-                        break;
                     case "expense":
                         return {
                             text: "Compras e despesas",
                             entryComponent: 'expense-form',
                             formatedCreatedAt: moment(draft.createdAt).format('DD/MM HH:mm')
                         }
-                        break;
                 }
             },
 
@@ -132,7 +127,7 @@
                 vm.SET_ALL_MS_SCREENS({
                     active: false
                 });
-                setImmediate(() => {
+                vm.$nextTick(() => {
                     this.$refs.morphScreenItems.forEach((morphScreen) => {
                         morphScreen.style.height = 50 + 'px';
                         morphScreen.style.opacity = 1;
@@ -174,7 +169,7 @@
                 const vm = this;
                 const allAnimationsCompleted = [];
                 let activeScreenIndex = vm.screens.indexOf(vm.activeMorphScreen)
-                setImmediate(() => {
+                vm.$nextTick(() => {
                     vm.SET_MS({
                         draftId: vm.activeMorphScreen.draft.draftId,
                         screen: {

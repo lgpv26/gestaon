@@ -1,6 +1,6 @@
 <template>
     <div class="rbc-status">
-        <div class="rbc-status-item" v-for="userItem in userList" :class="{active: userItem.value === value}" @click="onItemClick(userItem)">
+        <div class="rbc-status-item" v-for="(userItem, index) in userList" :key="index" :class="{active: userItem.value === value}" @click="onItemClick(userItem)">
             <span>{{ userItem.text }}</span>
             <span class="push-both-sides"></span>
             <icon-check v-if="userItem.value === value"></icon-check>
@@ -9,10 +9,7 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import Vue from 'vue'
-    import _ from 'lodash';
-    import utils from '@/utils'
+    import { mapState } from 'vuex';
 
     export default {
         props: ['cardId','value'],

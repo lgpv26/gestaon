@@ -32,10 +32,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import Vue from 'vue'
+    import { mapState } from 'vuex';
     import _ from 'lodash'
-    import utils from '@/utils'
     import moment from 'moment'
 
     export default {

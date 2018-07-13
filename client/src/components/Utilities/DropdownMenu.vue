@@ -7,14 +7,13 @@
             <div class="dropdown-menu" v-if="isOpen" ref="popover"
                  :style="{'margin-top': (verticalOffset) ? verticalOffset + 'px' : '0px', 'margin-left': (horizontalOffset) ? horizontalOffset + 'px' : '0px'}">
                 <ul>
-                    <li v-for="menuItem in menuList" @click="onMenuItemClick(menuItem)">{{ menuItem.text }}</li>
+                    <li v-for="(menuItem, index) in menuList" :key="index" @click="onMenuItemClick(menuItem)">{{ menuItem.text }}</li>
                 </ul>
             </div>
         </transition>
     </div>
 </template>
 <script>
-    import { mapState } from 'vuex';
     import Vue from 'vue';
     import Popper from 'popper.js';
 
@@ -34,17 +33,17 @@
                     this.closeSelect()
                 }
             },
-            onMouseOver(ev){
+            onMouseOver(){
                 if(this.closeTimeout){
                     clearTimeout(this.closeTimeout);
                 }
             },
-            onMouseLeave(ev){
+            onMouseLeave(){
                 this.closeTimeout = setTimeout(() => {
                     this.closeSelect();
                 }, 1200);
             },
-            onClickTarget(ev){
+            onClickTarget(){
                 this.openSelect();
             },
             onClick(ev){

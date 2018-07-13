@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import {createClient} from '../models/ClientModel'
 
-export class RequestModel {
+export default class RequestModel {
     constructor({
         id = null,
         activeStep = null,

@@ -114,9 +114,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
-    import utils from '@/utils/index'
     import config from '../../../../../config'
     import _ from 'lodash'
     import DraftMixin from '../DraftMixin'
@@ -128,7 +127,6 @@
     import ClientForm from './Client/ClientForm.vue'
     import ClientSummary from './Client/ClientSummary.vue'
     import OrderForm from './Order/OrderForm.vue'
-    import TaskForm from './Task/TaskForm.vue'
     import Scrollbar from 'smooth-scrollbar'
 
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
@@ -145,8 +143,7 @@
             'app-client-summary': ClientSummary,
             'app-payment-methods-form': PaymentMethodsForm,
             'app-client-form': ClientForm,
-            'app-order-form': OrderForm,
-            'app-task-form': TaskForm
+            'app-order-form': OrderForm
         },
         mixins: [DraftMixin],
         data(){

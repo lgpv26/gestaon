@@ -15,7 +15,7 @@
             }
         },
         methods: {
-            toggle(ev){
+            toggle(){
                 if(this.$refs.switch.classList.contains('on')){
                     this.on = false;
                     this.$refs.switch.classList.remove("on");

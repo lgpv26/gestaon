@@ -1,8 +1,7 @@
-import Vue from 'vue'
 import _ from 'lodash'
 import { getField, updateField } from 'vuex-map-fields'
-import { RequestBoardCardModel, RequestBoardSectionModel } from '@/models/index'
-import utils from '@/utils'
+import { RequestBoardCardModel, RequestBoardSectionModel } from '../../models/index'
+import utils from '../../utils'
 
 const state = {
     sections: [],

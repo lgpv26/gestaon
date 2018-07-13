@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { createAddress } from './AddressModel'
 
-export class ClientAddressModel {
+export default class ClientAddressModel {
     constructor({ id = null, complement = '', number = '', address = {} } = {}){
         this.id = id
         this.complement = complement

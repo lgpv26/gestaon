@@ -80,9 +80,8 @@
     </div>
 </template>
 <script>
-    import { mapMutations, mapGetters, mapState, mapActions } from 'vuex';
+    import { mapGetters, mapState, mapActions } from 'vuex';
 
-    import config from '../../../../config';
     import utils from '../../../../utils/index';
     import moment from 'moment';
     import _ from 'lodash';
@@ -239,16 +238,12 @@
                 switch(status){
                     case "pending":
                         return "Pendente"
-                        break;
                     case "in-displacement":
                         return "Em deslocamento"
-                        break;
                     case "canceled":
                         return "Cancelado"
-                        break;
                     case "finished":
                         return "Finalizado"
-                        break;
                     default:
                         return "---"
                 }
@@ -377,7 +372,7 @@
                         })
                     }, {
                         companyId: vm.company.id
-                    }).then((res) => {
+                    }).then(() => {
                         vm.selectedItems = []
                         vm.$refs.filter.apply()
                     })

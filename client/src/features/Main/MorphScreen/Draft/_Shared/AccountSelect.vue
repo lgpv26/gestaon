@@ -6,7 +6,7 @@
         <template slot="content">
             <div style="width: 240px;">
                 <h3 v-if="showTitle">Conta</h3>
-                <div v-for="account in accounts" class="item">
+                <div v-for="(account, index) in accounts" :key="index" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === account.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 24px; top: 0; cursor: pointer; font-weight: bold;" @click="editing = false">
@@ -45,10 +45,7 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
+    import { mapState } from 'vuex'
 
     export default {
         props: ['value','showTitle','popoverProps'],

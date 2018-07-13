@@ -33,8 +33,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex';
-    import oAuthAPI from '../../api/oauth';
+    import { mapState, mapActions } from 'vuex'
 
     export default {
         data(){
@@ -62,7 +61,7 @@
                 const vm = this;
                 vm.setLoadingText("Tentando realizar o login...");
                 vm.startLoading();
-                vm.authenticate(this.form).then((result) => {
+                vm.authenticate(this.form).then(() => {
                     vm.setLoadingText("Sucesso! Aguarde...");
                     setTimeout(() => {
                         if(this.authenticated){

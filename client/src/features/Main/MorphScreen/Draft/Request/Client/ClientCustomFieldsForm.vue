@@ -14,7 +14,7 @@
         <div class="form-group__content" v-if="_.isArray(clientCustomFieldRows) && clientCustomFieldRows.length > 0">
             <div class="dashed-line"></div>
             <ul class="content__list--mini">
-                <li class="list__item" v-for="(clientCustomFieldRow, index) in clientCustomFieldRows">
+                <li class="list__item" v-for="(clientCustomFieldRow, index) in clientCustomFieldRows" :key="index">
                     <span style="white-space: nowrap">{{ customFieldNames[index] }}</span>
                     <div class="item__mini-circle"></div>
                     <input type="text" placeholder="..." v-model="clientCustomFieldRow.value"
@@ -30,12 +30,10 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
-    import CustomFieldsAPI from '@/api/custom-fields'
+    import CustomFieldsAPI from '../../../../../../api/custom-fields'
 
     import DraftMixin from '../../DraftMixin'
 

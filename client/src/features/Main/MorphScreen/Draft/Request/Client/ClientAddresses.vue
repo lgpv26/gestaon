@@ -10,7 +10,7 @@
             </div>
             <div class="form-group__content">
                 <ul class="content__list">
-                    <li class="list__item" v-for="(clientAddress, index) in clientAddresses" :class="{ active: clientAddressId === clientAddress.id }">
+                    <li class="list__item" v-for="(clientAddress, index) in clientAddresses" :key="index" :class="{ active: clientAddressId === clientAddress.id }">
                         <span style="cursor: pointer;" @click="select(clientAddress.id)">
                             {{ clientAddress.address.name }},
                             {{ (_.get(clientAddress,'number',false) ? clientAddress.number.toString().trim() : "SN" ) }}
@@ -38,13 +38,7 @@
     import { createHelpers } from 'vuex-map-fields'
 
     import _ from 'lodash'
-    import utils from '@/utils'
-    import models from '@/models/index'
-    import AddressesAPI from '@/api/addresses'
-    import ClientAPI from '@/api/clients'
-    import AddressForm from './AddressForm.vue'
     import ClientAddressForm from './ClientAddressForm.vue'
-    import Vue from 'vue';
 
     import DraftMixin from '../../DraftMixin'
 

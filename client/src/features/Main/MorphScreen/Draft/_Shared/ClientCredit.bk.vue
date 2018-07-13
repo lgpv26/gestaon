@@ -38,10 +38,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
+    import { mapState } from 'vuex'
+    import utils from '../../../../../utils/index'
 
     import ClientsAPI from '../../../../../api/clients'
 

@@ -4,7 +4,7 @@
             <div class="tooltip-content">
                 <span v-if="client">{{client.name}}</span>
                 <div v-if="client.clientPhones.length" style="margin-top: 8px;">
-                    <div v-for="clientPhone in client.clientPhones">
+                    <div v-for="(clientPhone, index) in client.clientPhones" :key="index">
                         <span v-if="clientPhone.id === selectedClientPhone"><i class="mi mi-done" style="position: relative; top: 3px; font-size: 15px"></i></span>
                         <span>{{ clientPhone.name || 'PADRÃO' }}: {{ utils.formatPhone(clientPhone.number) }}</span>
                     </div>
@@ -25,11 +25,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import RequestsAPI from '@/api/requests'
-    import Vue from 'vue'
+    import { mapState, mapActions } from 'vuex'
     import _ from 'lodash'
-    import utils from '@/utils'
 
     export default {
         props: ['card'],

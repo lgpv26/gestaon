@@ -6,7 +6,7 @@
         <template slot="content">
             <div style="width: 240px;">
                 <h3>Canal de divulgação</h3>
-                <div v-for="promotionChannel in promotionChannels" class="item">
+                <div v-for="(promotionChannel, index) in promotionChannels" :key="index" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === promotionChannel.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 24px; top: 0; cursor: pointer; font-weight: bold;" @click="editing = false">
@@ -45,10 +45,7 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
+    import { mapState } from 'vuex'
 
     export default {
         props: ['value','popoverProps'],

@@ -24,11 +24,11 @@
     </div>
 </template>
 <script>
-    import Vue from 'vue';
-    import _ from 'lodash';
-    import Popper from 'popper.js';
-    import MarkJS from 'mark.js';
-    import Scrollbar from 'smooth-scrollbar';
+    import Vue from 'vue'
+    import _ from 'lodash'
+    import Popper from 'popper.js'
+    import MarkJS from 'mark.js'
+    import Scrollbar from 'smooth-scrollbar'
     export default {
         data(){
             return {
@@ -93,23 +93,25 @@
                 this.$emit("itemSelected", item);
                 this.closeSearch();
             },
-            onMouseOver(ev){
+            onMouseOver(){
                 if(this.closeTimeout){
                     clearTimeout(this.closeTimeout);
                 }
             },
-            onMouseLeave(ev){
+            onMouseLeave(){
                 if(this.shouldStayOpen) return;
                 this.closeTimeout = setTimeout(() => {
                     this.closeSearch();
                 }, 1200);
             },
-            onClickTarget(ev){
+            onClickTarget(){
                 this.openSearch();
             },
             onClick(ev){
                 const vm = this;
-                if(vm.isShowing && (vm.$refs.target === ev.target || vm.$refs.target.contains(ev.target))){}
+                if(vm.isShowing && (vm.$refs.target === ev.target || vm.$refs.target.contains(ev.target))){
+                    // do nothing
+                }
                 else if(vm.isShowing && vm.$refs.container && ((vm.$refs.container !== ev.target && !vm.$refs.container.contains(ev.target)) ||
                     ev.target === vm.$refs.closeButton || vm.$refs.closeButton.contains(ev.target))){
                     vm.closeSearch();

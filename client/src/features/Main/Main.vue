@@ -3,11 +3,6 @@
         <app-caller-id></app-caller-id>
         <app-morph-screen></app-morph-screen>
         <app-modals></app-modals>
-        <app-device-details-window></app-device-details-window>
-        <app-map-context-menu></app-map-context-menu>
-        <transition name="settings-animation">
-            <app-settings v-if="showSettings" :showSettings.sync="showSettings"></app-settings>
-        </transition>
         <transition name="app-animation">
             <div id="content" class="app-content" v-show="!showSettings">
                 <div id="left-column" class="left-column">
@@ -55,28 +50,21 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
+    import { mapMutations, mapState, mapActions } from 'vuex';
     import { MorphScreen } from "./MorphScreen/index";
+    import { Howl } from 'howler'
     import RequestBoardFilterComponent from "./Dashboard/RequestBoard/RequestBoardFilter.vue";
     import SearchComponent from "./_Shared/Search.vue";
     import CallerIDComponent from "./_Shared/CallerID.vue";
     import MenuComponent from "./_Shared/Menu.vue";
     import Modals from "./Dashboard/Modals.vue";
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
-    import SettingsComponent from "./Settings/Settings.vue";
-    import MeAPI from "../../api/me";
-    import DraftsAPI from "../../api/drafts";
     import Vue from 'vue';
     import io from 'socket.io-client';
     import VueSocketio from 'vue-socket.io'
     import _ from 'lodash';
     import moment from 'moment';
     import config from '../../config';
-    import DeviceDetails from './Dashboard/Tracker/DeviceDetailsWindow.vue';
-    import MapContextMenu from './Dashboard/Tracker/MapContextMenu.vue';
-    import Howler from 'howler';
-
-    import utils from '@/utils'
 
     const alarmSound = require('../../assets/sounds/alarm.mp3');
 
@@ -85,10 +73,7 @@
         components: {
             "app-modals": Modals,
             "app-morph-screen": MorphScreen,
-            "app-settings": SettingsComponent,
             "app-dropdown-menu": DropdownMenuComponent,
-            "app-device-details-window": DeviceDetails,
-            "app-map-context-menu": MapContextMenu,
             "app-search": SearchComponent,
             "app-menu": MenuComponent,
             "app-caller-id": CallerIDComponent,
@@ -235,7 +220,6 @@
                     case "start":    color = "OliveDrab";  bgc = "PaleGreen";       break;
                     case "warning":  color = "Tomato";     bgc = "Black";           break;
                     case "end":      color = "Orchid";     bgc = "MediumVioletRed"; break;
-                    default: color = color;
                 }
                 if (typeof msg === "object") {
                     console.log(msg);
@@ -274,7 +258,7 @@
                 console.log("Disconnected from socket server. Reason: ", reason)
             })
 
-            socket.on('reconnect', (reason) => {
+            socket.on('reconnect', () => {
                 vm.stopLoading();
                 console.log("Reconnected.")
             })
@@ -297,7 +281,7 @@
                         vm.log("Token set using Refresh Token.", "info");
                         vm.countdownToRefreshToken();
                         resolve("Token set using Refresh Token.");
-                    }).catch((err) => {
+                    }).catch(() => {
                         reject(new Error("Refresh token expired or invalid."));
                     });
                 }
@@ -310,7 +294,7 @@
                 vm.showError(err);
                 vm.logout();
             }).then(() => { // Connect to socket.io
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     window.setAppLoadingText("Carregando tecnologia real-time...");
                     if(socket.connected){
                         vm.log("Socket connection succeeded.", "info");
@@ -324,9 +308,9 @@
                     }
                 });
             }).then(() => {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     window.setAppLoadingText("Carregando usuário...");
-                    vm.setAuthUser().then((me) => {
+                    vm.setAuthUser().then(() => {
                         vm.menuList = _.filter(vm.menuList, (menuItem) => {
                             if(menuItem.type === 'system'){
                                 if(menuItem.onlyAdmin && vm.user.type === 'admin'){
@@ -347,7 +331,7 @@
                         });
                         vm.log("Authenticated user set.", "info");
                         resolve('Authenticated user set.');
-                    }).catch((error) => {
+                    }).catch(() => {
                         vm.stopLoading();
                         console.log("Couldn't get authenticated user.");
                         vm.logout();

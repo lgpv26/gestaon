@@ -2,7 +2,6 @@ import Vue from 'vue'
 import meAPI from '../../api/me'
 import oAuth2API from '../../api/oauth'
 import companiesAPI from '../../api/companies'
-import config from '../../config'
 
 import _ from 'lodash';
 
@@ -120,7 +119,7 @@ const actions = {
                 context.commit("setPermissions",[]);
                 context.commit('setActiveCompany', {});
             }
-        }, (error) => {
+        }, () => {
             context.dispatch('logout');
         });
     },
@@ -142,7 +141,7 @@ const actions = {
         })
     },
     logout(context){
-        return new Promise(function (resolve, reject){
+        return new Promise((resolve) => {
             setTimeout(() => {
                 context.commit('logout');
                 resolve(context.state.authenticated);

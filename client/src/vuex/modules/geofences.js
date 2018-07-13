@@ -1,6 +1,5 @@
-import GeofencesAPI from '../../api/geofences';
-import moment from 'moment';
-import _ from 'lodash';
+import GeofencesAPI from '../../api/geofences'
+import _ from 'lodash'
 
 const state = {
     show: true,

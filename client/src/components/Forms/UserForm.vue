@@ -115,7 +115,7 @@
                 }
                 delete form.confirmPassword;
                 vm.loading = true;
-                UsersAPI.updateOne(form.id, form, {companyId: vm.company.id}).then((response) => {
+                UsersAPI.updateOne(form.id, form, {companyId: vm.company.id}).then(() => {
                     vm.$modal.hide('user-form');
                     vm.showToast({
                         type: "success",
@@ -150,7 +150,7 @@
                 vm.loading = true;
                 _.assign(vm.form, {companyId: vm.company.id});
                 if(vm.form.password === vm.form.confirmPassword) {
-                    UsersAPI.createOne(vm.form, {companyId: vm.company.id}).then(({data}) => {
+                    UsersAPI.createOne(vm.form, {companyId: vm.company.id}).then(() => {
                         vm.$modal.hide('user-form');
                         vm.showToast({
                             type: "success",

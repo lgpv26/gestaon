@@ -35,7 +35,6 @@
     import AddressesAPI from '../../../../../../api/addresses';
     import SearchComponent from '../../../../../../components/Inputs/Search.vue';
     import utils from '../../../../../../utils/index';
-    import models from '../../../../../../models-old';
     import Vue from 'vue';
 
     export default {
@@ -67,7 +66,7 @@
         },
         sockets: {
             draftClientAddressAddressReset(){
-                Object.assign(this.address, models.createAddressModel());
+               /* Object.assign(this.address, models.createAddressModel());*/
             },
             draftClientAddressAddressSelect(address){
                 utils.assignToExistentKeys(this.address, address);

@@ -11,7 +11,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="(requestPaymentRow,index) in requestPaymentRows" class="payment-method">
+        <tr v-for="(requestPaymentRow,index) in requestPaymentRows" :key="index" class="payment-method">
             <td>
                 <app-payment-method-select :popoverProps="{placement: 'top-start', verticalOffset: 10}" v-model="requestPaymentRow.paymentMethod" @change="changeRequestPaymentRowPaymentMethod($event,index)"></app-payment-method-select>
             </td>
@@ -59,20 +59,12 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
-    import utils from '@/utils/index'
-    import _ from 'lodash'
     import moment from 'moment'
-    import shortid from 'shortid'
     import DraftMixin from '../DraftMixin'
     import PaymentMethodSelectComponent from '../_Shared/PaymentMethodSelect.vue'
     import ClientCreditComponent from '../_Shared/ClientCredit.vue'
-
-    import ClientForm from './Client/ClientForm.vue'
-    import ClientSummary from './Client/ClientSummary.vue'
-    import OrderForm from './Order/OrderForm.vue'
-    import TaskForm from './Task/TaskForm.vue'
 
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 

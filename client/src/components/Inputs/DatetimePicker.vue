@@ -12,12 +12,12 @@
                 </div>
                 <div class="weekdays">
                     <ul>
-                        <li v-for="weekDay in calendar.week.days">{{ weekDay.abb }}</li>
+                        <li v-for="(weekDay, index) in calendar.week.days" :key="index">{{ weekDay.abb }}</li>
                     </ul>
                 </div>
                 <div class="days">
-                    <ul v-for="rowDays in calendar.days">
-                        <li v-for="rowDay in rowDays" :class="{ 'current-month': rowDay.currentMonth, 'active': rowDay.active }" @click="selectDay(rowDay)">{{ rowDay.text }}</li>
+                    <ul v-for="(rowDays, dayIndex) in calendar.days" :key="dayIndex">
+                        <li v-for="(rowDay, rowDayIndex) in rowDays" :key="rowDayIndex" :class="{ 'current-month': rowDay.currentMonth, 'active': rowDay.active }" @click="selectDay(rowDay)">{{ rowDay.text }}</li>
                     </ul>
                 </div>
             </div>
@@ -187,7 +187,9 @@
             },
             clickEvent(e){
                 const vm = this;
-                if(vm.$refs.popperReference.contains(e.target) || vm.$refs.popperReference === e.target){}
+                if(vm.$refs.popperReference.contains(e.target) || vm.$refs.popperReference === e.target){
+                    // do nothing
+                }
                 else if(!vm.$refs.popperContainer.contains(e.target) && vm.$refs.popperReference !== e.target){
                     vm.active = false;
                 }

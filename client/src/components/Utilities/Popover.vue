@@ -122,7 +122,9 @@
             },
             onBodyClick(ev){
                 // verify if the user is not clicking the triggerer with the popup opened
-                if(this.visible && (this.$refs.triggerer.contains(ev.target) || this.$refs.triggerer === ev.target)){}
+                if(this.visible && (this.$refs.triggerer.contains(ev.target) || this.$refs.triggerer === ev.target)){
+                    // do nothing
+                }
                 // verify if the user is clicking outside the triggerer and content area
                 else if(this.visible && this.$refs.content && (this.$refs.content !== ev.target && !this.$refs.content.contains(ev.target))){
                     this.closePopover();

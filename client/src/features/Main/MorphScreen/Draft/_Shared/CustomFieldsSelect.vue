@@ -6,7 +6,7 @@
         <template slot="content">
             <div>
                 <h3 v-if="showTitle">Grupo de clientes</h3>
-                <div v-for="customField in customFields" class="item">
+                <div v-for="(customField, index) in customFields" :key="index" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === customField.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 0px; top: 0; cursor: pointer;">
@@ -32,10 +32,9 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState } from 'vuex'
     import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
+    import utils from '../../../../../utils/index'
 
     export default {
         props: ['value','showTitle','popoverProps'],

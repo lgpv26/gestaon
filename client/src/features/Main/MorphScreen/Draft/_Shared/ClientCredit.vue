@@ -26,7 +26,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="bill in bills">
+                                <tr v-for="(bill, index) in bills" :key="index">
                                     <td>{{ bill.id }}</td>
                                     <td>00/00/2018 10:00</td>
                                     <td>Status</td>
@@ -46,7 +46,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="paymentMethod in billForm.paymentMethods">
+                            <tr v-for="(paymentMethod, index) in billForm.paymentMethods" :key="index">
                                 <td><app-payment-method-select v-model="paymentMethod.id" :popoverProps="{placement: 'top', group: 'client-credit', groupLevel: 1}"></app-payment-method-select></td>
                                 <td><money type="text" v-model="paymentMethod.amount" style="text-align: right;"></money></td>
                             </tr>
@@ -60,10 +60,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
+    import { mapState } from 'vuex'
+    import utils from '../../../../../utils/index'
 
     import ClientsAPI from '../../../../../api/clients'
     import PaymentMethodSelectComponent from '../_Shared/PaymentMethodSelect.vue'

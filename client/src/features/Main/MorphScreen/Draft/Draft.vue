@@ -14,7 +14,7 @@
             <div class="header__tags" v-if="tags.length && _.first(tags)">
                 <span>Termos da busca: </span>
                 <ul>
-                    <li class="copiable-content" v-for="tag in tags" :data-clipboard-text="tag"><span>{{ tag }}</span><icon-copy></icon-copy></li>
+                    <li class="copiable-content" v-for="(tag, index) in tags" :key="index" :data-clipboard-text="tag"><span>{{ tag }}</span><icon-copy></icon-copy></li>
                 </ul>
             </div>
             <div class="header__phone-line" v-if="_.get(draft, 'data.request.phoneLine', false)">
@@ -50,22 +50,15 @@
 <script>
     import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
     import _ from 'lodash';
-    import anime from 'animejs';
     import moment from 'moment';
     import Clipboard from 'clipboard';
 
     import DraftDependencyDataMixin from "./DraftDependencyDataMixin"
-    import ClientForm from "./Client/ClientForm.vue";
     import RequestForm from "./Request/RequestForm.vue";
-    import ExpenseForm from "./Expense/ExpenseForm.vue";
-    import AccountsForm from "./Accounts/AccountsForm.vue";
 
     export default {
         components: {
-            "app-request-form": RequestForm,
-            "app-client-form": ClientForm,
-            "app-accounts-form": AccountsForm,
-            "app-expense-form": ExpenseForm,
+            "app-request-form": RequestForm
         },
         data(){
             return {

@@ -28,7 +28,7 @@
                         :style="{'padding-bottom': options.gutterSize + 'px', 'padding-left': options.gutterSize + 'px'}"
                         @input="onCardDraggableInput($event, section)" @start="onCardDragStart($event, section)" @end="onCardDragEnd($event, section)"
                         @change="onCardPositionChange($event, section)">
-                        <div class="request-card" v-for="card in section.cards" v-show="card.state.showCard" @mousedown="onMouseDown(section)" :key="card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
+                        <div class="request-card" v-for="card in section.cards" v-show="card.state.showCard" @mousedown="onMouseDown(section)" :key="'card-' + card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
                             <app-request-board-card class="request-card__main" :card="card" :isDragging="isDraggingCard" @click="requestCardClicked(card, $event)"></app-request-board-card>
                         </div>
                     </app-draggable>
@@ -40,12 +40,9 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import DraggableComponent from 'vuedraggable';
-    import Scrollbar from 'smooth-scrollbar';
-    import Vue from 'vue'
-    import _ from 'lodash';
-    import utils from '@/utils'
+    import { mapMutations, mapState, mapGetters } from 'vuex'
+    import DraggableComponent from 'vuedraggable'
+    import _ from 'lodash'
 
     import RequestBoardCard from './RequestBoardCard.vue'
 
@@ -154,7 +151,7 @@
                 this.lastSectionMove = section.id
             },
 
-            onCardDragStart(ev, section){
+            onCardDragStart(ev){
                 /*this.lastSectionMove.from = JSON.parse(JSON.stringify(section))
                 console.log(this.lastSectionMove.from)*/
                 this.isDraggingCard = true
@@ -168,7 +165,7 @@
                     }
                 })
             },
-            onCardDragEnd(ev, section){
+            onCardDragEnd(ev){
                 this.isDraggingCard = false
                 const boardCardContainer = _.first(ev.item.getElementsByClassName('request-board-card__container'));
                 boardCardContainer.style.display = 'flex';
@@ -189,7 +186,6 @@
                 })
             },
             onCardPositionChange(ev, section){
-                const vm = this
                 let card, fromIndex, toIndex
                 if(_.has(ev,'moved')){ // when moved to same section
                     fromIndex = ev.moved.oldIndex
@@ -204,13 +200,11 @@
                 }
                 this.REAPLY_FILTERS()
             },
-            emitCardPositionChange(toSection, card, toIndex, fromIndex = null){
+            emitCardPositionChange(toSection, card, toIndex){
                 const fromSection = card.sectionId
                 const prevCard = toSection.cards[toIndex - 1]
                 const currCard = toSection.cards[toIndex]
                 const nextCard = toSection.cards[toIndex + 1]
-
-                let position
 
                 if (nextCard && prevCard) {
                     const emitData = {

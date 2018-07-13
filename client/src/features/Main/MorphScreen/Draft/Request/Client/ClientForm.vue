@@ -19,7 +19,7 @@
                                         <span class="detail__name" v-html="props.item.client.name"></span>
                                         <span class="detail__address" v-if="props.item.client.address" v-html="props.item.client.address.address + ', ' + props.item.client.address.number"></span>
                                         <span class="detail__phones" v-if="props.item.client.phones.length > 0">
-                                        <span v-for="(clientPhone, index) in props.item.client.phones"
+                                        <span v-for="(clientPhone, index) in props.item.client.phones" :key="index"
                                             v-html="((index === 0) ? '' : ', ') + clientPhone.number"></span>
                                         </span>
                                     </div>
@@ -66,19 +66,17 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash'
-    import utils from '@/utils'
     import DraftMixin from '../../DraftMixin'
     import ClientCustomFieldForm from './ClientCustomFieldsForm.vue'
-    import ClientAddressForm from './ClientAddressForm.vue'
     import ClientPhoneForm from './ClientPhonesForm.vue'
     import ClientGroupForm from './ClientGroupForm.vue'
-    import SearchComponent from '@/components/Inputs/Search.vue'
+    import SearchComponent from '../../../../../../components/Inputs/Search.vue'
     import ClientAddressTypesInput from './ClientAddressTypesInput.vue'
     import ClientAddresses from './ClientAddresses.vue'
-    import ServiceAPI from '@/api/service'
+    import ServiceAPI from '../../../../../../api/service'
     import Vue from 'vue'
 
     const { mapFields } = createHelpers({
@@ -202,7 +200,7 @@
                                 }
                             })
                             vm.$refs.search.search()
-                        }).catch((err) => {
+                        }).catch(() => {
                             vm.search.items = []
                         })
                     },

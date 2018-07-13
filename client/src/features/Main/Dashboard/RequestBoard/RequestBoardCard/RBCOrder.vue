@@ -12,7 +12,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="requestOrderProduct in requestOrderProducts">
+                        <tr v-for="(requestOrderProduct, index) in requestOrderProducts" :key="index">
                             <td style="text-align: center; padding-right: 10px;">{{ requestOrderProduct.quantity }}</td>
                             <td>{{ requestOrderProduct.product.name }}</td>
                             <td style="text-align: right">- {{ utils.formatMoney(requestOrderProduct.unitDiscount,2,'R$ ','.',',') }}</td>
@@ -26,7 +26,7 @@
                         <tr>
                             <td colspan="4" style="padding-top: 10px;"></td>
                         </tr>
-                        <tr v-for="requestPayment in requestPayments">
+                        <tr v-for="(requestPayment, index) in requestPayments" :key="index">
                             <td colspan="3" style="text-align: right">{{ requestPayment.paymentMethod.name }}</td>
                             <td colspan="1" style="text-align: right">{{ utils.formatMoney(requestPayment.amount,2,'R$ ','.',',') }}</td>
                         </tr>
@@ -44,11 +44,9 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import RequestsAPI from '@/api/requests'
-    import Vue from 'vue'
+    import { mapState, mapActions } from 'vuex'
+    import RequestsAPI from '../../../../../api/requests'
     import _ from 'lodash'
-    import utils from '@/utils'
 
     export default {
         props: ['card'],

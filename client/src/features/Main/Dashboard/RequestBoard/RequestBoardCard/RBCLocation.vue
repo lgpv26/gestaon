@@ -17,11 +17,9 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import RequestsAPI from '@/api/requests'
-    import Vue from 'vue'
-    import _ from 'lodash';
-    import utils from '@/utils'
+    import { mapState, mapActions } from 'vuex';
+    import RequestsAPI from '../../../../../api/requests'
+    import _ from 'lodash'
 
     export default {
         props: ['card'],

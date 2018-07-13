@@ -1,12 +1,14 @@
 <template>
-    <div v-if="loading" class="parent">
-        <div class="loading-container">
-            <div class="cssload-loader">
-                <div class="cssload-inner cssload-one"></div>
-                <div class="cssload-inner cssload-two"></div>
-                <div class="cssload-inner cssload-three"></div>
+    <div v-if="loading" id="app-loading" class="app-loading">
+        <div class="app-loading__container">
+            <div class="spinner">
+                <div class="spinner__wrapper">
+                    <div class="cssload-inner cssload-one"></div>
+                    <div class="cssload-inner cssload-two"></div>
+                    <div class="cssload-inner cssload-three"></div>
+                </div>
             </div>
-            <h3 v-if="loadingText">{{ loadingText }}</h3>
+            <h3 id="app-loading-text" v-if="loadingText">{{ loadingText }}</h3>
         </div>
     </div>
 </template>

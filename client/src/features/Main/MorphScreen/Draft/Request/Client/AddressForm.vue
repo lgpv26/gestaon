@@ -30,13 +30,12 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
 
     import _ from 'lodash'
-    import AddressesAPI from '@/api/addresses'
-    import SearchComponent from '@/components/Inputs/Search.vue'
-    import utils from '@/utils/index'
+    import AddressesAPI from '../../../../../../api/addresses'
+    import SearchComponent from '../../../../../../components/Inputs/Search.vue'
     import Vue from 'vue'
 
     import DraftMixin from '../../DraftMixin'
@@ -95,7 +94,7 @@
                                 return source
                             })
                             vm.$refs.searchComponent.search()
-                        }).catch((err) => {
+                        }).catch(() => {
                             vm.search.items = []
                         })
                     },

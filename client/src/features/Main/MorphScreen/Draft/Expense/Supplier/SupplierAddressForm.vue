@@ -88,18 +88,6 @@
         methods: {
             ...mapActions('toast', ['showToast', 'showError']),
             addressChanged(ev){
-                /*
-                this.clientAddress.address.cep = ev.cep;
-                this.$refs.cepInput.refresh();
-                setImmediate(() => {
-
-                    console.log(this.$refs.cepInput);
-                })
-                */
-                /*setTimeout(() => {
-                    console.log(ev.cep);
-                    this.clientAddress.address.cep = ev.cep;
-                }, 2000)*/
             },
             createClientAddress(){
                 return {

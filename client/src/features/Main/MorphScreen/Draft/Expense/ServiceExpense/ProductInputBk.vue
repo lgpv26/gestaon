@@ -25,13 +25,12 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import { Select } from "@/components/Inputs/Select/index";
+    import { mapState, mapGetters, mapActions } from 'vuex';
     import _ from 'lodash';
-    import utils from '@/utils/index';
-    import models from '@/models'
-    import ProductsAPI from '@/api/products';
-    import SearchComponent from '@/components/Inputs/Search.vue';
+    import utils from '../../../../../../utils/index';
+    import models from '../../../../../../models'
+    import ProductsAPI from '../../../../../../api/products';
+    import SearchComponent from '../../../../../../components/Inputs/Search.vue';
 
     export default {
         components: {

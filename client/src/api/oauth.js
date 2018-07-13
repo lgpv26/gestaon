@@ -1,6 +1,5 @@
 import Vue from "vue"
 import config from '../config'
-import _ from 'lodash'
 
 export default {
     token(body){

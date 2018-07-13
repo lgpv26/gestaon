@@ -21,9 +21,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import _ from 'lodash';
-    import utils from '@/utils'
+    import { mapGetters } from 'vuex'
+    import utils from '../../../../../../utils'
     import ExpenseGroup from './ExpenseGroup.vue'
 
     export default {

@@ -1,6 +1,5 @@
-import moment from 'moment'
 import _ from 'lodash'
-import UsersAPI from '@/api/users.js'
+import UsersAPI from '../../../api/users.js'
 
 const state = {
     users: []

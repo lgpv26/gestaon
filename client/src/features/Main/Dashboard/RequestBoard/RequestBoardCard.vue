@@ -51,7 +51,7 @@
                                 <span class="progress__progress--unit">{{ current.time.abbUnit }}</span>
                                 <request-board-icon-progress-shield></request-board-icon-progress-shield>
                             </div>
-                            <div class="timeline__progress" v-for="(inProgressRequestTimelineItem, index) in inProgressRequestTimeline"
+                            <div class="timeline__progress" v-for="(inProgressRequestTimelineItem, index) in inProgressRequestTimeline" :key="'ti' + index"
                                 :style="{left: inProgressRequestTimelineItem.left + 'px'}">
                                 <app-popover :contentStyle="popoverContentStyle" :verticalOffset="5" :triggererStyle="{justifyContent: 'center'}">
                                     <template slot="triggerer">
@@ -140,12 +140,9 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import DraggableComponent from 'vuedraggable';
-    import Scrollbar from 'smooth-scrollbar';
-    import Vue from 'vue'
+    import { mapState, mapActions } from 'vuex';
     import _ from 'lodash';
-    import utils from '@/utils'
+    import utils from '../../../../utils'
     import moment from 'moment'
 
     import RBCLocation from './RequestBoardCard/RBCLocation.vue'
@@ -282,16 +279,12 @@
                 switch(this.form.status){
                     case "pending":
                         return "Pendente"
-                        break;
                     case "in-displacement":
                         return "Em deslocamento"
-                        break;
                     case "canceled":
                         return "Cancelado"
-                        break;
                     case "finished":
                         return "Finalizado"
-                        break;
                     default:
                         return "---"
                 }
@@ -330,7 +323,7 @@
                     const deadlineToTimelineItemInSec = moment.duration(deliveryDate.diff(requestTimelineItemDate)).asSeconds()
 
                     return (deadlineToTimelineItemInSec > 0) && (requestTimelineItem.action !== 'create') && (requestTimelineItem.status !== 'finished')
-                }), (requestTimelineItem, index) => {
+                }), (requestTimelineItem) => {
 
                     const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
                     const deadlineToStartInSec = moment.duration(deliveryDate.diff(startDate)).asSeconds()
@@ -363,7 +356,6 @@
                 const deadlineToNowInSec = moment.duration(deliveryDate.diff(nowDate)).asSeconds()
                 const deadlineToStartInSec = moment.duration(deliveryDate.diff(startDate)).asSeconds()
                 const startToNowInSec = Math.abs(deadlineToStartInSec - deadlineToNowInSec)
-                const startToNowInMin = Math.floor(startToNowInSec / 60)
 
                 if(deadlineToNowInSec <= 0){
                     this.deadline.isOver = true

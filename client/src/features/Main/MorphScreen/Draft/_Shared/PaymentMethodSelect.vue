@@ -7,7 +7,7 @@
         <template slot="content">
             <div style="width: 200px;">
                 <h3>Meios de pagamento</h3>
-                <div v-for="paymentMethod in paymentMethods" class="item">
+                <div v-for="(paymentMethod, index) in paymentMethods" :key="index" class="item">
                     <div style="margin-top: 10px; position: relative;" v-if="editing === paymentMethod.id">
                         <input type="text" style="font-size: 12px;" v-model="editForm.name" />
                         <div style="position: absolute; right: 0px; top: 0; cursor: pointer;">
@@ -32,10 +32,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState } from 'vuex'
     import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
 
     export default {
         props: ['value','popoverProps'],

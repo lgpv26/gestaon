@@ -21,9 +21,6 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import _ from 'lodash';
-
     export default {
         components: {
         },

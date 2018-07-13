@@ -2,7 +2,7 @@
     <div id="request-panel" ref="requestPanel">
         <app-draggable class="board" ref="board" :value="sections" :options="sectionDraggableOptions"
             @input="onSectionDraggableInput($event)" @start="onSectionDragStart" @end="onSectionDragEnd" :move="onSectionMove">
-            <app-request-board-section ref="sections" v-for="section in sections" :key="section.id" :data-id="section.id" :class="{dragging: isDraggingSection}"
+            <app-request-board-section ref="sections" v-for="section in sections" :key="'section-' + section.id" :data-id="section.id" :class="{dragging: isDraggingSection}"
                     :scrollables="scrollables" :options="boardOptions" :section="section"
                     @updateScrolls="updateScrolls()">
             </app-request-board-section>
@@ -16,16 +16,16 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
     import DraggableComponent from 'vuedraggable';
-    import Scrollbar from 'smooth-scrollbar';
+
     import Vue from 'vue'
     import _ from 'lodash'
     import moment from 'moment'
-    import utils from '@/utils'
+    import utils from '../../../../utils'
     import { createHelpers } from 'vuex-map-fields'
 
     import RequestBoardSection from './RequestBoardSection.vue'
 
-    const { mapFields, mapMultiRowFields } = createHelpers({
+    const { mapFields } = createHelpers({
         getterType: 'request-board/getField',
         mutationType: 'request-board/updateField',
     })
@@ -198,7 +198,6 @@
                     const prevSection = this.sections[this.lastMove.to - 1]
                     const currSection = this.sections[this.lastMove.to]
                     const nextSection = this.sections[this.lastMove.to + 1]
-                    let position
                     // is in middle
                     if(nextSection && prevSection){
                         console.log("middle", (prevSection.position + nextSection.position) / 2)
@@ -238,7 +237,7 @@
                 draggingElementViewport.style.display = 'none';
             },
             onSectionDragEnd(ev){
-                setImmediate(() => {
+                this.$nextTick(() => {
                     this.scrollables.forEach(({ scrollable }) => {
                         scrollable.updateResizeListeners()
                     })
@@ -257,7 +256,7 @@
             /* In-component utilities */
 
             updateScrolls(){
-                setImmediate(() => {
+                this.$nextTick(() => {
                     this.scrollables.forEach(({ scrollable }) => {
                         scrollable.updateScroll()
                     })

@@ -45,18 +45,7 @@
 </template>
 
 <script>
-    import _ from 'lodash'
-    import shortid from 'shortid'
-
-    import ClientsAPI from '@/api/clients'
-
-    import { mapGetters, mapActions, mapState } from 'vuex'
-    import Scrollbar from 'smooth-scrollbar'
-
-    import {createRequest} from '@/models/RequestModel'
-
     export default {
-
     }
 </script>
 <style scoped lang="scss">

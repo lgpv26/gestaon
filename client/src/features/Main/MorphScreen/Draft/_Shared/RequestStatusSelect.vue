@@ -6,7 +6,7 @@
         <template slot="content">
             <div style="width: 240px;">
                 <h3 v-if="showTitle">Status</h3>
-                <div v-for="requestStatusItem in requestStatusList" class="item">
+                <div v-for="(requestStatusItem, index) in requestStatusList" :key="index" class="item">
                     <div :class="{ active: value === requestStatusItem.value }" style="display: flex; flex-direction: row;">
                         <span style="cursor: pointer;" @click="select(requestStatusItem)">{{ requestStatusItem.name }}</span>
                         <span class="push-both-sides"></span>
@@ -19,10 +19,7 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
-    import _ from 'lodash'
-    import utils from '@/utils/index'
-    import Vue from 'vue'
+    import { mapState } from 'vuex'
 
     export default {
         props: ['value','showTitle','popoverProps'],

@@ -11,7 +11,7 @@
     </div>
 </template>
 <script>
-    import { mapState } from 'vuex'
+    import _ from 'lodash'
     import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 
     export default {
@@ -170,7 +170,7 @@
             },
             updateResizeListeners(){
                 const vm = this
-                setImmediate(() => {
+                vm.$nextTick(() => {
                     if(this.resizeSensor) this.resizeSensor.detach()
                     this.resizeSensor = new ResizeSensor(vm.viewportEl, () => {
                         vm.updateScroll()

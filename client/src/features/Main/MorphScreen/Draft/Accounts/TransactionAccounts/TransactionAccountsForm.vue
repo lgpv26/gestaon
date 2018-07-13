@@ -127,11 +127,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex';
-    import _ from 'lodash';
-    import utils from '@/utils'
-
-    import PaymentMethodsAPI from '@/api/payment-methods'
+    import { mapState, mapGetters } from 'vuex';
+    import utils from '../../../../../../utils'
 
     export default {
         components: {

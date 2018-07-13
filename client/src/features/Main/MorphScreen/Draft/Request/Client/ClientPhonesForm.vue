@@ -13,7 +13,7 @@
         <div class="form-group__content" v-if="_.isArray(clientPhoneRows) && clientPhoneRows.length > 0">
             <div class="dashed-line"></div>
             <ul class="content__list--mini">
-                <li class="list__item" v-for="(clientPhoneRow, index) in clientPhoneRows" :class="{active: clientPhoneId === clientPhoneRow.id}">
+                <li class="list__item" v-for="(clientPhoneRow, index) in clientPhoneRows" :key="index" :class="{active: clientPhoneId === clientPhoneRow.id}">
                     <div class="item__check item__icon" @click="select(clientPhoneRow.id)" style="cursor: pointer; margin-right: 8px;">
                         <icon-check style="width: 16px;"></icon-check>
                     </div>
@@ -32,11 +32,8 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import { createHelpers } from 'vuex-map-fields'
-    import _ from 'lodash'
-    import utils from '@/utils/index'
-    import shortid from 'shortid'
 
     import DraftMixin from '../../DraftMixin'
 
