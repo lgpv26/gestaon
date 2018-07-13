@@ -94,7 +94,7 @@ module.exports = class Events {
                             socket.instance.join('company/' + socket.activeCompany.id)
 
                             return new Promise((resolve, reject) => {
-                                 // join the user to its company events
+                                // join the user to its company events
                                 if(roomsConsult) {
                                     const promises = []
                                     const rooms = roomsConsult.split(",")
@@ -119,6 +119,12 @@ module.exports = class Events {
                                     })
                                 }
                             }).then(() => {
+                                socket.instance.to('company/' + socket.activeCompany.id).emit('presence:add', new EventResponse({
+                                    id: socket.user.id,
+                                    name: socket.user.name,
+                                    email: socket.user.email,
+                                    userCompanies: socket.user.companies
+                                }))
                                 // for the current user, join him to his tracking devices
                                 socket.user.companies.forEach((company) => {
                                     this.server.mongodb.Device.find({
@@ -131,17 +137,21 @@ module.exports = class Events {
                                         console.log(err)
                                     })
                                 })
-                                // Importing all events
-                                this.events.forEach((event) => {
-                                    event.files.forEach((file) => {
-                                        const tEventFile = require('./' + event.directoryName + '/' + file)
-                                        new tEventFile(this.server, socket)
+                                this.server.broker.call('socket.presenceLoad', {
+                                    companyId: socket.activeCompany.id,
+                                    activeSocketId: socket.instance.id
+                                }).then(() => {
+                                    // Importing all events
+                                    this.events.forEach((event) => {
+                                        event.files.forEach((file) => {
+                                            const tEventFile = require('./' + event.directoryName + '/' + file)
+                                            new tEventFile(this.server, socket)
+                                        })
                                     })
                                 })
                             })
-                            
-                        }) 
-                    })   
+                        })
+                    }) 
                 }
             })
 
@@ -149,10 +159,13 @@ module.exports = class Events {
                 if(!!this._versionInterval){
                     clearInterval(this._versionInterval)
                 }
-                
+
+                this.server.io.in('company/' + socket.activeCompany.id).emit('presence:remove', new EventResponse(socket.user.id))
+
                 this.server.broker.call('socket.remove', {
                     activeSocketId: socket.instance.id
                 })
+
             })
 
             socket.instance.on('join-company-room', (companyId) => {

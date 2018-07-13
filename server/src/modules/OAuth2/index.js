@@ -103,7 +103,7 @@ module.exports = (server) => {
                         user
                     };
                 }).catch((err) => {
-                    console.log("Error saving user Access Token.", err);
+                    console.log("Error saving user Access Token.", err)
                     return err;
                 });
             },
@@ -132,7 +132,7 @@ module.exports = (server) => {
                     ]
                 }).then((refreshToken) => {
                     if(!refreshToken){
-                        throw new Error("Invalid refresh token.");
+                        throw new Error("Invalid refresh token.")
                     }
                     return {
                         refreshToken: refreshToken.refreshToken,
@@ -150,7 +150,7 @@ module.exports = (server) => {
                     where: {
                         refreshToken: token.refreshToken
                     }
-                });
+                })
             }
         }
     });

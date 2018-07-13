@@ -104,7 +104,7 @@ module.exports = class RequestBoard {
                 })
             })      
         })
-
+        
         /**
          * Socket is leaving the chat, remove the socket from its listeners
          * @param {object} evData = { draftId:Number }
@@ -231,6 +231,7 @@ module.exports = class RequestBoard {
                                             vm.server.broker.call('socket.checkSocketId', {
                                                 userId: request.userId
                                             }).then((responsableSocketId) => {
+                                                if(!responsableSocketId) return 
                                                 const responsableChatUnread = _.filter(_.filter(chatItems, (filter) => {
                                                     if(filter.userId !== request.userId) return filter
                                                 }), (chat) => {

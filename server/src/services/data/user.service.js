@@ -5,7 +5,13 @@ module.exports = (server) => { return {
     name: "data/user",
     actions: {
         getOne(ctx) {
-
+            return server.mysql.User.findOne({
+                where: ctx.params.where,
+                include: ctx.params.include,
+                attributes: ctx.params.attributes
+            }).then((user) => {
+                return JSON.parse(JSON.stringify(user))
+            })
         },
         getList(ctx){
             return server.mysql.CompanyUser.findAll({

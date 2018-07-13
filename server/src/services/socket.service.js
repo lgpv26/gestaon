@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import config from '~config'
+import EventResponse from '../models/EventResponse'
 
 
 module.exports = (server) => {
@@ -70,6 +71,52 @@ module.exports = (server) => {
                 })
             },
 
+            presenceLoad(ctx){
+                const presenceRoom = _.get(server.io.sockets.adapter.rooms, '[company/' + ctx.params.companyId + ']', 0)
+                
+                let online = []
+
+                if(presenceRoom){
+                    let promises = []
+                    _.forEach(_.keys(presenceRoom.sockets),(socketId) => {
+                        promises.push(new Promise((resolve, reject) => {
+                                server.redisClient.get("socket:" + socketId)
+                                .then((userId) => {
+                                    if(!userId) return resolve()
+                                    userId = parseInt(userId)
+
+                                    return server.broker.call('data/user.getOne', {
+                                        where: {
+                                            id: userId
+                                        },
+                                        attributes: ['id', 'name', 'email'],
+                                        include: [{
+                                            model: server.mysql.CompanyUser,
+                                            as: 'userCompanies',
+                                            where: {
+                                                companyId: ctx.params.companyId
+                                            }
+                                        }]
+                                    }).then((user) => {
+                                        online.push(user)
+                                        resolve() 
+                                    })                                                               
+                                })
+                            })
+                        )
+                    })
+
+                    return Promise.all(promises)
+                    .then(() => {
+                        server.io.sockets.sockets[ctx.params.activeSocketId].emit('presence:load', new EventResponse(online))
+                        return Promise.resolve(online)
+                    })
+                }
+                else {
+                    return Promise.resolve(online)
+                }
+            },
+
 
             active(ctx){
                 return server.redisClient.set("socket:" + _.toString(ctx.params.activeSocketId), _.toString(ctx.params.userId), (err, res) => {
@@ -116,7 +163,7 @@ module.exports = (server) => {
                         console.log('Erro no redis.')
                         return Promise.reject('Erro no redis.')
                     }
-                    else {
+                    else {                        
                         return Promise.resolve() 
                     }
                 })
