@@ -118,6 +118,7 @@
     import { createHelpers } from 'vuex-map-fields'
     import config from '../../../../../config'
     import _ from 'lodash'
+    
     import DraftMixin from '../DraftMixin'
 
     import RequestStatusSelectComponent from '../_Shared/RequestStatusSelect.vue'
