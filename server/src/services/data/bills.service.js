@@ -44,7 +44,7 @@ module.exports = (server) => {
                             ]
                         }]
                 }).then((bill) => {
-                    if(!bill) throw new Error ('Notinha não encontrada')
+                    if(!bill) throw new Error ('Ops, pagamento já pago ou não encontrado')
                  
                     return server.sequelize.transaction().then((transaction) => {
    

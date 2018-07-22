@@ -78,7 +78,7 @@
         computed: {
             ...mapGetters('morph-screen', ['activeMorphScreen','tags']),
             ...mapState('morph-screen', ['screens','isShowing']),
-            ...mapState('auth', ['user', 'token', 'company']),
+            ...mapState('auth', ['user', 'tokens', 'company']),
             ...mapState('data/users', ['users']),
             formatedCreatedAt(){
                 return moment(this.activeMorphScreen.draft.createdAt).format("DD/MM/YYYY HH:mm")

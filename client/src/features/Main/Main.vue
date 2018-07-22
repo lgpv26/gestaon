@@ -10,14 +10,14 @@
                         <div class="header__dropdown-menu">
                             <app-dropdown-menu :menuList="menuList" placement="bottom-start" :verticalOffset="-10">
                                 <div class="dropdown-menu__company-name">
-                                    <h3>{{ shortCompanyName }}</h3>
+                                    <h3>{{ utils.getInitialsFromString(company.name) }}</h3>
                                 </div>
                             </app-dropdown-menu>
                         </div>
                     </header>
                     <app-menu></app-menu>
                     <span class="push-both-sides"></span>
-                    <div class="sidebar-widgets"></div>
+                    <app-connected-users></app-connected-users>
                 </div>
                 <div class="main-column" :style="{ width: (dimensions.window.width - 60) + 'px' }">
                     <header class="main-column__header">
@@ -51,22 +51,19 @@
 
 <script>
     import { mapMutations, mapState, mapActions } from 'vuex';
-    import { MorphScreen } from "./MorphScreen/index";
-    import { Howl } from 'howler'
-    import RequestBoardFilterComponent from "./Dashboard/RequestBoard/RequestBoardFilter.vue";
-    import SearchComponent from "./_Shared/Search.vue";
-    import CallerIDComponent from "./_Shared/CallerID.vue";
-    import MenuComponent from "./_Shared/Menu.vue";
-    import Modals from "./Dashboard/Modals.vue";
-    import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
-    import Vue from 'vue';
-    import io from 'socket.io-client';
-    import VueSocketio from 'vue-socket.io'
-    import _ from 'lodash';
-    import moment from 'moment';
-    import config from '../../config';
+    import { MorphScreen } from "./MorphScreen/index"
+    import RequestBoardFilterComponent from "./Dashboard/RequestBoard/RequestBoardFilter.vue"
+    import SearchComponent from "./_Shared/Search.vue"
+    import CallerIDComponent from "./_Shared/CallerID.vue"
+    import MenuComponent from "./_Shared/Menu.vue"
+    import Modals from "./Dashboard/Modals.vue"
+    import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue"
+    import ConnectedUsersComponent from "./_Shared/Sidebar/ConnectedUsers.vue"
 
-    const alarmSound = require('../../assets/sounds/alarm.mp3');
+    import _ from 'lodash'
+    import moment from 'moment'
+
+    import SessionHandler from './SessionHandler'
 
     export default {
         name: 'app-main',
@@ -78,10 +75,11 @@
             "app-menu": MenuComponent,
             "app-caller-id": CallerIDComponent,
             "app-request-board-filter": RequestBoardFilterComponent,
+            "app-connected-users": ConnectedUsersComponent
         },
+        mixins: [SessionHandler],
         data(){
             return {
-                accessTokenExpirationTimer: null,
                 showSettings: false,
                 menuList: [
                     /*{text: 'Add. empresa', type: 'system', action: this.addCompany, onlyAdmin: true},*/
@@ -92,19 +90,9 @@
         },
         computed: {
             ...mapState(['app', 'system']),
-            ...mapState('auth', ['user','token','company']),
+            ...mapState('auth', ['user','tokens','company']),
             ...mapState('morph-screen', ['screens']),
             ...mapState(['dimensions']),
-            shortCompanyName(){
-                if(_.has(this.company, 'name')){
-                    const words = _.upperCase(this.company.name).split(" ");
-                    if(words.length === 1){
-                        return words[0].substr(0, 2);
-                    }
-                    return words.map((n) => n[0]).join("");
-                }
-                return 'AG';
-            },
             truncatedName(){
                 return _.truncate(this.user.name, {
                     'length': 24,
@@ -115,7 +103,6 @@
         },
         methods: {
             ...mapMutations(['setApp','setSystemInitialized']),
-            ...mapMutations('morph-screen', ['SHOW_MS', 'SET_ALL_MS_SCREENS']),
             ...mapActions('auth', {
                 logoutAction: 'logout',
                 setAuthUser: 'setAuthUser',
@@ -147,26 +134,14 @@
                 'loadDevices'
             ]),
             ...mapActions('morph-screen', [
-                'loadMorphScreenData'
+                'showMorphScreen', 'loadMorphScreenData'
             ]),
             ...mapActions('toast', [
                 'showToast', 'showError'
             ]),
-            logout(){
-                const vm = this;
-                clearInterval(vm.accessTokenExpirationTimer);
-                vm.logoutAction().then((authenticated) => {
-                    if(!authenticated){
-                        vm.$router.replace("/login")
-                    }
-                });
-            },
-            showMorphScreen(){
-                this.SET_ALL_MS_SCREENS({
-                    active: false
-                })
-                this.SHOW_MS(true)
-            },
+            ...mapActions('presence', [
+                'setConnectedUsers'
+            ]),
             changeCompany(userCompany){
                 const vm = this;
                 if(vm.company.id === userCompany.company.id){
@@ -177,194 +152,30 @@
                     return true;
                 }
                 vm.setLoadingText("Mudando para a empresa " + userCompany.company.name + ".");
-                vm.startLoading();
+                vm.startLoading()
                 setTimeout(() => {
                     vm.changeCompanyAction(userCompany.company.id).then(() => {
                         vm.stopLoading(); // tracker watch becomes resposible to reload devices
-                        vm.$bus.$emit('system-initialized');
+                        vm.$bus.$emit('system-initialized')
                     });
                 }, 1000);
             },
-            toggleSettings(){
-                this.showSettings = !this.showSettings;
-            },
-            addCompany(){
-                this.$modal.show('company-form', {
-                    company: null
-                });
-            },
-            countdownToRefreshToken(){
-                const vm = this;
-                let accessTokenSecondsLeft = parseInt(moment.duration(moment(vm.token.accessTokenExpiresAt).diff(moment())).asSeconds());
-                if(vm.accessTokenExpirationTimer) clearInterval(vm.accessTokenExpirationTimer);
-                vm.accessTokenExpirationTimer = setInterval(function(){
-                    accessTokenSecondsLeft --;
-                    // console.log("Seconds left to refreshToken: ", accessTokenSecondsLeft);
-                    if(accessTokenSecondsLeft <= 30) {
-                        console.log("Refreshing token...");
-                        clearInterval(vm.accessTokenExpirationTimer);
-                        vm.refreshToken().then(() => {
-                            console.log("Token refreshed... Starting again.");
-                            vm.countdownToRefreshToken();
-                        });
-                    }
-                },1000);
-            },
-            log(msg, color){
-                color = color || "black";
-                let bgc = "White";
-                switch (color) {
-                    case "success":  color = "Green";      bgc = "LimeGreen";       break;
-                    case "info":     color = "DodgerBlue"; bgc = "Turquoise";       break;
-                    case "error":    color = "Red";        bgc = "Black";           break;
-                    case "start":    color = "OliveDrab";  bgc = "PaleGreen";       break;
-                    case "warning":  color = "Tomato";     bgc = "Black";           break;
-                    case "end":      color = "Orchid";     bgc = "MediumVioletRed"; break;
-                }
-                if (typeof msg === "object") {
-                    console.log(msg);
-                } else if (typeof color === "object") {
-                    console.log("%c" + msg, "color: PowderBlue;font-weight:bold; background-color: RoyalBlue;");
-                    console.log(color);
-                } else {
-                    console.log("%c" + msg, "color:" + color + ";font-weight:bold; background-color: " + bgc + ";");
-                }
+            registerSoundEventListeners(){
+                new Howl({
+                    src: [alarmSound]
+                }).play()
             }
         },
-        
         created(){
-            const vm = this;
-
-            console.log("O sistema está iniciando...")
-
-            /* start socket.io */
-
-            const socket = io(config.socketServer + '?token=' + vm.token.accessToken)
-            localStorage.debug = false
-
-            Vue.use(VueSocketio, socket)
-
-            /* if user disconnected / reconnected from socket server */
-
-            socket.on('reconnect_attempt', (attemptNumber) => {
-                vm.setLoadingText("Tentando reconectar (" + attemptNumber + ").")
-                vm.startLoading()
-                console.log("Trying reconnection.")
-            })
-
-            socket.on('disconnect', (reason) => {
-                vm.setLoadingText("Desconectado.")
-                vm.startLoading()
-                console.log("Disconnected from socket server. Reason: ", reason)
-            })
-
-            socket.on('reconnect', () => {
-                vm.stopLoading();
-                console.log("Reconnected.")
-            })
-
-            /* initialize the refresh token timer */
-
-            let accessTokenSecondsLeft = parseInt(moment.duration(moment(vm.token.accessTokenExpiresAt).diff(moment())).asSeconds())
-            let refreshTokenSecondsLeft = parseInt(moment.duration(moment(vm.token.refreshTokenExpiresAt).diff(moment())).asSeconds())
-
-            new Promise((resolve, reject) => { // deal with user token issues
-                window.setAppLoadingText("Carregando sessão...");
-                vm.setLoadingText("Carregando sessão...");
-                if(accessTokenSecondsLeft > 30){
-                    vm.log("Token set using Access Token.", "info");
-                    vm.countdownToRefreshToken();
-                    resolve("Token set using Access Token.");
-                }
-                else if(accessTokenSecondsLeft <= 0 && refreshTokenSecondsLeft > 30){
-                    vm.refreshToken().then(() => {
-                        vm.log("Token set using Refresh Token.", "info");
-                        vm.countdownToRefreshToken();
-                        resolve("Token set using Refresh Token.");
-                    }).catch(() => {
-                        reject(new Error("Refresh token expired or invalid."));
-                    });
-                }
-                else{
-                    vm.stopLoading();
-                    console.log("Auto-logout possibly due to refresh token expiration.");
-                    reject(new Error("Logout due to Access and Refresh Token expiration."));
-                }
-            }).catch((err) => {
-                vm.showError(err);
-                vm.logout();
-            }).then(() => { // Connect to socket.io
-                return new Promise((resolve) => {
-                    window.setAppLoadingText("Carregando tecnologia real-time...");
-                    if(socket.connected){
-                        vm.log("Socket connection succeeded.", "info");
-                        resolve("Socket connection succeeded.");
-                    }
-                    else {
-                        socket.on('connect', () => {
-                            vm.log("Socket connection succeeded.", "info");
-                            resolve("Socket connection succeeded.");
-                        })
-                    }
-                });
-            }).then(() => {
-                return new Promise((resolve) => {
-                    window.setAppLoadingText("Carregando usuário...");
-                    vm.setAuthUser().then(() => {
-                        vm.menuList = _.filter(vm.menuList, (menuItem) => {
-                            if(menuItem.type === 'system'){
-                                if(menuItem.onlyAdmin && vm.user.type === 'admin'){
-                                    return true;
-                                }
-                                else if(!menuItem.onlyAdmin){
-                                    return true;
-                                }
-                            }
-                        });
-                        vm.user.userCompanies.forEach((userCompany) => {
-                            vm.menuList.unshift({
-                                text: userCompany.company.name,
-                                type: 'company',
-                                action: vm.changeCompany,
-                                param: userCompany
-                            });
-                        });
-                        vm.log("Authenticated user set.", "info");
-                        resolve('Authenticated user set.');
-                    }).catch(() => {
-                        vm.stopLoading();
-                        console.log("Couldn't get authenticated user.");
-                        vm.logout();
-                    });
-                });
-            }).then(() => {
-                /* load company data */
-                return Promise.all([
-                    vm.loadAllUsers({ companyId: vm.company.id }),
-                    vm.loadAllClientGroups({ companyId: vm.company.id }),
-                    vm.loadAllPaymentMethods({ companyId: vm.company.id }),
-                    vm.loadAllPromotionChannels({ companyId: vm.company.id }),
-                    vm.loadAllAccounts({ companyId: vm.company.id }),
-                    vm.loadAllProducts({ companyId: vm.company.id }),
-                    vm.loadMorphScreenData(vm.company.id)
-                ])
-            }).then(() => {
-                if(window.isAppLoading()) {
-                    window.removeAppLoading()
-                }
-                vm.stopLoading()
-                vm.setSystemInitialized(true)
-                vm.$bus.$on('sound-play', () => {
-                    new Howl({
-                        src: [alarmSound]
-                    }).play();
-                })
-            })
+            this.$bus.$on('sound-play', this.registerSoundEventListeners)
+        },
+        beforeDestroy(){
+            this.$bus.$off('sound-play', this.registerSoundEventListeners)
         }
     }
 </script>
 
-<style>
+<style lang="scss">
 
     div.body #content {
         width: 100%;
@@ -480,10 +291,6 @@
         letter-spacing: 1px;
         color: var(--base-color);
         font-size: 14px;
-    }
-
-    .left-column div.sidebar-widgets {
-        border-top: 1px solid #292929;
     }
 
     .main-column {

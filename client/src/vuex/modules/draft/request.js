@@ -48,7 +48,8 @@ const state = {
             },
             clientCustomFields: [],
             clientAddresses: [],
-            clientPhones: []
+            clientPhones: [],
+            dateCreated: null
         },
         order: {
             orderProducts: [],

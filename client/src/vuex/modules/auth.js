@@ -7,7 +7,7 @@ import _ from 'lodash';
 
 const state = {
     authenticated: false,
-    token: null,
+    tokens: null,
     user: {},
     company: {},
     settings: {},
@@ -50,11 +50,15 @@ const getters = {
 };
 
 const mutations = {
-    authenticate(state,token){
-        localStorage.setItem("token", JSON.stringify(token));
-        state.token = token;
-        state.user = {};
-        state.authenticated = true;
+    SET_TOKENS(state, tokens){
+        localStorage.setItem("tokens", JSON.stringify(tokens))
+        state.tokens = tokens
+    },
+    authenticate(state,tokens){
+        localStorage.setItem("tokens", JSON.stringify(tokens))
+        state.tokens = tokens
+        state.user = {}
+        state.authenticated = true
     },
     setAuthUser(state,user){
         state.user = user;
@@ -74,8 +78,8 @@ const mutations = {
         });
     },
     logout(state){
-        localStorage.removeItem("token");
-        state.token = null;
+        localStorage.removeItem("tokens");
+        state.tokens = null;
         state.user = {};
         state.authenticated = false;
     }
@@ -90,29 +94,24 @@ const actions = {
                 context.commit("setAuthUser", data.user);
             }
             return result;
-        });
+        })
     },
-    refreshToken(context){
-        return oAuth2API.refreshToken(context.state.token.refreshToken).then((result) => {
-            const data = result.data;
-            if(data.hasOwnProperty('accessToken')){
-                context.commit("authenticate", data);
-                context.commit("setAuthUser", data.user);
-            }
-            return result;
-        });
+    refreshToken(context, {accessToken, refreshToken}){
+        return context.commit("SET_TOKENS", {
+            accessToken, refreshToken
+        })
     },
     setAuthUser(context){
         return meAPI.get().then(({data}) => {
             context.commit('setAuthUser', data);
             let activeCompany = null;
             if(_.has(data, 'userCompanies') && data.userCompanies.length > 0){
-                let activeUserCompany = _.find(data.userCompanies, {id: data.activeCompanyUserId});
-                if(!activeUserCompany) activeUserCompany = data.userCompanies[0];
-                activeCompany = activeUserCompany.company;
-                context.commit("setCompanySettings", activeCompany.companySettings);
-                context.commit("setPermissions", activeUserCompany.permissions);
-                context.commit('setActiveCompany', activeCompany);
+                let activeUserCompany = _.find(data.userCompanies, {id: data.activeCompanyUserId})
+                if(!activeUserCompany) activeUserCompany = data.userCompanies[0]
+                activeCompany = activeUserCompany.company
+                context.commit("setCompanySettings", activeCompany.companySettings)
+                context.commit("setPermissions", activeUserCompany.permissions)
+                context.commit('setActiveCompany', activeCompany)
             }
             else{
                 context.commit("setCompanySettings",[]);
@@ -125,26 +124,26 @@ const actions = {
     },
     changeCompany(context, companyId){
         return companiesAPI.getOneAndSetActive(companyId).then(({data}) => {
-            let activeCompanyUsers = _.find(data.companyUsers, {id: data.activeCompanyUserId});
+            let activeCompanyUsers = _.find(data.companyUsers, {id: data.activeCompanyUserId})
             if(!activeCompanyUsers) activeCompanyUsers = data.companyUsers[0];
-            context.commit('setCompanySettings', data.companySettings);
-            context.commit('setPermissions', activeCompanyUsers.permissions);
-            context.commit('setActiveCompany', data);
+            context.commit('setCompanySettings', data.companySettings)
+            context.commit('setPermissions', activeCompanyUsers.permissions)
+            context.commit('setActiveCompany', data)
         });
     },
     saveCompanySettings(context, settings){
         return companiesAPI.updateOneSettings(context.state.company.id, {
             companySettings: settings
         }).then(({data}) => {
-            context.commit("setCompanySettings", data.companySettings);
-            return data;
+            context.commit("setCompanySettings", data.companySettings)
+            return data
         })
     },
     logout(context){
         return new Promise((resolve) => {
             setTimeout(() => {
                 context.commit('logout');
-                resolve(context.state.authenticated);
+                resolve(context.state.authenticated)
             }, 300)
         });
     }

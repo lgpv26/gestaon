@@ -104,6 +104,16 @@ export default {
             }
         }
     },
+    getInitialsFromString(string){
+        if(string){
+            const words = _.upperCase(string).split(" ");
+            if(words.length === 1){
+                return words[0].substr(0, 2);
+            }
+            return words.map((n) => n[0]).join("");
+        }
+        return '??';
+    },
     getShortString(str, max, add){
         add = add || '...';
         return (typeof str === 'string' && str.length > max ? str.substring(0,max).trim() + ' ' + add : str.trim());

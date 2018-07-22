@@ -13,7 +13,8 @@ export default class ClientModel {
         clientAddressForm = {},
         clientCustomFields = [],
         clientAddresses = [],
-        clientPhones = []
+        clientPhones = [],
+        dateCreated = null
     } = {}){
         this.id = id
         this.name = name
@@ -27,6 +28,7 @@ export default class ClientModel {
         this.clientAddresses = _.map(clientAddresses, (clientAddress) => {
             return _.assign(clientAddress, createClientAddress(clientAddress))
         })
+        this.dateCreated = dateCreated
     }
 }
 

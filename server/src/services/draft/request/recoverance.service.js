@@ -216,7 +216,7 @@ module.exports = (server) => {
         },
         setClient(ctx){
             const client = ctx.params.client
-            let omit = ['companyId', 'dateUpdated', 'dateCreated', 'dateRemoved']
+            let omit = ['companyId', 'dateUpdated', 'dateRemoved']
 
             if(_.has(client, "clientPhones")){
                 client.clientPhones.forEach((clientPhone, index) => {

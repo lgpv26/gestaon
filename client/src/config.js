@@ -18,12 +18,11 @@ let config = {
 
 if(process.env.NODE_ENV !== 'production') {
     try {
-        const developerConfig = require('./config.developer')
+        const developerConfig = require('./config.developer').default
         _.assign(config, developerConfig)
         // do stuff
     } catch (err) {
-        console.log("Developer config file not found.")
-
+        console.log("Developer config file not found.", err)
     }
 }
 

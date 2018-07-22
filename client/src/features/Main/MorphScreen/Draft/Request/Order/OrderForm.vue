@@ -53,7 +53,6 @@
                     </div>
                 </div>
             </div>
-            <!--
             <div class="form__side-column" style="display: flex; flex-direction: column;">
                 <div class="reports">
                     <div class="side-column__tabs">
@@ -64,79 +63,138 @@
                     </div>
                     <div class="form-groups">
                         <div class="form-group">
-                            <div class="product-chart" ref="productChart" v-show="activeTab === 'chart'"></div>
-                            <div v-show="activeTab === 'history'">
-                                <div class="history__summary" style="display: flex; flex-direction: column; margin-bottom: 15px;">
-                                    <div class="summary__titles" style="display: flex; flex-direction: row;">
-                                        Cliente desde
-                                        <span class="push-both-sides"></span>
-                                        Média de compra(s)
+                            <div class="tab--product-chart" ref="productChart" v-show="activeTab === 'chart'"></div>
+                            <div class="tab--request-history" v-show="activeTab === 'history'">
+                                <div v-if="client.id">
+                                    <div class="history__summary" style="display: flex; flex-direction: column; margin-bottom: 15px;">
+                                        <div class="summary__titles" style="display: flex; flex-direction: row;">
+                                            Cliente desde
+                                            <span class="push-both-sides"></span>
+                                            Média de compra(s)
+                                        </div>
+                                        <div class="summary__values" style="display: flex; flex-direction: row;">
+                                            <h3 style="color: var(--font-color--d-secondary)" v-if="client.id">{{ moment(client.dateCreated).format('DD/MM/YYYY HH:mm:ss') }}</h3>
+                                            <h3 style="color: var(--font-color--d-terciary)" v-else>---</h3>
+                                            <span class="push-both-sides"></span>
+                                            <h3 style="color: var(--font-color--primary)" v-if="averageDaysBetweenRequests">{{ averageDaysBetweenRequests }} dias</h3>
+                                            <h3 style="color: var(--font-color--terciary)" v-else>---</h3>
+                                        </div>
                                     </div>
-                                    <div class="summary_values" style="display: flex; flex-direction: row;">
-                                        <h3 style="color: var(--font-color--d-secondary)">02/05/2015</h3>
-                                        <span class="push-both-sides"></span>
-                                        <h3 style="color: var(--font-color--primary)">145 dias</h3>
+                                    <table style="width: 100%;">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align: left; padding-bottom: 5px;">Comprou</th>
+                                                <th style="text-align: left; padding-bottom: 5px;">Qt.</th>
+                                                <th style="text-align: left; padding-bottom: 5px;">Total</th>
+                                                <th style="text-align: right; padding-bottom: 5px;">Pago</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody v-for="(requestHistoryItem, index) in requestHistory" :key="index">
+                                            <tr style="cursor: pointer;" @click="selectRequestHistoryItem(requestHistoryItem)">
+                                                <td>{{ moment(requestHistoryItem.deliveryDate).format("DD/MM/YYYY HH:mm") }}</td>
+                                                <td>{{ requestHistoryItem.productQuantity }}</td>
+                                                <td>{{ utils.formatMoney(requestHistoryItem.orderTotal,2,'R$ ','.',',') }}</td>
+                                                <td :class="{paid: requestHistoryItem.paid, 'unpaid': !requestHistoryItem.paid}" style="text-align: right; padding-right: 12px;"><icon-check></icon-check></td>
+                                            </tr>
+                                            <tr style="margin-top: 10px;" v-if="requestHistoryItem.id === selectedRequestHistoryItem">
+                                                <td colspan="4">
+                                                    <div class="request-history__container">
+                                                        <div style="display: flex; flex-direction: column; align-items: center; width: 32px; margin-top: 12px;">
+                                                            <div style="width: 10px; height: 10px; border-radius: 100%; border: 2px solid var(--border-color--primary);"></div>
+                                                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                                                <div style="width: 2px; background-color: var(--bg-color--primary);" :style="{ height: 46 + ((requestHistoryItem.products.length - 1) * 20) + 'px'}"></div>
+                                                                <div style="width: 10px; height: 10px; border-radius: 100%; border: 2px solid var(--border-color--primary);"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="history-lists">
+                                                            <table style="margin-bottom: 15px;">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style="width: 25px;"><icon-stock></icon-stock></th>
+                                                                        <th style="width: 50%">Produtos</th>
+                                                                        <th style="text-align: right;">Valor</th>
+                                                                        <th style="width: 30px;"></th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr v-for="requestOrderProduct in requestHistoryItem.products" :key="requestOrderProduct.id">
+                                                                        <td>{{ requestOrderProduct.quantity }}</td>
+                                                                        <td style="color: #FFF; width: 24px;">{{ requestOrderProduct.product.name }}</td>
+                                                                        <td style="color: #FFF; text-align: right;">
+                                                                            {{ utils.formatMoney(requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount),2,"R$ ",'.',',') }}
+                                                                        </td>
+                                                                        <td></td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                            <table style="margin-bottom: 12px;">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style="width: 47%;">
+                                                                            <div style="display: flex;">
+                                                                                <div style="width: 25px;">
+                                                                                    <icon-credit-card></icon-credit-card>
+                                                                                </div>
+                                                                                <span style="font-weight: 800; color: #FFF;">Pagamento</span>
+                                                                            </div>
+                                                                        </th>
+                                                                        <th>Venc.</th>
+                                                                        <th style="text-align: right;">Valor</th>
+                                                                        <th style="text-align: right; width: 30px"></th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr v-for="requestPayment in requestHistoryItem.payments" :key="requestPayment.id" @mouseover="requestPayment.showPayButton = true" @mouseleave="requestPayment.showPayButton = false">
+                                                                        <td style="color: #FFF; width: 24px;">
+                                                                            <span style="color: #FFF;">{{ requestPayment.paymentMethod.name }}</span>
+                                                                        </td>
+                                                                        <td style="color: #FFF;">
+                                                                            <span v-if="requestPayment.deadlineDatetime">{{ moment(requestPayment.deadlineDatetime).format('DD/MM/YYYY') }}</span>
+                                                                            <span v-else>---</span>
+                                                                        </td>
+                                                                        <td style="color: #FFF; text-align: right; position: relative">
+                                                                            <div v-if="requestPayment.showPayButton" style="cursor: pointer; position: absolute; background-color: #FFF; left: 0; right: 0; bottom: 0; top: 0; border-radius: 3px; display: flex; justify-content: center; align-items: center; color: var(--font-color--primary); font-weight: 600;" @click="payBill(requestPayment)">
+                                                                                Pagar
+                                                                            </div>
+                                                                            {{ utils.formatMoney(requestPayment.amount,2,"R$ ",'.',',') }}
+                                                                        </td>
+                                                                        <td style="text-align: right;" class="request-payment__check" :class="{paid: !requestPayment.paymentMethod.hasDeadline || requestPayment.billPaymentDate, unpaid: requestPayment.paymentMethod.hasDeadline && !requestPayment.billPaymentDate}"><icon-check></icon-check></td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                            <!--
+                                                            <div style="display: flex; flex-direction: row; margin-top: 8px;">
+                                                                <span class="push-both-sides"></span>
+                                                                <a class="btn btn--edit">Editar pedido</a>
+                                                            </div>
+                                                            -->
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="limit-in-use">
+                                        <span>Limite utilizado</span>
+                                        <h3>{{ utils.formatMoney(limitInUse,2,'R$ ','.',',') }}</h3>
                                     </div>
                                 </div>
-                                <table style="width: 100%;">
-                                    <tbody>
-                                        <tr style="vertical-align: baseline;">
-                                            <td>03/08/2017</td>
-                                            <td style="padding-bottom: 5px;">
-                                                <ul style="display: flex; flex-direction: column">
-                                                    <li>GÁS LP 13KG</li>
-                                                    <li>GÁS LP 45KG</li>
-                                                </ul>
-                                            </td>
-                                            <td>
-                                                <ul style="display: flex; flex-direction: column">
-                                                    <li>1</li>
-                                                    <li>1</li>
-                                                </ul>
-                                            </td>
-                                            <td>
-                                                <ul style="display: flex; flex-direction: column">
-                                                    <li style="text-align: right;">R$ 78,00</li>
-                                                    <li style="text-align: right;">R$ 420,00</li>
-                                                </ul>
-                                            </td>
-                                        </tr>
-                                        <tr style="vertical-align: baseline;">
-                                            <td>03/08/2017</td>
-                                            <td>
-                                                <ul style="display: flex; flex-direction: column">
-                                                    <li>GÁS LP 13KG</li>
-                                                    <li>GÁS LP 45KG</li>
-                                                </ul>
-                                            </td>
-                                            <td>
-                                                <ul style="display: flex; flex-direction: column">
-                                                    <li>1</li>
-                                                    <li>1</li>
-                                                </ul>
-                                            </td>
-                                            <td>
-                                                <ul style="display: flex; flex-direction: column">
-                                                    <li style="text-align: right;">R$ 78,00</li>
-                                                    <li style="text-align: right;">R$ 420,00</li>
-                                                </ul>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div v-else>
+                                    <span>Sem cliente selecionado.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            -->
     </div>
 </template>
 
 <script>
-    import { mapState, mapGetters } from 'vuex';
+    import { mapState, mapGetters, mapActions } from 'vuex';
     import { createHelpers } from 'vuex-map-fields'
     import _ from 'lodash';
+    import Vue from 'vue'
     import moment from 'moment';
     import OrderProductsForm from './OrderProductsForm.vue';
     import EmployeeInput from './EmployeeInput.vue';
@@ -144,6 +202,9 @@
 
     import PromotionChannelSelectComponent from '../../_Shared/PromotionChannelSelect.vue'
     import UserSelectComponent from '../../_Shared/UserSelect.vue'
+
+    import ClientsAPI from '../../../../../../api/clients'
+    import BillsAPI from '../../../../../../api/bills'
 
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
@@ -165,6 +226,9 @@
                 activeTab: 'history',
                 productChart: null,
                 datetime: null,
+                averageDaysBetweenRequests: null,
+                requestHistory: [],
+                selectedRequestHistoryItem: null,
                 datetimeSelectorConfig: {
                     altInput: true,
                     altFormat: 'd/m/Y H:i:S',
@@ -176,11 +240,28 @@
                 formPath: 'request.order',
             }
         },
+        sockets: {
+            ['draft/request.client.select'](ev){
+                if(ev.success){
+                    if(_.has(ev, 'evData.client.id')){
+                        this.getClientRequestList(ev.evData.client.id)
+                    }
+                }
+            },
+            ['draft.load'](ev){
+                if(ev.success){
+                    if(_.has(ev, 'evData.data.request.client.id')){
+                        this.getClientRequestList(ev.evData.data.request.client.id)
+                    }
+                }
+            }
+        },
         computed: {
             ...mapState('data/promotion-channels', ['promotionChannels']),
             ...mapState('data/users', ['users']),
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapFields([
+                'form.client',
                 'form.deliveryDate',
                 'form.useSuggestedDeliveryDate',
                 'form.obs',
@@ -213,9 +294,83 @@
                 else {
                     return "Carregando..."
                 }
+            },
+            limitInUse(){
+                const vm = this
+                return Math.round(_.sumBy(vm.requestHistory, (requestHistoryItem) => {
+                    return _.sumBy(requestHistoryItem.payments, (requestPayment) => {
+                        if(requestPayment.paymentMethod.hasDeadline && !requestPayment.billPaymentDate){
+                            return parseFloat(requestPayment.amount)
+                        }
+                    })
+                }))
             }
         },
         methods: {
+            ...mapActions('toast', ['showToast','showError']),
+            getClientRequestList(clientId){
+                const vm = this
+                ClientsAPI.getRequestHistory(clientId, {
+                    companyId: 1
+                }).then(({data}) => {
+                    vm.averageDaysBetweenRequests = data.daysAverage
+                    vm.requestHistory = _.map(data.requestHistory, (requestHistoryItem) => {
+                        return {
+                            id: requestHistoryItem.id,
+                            showPayButton: false,
+                            deliveryDate: requestHistoryItem.deliveryDate,
+                            paid: _.every(requestHistoryItem.requestPayments, (requestPayment) => {
+                                if(requestPayment.paymentMethod.hasDeadline){
+                                    return !!requestPayment.billPaymentDate
+                                }
+                                return true
+                            }),
+                            productQuantity: _.sumBy(requestHistoryItem.requestOrder.requestOrderProducts,(requestOrderProduct) => {
+                                return requestOrderProduct.quantity
+                            }),
+                            orderTotal: _.sumBy(requestHistoryItem.requestOrder.requestOrderProducts,(requestOrderProduct) => {
+                                return requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
+                            }),
+                            products: requestHistoryItem.requestOrder.requestOrderProducts,
+                            payments: _.map(requestHistoryItem.requestPayments, (requestPayment) => {
+                                return _.assign(requestPayment, {
+                                    showPayButton: false
+                                })
+                            })
+                        }
+                    })
+                }).catch((err) => {
+                    console.log("Erro", err)
+                })
+            },
+            payBill(requestPayment){
+                const vm = this
+                if(requestPayment.paymentMethod.hasDeadline){
+                    BillsAPI.markAsPaid(requestPayment.id, {
+                        companyId: 1
+                    }).then((response) => {
+                        if(response.success){
+                            vm.getClientRequestList(vm.client.id)
+                            vm.showToast({
+                                type: 'success',
+                                message: "Notinha marcado como pago!"
+                            })
+                        }
+                        else {
+                            vm.showError(response.error.message)
+                        }
+                    }).catch((err) => {
+                        vm.showError("Ops... " + err.toString())
+                    })
+                }
+                else {
+                    vm.showError("Somente pagamentos com vencimento podem ser pagos por aqui")
+                }
+            },
+            selectRequestHistoryItem(requestHistoryItem){
+                if(this.selectedRequestHistoryItem === requestHistoryItem.id) this.selectedRequestHistoryItem = null
+                else this.selectedRequestHistoryItem = requestHistoryItem.id
+            },
             activateTab(tab){
                 this.activeTab = tab;
             },
@@ -638,6 +793,9 @@
     .form__side-column .reports .form-group {
         border-top-left-radius: 0;
         margin-bottom: 10px;
+        &:last-child {
+            margin-bottom: 0;
+        }
     }
     .content__separator {
         margin-bottom: 20px;
@@ -671,4 +829,93 @@
         color: var(--font-color--7);
     }
 
+    .tab--request-history {
+        table {
+            th {
+                text-align: left;
+            }
+            td {
+                text-align: left
+            }
+        }
+        .limit-in-use {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            margin-top: 20px;
+            h3 {
+                color: var(--font-color--terciary);
+                font-size: 20px;
+                font-weight: 400;
+                margin-top: 5px;
+            }
+        }
+        .summary__titles {
+            margin-bottom: 5px;
+        }
+        .request-history__container {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            span {
+                color: #FFF;
+            }
+            .history-lists {
+                border-radius: 5px;
+                align-self: center;
+                padding: 8px 12px;
+                width: 100%;
+                background-color: var(--bg-color--primary);
+                color: #FFF;
+                display: flex;
+                flex-direction: column;
+                &> ul {
+                    margin-bottom: 5px;
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+                }
+
+                &> ul li {
+                    margin-bottom: 5px;
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+                }
+
+                .btn--edit {
+                    background-color: #FFF;
+                    color: var(--font-color--terciary)
+                }
+
+                .btn--pay {
+                    background-color: #FFF;
+                    color: var(--font-color--primary)
+                }
+
+                .btn--paid {
+                    background-color: #FFF;
+                    color: var(--font-color--5)
+                }
+            }
+
+        }
+    }
+
+</style>
+
+<style>
+    .tab--request-history td.paid .colorizable {
+        fill: var(--font-color--primary)
+    }
+    .tab--request-history td.unpaid .colorizable {
+    }
+    .tab--request-history .request-payment__check.paid .colorizable{
+        fill: var(--font-color--secondary)
+    }
+    .tab--request-history .request-payment__check.unpaid .colorizable{
+        fill: rgba(0,0,0,.1)
+    }
 </style>

@@ -11,7 +11,7 @@ const config = {
             protocols: false
         },
         version: packageJSON.version,
-        androidVersion: '0.0.16'
+        androidVersion: '0.0.17'
     },
     requestBoard: {
         defaultPosition: 65535

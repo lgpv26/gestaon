@@ -211,14 +211,16 @@
                 return !this.client.name || (this.client.id && this.clientAddressId)
             },
             totalToPay(){
-                return _.sumBy(this.orderProducts, (orderProduct) => {
+                const totalToPay = _.sumBy(this.orderProducts, (orderProduct) => {
                     return (orderProduct.unitPrice - orderProduct.unitDiscount) * orderProduct.quantity
                 })
+                return Math.round(totalToPay)
             },
             totalLeftToPay(){
-                return _.sumBy(this.requestPayments, (requestPayment) => {
+                const totalLeftToPay = _.sumBy(this.requestPayments, (requestPayment) => {
                     return requestPayment.amount
                 })
+                return Math.round(totalLeftToPay)
             }
         },
         methods: {
@@ -329,6 +331,7 @@
                     }
                 })
 
+                console.log(Math.round(vm.totalLeftToPay), Math.round(vm.totalToPay))
                 if(!error && (vm.totalLeftToPay !== vm.totalToPay)){
                     error = "O valor a pagar deve coincidir com o valor total do pedido!"
                 }
@@ -405,6 +408,7 @@
                 flex-grow: 1;
                 max-width: 800px;
                 table.payment-methods td, table.payment-methods th{
+                    height: auto;
                     padding-right: 10px;
                     padding-left: 0;
                     font-weight: initial;

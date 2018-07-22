@@ -37,6 +37,8 @@ import utils from './utils/index'
 import routes from './routes'
 import store from './vuex/store'
 
+import OAuthAPI from './api/oauth'
+
 /* Plugins imports */
 
 import moment from 'moment'
@@ -172,32 +174,22 @@ moment.locale('pt-br');
 /*const SlidingMarker = require('marker-animate-unobtrusive');
 SlidingMarker.initializeGlobally();*/
 
-Vue.http.interceptors.push((request, next) => {
-
-    if(store.state.auth.authenticated) {
-        request.params['token'] = store.state.auth.token.accessToken;
-    }
-
-    next();
-
-});
-
 const router = new Router({
     scrollBehavior: () => ({ y: 0 }),
     routes
 });
 
-let token = localStorage.getItem("token");
-if (token !== null) {
-    token = JSON.parse(token);
-    store.commit("auth/authenticate", token);
+let tokens = localStorage.getItem("tokens");
+if (tokens !== null) {
+    tokens = JSON.parse(tokens);
+    store.commit("auth/authenticate", tokens);
 }
 
 /* Login Guard */
 
 router.beforeEach((to, from, next) => {
     if(!store.state.auth.authenticated && to.path !== "/login" && to.path !== "/register"){
-        return next('/login');
+        return next('/login')
         /*if(_.has(store.state.auth, "token.refreshToken") && moment(store.state.auth.refreshTokenExpiresAt).isAfter(moment())){
             oAuth2API.refreshToken(store.state.auth.refreshToken).then((result) => {
                 const data = result.data;
@@ -227,6 +219,32 @@ router.beforeEach((to, from, next) => {
     document.title = to.meta.title;
     next();
 });
+
+/* Request interceptors */
+
+Vue.http.interceptors.push((request, next) => {
+    if(store.state.auth.authenticated) {
+        request.params['token'] = store.state.auth.tokens.accessToken
+    }
+    next((response) => {
+        if(_.get(response,'body.error.code',false) === "EXPIRED_TOKEN" && response.status === 401){
+            console.log("AccessToken expirado, tentativa de renovação do token usando o refreshToken", response.body)
+            return OAuthAPI.refreshToken(store.state.auth.tokens.refreshToken).then((result) => {
+                store.dispatch('auth/refreshToken', {
+                    accessToken: result.data.accessToken,
+                    refreshToken: result.data.refreshToken
+                })
+                console.log("Refresh token adquirido com sucesso!", result)
+                return Vue.http(request)
+            }).catch((err) => {
+                return store.dispatch('auth/logout').then(() => {
+                    router.push("/login")
+                    return Promise.reject("Não foi possível renovar o token, redirecionando para a tela de entrada")
+                })
+            })
+        }
+    })
+})
 
 /* Global Event Bus */
 

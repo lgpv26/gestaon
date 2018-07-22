@@ -61,7 +61,7 @@
                 'filters.deliveryDate',
             ]),
             ...mapState(['mainContentArea']),
-            ...mapState('auth', ['user', 'token', 'company']),
+            ...mapState('auth', ['user', 'tokens', 'company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
             ...mapState('request-board', ['sections']),
             ...mapGetters('request-board', [])

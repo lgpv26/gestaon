@@ -70,7 +70,7 @@
             ...mapGetters('morph-screen', ['activeMorphScreen']),
             ...mapState('morph-screen', ['screens','sourceEl','isShowing','sourceElBgColor','mimicBorderRadius']),
             ...mapState('auth', [
-                'user', 'token', 'company'
+                'user', 'tokens', 'company'
             ]),
             ...mapState('data/users', [
                 'users'

@@ -86,7 +86,14 @@ module.exports = (server) => {
                             include: [
                                 {
                                     model: server.mysql.RequestOrderProduct,
-                                    as: 'requestOrderProducts'
+                                    as: 'requestOrderProducts',
+                                    include: [
+                                        {
+                                            model: server.mysql.Product,
+                                            attributes: ['name'],
+                                            as: 'product'
+                                        }
+                                    ]
                                 }
                             ]
                         },
@@ -103,7 +110,7 @@ module.exports = (server) => {
                     ]
                 }).then((requestHistory) => {
                     let lastDeliveryDate = null
-                    const daysAverage = _.meanBy(requestHistory,(requestHistoryItem) => {
+                    const daysAverage = _.meanBy(requestHistory, (requestHistoryItem) => {
                         if(lastDeliveryDate){
                             const diffBetweenLastDateInIteration = moment(requestHistoryItem.deliveryDate).diff(lastDeliveryDate, 'days')
                             lastDeliveryDate = requestHistoryItem.deliveryDate
@@ -111,7 +118,7 @@ module.exports = (server) => {
                         }
                     })
                     return {
-                        daysDifferenceAverageBetweenRequests,
+                        daysAverage,
                         requestHistory
                     }
                 })

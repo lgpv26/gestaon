@@ -77,7 +77,7 @@ module.exports = (server, restify) => {
 
     server.patch('/clients/:id', clientsController.updateOne);
 
-    server.get('/clients/:id/requests/history', (req, res, next) => {
+    server.get('/clients/:id/request-history', (req, res, next) => {
         return server.broker.call('data/client.getRequestHistory', {
             data: {
                 id: parseInt(req.params.id)

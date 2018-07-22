@@ -129,8 +129,8 @@
                 const vm = this;
                 vm.loading = true;
                 UsersAPI.removeOne(vm.form.id).then(({data}) => {
-                    vm.$bus.$emit('user-removed', parseInt(data.id));
-                    vm.$modal.hide('user-form');
+                    vm.$bus.$emit('user-removed', parseInt(data.id))
+                    vm.$modal.hide('user-form')
                     vm.showToast({
                         type: "success",
                         message: "Usuário \"" + vm.form.name + "\" removido com sucesso."

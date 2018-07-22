@@ -22,7 +22,7 @@
         },
         computed: {
             ...mapState('auth', [
-                'user', 'token', 'company'
+                'user', 'tokens', 'company'
             ]),
             ...mapState('map', [
                 'devices'

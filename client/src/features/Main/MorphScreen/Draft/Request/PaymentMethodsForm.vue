@@ -150,6 +150,7 @@
         padding-left: 0;
         font-weight: initial;
         padding-bottom: 8px;
+        height: auto;
     }
     table.payment-methods td:last-child, table.payment-methods th:last-child {
         padding-right: 0;

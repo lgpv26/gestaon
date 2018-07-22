@@ -81,6 +81,12 @@ const actions = {
             return response;
         })
     },
+    showMorphScreen(context){
+        context.commit('SET_ALL_MS_SCREENS', {
+            active: false
+        })
+        context.commit('SHOW_MS', true)
+    },
     createDraft(context, {body, companyId}){
         return DraftsAPI.createOne(body, {companyId})
     },

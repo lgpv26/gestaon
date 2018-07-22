@@ -32,6 +32,9 @@ export default {
     savePhones(clientId, body, params){
         return Vue.http.patch(config.apiBaseUrl + '/clients/' + clientId + '/phones', { clientPhones: body }, { params }).then((response) => response.json())
     },
+    getRequestHistory(id, params = {}){
+        return Vue.http.get(config.apiBaseUrl + '/clients/' + id + '/request-history', { params }).then((response) => response.json())
+    },
     getCreditInfo(id, params = {}){
         return Vue.http.get(config.apiBaseUrl + '/clients/' + id + '/credit-info', { params }).then((response) => response.json())
     },
