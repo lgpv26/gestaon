@@ -1,6 +1,8 @@
 const basePath = require('./../middlewares/base-path.middleware')
 const Controller = require('../models/Controller')
 const _ = require("lodash")
+import EventResponse from '../models/EventResponse'
+import { HTTPError } from '~errors'
 
 module.exports = (server, restify) => {
 
@@ -126,17 +128,6 @@ module.exports = (server, restify) => {
         })
     })
 
-    server.post('/requests', (req, res, next) => {
-        server.broker.call('data/request.create', {
-            data: {
-                companyId: 1
-            }
-        }).then((request) => {
-            return res.send(200, request)
-        }).catch((err) => {
-            console.log(err)
-        })
-    })
 
     server.post('/requests/persistence/:draftId', (req, res, next) => {
         return server.broker.call('draft/request/persistence.start', {

@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import moment from 'moment'
 const Op = require('sequelize').Op
+import EventResponse from '~models/EventResponse'
 
 module.exports = (server) => { return {
     name: "data/request",
@@ -30,9 +31,10 @@ module.exports = (server) => { return {
         create(ctx) {
             return server.mysql.Request.create(ctx.params.data)
             .then((request) => {
+                server.io.to(`company/${ctx.params.data.companyId}`).emit('request.create', new EventResponse(request))
                 return JSON.parse(JSON.stringify(request))
-            }).catch(() => {
-                console.log("Erro em: data/request.update")
+            }).catch((err) => {
+                console.log(err, "Erro em: data/request.create")
                 return Promise.reject('Erro ao criar o pedido.')
             })
         },
@@ -54,6 +56,7 @@ module.exports = (server) => { return {
                 })
             })
         },
+
         remove(ctx){
 
         },
@@ -457,8 +460,8 @@ module.exports = (server) => { return {
                             return { lat: geo.geometry.location.lat, lng: geo.geometry.location.lng }
                         })
                         .catch((error) => {
-                            console.log("Erro: no geo code")
-                            return Promise.reject("Erro ao salvar o endereço do cliente no pedido")
+                            console.log("Erro: no geo code, Erro ao salvar o endereço do cliente no pedido, service request.getGeo" + new Date())
+                            return Promise.resolve()
                         })
                 })
         },

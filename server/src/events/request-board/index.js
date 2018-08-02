@@ -70,12 +70,11 @@ module.exports = class RequestBoard {
             }).then(() => {
                 vm.server.broker.call('request-board.load', {
                     data: {
-                        filter: evData.filter || {},
+                        filter: evData.filter || null,
                         companyId: vm.socket.activeCompany.id,
                     },
                     userId: vm.socket.user.id
                 }).then((sections) => {
-
                     vm.socket.instance.emit('requestBoardLoad', new EventResponse({sections}))
                 }).catch((err) => {
                     console.log(err)
@@ -256,7 +255,8 @@ module.exports = class RequestBoard {
                                     if(evData.status === 'finished' || evData.status === 'canceled'){
                                         return vm.server.broker.call('request-board.removeCard', {
                                             data: {
-                                                cardId: evData.cardId
+                                                cardId: evData.cardId,
+                                                companyId: vm.socket.activeCompany.id
                                             }
                                         }).then(() => {
                                             vm.server.broker.call("push-notification.push", {

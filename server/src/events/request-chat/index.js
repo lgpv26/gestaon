@@ -35,10 +35,13 @@ module.exports = class RequestBoard {
          * @param {object} evData = { cardId:Number }
          */
         vm.socket.instance.on('request-chat:load', (evData) => {
-            return vm.server.mongodb.Card.findOne({requestId: evData.requestId}, {}, { sort: { position: 1 } }, function (err, card) {
-                return card
-            }).then((card) => {
-                if(!card) return vm.socket.instance.emit('request-chat:load', new EventResponse(new Error('Erro ao recuperar o Card!')))
+            return vm.server.mysql.RequestCard.findOne({
+                where: {
+                    requestId: evData.requestId
+                }
+            })
+            .then((card) => {
+                if(!card) return vm.socket.instance.emit('request-chat:load', new EventResponse(new Error('Erro ao recuperar o Card')))
                 vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat')
 
                     // if from database, call the service
@@ -47,17 +50,17 @@ module.exports = class RequestBoard {
                     socketId: vm.socket.instance.id,
                     companyId: vm.socket.activeCompany.id
                 }).then(() => {
-                        return vm.server.mysql.RequestChatItem.findAll({
-                            where: {
-                                requestId: parseInt(card.requestId)
-                            },
-                            order: [['dateCreated', 'DESC']],
-                            include: [{
-                                model: vm.server.mysql.User,
-                                as: "user",
-                                attributes: ['id', 'name','email','type']
-                            }]
-                        }).then((requestChatItems) => {
+                    return vm.server.mysql.RequestChatItem.findAll({
+                        where: {
+                            requestId: parseInt(card.requestId)
+                        },
+                        order: [['dateCreated', 'DESC']],
+                        include: [{
+                            model: vm.server.mysql.User,
+                            as: "user",
+                            attributes: ['id', 'name','email','type']
+                        }]
+                    }).then((requestChatItems) => {
                             let read =[]
                             let promise = []
 
@@ -91,16 +94,16 @@ module.exports = class RequestBoard {
                                         }
                                         
                                         vm.socket.instance.emit('request-board:chat', new EventResponse({
-                                            cardId: card._id,
+                                            cardId: card.id,
                                             unreadChatItemCount: 0
                                         }))
                                         
                                         return vm.socket.instance.emit('request-chat:load', new EventResponse(requestChatItems))
                                     
                                 })                            
-                            })                       
-                        })   
-                    })
+                            })     
+                        })                    
+                    })  
                 })
             })      
         })
@@ -110,8 +113,10 @@ module.exports = class RequestBoard {
          * @param {object} evData = { draftId:Number }
          */
         vm.socket.instance.on('request-chat:leave', (evData) => {
-            return vm.server.mongodb.Card.findOne({requestId: evData.requestId}, {}, { sort: { position: 1 } }, function (err, card) {
-                return card
+            return vm.server.mysql.RequestCard.findOne({
+                where: {
+                    requestId: evData.requestId
+                } 
             }).then((card) => {
                 if(!card) return vm.socket.instance.emit('request-chat:leave', new EventResponse(new Error('Erro ao recuperar o Card!')))
                 vm.socket.instance.leave('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat')
@@ -128,8 +133,10 @@ module.exports = class RequestBoard {
          * On send message
          */
         vm.socket.instance.on('request-chat:itemSend', (evData) => {
-            return vm.server.mongodb.Card.findOne({requestId: evData.requestId}, {}, { sort: { position: 1 } }, function (err, card) {
-                return card
+            return vm.server.mysql.RequestCard.findOne({
+                where: {
+                    requestId: evData.requestId
+                }
             }).then((card) => {
                 if(!card) return vm.socket.instance.emit('request-chat:itemSend', new EventResponse(new Error('Erro ao recuperar o Card!')))
 
@@ -147,6 +154,7 @@ module.exports = class RequestBoard {
                         }
                     }).then((request) => {
                         request = JSON.parse(JSON.stringify(request))
+
                         const room = _.get(vm.server.io.sockets.adapter.rooms, '[company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat]', 0)
                         let promises = []
                         let read = []
@@ -210,14 +218,14 @@ module.exports = class RequestBoard {
                                                     const read = _.find(chat.usersRead, {userId: userId})
                                                     if(!read) return chat
                                                 })
-           
+            
                                                 _.forEach(_.groupBy(count, 'requestId'), (chatUnread, requestId) => {
                                                     if(card.requestId === parseInt(requestId) && chatUnread.length){
                                                             vm.server.broker.call('socket.checkSocketId', {
                                                                 userId: _.first(chatUnread).userId
                                                             }).then((userSocketId) => {
                                                                 vm.server.io.sockets.sockets[userSocketId].in('company/' + vm.socket.activeCompany.id + '/request-board').emit('request-board:chat', new EventResponse({
-                                                                    cardId: card._id,
+                                                                    cardId: card.id,
                                                                     unreadChatItemCount: chatUnread.length
                                                                 }))
                                                             })
@@ -277,8 +285,8 @@ module.exports = class RequestBoard {
                                     }
                                 })
                             })
-                        })     
-                    })
+                        })
+                    })     
                 })
             })
         })

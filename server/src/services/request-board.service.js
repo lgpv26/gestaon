@@ -4,6 +4,7 @@ import {Op} from 'sequelize'
 import sequelize from 'sequelize'
 import EventResponse from '~server/models/EventResponse'
 import config from '~config'
+import shortid from 'shortid'
 
 import { base64encode, base64decode } from 'nodejs-base64'
 
@@ -32,45 +33,37 @@ module.exports = (server) => { return {
             if(_.get(searchObj,'deliveryDate',false)){
                 _.assign(where, {
                     deliveryDate: {
-                        "$gte": moment(searchObj.deliveryDate).startOf("day").toDate(),
-                        "$lte": moment(searchObj.deliveryDate).endOf("day").toDate()
+                        [Op.gte]: moment(searchObj.deliveryDate).startOf("day").toDate(),
+                        [Op.lte]: moment(searchObj.deliveryDate).endOf("day").toDate(),
+                        [Op.not]: null
                     }
                 })
             }
             else {
                 _.assign(where, {
                     deliveryDate: {
-                        "$gte": moment().startOf("day").toDate(),
-                        "$lte": moment().endOf("day").toDate()
+                        [Op.gte]: moment().startOf("day").toDate(),
+                        [Op.lte]: moment().endOf("day").toDate(),
+                        [Op.not]: null
                     }
                 })
             }
 
-            return server.mongodb.Section.find({}, null, {
-                sort: {
-                    position: 1
-                }
-            }).populate({
-                path: 'cards',
-                match: where
-            }).exec().then((sections) => {
-                const cardsRequestsIds = []
-                // get all requestIds to consult mysql just once
-                sections.forEach((section) => {
-                    section.cards.forEach((card) => {
-                        cardsRequestsIds.push(parseInt(card.requestId))
-                    })
-                })
-                sections = JSON.parse(JSON.stringify(sections))
-                return ctx.call("data/request.getList", {
-                    where: {
-                        id: {
-                            [Op.in]: cardsRequestsIds
-                        },
-                        companyId: parseInt(ctx.params.data.companyId)
-                    },
-                    include: [
-                        {
+            return server.mysql.RequestSection.findAll({
+                where: {
+                    companyId: parseInt(ctx.params.data.companyId)
+                },
+                required: true,
+                order: [['position', 'ASC']],
+                include: [{
+                    model: server.mysql.RequestCard,
+                    as: 'cards',
+                    where: where,
+                    required: false,
+                    include: [{
+                        model: server.mysql.Request,
+                        as: "request",
+                        include: [{
                             model: server.mysql.RequestTimeline,
                             as: "requestTimeline",
                             include: [{
@@ -141,52 +134,60 @@ module.exports = (server) => { return {
                                 model: server.mysql.PaymentMethod,
                                 as: 'paymentMethod'
                             }]
-                        }
-                    ]
-                }).then((requestList) => {
-                    requestList = JSON.parse(JSON.stringify(requestList))
-                    let promises = []
-                    requestList.forEach((request, index) => {
-                            promises.push(server.mysql.RequestChatItem.findAll({
-                                where: {
-                                    requestId: request.id
-                                },
-                                attributes: ['id', 'userId'],
-                                include: [{
-                                    model: server.mysql.RequestChatItemRead,
-                                    as: 'usersRead',
-                                    attributes: ['id', 'userId']
-                                }]
-                            }).then((chatItems) => {
-                                    const count = _.filter(_.filter(chatItems, (filter) => {
+                        }, {
+                            model: server.mysql.RequestChatItem,
+                            as: "requestChatItems",
+                            attributes: ['id', 'userId'],
+                            include: [{
+                                model: server.mysql.RequestChatItemRead,
+                                as: 'usersRead',
+                                attributes: ['id', 'userId']
+                            }]
+                        }]   
+                    }]
+                }]
+            })
+            .then((sectionsList) => {
+                sectionsList = JSON.parse(JSON.stringify(sectionsList))
+   
+                let sectionPromises = []
+                if(sectionsList.length) {
+                    sectionsList.forEach((section, indexSection) => {
+                        let promises = []
+                        sectionsList[indexSection].cards = _.orderBy(sectionsList[indexSection].cards, 'position', 'asc')
+                        sectionPromises.push(new Promise((resolve, reject) => {
+                            section.cards.forEach((card, indexCard) => {
+                                promises.push(new Promise((resolve, reject) => {
+                                    const count = _.filter(_.filter(card.request.requestChatItems, (filter) => {
                                         if(filter.userId !== ctx.params.userId) return filter
                                     }), (chat) => {
                                         const read = _.find(chat.usersRead, {userId: ctx.params.userId})
                                         if(!read) return chat
                                     })
-                                    return _.set(requestList[index], 'unreadChatItemCount', count.length)
+                                    _.set(sectionsList[indexSection].cards[indexCard], 'unreadChatItemCount', count.length)
+                                    resolve()
+                                }))
                             })
-                        )
+                            return Promise.all(promises)
+                            .then(() => {
+                                resolve()
+                            })
+                        }))
                     })
-
-                    return Promise.all(promises).then(() => {
-                        return _.map(sections, (section) => {
-                            _.map(section.cards, (card) => {
-                                card.request = _.find(requestList, { id: card.requestId })
-                                return card
-                            })
-                            section.cards.sort(function(a, b){
-                                return a.position - b.position
-                            })
-                            return section
-                        })
-                    })
+                }
+                return Promise.all(sectionPromises).then(() => {
+                    return sectionsList
                 })
             })
         },
         consultSectionOne(ctx){
-            return server.mongodb.Section.findOne(ctx.params.where)
-                .sort({ position: 1 }).then((section) => {
+            return server.mysql.RequestSection.findOne({
+                    where: ctx.params.where  || {},
+                    include: ctx.params.include || [],
+                    order: ctx.params.order || null,
+                    attributes: ctx.params.attributes || null
+                })
+                .then((section) => {
                     if (!section) {
                         return ctx.call("request-board.createSection", {
                             data: {
@@ -200,7 +201,7 @@ module.exports = (server) => { return {
                         return section
                     }
                 }).catch((err) => {
-                    return err
+                    return Promise.reject(err)
                 })
         },
         /**
@@ -210,13 +211,23 @@ module.exports = (server) => { return {
          */
         createSection(ctx){
             return new Promise((resolve, reject) => {
-                server.mongodb.Section.findOne({}, {}, { sort: { position : -1 } }, function(err, lastSection) {
+                server.mysql.RequestSection.findOne({
+                    order: [['position','DESC']],
+                    where: {
+                        companyId: ctx.params.data.companyId
+                    }
+                })
+                .then((lastSection) => {
                     let position = config.requestBoard.defaultPosition
                     if(lastSection) position += lastSection.position
-                    server.mongodb.Section.create({
+                    const sectionCode = shortid.generate()
+                    server.mysql.RequestSection.create({
                         companyId: ctx.params.data.companyId,
-                        position
-                    }).then((section) => {
+                        position,
+                        code: sectionCode,
+                        name: 'Seção #' + sectionCode
+                    })
+                    .then((section) => {
                         server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionCreate', new EventResponse(section))
                         resolve(section)
                     }).catch((err) => {
@@ -228,59 +239,80 @@ module.exports = (server) => { return {
                 return section
             })
         },
+        updateSection(ctx){
+            return server.mysql.RequestSection.update(ctx.params.data, {
+               where: ctx.params.where
+            }).then((updated) => {
+                if (parseInt(_.toString(updated)) < 1 ) {
+                    console.log("Nenhum registro encontrado. Update.")
+                    return Promise.reject('Erro ao atualizar a sessão.')
+                }
+                return server.mysql.RequestSection.findById(ctx.params.sectionId)
+                .then((section) => {
+                    section = JSON.parse(JSON.stringify(section))
+                    server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardCardUpdate', new EventResponse(section))
+                    return section
+                })
+            })
+        },
         /**
          * Move a section associated to the company request-board
          * @param {String} data.location, {Number} data.companyId, {Number} data.position, {Number} data.sectionId
          * @returns {Promise.<Object>} section
          */
         moveSection(ctx){
-            switch(ctx.params.data.location){
-                case "first":
-                    return server.mongodb.Section.findOne({}, {}, { sort: { position: 1 } }, function(err, firstSection) {
-                        let position = firstSection.position / 2
-                        return server.mongodb.Section.findOneAndUpdate({
-                            _id: ctx.params.data.sectionId
-                        }, {
-                            $set: {
-                                position
+            return new Promise((resolve, reject) => {
+                switch(ctx.params.data.location){
+                    case "first":
+                        return server.mysql.RequestSection.findOne({
+                            order: [['position','ASC']],
+                            where: {
+                                companyId: 1 // HARDCODED
                             }
-                        }).then((section) => {
-                            _.assign(section, { position })
-                            server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionMove', new EventResponse(section))
-                            return section
                         })
-                    })
-                    break;
-                case "last":
-                    return server.mongodb.Section.findOne({}, {}, { sort: { position: -1 } }, function(err, lastSection) {
-                        let position = config.requestBoard.defaultPosition
-                        if(lastSection) position += lastSection.position
-                        return server.mongodb.Section.findOneAndUpdate({
-                            _id: ctx.params.data.sectionId
-                        }, {
-                            $set: {
-                                position
+                        .then((firstSection) => {
+                            let position = firstSection.position / 2
+                            resolve({position}) 
+                        })
+                        break;
+                    case "last":
+                        return server.mysql.RequestSection.findOne({
+                            order: [['position','DESC']],
+                            where: {
+                                companyId: 1 // HARDCODED
                             }
-                        }).then((section) => {
-                            _.assign(section, { position })
-                            server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionMove', new EventResponse(section))
-                            return section
                         })
-                    })
-                    break;
-                default:
-                    return server.mongodb.Section.findOneAndUpdate({
-                        _id: ctx.params.data.sectionId
-                    }, {
-                        $set: {
-                            position: ctx.params.data.position
-                        }
-                    }).then((section) => {
-                        _.assign(section, { position: ctx.params.data.position })
+                        .then((lastSection) => {
+                            let position = config.requestBoard.defaultPosition
+                            if(lastSection) position += lastSection.position
+                            resolve({position}) 
+                        })
+                        break;
+                    default:
+                        resolve({position: ctx.params.data.position})
+                }
+            })
+            .then((data) => {
+                return server.mysql.RequestSection.update(data, {
+                    where: {
+                        id: ctx.params.data.sectionId
+                    }
+                }).then((updated) => {
+                    if (parseInt(_.toString(updated)) < 1 ) {
+                        console.log("Nenhum registro encontrado. Update.")
+                        return Promise.reject('Erro ao mover a Section.')
+                    }
+                    return server.mysql.RequestSection.findById(ctx.params.data.sectionId)
+                    .then((section) => {
+                        section = JSON.parse(JSON.stringify(section))
                         server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionMove', new EventResponse(section))
                         return section
+                    }).catch((err) => {
+                        console.log('erro consult by id - request board service update')
+                        return Promise.reject("Erro ao recuperar os dados da Section.")
                     })
-            }
+                })
+            })
         },
         /**
          * Remove a section associated to the company request-board
@@ -289,48 +321,70 @@ module.exports = (server) => { return {
          * @returns {Promise.<Number>} removedSectionId
          */
         removeSection(ctx){
-            return server.mongodb.Card.count({
-                section: ctx.params.data.sectionId
-            }).then((count) => {
-                if(count > 0){
-                    throw new Error("Você não pode remover uma seção que possui pedido(s).")
-                }
-                else {
-                    return server.mongodb.Section.remove({
-                        _id: ctx.params.data.sectionId
-                    }).then(() => {
-                        server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionRemove', new EventResponse({
-                            removedSectionId: ctx.params.data.sectionId
-                        }))
-                        return ctx.params.data.sectionId
-                    })
-                }
+            return server.mysql.RequestSection.findOne({
+                where: {
+                    id: ctx.params.data.sectionId
+                },
+                include: [{
+                        model: server.mysql.RequestCard,
+                        attributes: ['id'],
+                        as: 'cards'
+                    }]
+            })
+            .then((section) => {
+                if(!section) return Promise.reject("Erro ao buscar informações da seção.")
+                if(section.cards.length) return Promise.reject("Você não pode remover uma seção que possui pedido(s).")
+                section.destroy()
+                .then(() => {
+                    server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionRemove', new EventResponse({
+                        removedSectionId: ctx.params.data.sectionId
+                    }))
+                    return ctx.params.data.sectionId
+                })
             })
         },
 
         getCard(ctx) {
-            console.log(ctx.params.where)
-            return server.mongodb.Card.findOne(ctx.params.where).then((card) => {
-                console.log(card)
+            return server.mysql.RequestCard.findOne({
+                where: ctx.params.where
+            })
+            .then((card) => {
                 if(!card) return null
-                return card.toJSON()
+                return JSON.parse(JSON.stringify(card))
             })
         },
 
         createCard(ctx){
-            return server.mongodb.Card.create(ctx.params.data).then((card) => {
-                if(!card) throw new Error ('Erro ao criar Card')
-                // check socket connections and emit 
-                server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('cardCreated', {
-                    data: card, sectionId: ctx.params.section.id
-                })
-                card = card.toJSON()
-                card.request = ctx.params.request
-                ctx.call("request-board.saveCardInSection", {
-                    sectionId: ctx.params.section.id,
-                    cardId: card.id
-                }).then((section) => {
-                    server.io.sockets.emit('requestBoardCardCreate', {
+            return ctx.call("request-board.consultSectionOne", {
+                where: {
+                    companyId: ctx.params.data.companyId
+                },
+                order: [['position', 'ASC']],
+                include: [{
+                    model: server.mysql.RequestCard,
+                    attributes: ['id', 'position'],
+                    as: 'cards'
+                }],
+                companyId: ctx.params.data.companyId
+            })
+            .then((section) => {
+                let position = config.requestBoard.defaultPosition
+                if(section.cards && section.cards.length) {
+                    const lastPosition = _.first(_.orderBy(JSON.parse(JSON.stringify(section.cards)), 'position', 'desc'))
+                    position += lastPosition.position
+                }
+                const code = shortid.generate();
+                return server.mysql.RequestCard.create(
+                    _.assign(ctx.params.data, {
+                            sectionId: section.id,
+                            code,
+                            name: 'Card #' + code,
+                            position
+                        })
+                )
+                .then((card) => {
+                    if(!card) return Promise.reject('Erro ao criar o Card')
+                    server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardCreate', {
                         data: {
                             card,
                             section
@@ -338,20 +392,29 @@ module.exports = (server) => { return {
                     })
                     return card
                 })
-            }).catch((err) => {
-                console.log("Erro em: request-board.createCard")
-                return Promise.reject("Pedido está Ok, porém houve um erro ao criar o card!")
             })
+            .catch((err) => {
+                console.log(err, "Erro em: request-board.createCard")
+                return Promise.reject("Pedido está Ok, porém houve um erro ao criar o card!")
+            })   
         },
+
         reloadCard(ctx){
-            return server.mongodb.Card.findOne({requestId: ctx.params.request.id})
+            return server.mysql.RequestCard.findOne({
+                where: {
+                    requestId: ctx.params.request.id
+                },
+                include: [{
+                    model: server.mysql.Request,
+                    as: 'request'
+                }]
+            })
             .then((card) => {
                 if(!card){
-                    throw new Error ('Erro ao atualizar Card')
+                    return Promise.reject('Erro ao atualizar Card')
                 }
                 // check socket connections and emit 
-                card = card.toJSON()
-                card.request = ctx.params.request
+                card = JSON.parse(JSON.stringify(card))
             
                 server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardCardUpdate', new EventResponse(card))
 
@@ -359,19 +422,25 @@ module.exports = (server) => { return {
             })
         },
         
-        updateCardDeliveryDate(ctx){
-            return server.mongodb.Card.findOneAndUpdate({
-                requestId: ctx.params.request.id
-            }, {
-                $set: {
-                    deliveryDate: ctx.params.request.deliveryDate
+        updateCard(ctx){
+            return server.mysql.RequestCard.update(ctx.params.data, {
+               where: ctx.params.where
+            }).then((updated) => {
+                if (parseInt(_.toString(updated)) < 1 ) {
+                    console.log("Nenhum registro encontrado. Update.")
+                    return Promise.reject('Erro ao atualizar o card.')
                 }
-            }).then((card) => {
-                card = card.toJSON()
-                card.request = ctx.params.request
-                _.assign(card, { deliveryDate: ctx.params.request.deliveryDate })
-                server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardCardUpdate', new EventResponse(card))
-                return card
+                return server.mysql.RequestCard.findById(ctx.params.cardId, {
+                    include: [{
+                        model: server.mysql.Request,
+                        as: 'request'
+                    }]
+                })
+                .then((card) => {
+                    card = JSON.parse(JSON.stringify(card))
+                    server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardCardUpdate', new EventResponse(card))
+                    return card
+                })
             })
         },
         /**
@@ -382,129 +451,100 @@ module.exports = (server) => { return {
          */
         moveCard(ctx){
             const vm = this
-            switch(ctx.params.data.location){
-                case "first":
-                    return server.mongodb.Card.findOne({ section: ctx.params.data.toSection}, {}, { sort: { position: 1 } }).exec().then((firstCard) => {
-                        let position = firstCard.position / 2
-                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then((card) => {
-                            return {
-                                location: 'first',
-                                card: card
-                            }
+            return new Promise((resolve, reject) => {
+                switch(ctx.params.data.location){
+                    case "first":
+                        return server.mysql.RequestCard.findOne({
+                            where: {
+                                sectionId: ctx.params.data.toSection,
+                                requestId: {
+                                    [Op.not]: null
+                                }
+                            },
+                            order: [['position', 'ASC']],
+                            attributes: ['id', 'position']
                         })
-                    })
-                break;
-                case "last":
-                    return server.mongodb.Card.findOne({ section: ctx.params.data.toSection }, {}, { sort: { position: -1 } }).exec().then((lastCard) => {
+                        .then((firstCard) => {
+                            let position = firstCard.position / 2
+                            resolve({position, location: 'first', sectionId: ctx.params.data.toSection})
+                        })
+                    break;
+                    case "last":
+                        return server.mysql.RequestCard.findOne({
+                            where: {
+                                sectionId: ctx.params.data.toSection,
+                                requestId: {
+                                    [Op.not]: null
+                                }
+                            },
+                            order: [['position', 'DESC']],
+                            attributes: ['id', 'position']
+                        })
+                        .then((lastCard) => {
+                            let position = config.requestBoard.defaultPosition
+                            if(lastCard) position += lastCard.position
+                            resolve({position, location: 'last', sectionId: ctx.params.data.toSection})
+                        })
+                    break;
+                    case "middle":
+                        return server.mysql.RequestCard.findAll({
+                            where: {
+                                id: {
+                                    [Op.in]: [ctx.params.data.prevCard, ctx.params.data.nextCard]
+                                }
+                            },
+                            order: [['position', 'DESC']],
+                            attributes: ['id', 'position']
+                        })
+                        .then((prevAndNextCard) => {
+                            const position = (( prevAndNextCard[0].position + prevAndNextCard[1].position ) / 2)
+                            resolve({position, location: 'middle', sectionId: ctx.params.data.toSection})
+                        })
+                    break;
+                    case "last-and-only":
                         let position = config.requestBoard.defaultPosition
-                        if(lastCard) position += lastCard.position
-                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then((card) => {
-                            return {
-                                location: 'last',
-                                card: card
-                            }
-                        })
-                    })
-                break;
-                case "middle":
-                    return server.mongodb.Card.find({ section: ctx.params.data.toSection, _id: { $in: [ctx.params.data.prevCard, ctx.params.data.nextCard] }}).then((prevAndNextCard) => {
-                        prevAndNextCard.sort((a, b) => {
-                            return b.position - a.position
-                        })
-                        const position = ( prevAndNextCard[0].position + prevAndNextCard[1].position ) / 2
-                        return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then((card) => {
-                            return {
-                                location: 'middle',
-                                card: card
-                            }
-                        })
-                    })
-                break;
-                case "last-and-only":
-                    let position = config.requestBoard.defaultPosition
-                    return vm.saveRequestBoardCard(ctx.params.data.cardId, ctx.params.data.toSection, position).then((card) => {
+                        resolve({position, location: 'last-and-only', sectionId: ctx.params.data.toSection}) 
+                    break
+                }
+            })
+            .then((data) => {
+                return server.mysql.RequestCard.update(data, {
+                    where: {
+                        id: ctx.params.data.cardId
+                    }
+                }).then((updated) => {
+                    if (parseInt(_.toString(updated)) < 1 ) {
+                        console.log("Nenhum registro encontrado. Update.")
+                        return Promise.reject('Erro ao mover o Card.')
+                    }
+                    return server.mysql.RequestCard.findById(ctx.params.data.cardId)
+                    .then((card) => {
+                        card = JSON.parse(JSON.stringify(card))
                         return {
-                            location: 'last-and-only',
-                            card: card
+                            location: data.location,
+                            card
                         }
+                    }).catch((err) => {
+                        console.log('erro consult by id - request board service update')
+                        return Promise.reject("Erro ao recuperar os dados da Section.")
                     })
-                break;
-            }
+                })
+            })
         },
         removeCard(ctx){
-            return server.mongodb.Card.findOne({ _id: ctx.params.data.cardId}).then((card) => {
-                return ctx.call("request-board.consultSectionOne", {
-                    where: {
-                        _id: card.section
-                    }
-                }).then((section) => {
-                    let index = _.findIndex(section.cards, (cardSection) => {
-                        return cardSection.valueOf() == card.id
-                    })
-           
-                    if(index == -1){
-                        return new Error('Card não encontrado!')
-                    }
-                    section.cards.splice(index,1)
-                    return section.save().then(() => {
-                        return server.mongodb.Card.remove({
-                            _id: ctx.params.data.cardId
-                        }).then(() => {
-                            server.io.emit('requestBoardCardRemove', new EventResponse({
-                                removedCardId: ctx.params.data.cardId
-                            }))
-                            /*server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardRemove', new EventResponse({
-                                removedCardId: ctx.params.data.cardId
-                            }))*/
-                            return ctx.params.data.cardId
-                        })
-                        
-                    })           
-                })
-            })
-        },
-        saveCardInSection(ctx){
-            return ctx.call("request-board.consultSectionOne", {
+            return server.mysql.RequestCard.destroy({
                 where: {
-                    _id: ctx.params.sectionId
+                    id: ctx.params.data.cardId
                 }
-            }).then((section) => {
-                section.cards.push(ctx.params.cardId)
-                return section.save()
             })
-        }
-    },
-    methods: {
-        saveRequestBoardCard(cardId, toSectionId, position){
-            return server.mongodb.Card.findOne({
-                _id: cardId
-            }).then((card) => {
-                const prevSectionId = card.section.toString()
-                _.assign(card, {
-                    position,
-                    section: toSectionId
-                })
-                return card.save().then(() => {
-                    if(prevSectionId !== toSectionId) { // only execute here if card is going to another section
-                        const removeCardFromPrevSection = server.mongodb.Section.findOne({
-                            _id: prevSectionId
-                        }).then((prevSection) => {
-                            const prevSectionCardIndex = _.findIndex(prevSection.cards, card._id)
-                            prevSection.cards.splice(prevSectionCardIndex, 1)
-                            return prevSection.save()
-                        })
-                        const addCardToNextSection = server.mongodb.Section.findOne({
-                            _id: toSectionId
-                        }).then((toSection) => {
-                            toSection.cards.push(card._id)
-                            return toSection.save()
-                        })
-                        return Promise.all([removeCardFromPrevSection, addCardToNextSection]).then(() => {
-                            return card
-                        })
-                    }
-                    return card
-                })
+            .then(() => {
+                server.io.emit('requestBoardCardRemove', new EventResponse({
+                    removedCardId: ctx.params.data.cardId
+                }))
+                server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardCardRemove', new EventResponse({
+                    removedCardId: ctx.params.data.cardId
+                }))
+                return ctx.params.data.cardId
             })
         }
     }

@@ -1,6 +1,5 @@
 const _ = require('lodash')
 const Op = require('sequelize').Op
-const { MoleculerError } = require('moleculer').Errors
 
 module.exports = (server) => { return {
     name: "data/address",
@@ -12,16 +11,13 @@ module.exports = (server) => { return {
          * @param {Object} id, companyId
          * @returns {Promise.<Array>} requests
          */
-        get(ctx) {
+        getOne(ctx) {
             return server.mysql.Address.findOne({
-                where: {
-                    id: ctx.params.data.id,
-                    companyId: {
-                        [Op.in]: [0, ctx.params.data.companyId]
-                    } 
-                }
+                where: ctx.params.where || {},
+                include: ctx.params.include || [],
+                attributes: ctx.params.attributes || null
             }).then((address) => {
-                  return JSON.parse(JSON.stringify(address))
+                return JSON.parse(JSON.stringify(address))
             })
         },
         /**
@@ -71,6 +67,21 @@ module.exports = (server) => { return {
         },
         remove(ctx){
 
+        },
+        checkCanBeUpdate(ctx){
+            return ctx.call('data/address.getOne', {
+                where: {
+                    id: ctx.params.addressId,
+                    companyId: {
+                        [Op.not]: 0,
+                        [Op.eq]: ctx.params.companyId
+                    }
+                }
+            })
+            .then((address) => {
+                if(!address) return null
+                return address
+            })
         },
         /**
          * @param {Object} data, {Object} companyId, {Object} transaction
