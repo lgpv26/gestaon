@@ -1,350 +1,261 @@
-const _ = require('lodash')
-const Op = require('sequelize').Op
+import _ from 'lodash'
 import moment from 'moment'
-import { runInContext } from 'vm';
+const Op = require('sequelize').Op
 
 module.exports = (server) => {
-    //PRIVATES
-    let _transaction = null
-
-    return {
+     return {
         name: "data/client",
         actions: {
-            search() {
 
-            },
-            /**
-             * @param {Object} id, companyId
-             * @returns {Promise.<Array>} requests
-             */
-            get(ctx) {
-                return server.mysql.Client.findOne({
-                    where: ctx.params.where || {},
-                    attributes: ctx.params.attributes || null,
-                    include: ctx.params.include || []
-                }).then((client) => {
-                    return JSON.parse(JSON.stringify(client))
-                })
-            },
-            list(ctx) {
+            start(ctx){
+                const vm = this
+                const companyId = ctx.params.companyId
 
-            },
-            /**
-             * @param {Object} data, {Object} transaction
-             * @returns {Promise.<Object>} client 
-             */
-            create(ctx) {
-                return server.mysql.Client.create(ctx.params.data)
-                .then((client) => {
-                    return JSON.parse(JSON.stringify(client))
-                }).catch(() => {
-                    console.log("Nenhum registro encontrado. Create.")
-                    return Promise.reject('Erro ao cadastrar o cliente.')
-                })
-            },
-            /**
-             * @param {Object} data, {Object} where, {Object} transaction
-             * @returns {Promise.<Object>} client 
-             */
-            update(ctx) {
-                return server.mysql.Client.update(ctx.params.data, {
-                    where: ctx.params.where || {}
-                }).then((updated) => {
-                    if (parseInt(_.toString(updated)) < 1 ) {
-                        console.log("Nenhum registro encontrado. Update.")
-                        return Promise.reject('Erro ao atualizar o cliente.')
-                    }
-                    return server.mysql.Client.findById(ctx.params.data.id)
-                    .then((client) => {
-                        return JSON.parse(JSON.stringify(client))
-                    }).catch((err) => {
-                        console.log('erro consult by id - client service update')
-                        return Promise.reject("Erro ao recuperar os dados do cliente.")
-                    })
-                }).catch((err) => {
-                    console.log("Nenhum registro encontrado. Update.")
-                    return Promise.reject("Erro ao atualizar o cliente.")
-                })
-            },
-            remove(ctx) {
+                return new Promise((resolve, reject) => {
+                    async function start() {
+                            try{
+                                vm.saveInRequest = (ctx.params.transaction) ? true : false
+                                ctx.params.data = _.assign(ctx.params.data, {companyId})
+                                const transaction = await vm.checkTransaction(ctx.params.transaction || null)
 
-            },
-            getRequestHistory(ctx){
-                return server.mysql.Request.findAll({
-                    where: {
-                        clientId: ctx.params.data.id,
-                        status: 'finished',
+                                ctx.params.data = await vm.checkTempIds(ctx.params.data)
 
-                    },
-                    order: [
-                        ['deliveryDate', 'DESC']
-                    ],
-                    include: [
-                        {
-                            model: server.mysql.RequestOrder,
-                            as: 'requestOrder',
-                            include: [
-                                {
-                                    model: server.mysql.RequestOrderProduct,
-                                    as: 'requestOrderProducts',
-                                    include: [
-                                        {
-                                            model: server.mysql.Product,
-                                            attributes: ['name'],
-                                            as: 'product'
-                                        }
-                                    ]
+                                const client = await vm.saveClient(ctx.params.data, transaction)
+
+                                if (_.has(ctx.params.data, "clientAddresses")) {
+                                    _.set(client, 'clientAddresses', await vm.setClientAddresses(ctx.params.data.clientAddresses, client.id, companyId, transaction))
                                 }
-                            ]
+
+                                if (_.has(ctx.params.data, "clientPhones")) {
+                                    const clientPhones = _.map(ctx.params.data.clientPhones, clientPhone => {
+                                        return _.assign(clientPhone, {
+                                            clientId: client.id,
+                                        })
+                                    })
+                                    _.set(client, 'clientPhones', await vm.saveClientPhones(clientPhones, client.id, transaction))
+                                }                        
+                                
+                                if (_.has(ctx.params.data, "clientCustomFields")) {
+                                    const clientCustomFields = _.map(ctx.params.data.clientCustomFields, clientCustomField => {
+                                        return _.assign(clientCustomField, {
+                                            clientId: client.id,
+                                            customFieldId: clientCustomField.customField.id
+                                        })
+                                    })
+                                    _.set(client, 'clientCustomFields', await vm.saveClientCustomFields(clientCustomFields, client.id, transaction))
+                                }
+
+                                return resolve(client)
+                                //console.log(client)
+
+                            }
+                            catch(err) {
+                                console.log('try catch do client, erro no client')
+                                return reject(err)
+                            }
+                    }
+
+                    start()
+                })               
+
+            }
+
+        },
+        methods: {
+            checkTransaction(transaction){
+                if(transaction) return Promise.resolve(transaction)
+                return server.sequelize.transaction((t) => {
+                    return Promise.resolve(t)
+                })
+            },
+
+            checkTempIds(data){
+                let removeTemps = []
+
+                if(_.has(data, "clientAddresses")){
+                    removeTemps.push(this.removeArrayTempIds(data, "clientAddresses", "clientAddressId")
+                    .then((clientAddresses) => {
+                        _.set(data, "clientAddresses", clientAddresses)
+                    }))
+                }
+                
+                if(_.has(data, "clientPhones")){
+                    removeTemps.push(this.removeArrayTempIds(data, "clientPhones", "clientPhoneId")
+                    .then((clientPhones) => {
+                        _.set(data, "clientPhones", clientPhones)
+                    }))
+                }
+                if(_.has(data, "clientCustomFields")){
+                    removeTemps.push(this.removeArrayTempIds(data, "clientCustomFields")
+                    .then((clientCustomFields) => {
+                        _.set(data, "clientCustomFields", clientCustomFields)
+                    })
+                    )
+                }
+
+                return Promise.all(removeTemps).then(() => {
+                    const id = _.get(data, 'id', false)
+                    if((typeof id == 'string') && id.substring(0,4) === "tmp/") {
+                        _.set(data, 'tempId', id)
+                        _.set(data, 'id', null)
+                    }
+
+                    return Promise.resolve(data)
+                })
+            },
+
+            removeArrayTempIds(data, path, select){
+                let newValue = []
+                const promises = []
+                _.map(_.get(data, path), (obj) => {
+                    promises.push(new Promise((resolve, reject) => {
+                        if(select && _.has(data, select)){
+                            if(obj.id === _.get(data, select)){
+                                obj.select = true
+                            }
+                            else{
+                                obj.select = false
+                            }                        
+                        }
+                        if(_.get(obj, 'id', false) && !_.isNumber(obj.id) && obj.id.substring(0,4) === "tmp/"){
+                            obj.tempId = obj.id
+                            obj.id = null              
+                        }
+                        newValue.push(obj)
+                        resolve()
+                    }))
+                })
+                return Promise.all(promises)
+                .then(() => {
+                    return newValue
+                })                
+            },
+            /**
+             * SAVE (create or update) INITIAL DATA CLIENT
+             * @returns {Promise.<object>} client
+             */    
+            saveClient(data, transaction){
+                if (data.id) { // update client
+                    return server.mysql.Client.update(data, {
+                        where: {
+                            id: data.id
                         },
-                        {
-                            model: server.mysql.RequestPayment,
-                            as: 'requestPayments',
-                            include: [
-                                {
-                                    model: server.mysql.PaymentMethod,
-                                    as: 'paymentMethod'
-                                }
-                            ]
+                        transaction
+                    }).then((updated) => {
+                        if (parseInt(_.toString(updated)) < 1 ) {
+                            console.log("Nenhum registro encontrado. Update.")
+                            return Promise.reject('Erro ao atualizar o cliente.')
                         }
-                    ]
-                }).then((requestHistory) => {
-                    let lastDeliveryDate = null
-                    const daysAverage = _.meanBy(requestHistory, (requestHistoryItem) => {
-                        if(lastDeliveryDate){
-                            const diffBetweenLastDateInIteration = moment(requestHistoryItem.deliveryDate).diff(lastDeliveryDate, 'days')
-                            lastDeliveryDate = requestHistoryItem.deliveryDate
-                            return diffBetweenLastDateInIteration
-                        }
-                    })
-                    return {
-                        daysAverage,
-                        requestHistory
-                    }
-                })
-            },
-            
-            changeCreditLimit(ctx) {
-                return ctx.call("data/client.get", {
-                    where: {
-                        id: ctx.params.data.clientId
-                    },
-                    attributes: ['id','creditLimit','limitInUse']
-                }).then((client) => {
-                    if(parseFloat(client.limitInUse) > parseFloat(ctx.params.data.creditLimit)) throw new Error('Limite de crédito não pode ser inferior ao crédito em uso!')
-                    return ctx.call("data/client.setTransaction").then(() => {
-                        return server.mysql.CreditLog.create({
-                            clientId: client.id,
-                            newCreditLimit: ctx.params.data.creditLimit,
-                            oldCreditLimit: client.creditLimit,
-                            userId: ctx.params.userId
-                        }).then(() => {
-                            return ctx.call("data/client.update", {
-                                data: {
-                                    creditLimit: ctx.params.data.creditLimit,
-                                    id: ctx.params.data.clientId
-                                },
-                                where: {
-                                    id: ctx.params.data.clientId,
-                                    companyId: ctx.params.data.companyId
-                                }
-                            }).then((client) => {
-                                return ctx.call("data/client.commit")
-                                .then(() => {
-                                    return {creditLimit: client.creditLimit}
-                                })                                
-                            }).catch((err) => {
-                                return ctx.call("data/client.rollback", {
-                                    err: 'Não foi possivel alterar o limite de credito! Update'
-                                })
-                            })
+                        return server.mysql.Client.findById(data.id)
+                        .then((client) => {
+                            return JSON.parse(JSON.stringify(client))
                         }).catch((err) => {
-                            console.log(err)
-                            return ctx.call("data/client.rollback", {
-                                err: 'Não foi possivel alterar o limite de credito! CreditLog'
-                            })
+                            console.log('erro consult by id - client service update')
+                            return Promise.reject("Erro ao recuperar os dados do cliente.")
                         })
+                    }).catch((err) => {
+                        console.log("Nenhum registro encontrado. Update.")
+                        return Promise.reject("Erro ao atualizar o cliente.")
                     })
-                })
-            },
-
-            getCreditInfo(ctx){
-                return Promise.all([
-                    server.mysql.Client.findOne({
-                        where: {
-                            companyId: ctx.params.companyId,
-                            id: ctx.params.clientId
-                        },
-                        attributes: ['creditLimit','limitInUse']
-                    }).then((client) => {
-                        return JSON.parse(JSON.stringify(client))
-                    }),
-                    ctx.call('data/client.getBills', {
-                        companyId: ctx.params.companyId,
-                        clientId: ctx.params.clientId
+                }
+                else { // create client
+                    return server.mysql.Client.create(data, {transaction})
+                    .then((client) => {
+                        client = JSON.parse(JSON.stringify(client))
+                        if(data.tempId) _.set(client, 'tempId', data.tempId)
+                        return client
+                    }).catch(() => {
+                        console.log("Nenhum registro encontrado. Create.")
+                        return Promise.reject('Erro ao cadastrar o cliente.')
                     })
-                ]).then(([client, bills]) => {
-                    return {
-                        creditLimit: client.creditLimit,
-                        limitInUse: client.limitInUse,
-                        bills
-                    }
-                })
-            },
-
-            /**
-             * @param {Object} id, companyId
-             * @returns {Promise.<Array>} requests
-             */
-            getBills(ctx) {
-                return server.mysql.RequestPayment.findAll({
-                    where: {
-                        billPaymentDate: null
-                    },
-                    order: [['dateCreated', 'DESC']],
-                    include: [{
-                        model: server.mysql.PaymentMethod,
-                        as: 'paymentMethod',
-                        where: {
-                            autoPay: 0
-                        }
-                    },
-                    {
-                        model: server.mysql.Request,
-                        as: 'request',
-                        required: true,
-                        include: [{
-                            model: server.mysql.Client,
-                            as: 'client',
-                            where:{
-                                companyId: ctx.params.companyId,
-                                id: ctx.params.clientId
-                            },
-                            required: true
-                        }]
-                    }]
-                }).then((bills) => {
-                    return JSON.parse(JSON.stringify(bills))
-                })
-            },
-
-            /**
-             * @param {Object} where, {Array} include, {Object} transaction
-             * @returns {Promise.<Array>} clientAddresses
-             */
-            clientAddressList(ctx) {
-                return server.mysql.ClientAddress.findAll({
-                    where: ctx.params.where || {},
-                    include: ctx.params.include || []
-                }).then((clientAddresses) => {
-                    return JSON.parse(JSON.stringify(clientAddresses))
-                })
+                }
             },
             /**
-             * @param {Object} data, {Object} transaction
-             * @returns {Promise.<Array>} clientAddresses
-             */
-            setClientAddresses(ctx) {
-                return ctx.call("data/address.saveAddresses", {
-                    data: ctx.params.data,
-                    companyId: ctx.params.data.companyId
+             * set data and save clientAddresses
+             * @returns {Promise.<array>} clientAddresses
+             */   
+            setClientAddresses(data, clientId, companyId, transaction){
+                return server.broker.call("data/address.saveAddresses", {
+                    data,
+                    companyId,
+                    transaction
                 }).then((clientAddressWithAddress) => {
-                    let clientAddresses = []
+                    let clientAddressesArray = []
                     clientAddressWithAddress.forEach((result) => {
-                        clientAddresses.push({
+                        clientAddressesArray.push({
                             id: (result.id) ? result.id : null,
                             status: 'activated',
-                            clientId: (ctx.params.data.clientId) ? parseInt(ctx.params.data.clientId) : null,
+                            clientId: (clientId) ? parseInt(clientId) : null,
                             addressId: parseInt(result.address.id),
                             name: (result.name) ? result.name : null,
                             number: (result.number) ? result.number : null,
                             complement: (result.complement) ? result.complement : null,
                             type: [1,3,5],
+                            tempId: (result.tempId) ? result.tempId : null,
                             select: result.select
                         })
                     })
 
-                    return ctx.call("data/client.saveClientAddresses", {
-                        data: clientAddresses,
-                        clientId: (ctx.params.data.clientId) ? parseInt(ctx.params.data.clientId) : null
-                    }).then((clientAddresses) => {
-                        return clientAddresses
+                    return this.saveClientAddresses(clientAddressesArray, clientId, transaction)
+                    .then((clientAddresses) => {
+                        return Promise.resolve(clientAddresses)
                     }).catch((err) => {
                         console.log("Nenhum registro encontrado. ClientAddress")
                         return Promise.reject("Erro ao salvar endereços do cliente.")
-                    }) 
+                    })
                 }).catch((err) => {
                     console.log("Nenhum registro encontrado. Address")
                     return Promise.reject("Erro ao salvar os endereços.")                
                 })
             },
-            /**
-             * @param {Object} data, {Object} transaction
-             * @returns {Promise.<Object>} address
-             */
-            clientAddressCreate(ctx){
-                return server.mysql.ClientAddress.create(ctx.params.data)
-                .then((clientAddress) => {
-                    if(!clientAddress){
-                        console.log("Nenhum registro encontrado. Create.")
-                        return Promise.reject("Erro ao cadastrar endereço do cliente.")
-                    }
-                    return JSON.parse(JSON.stringify(clientAddress))
-                })
-            },
-            /**
-             * @param {Object} where, {Object} transaction
-             * @returns {Promise.<Object>} addresses
-             */
-            clientAddressUpdate(ctx){
-                return server.mysql.ClientAddress.update(ctx.params.data, {
-                    where: ctx.params.where || {},
-                    paranoid: false
-                }).then((clientAddressUpdate) => {
-                    if(parseInt(_.toString(clientAddressUpdate)) < 1 ){
-                        console.log("Nenhum registro encontrado. Update. clientAddressUpdate")
-                        return Promise.reject("Erro ao atualizar endereço do cliente.")
-                    }
-                    return server.mysql.ClientAddress.findById(ctx.params.data.id)
-                    .then((ClientAddress) => {
-                        return JSON.parse(JSON.stringify(ClientAddress))
-                    })
-                })
-            },
+
             /**
              * @param {Object} data, {Int} clientId, {Object} transaction (optional)
              * @returns {Promise.<Array>} clientAddresses
              */            
-            saveClientAddresses(ctx) {
+            saveClientAddresses(data, clientId, transaction) {
                 /*
                 * Delete all client's clientAddress
                 */ 
                return server.mysql.ClientAddress.destroy({
                 where: {
-                    clientId: ctx.params.clientId
-                }
+                    clientId: clientId
+                },
+                transaction
                 }).then(() => {
                     let clientAddressesPromises = []
-                    ctx.params.data.forEach((clientAddress) => {
+                    data.forEach((clientAddress) => {
                         if (clientAddress.id) {
-                            clientAddressesPromises.push(ctx.call("data/client.clientAddressUpdate", {
-                                data: _.assign(clientAddress, {
+                            clientAddressesPromises.push(
+                                server.mysql.ClientAddress.update(_.assign(clientAddress, {
                                     dateRemoved: null
-                                }),
-                                where: {
-                                    id: clientAddress.id
-                                }
-                            }).then((clientAddressUpdate) => {
-                                return _.assign(clientAddressUpdate, { type: clientAddress.type, select: clientAddress.select })
-                            })
+                                }), {
+                                    where: {
+                                        id: clientAddress.id
+                                    },
+                                    transaction
+                                }).then((clientAddressUpdate) => {
+                                    if(parseInt(_.toString(clientAddressUpdate)) < 1 ){
+                                        console.log("Nenhum registro encontrado. Update. clientAddressUpdate")
+                                        return Promise.reject("Erro ao atualizar endereço do cliente.")
+                                    }
+                                    return server.mysql.ClientAddress.findById(clientAddress.id, {transaction})
+                                    .then((ClientAddress) => {
+                                        return _.assign(JSON.parse(JSON.stringify(ClientAddress)), { type: clientAddress.type, select: clientAddress.select })
+                                    })
+                                })
                             )
                         }
                         else {
-                            clientAddressesPromises.push(ctx.call("data/client.clientAddressCreate", {
-                                data: clientAddress
-                            }).then((clientAddressCreate) => {
-                                return _.assign(clientAddressCreate, { type: clientAddress.type, select: clientAddress.select })
-                            })
+                            clientAddressesPromises.push(
+                                server.mysql.ClientAddress.create(clientAddress, {transaction})
+                                    .then((clientAddressCreate) => {
+                                        if(!clientAddressCreate){
+                                            console.log("Nenhum registro encontrado. Create.")
+                                            return Promise.reject("Erro ao cadastrar endereço do cliente.")
+                                        }
+                                        return _.assign(JSON.parse(JSON.stringify(clientAddressCreate)), { type: clientAddress.type, select: clientAddress.select, tempId: clientAddress.tempId })
+                                    })
                             )
                         }
                     })
@@ -357,72 +268,51 @@ module.exports = (server) => {
                 })
             },
             /**
-             * @param {Object} data, {Object} transaction
-             * @returns {Promise.<Object>} clientPhone
-             */
-            clientPhoneCreate(ctx){
-                return server.mysql.ClientPhone.create(ctx.params.data)
-                .then((clientPhone) => {
-                    if(!clientPhone){
-                        console.log("Nenhum registro encontrado. Create clientPhone.")
-                        return Promise.reject("Erro ao cadastrar telefone do cliente.")
-                    }
-                    return JSON.parse(JSON.stringify(clientPhone))
-                })
-            },
-            /**
-             * @param {Object} where, {Object} transaction
-             * @returns {Promise.<Object>} clientPhone
-             */
-            clientPhoneUpdate(ctx){
-                return server.mysql.ClientPhone.update(ctx.params.data, {
-                    where: ctx.params.where || {},
-                    paranoid: false
-                }).then((clientPhoneUpdate) => {
-                    if(parseInt(_.toString(clientPhoneUpdate)) < 1 ){
-                        console.log("Nenhum registro encontrado. Update. clientPhone")
-                        return Promise.reject("Erro ao atualizar telefone do cliente.")
-                    }
-                    return server.mysql.ClientPhone.findById(ctx.params.data.id)
-                    .then((clientPhone) => {
-                        return JSON.parse(JSON.stringify(clientPhone))
-                    })
-                })
-            },
-            /**
              * @param {Object} data, {Int} clientId, {Object} transaction (optional)
              * @returns {Promise.<Array>} clientPhones
              */            
-            saveClientPhones(ctx) {
+            saveClientPhones(data, clientId, transaction) {
                 /*
                 * Delete all client's clientPhone
                 */ 
                return server.mysql.ClientPhone.destroy({
                     where: {
-                        clientId: ctx.params.clientId
-                    }
+                        clientId: clientId
+                    }, 
+                    transaction
                 }).then(() => {
                     let clientPhonesPromises = []
-                    ctx.params.data.forEach((clientPhone) => {
+                    data.forEach((clientPhone) => {
                         if (clientPhone.id) {
-                            clientPhonesPromises.push(ctx.call("data/client.clientPhoneUpdate", {
-                                data: _.assign(clientPhone, {
+                            clientPhonesPromises.push(server.mysql.ClientPhone.update(_.assign(clientPhone, {
                                     dateRemoved: null
-                                }),
-                                where: {
-                                    id: clientPhone.id
-                                }
-                            }).then((clientPhoneUpdate) => {
-                                return _.assign(clientPhoneUpdate, { select: clientPhone.select })
-                            })
-                            )
+                                }), {
+                                    where: {
+                                        id: clientPhone.id
+                                    },
+                                    transaction
+                                }).then((clientPhoneUpdate) => {
+                                    if(parseInt(_.toString(clientPhoneUpdate)) < 1 ){
+                                        console.log("Nenhum registro encontrado. Update. clientPhone")
+                                        return Promise.reject("Erro ao atualizar telefone do cliente.")
+                                    }
+                                    return server.mysql.ClientPhone.findById(clientPhone.id, {transaction})
+                                    .then((clientPhoneUpdated) => {
+                                        return _.assign(JSON.parse(JSON.stringify(clientPhoneUpdated)), { select: clientPhone.select })
+                                    })
+                                })
+                            )                        
                         }
                         else {
-                            clientPhonesPromises.push(ctx.call("data/client.clientPhoneCreate", {
-                                data: clientPhone
-                            }).then((clientPhoneCreate) => {
-                                return _.assign(clientPhoneCreate, { select: clientPhone.select })
-                            })
+                            clientPhonesPromises.push(
+                                server.mysql.ClientPhone.create(clientPhone, {transaction})
+                                .then((clientPhoneCreate) => {
+                                    if(!clientPhoneCreate){
+                                        console.log("Nenhum registro encontrado. Create clientPhone.")
+                                        return Promise.reject("Erro ao cadastrar telefone do cliente.")
+                                    }
+                                    return _.assign(JSON.parse(JSON.stringify(clientPhoneCreate)), { select: clientPhone.select, tempId: clientPhone.tempId})
+                                })
                             )
                         }
                     })
@@ -439,55 +329,60 @@ module.exports = (server) => {
              * @param {Object} data, {Int} clientId, {Object} transaction (optional)
              * @returns {Promise.<Array>} clientCustomFields
              */            
-            saveClientCustomFields(ctx) {
+            saveClientCustomFields(data, clientId, transaction) {
                 /*
                 * Delete all client's clientCustomFields
                 */ 
                 return server.mysql.ClientCustomField.destroy({
                     where: {
-                        clientId: ctx.params.clientId
-                    }
+                        clientId: clientId
+                    }, 
+                    transaction
                 }).then(() => {
-                    return server.mysql.ClientCustomField.bulkCreate(ctx.params.data, {
-                        updateOnDuplicate:['clientId', 'customFieldId', 'value', 'dateUpdate', 'dateRemoved'],
-                        returning: true
-                    }).then((response) => {
-                        if (!response) {
-                            console.log('Registro não encontrado. data/client.saveClientCustomFields')
-                            return Promise.reject("Erro ao atualizar dados do cliente.")
+                    let clientCustomFieldsPromises = []
+                    data.forEach((clientCustomField) => {
+                        if (clientCustomField.id) {
+                            clientCustomFieldsPromises.push(server.mysql.ClientCustomField.update(_.assign(clientCustomField, {
+                                    dateRemoved: null
+                                }), {
+                                    where: {
+                                        id: clientCustomField.id
+                                    },
+                                    transaction
+                                }).then((clientCustomFieldUpdate) => {
+                                    if(parseInt(_.toString(clientCustomFieldUpdate)) < 1 ){
+                                        console.log("Nenhum registro encontrado. Update. clientCustomField")
+                                        return Promise.reject("Erro ao atualizar dados do cliente.")
+                                    }
+                                    return server.mysql.ClientCustomField.findById(clientCustomField.id, {transaction})
+                                    .then((clientCustomFieldUpdated) => {
+                                        return JSON.parse(JSON.stringify(clientCustomFieldUpdated))
+                                    })
+                                })
+                            )                        
                         }
-                        return response
+                        else {
+                            clientCustomFieldsPromises.push(
+                                server.mysql.ClientCustomField.create(clientCustomField, {transaction})
+                                .then((clientCustomFieldCreate) => {
+                                    if(!clientCustomFieldCreate){
+                                        console.log("Nenhum registro encontrado. Create clientCustomField.")
+                                        return Promise.reject("Erro ao cadastrar dados do cliente.")
+                                    }
+                                    return _.assign(JSON.parse(JSON.stringify(clientCustomFieldCreate)), { tempId: clientCustomField.tempId})
+                                })
+                            )
+                        }
+                    })
+
+                    return Promise.all(clientCustomFieldsPromises).then((clientCustomFields) => {
+                        return clientCustomFields
                     }).catch((err) => {
-                        console.log("Erro no bulkCreate do clientCustomField, data/client.saveClientCustomFields")
-                        return Promise.reject("Erro ao atualizar telefones do cliente.")
+                        console.log("Erro em: data/client.saveClientCustomFields - Promise ALL")
+                        return Promise.reject("Erro ao interagi com os dados do cliente.")
                     })
                 })
-            },
-        /**
-         * @returns {Promise} set transaction
-         */ 
-        setTransaction() {
-            return server.sequelize.transaction().then((transaction) => {
-                this._transaction = transaction
-            })
-        },
-
-        /**
-         * Commit persistence
-         */
-        commit() {
-            console.log("Commit do data/client!")
-            this._transaction.commit()
-        },
-
-        /**
-         * Rollback persistence
-         */
-        rollback(ctx) {
-            console.log("Oh God, just rollback do data/client!")
-            this._transaction.rollback()
-            throw new Error(ctx.params.err)
-        }
+            }
         }
     }
 }

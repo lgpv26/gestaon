@@ -117,11 +117,11 @@ module.exports = (server, restify) => {
                 return next(err)
             });
         }
-        if(_.isString(columnFind) || !columnFind){
+        if(_.isString(columnFind) || !columnFind) {
             return queryFnc
         }
-        else{
+        else {
             return queryFnc(columnFind, res, next)
         }
     }
-};
+}

@@ -38,7 +38,9 @@ module.exports = (server) => { return {
          * @returns {Promise.<Object>} address
          */
         create(ctx){
-            return server.mysql.Address.create(ctx.params.data)
+            return server.mysql.Address.create(ctx.params.data, {
+                transaction: ctx.params.transaction || null
+             })
             .then((address) => {
                 if(!address){
                     console.log("Nenhum registro encontrado. Create.")
@@ -53,7 +55,8 @@ module.exports = (server) => { return {
          */
         update(ctx){
             return server.mysql.Address.update(ctx.params.data, {
-                where: ctx.params.where || {}
+                where: ctx.params.where || {},
+                transaction: ctx.params.transaction || null
             }).then((addressUpdate) => {
                 if(parseInt(_.toString(addressUpdate)) < 1 ){
                     console.log("Nenhum registro encontrado. Update.")
@@ -114,6 +117,7 @@ module.exports = (server) => { return {
                         },
                         transaction: ctx.params.transaction
                     }).then((addressesConsult) => {
+                        
                         addressesConsult.forEach((result) => {
                             const index = _.findIndex(data, (addressesFind) => {
                                 return addressesFind.address.id === result.id
@@ -129,6 +133,7 @@ module.exports = (server) => { return {
                 /*
                 * Create or Update the allow Address
                 */
+               
                     let addressChangePromises = []
                     data.forEach((clientAddress) => {
                         if (clientAddress.address.id) {
@@ -136,7 +141,8 @@ module.exports = (server) => { return {
                                 data: clientAddress.address,
                                 where: {
                                     id: clientAddress.address.id
-                                }
+                                },
+                                transaction: ctx.params.transaction || null
                             }).then((address) => {
                                 return _.assign(clientAddress, { address: address })
                             })
@@ -146,7 +152,8 @@ module.exports = (server) => { return {
                             addressChangePromises.push(ctx.call("data/address.create", {
                                 data: _.assign(clientAddress.address, {
                                     companyId: ctx.params.companyId
-                                })
+                                }),
+                                transaction: ctx.params.transaction || null
                             }).then((address) => {
                                 return _.assign(clientAddress, { address: address })
                             })
@@ -161,7 +168,7 @@ module.exports = (server) => { return {
                     })
                 })                   
             })
-            .then((response) => {                
+            .then((response) => {               
                 return _.concat((response) ? response : [], (addressCantChange) ? addressCantChange : [])
             }).catch((err) => {
                 console.log("Erro em: data/address.saveAddresses")

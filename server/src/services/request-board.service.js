@@ -379,7 +379,8 @@ module.exports = (server) => { return {
                             sectionId: section.id,
                             code,
                             name: 'Card #' + code,
-                            position
+                            position,
+                            requestId: (ctx.params.data.requestId) ? ctx.params.data.requestId : null
                         })
                 )
                 .then((card) => {
