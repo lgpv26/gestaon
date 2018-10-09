@@ -57,6 +57,7 @@ module.exports = (server) => {
                                         })
 
                                         if(!checkId) _.set(mapIds, objId, action.id)
+                                        _.set(action, 'tempId', objId)
 
                                         objReturn.push(action)
                                         
@@ -174,7 +175,8 @@ module.exports = (server) => {
                     const promises = []
                     _.forEach(obj.data, (value, key) => {
                         promises.push(new Promise((resolve, reject) => {
-                            if(_.get(obj, 'data.' + key) && _.isNumber(value)) resolve()
+                            if(_.get(obj, 'data.' + key) && _.isNumber(value)) return resolve()
+                            if(key === 'clientAddressId' || key === 'clientPhoneId') return resolve()
                             if((typeof _.get(obj, 'data.' + key) != 'object') && value.substring(0,4) === "tmp/") {
                                 if(mapIds[value]){
                                     _.set(obj.data, key, _.get(mapIds, value))

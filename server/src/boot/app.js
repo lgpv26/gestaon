@@ -110,6 +110,7 @@ di.server.broker.createService(require('../services/data/finance.service')(di.se
 di.server.broker.createService(require('../services/data/request-queue.service')(di.server))
 di.server.broker.createService(require('../services/data/request-order.service')(di.server))
 di.server.broker.createService(require('../services/data/request-payments.service')(di.server))
+di.server.broker.createService(require('../services/data/request-details.service')(di.server))
 
 di.server.broker.createService(require('../services/draft/index.service')(di.server))
 

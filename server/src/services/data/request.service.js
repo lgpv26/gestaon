@@ -17,10 +17,11 @@ module.exports = (server) => {
                                     try{
                                         let oldRequest = null
                                         const data = await vm.checkTempIds(ctx.params.data)
-                                        if(data.id) oldRequest = await vm.oldRequest(data, companyId)
+                                        if(data.id) oldRequest = await vm.oldRequest(data, companyId)                                   
 
                                         const client = await vm.checkClient(
                                             data.client || null,
+                                            { request: data},
                                             transaction,
                                             companyId)
                                         
@@ -48,7 +49,7 @@ module.exports = (server) => {
                                             },
                                             transaction)
 
-                                        const timeline = await vm.createTimeline({
+                                        const requestTimeline = await vm.createTimeline({
                                             requestId: _.get(request, 'id', null),
                                             triggeredBy: userId,
                                             companyId: companyId,
@@ -58,36 +59,42 @@ module.exports = (server) => {
                                         },
                                         transaction)
 
-                                        resolve(request)
-/*
                                         const requestPayments = await vm.checkRequestPayments(
                                             data,
                                             request,
-                                            oldRequest,
-                                            companyId,
                                             userId,
                                             transaction
                                         )
 
-                                        console.log(requestPayments)
-                  /*                      
+                                        const requestDetails = await vm.checkRequestDetails(
+                                            data,
+                                            request,
+                                            client,
+                                            userId,
+                                            transaction
+                                        )
 
-                                        //console.log(ctx.params.data)
+                                        await vm.dashboard(request, client, oldRequest, companyId, transaction)
 
-                                        /*
-                                        const teste = await vm.createRequest({
-                                            companyId: 1,
-                                            userId: 2
-                                        }, transaction) 
-                                        */
 
-                                        // console.log(teste)
-                                       // resolve(teste)
+                                        if (request.status === 'pending' && request.userId) {
+                                            await vm.pushNotification(request)
+                                        }
 
+                                        return resolve(
+                                            _.assign(
+                                                request,
+                                                {client},
+                                                {requestOrder},
+                                                {requestTimeline},
+                                                {requestPayments},
+                                                requestDetails
+                                            )
+                                        )
                                         
                                     }
                                     catch(err) {
-                                        console.log('try catch do request')
+                                        console.log(err, 'try catch do request')
                                         reject(err)
                                     }
                             }
@@ -102,9 +109,26 @@ module.exports = (server) => {
                     console.log('catch transaction')
                     return Promise.reject(err)
                 })               
-            
+        },
 
-        }
+        getOne(ctx) {
+            return server.mysql.Request.findOne({
+                where: ctx.params.where || {},
+                include: ctx.params.include || []
+            }).then((request) => {
+                return JSON.parse(JSON.stringify(request))
+            })
+        },
+        /**
+         * @param {Object} where, {Array} include
+         * @returns {Promise.<Array>} requests
+         */
+        getList(ctx){
+            return server.mysql.Request.findAll({
+                where: ctx.params.where || {},
+                include: ctx.params.include || []
+            })
+        },
 
         },
         methods: {
@@ -250,11 +274,13 @@ module.exports = (server) => {
                     return JSON.parse(JSON.stringify(request))
                 })
             },
-            checkClient(data, transaction, companyId){
+            checkClient(data, dataRequest, transaction, companyId){
                 if(!data) return Promise.resolve(null)
                 if((data.name === '' || data.name === null) && !data.id) return Promise.resolve(null)
+                const request = dataRequest.request
                 return server.broker.call('data/client.start', {
                     data,
+                    request,
                     companyId,
                     transaction
                 })
@@ -280,7 +306,7 @@ module.exports = (server) => {
                             console.log("Nenhum registro encontrado. Update.")
                             return Promise.reject('Erro ao atualizar o pedido (geral).')
                         }
-                        return server.mysql.Request.findById(ctx.params.data.id, {transaction})
+                        return server.mysql.Request.findById(data.id, {transaction})
                         .then((request) => {
                             return JSON.parse(JSON.stringify(request))
                         })
@@ -306,17 +332,242 @@ module.exports = (server) => {
                         return Promise.reject(err)
                     }) 
             },
-            checkRequestPayments(data, request, oldRequest, companyId, userId, transaction){
+            checkRequestPayments(data, request, userId, transaction){
                 if(!_.has(data, 'requestPayments')) return Promise.resolve(null)
                 return server.broker.call('data/request-payments.start', {
                     data: data.requestPayments,
                     request,
-                    oldRequest,
-                    companyId,
                     userId,
                     transaction
                 })
+            },
+            checkRequestDetails(data, request, client, userId, transaction){
+                if(!_.has(data, 'clientAddressId') || !_.has(data, 'clientPhoneId')) return Promise.resolve(null)
+
+                const clientAddressSelect = _.find(client.clientAddresses, 'select')
+                const clientPhoneSelect = _.find(client.clientPhones, 'select')
+
+                return server.broker.call('data/request-details.start', {
+                    data: {
+                        clientAddressSelect,
+                        clientPhoneSelect
+                    },
+                    request,
+                    userId,
+                    transaction
+                })
+            },
+            dashboard(request, client, oldRequest, companyId, transaction) {
+                return new Promise((resolve, reject) => {
+                    if(!client.id || (request.status === 'finished' || request.status === 'canceled')){
+                        if(request.id && (oldRequest && oldRequest.status !== 'finished' && oldRequest.status !== 'canceled')){
+                            return server.broker.call('request-board.getCard', {
+                                where: {
+                                    requestId: parseInt(request.id)
+                                }
+                            }).then((card) => {                 
+                                return server.broker.call('request-board.removeCard', {
+                                    data: {
+                                        cardId: card.id,
+                                        companyId: companyId
+                                    }
+                                }).then(() => {
+                                    return server.broker.call("push-notification.push", {
+                                        data: {
+                                            userId: request.userId,
+                                            title: 'O pedido #' + request.id + ' foi encerrado.',
+                                            sound: 'deny1',
+                                            message: 'Abra a notificação para ver mais detalhes',
+                                            payload: {
+                                                type: 'request.removed',
+                                                id: '' + request.id
+                                            }
+                                        },
+                                        notRejectNotLogged: true
+                                    })
+                                    .then(() => {
+                                        resolve()
+                                    })
+                                })
+                            })
+                        }
+                        else{
+                            resolve()
+                        }                
+                    }
+                    else {
+                        return server.broker.call("data/request.getOne", {
+                            where: {
+                                id: request.id
+                            },
+                            transaction,
+                            include: [{
+                                model: server.mysql.RequestTimeline,
+                                as: "requestTimeline",
+                                include: [{
+                                    model: server.mysql.User,
+                                    as: "triggeredByUser",
+                                    attributes: ['id', 'name', 'email', 'activeCompanyUserId']
+                                },{
+                                    model: server.mysql.User,
+                                    as: "user",
+                                    attributes: ['id', 'name', 'email', 'activeCompanyUserId']
+                                }]
+                            },
+                            {
+                                model: server.mysql.RequestCard,
+                                as: "requestCard"
+                            },
+                            {
+                                model: server.mysql.RequestClientPhone,
+                                as: "requestClientPhones",
+                                include: [{
+                                    model: server.mysql.ClientPhone,
+                                    as: "clientPhone",
+                                }]
+                            },{
+                                model: server.mysql.RequestClientAddress,
+                                as: "requestClientAddresses",
+                                include: [{
+                                    model: server.mysql.ClientAddress,
+                                    as: "clientAddress",
+                                    include:[{
+                                        model: server.mysql.Address,
+                                        as: "address"
+                                    }]
+                                }]
+                            },{
+                                model: server.mysql.Client,
+                                as: "client",
+                                include: [{
+                                    model: server.mysql.ClientPhone,
+                                    as: 'clientPhones'
+                                }, {
+                                    model: server.mysql.ClientAddress,
+                                    as: 'clientAddresses',
+                                    include: [{
+                                        model: server.mysql.Address,
+                                        as: 'address'
+                                    }]
+                                }, {
+                                    model: server.mysql.ClientCustomField,
+                                    as: 'clientCustomFields',
+                                    include: [{
+                                        model: server.mysql.CustomField,
+                                        as: 'customField'
+                                    }]
+                                }, {
+                                    model: server.mysql.ClientGroup,
+                                    as: 'clientGroup'
+                                }]
+                            },{
+                                model: server.mysql.RequestOrder,
+                                as: "requestOrder",
+                                include: [{
+                                    model: server.mysql.RequestOrderProduct,
+                                    as: 'requestOrderProducts',
+                                    include: [{
+                                        model: server.mysql.Product,
+                                        as: 'product'
+                                    }]
+                                }]
+                            },{
+                                model: server.mysql.RequestPayment,
+                                as: "requestPayments",
+                                include: [{
+                                    model: server.mysql.PaymentMethod,
+                                    as: 'paymentMethod'
+                                }]
+                            }]
+                        }).then((consultResquest) => {
+                            if(request.id && (oldRequest && oldRequest.status !== 'finished' && oldRequest.status !== 'canceled')) {
+                                if(consultResquest.deliveryDate === oldRequest.deliveryDate){
+                                    return server.broker.call("request-board.reloadCard", {
+                                        request: consultResquest,
+                                        companyId: companyId,
+                                    })
+                                    .then(() => {
+                                        return resolve()
+                                    })
+                                }
+                                else {
+                                    return server.broker.call("request-board.updateCard", {
+                                        where: {
+                                            requestId: consultResquest.id
+                                        },
+                                        data: {
+                                            deliveryDate: consultResquest.deliveryDate
+                                        },
+                                        cardId: consultResquest.requestCard.id,
+                                        companyId: companyId,
+                                        transaction
+                                    })
+                                    .then(() => {
+                                        return resolve()
+                                    })
+                                }
+                            }
+                            else{
+                                return server.broker.call("request-board.consultSectionOne", {
+                                    where: {
+                                        companyId: consultResquest.companyId
+                                    },
+                                    companyId: consultResquest.companyId
+                                }).then((section) => {
+                                    let maxCard = _.maxBy(section.cards, (card) => {
+                                        return card.position
+                                    })
+                                    let maxCardPosition = 65535
+                                    if (maxCard) maxCardPosition += maxCard.position
+                                    return server.broker.call("request-board.createCard", {
+                                        section: section,
+                                        data: {
+                                            requestId: consultResquest.id,
+                                            position: maxCardPosition,
+                                            section: section.id,
+                                            deliveryDate: consultResquest.deliveryDate,
+                                            createdBy: _.first(consultResquest.requestTimeline).triggeredBy,
+                                            companyId: consultResquest.companyId
+                                        },
+                                        request: consultResquest,
+                                        transaction
+                                    }).then((card) => {
+                                        return resolve(card)
+                                    }).catch((err) => {
+                                        console.log("Erro em: draft/request.dashboard createCard")
+                                        return reject(err)
+                                    })
+                                })
+                            }
+                        }).catch((err) => {
+                            console.log(err, "Erro em: draft/request.dashboard consult do request")
+                            return reject("Erro ao consultar o pedido para criar o card.")
+                        })
+                    }
+                })
+            },
+            pushNotification(request){
+                return new Promise((resolve, reject) => {
+                    return server.broker.call("push-notification.push", {
+                        data: {
+                            userId: request.userId,
+                            title: 'Novo pedido #' + request.id,
+                            message: 'Abra a notificação para ver mais detalhes',
+                            payload: {
+                                type: 'request.create',
+                                id: '' + request.id
+                            }
+                        },
+                        notRejectNotLogged: true
+                    }).then(() => {
+                        return resolve()
+                    }).catch(() => {
+                        return resolve('Não foi possivel notificar o entregador!')
+                    })
+                })
+                
             }
+
         }
     }
 }

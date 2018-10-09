@@ -17,8 +17,9 @@ module.exports = (server) => {
                                 vm.saveInRequest = (ctx.params.transaction) ? true : false
                                 ctx.params.data = _.assign(ctx.params.data, {companyId})
                                 const transaction = await vm.checkTransaction(ctx.params.transaction || null)
+                                const request = ctx.params.request
 
-                                ctx.params.data = await vm.checkTempIds(ctx.params.data)
+                                ctx.params.data = await vm.checkTempIds(ctx.params.data, request)
 
                                 const client = await vm.saveClient(ctx.params.data, transaction)
 
@@ -69,18 +70,18 @@ module.exports = (server) => {
                 })
             },
 
-            checkTempIds(data){
+            checkTempIds(data, request){
                 let removeTemps = []
 
                 if(_.has(data, "clientAddresses")){
-                    removeTemps.push(this.removeArrayTempIds(data, "clientAddresses", "clientAddressId")
+                    removeTemps.push(this.removeArrayTempIds(data, "clientAddresses", "clientAddressId", request)
                     .then((clientAddresses) => {
                         _.set(data, "clientAddresses", clientAddresses)
                     }))
                 }
                 
                 if(_.has(data, "clientPhones")){
-                    removeTemps.push(this.removeArrayTempIds(data, "clientPhones", "clientPhoneId")
+                    removeTemps.push(this.removeArrayTempIds(data, "clientPhones", "clientPhoneId", request)
                     .then((clientPhones) => {
                         _.set(data, "clientPhones", clientPhones)
                     }))
@@ -104,13 +105,13 @@ module.exports = (server) => {
                 })
             },
 
-            removeArrayTempIds(data, path, select){
+            removeArrayTempIds(data, path, select, request){
                 let newValue = []
                 const promises = []
                 _.map(_.get(data, path), (obj) => {
                     promises.push(new Promise((resolve, reject) => {
-                        if(select && _.has(data, select)){
-                            if(obj.id === _.get(data, select)){
+                        if(select && _.has(request, select)){
+                            if(obj.id === _.get(request, select)){
                                 obj.select = true
                             }
                             else{
