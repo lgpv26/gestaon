@@ -3,6 +3,7 @@ const basePath = require('./../middlewares/base-path.middleware');
 const Controller = require('./../models/Controller')
 import { HTTPError } from '~errors'
 
+
 module.exports = (server, restify) => {
 
     const authGuard = require('./../middlewares/auth-guard.middleware')(server, restify);

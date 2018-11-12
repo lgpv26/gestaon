@@ -48,6 +48,7 @@ module.exports = {
                 deadlineDatetime: {
                     type: TIMESTAMP
                 },
+                /*
                 paid: {
                     type: Sequelize.BOOLEAN,
                     default: false
@@ -62,6 +63,7 @@ module.exports = {
                 settledDatetime: {
                     type: TIMESTAMP
                 },
+                */
                 dateUpdated: {
                     type: TIMESTAMP
                 },

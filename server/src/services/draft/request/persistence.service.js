@@ -262,7 +262,37 @@ module.exports = (server) => {
          */
         dashboard(ctx) {
             if(!this._request.client.id || (this._request.status === 'finished' || this._request.status === 'canceled')){
-                return true
+                if(ctx.params.data.id && (this._oldRequest.status !== 'finished' && this._oldRequest.status !== 'canceled')){
+                    return ctx.call('request-board.getCard', {
+                        where: {
+                            requestId: parseInt(ctx.params.data.id)
+                        }
+                    }).then((card) => {                 
+                        return ctx.call('request-board.removeCard', {
+                            data: {
+                                cardId: card.id,
+                                companyId: this._companyId
+                            }
+                        }).then(() => {
+                            return ctx.call("push-notification.push", {
+                                data: {
+                                    userId: this._request.userId,
+                                    title: 'O pedido #' + ctx.params.data.id + ' foi encerrado.',
+                                    sound: 'deny1',
+                                    message: 'Abra a notificação para ver mais detalhes',
+                                    payload: {
+                                        type: 'request.removed',
+                                        id: '' + ctx.params.data.id
+                                    }
+                                },
+                                notRejectNotLogged: true
+                            })
+                        })
+                    })
+                }
+                else{
+                    return true
+                }                
             }
             else {
                 return ctx.call("data/request.getOne", {
@@ -281,6 +311,10 @@ module.exports = (server) => {
                             as: "user",
                             attributes: ['id', 'name', 'email', 'activeCompanyUserId']
                         }]
+                    },
+                    {
+                        model: server.mysql.RequestCard,
+                        as: "requestCard"
                     },
                     {
                         model: server.mysql.RequestClientPhone,
@@ -352,8 +386,14 @@ module.exports = (server) => {
                             })
                         }
                         else {
-                            return ctx.call("request-board.updateCardDeliveryDate", {
-                                request: request,
+                            return ctx.call("request-board.updateCard", {
+                                where: {
+                                    requestId: request.id
+                                },
+                                data: {
+                                    deliveryDate: request.deliveryDate
+                                },
+                                cardId: request.requestCard.id,
                                 companyId: this._companyId
                             })
                         }
@@ -390,7 +430,7 @@ module.exports = (server) => {
                         })
                     }
                 }).catch((err) => {
-                    console.log("Erro em: draft/request/persistence.dashboard consult do request")
+                    console.log(err, "Erro em: draft/request/persistence.dashboard consult do request")
                     return Promise.reject("Erro ao consultar o pedido para criar o card.")
                 })
             }

@@ -10,6 +10,10 @@
     }],
     [ "babel-plugin-webpack-alias", {
       "config": "./webpack.config.js"
+    }],
+    ["transform-runtime", {
+      "polyfill": false,
+      "regenerator": true
     }]
   ]
 }

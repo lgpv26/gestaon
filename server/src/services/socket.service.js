@@ -1,6 +1,8 @@
 import _ from 'lodash'
 import config from '~config'
 import EventResponse from '../models/EventResponse'
+import { base64encode, base64decode } from 'nodejs-base64'
+import moment from 'moment'
 
 
 module.exports = (server) => {
@@ -67,6 +69,45 @@ module.exports = (server) => {
                                 })
                             })
                         }
+                    })
+                })
+            },
+
+            conected(ctx){
+                let promises = []
+                promises.push(ctx.call('socket.presenceLoad', {
+                    companyId: ctx.params.companyId,
+                    activeSocketId: ctx.params.activeSocketId
+                }))
+
+                promises.push(ctx.call('socket.requestBoardLoad', {
+                    companyId: ctx.params.companyId,
+                    activeSocketId: ctx.params.activeSocketId,
+                    userId: ctx.params.userId
+                }))
+
+                return Promise.all(promises)
+            },
+
+            requestBoardLoad(ctx){
+                server.io.sockets.sockets[ctx.params.activeSocketId].join('company/' + ctx.params.companyId + '/request-board') // subscribe the user to its request-board company channel
+
+                return ctx.call('socket.control', {
+                    userId: ctx.params.userId,
+                    socketId: ctx.params.activeSocketId,
+                    companyId: ctx.params.companyId
+                }).then(() => {
+                    return ctx.call('request-board.load', {
+                        data: {
+                            filter: base64encode(JSON.stringify({deliveryDate: moment().startOf('day').toISOString()})),
+                            companyId: ctx.params.companyId,
+                        },
+                        userId: ctx.params.userId
+                    }).then((sections) => {
+                        server.io.sockets.sockets[ctx.params.activeSocketId].emit('requestBoardLoad', new EventResponse({sections}))
+                        return Promise.resolve()
+                    }).catch((err) => {
+                        //console.log('aquii', err)
                     })
                 })
             },

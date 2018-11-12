@@ -31,16 +31,25 @@ module.exports = (server) => { return {
                 }
                 return 1
             }).then((draftId) => {
-                return server.mongodb.Draft.create({
-                    draftId: draftId,
-                    companyId: ctx.params.data.companyId,
-                    createdBy: ctx.params.data.createdBy,
-                    data: ctx.params.data.data,
-                    type: 'request',
-                    isSingle: false
-                }).then((draft) => {
-                    server.io.to(`company/${ctx.params.data.companyId}`).emit('draft.create',new EventResponse(draft))
-                    return draft
+                return ctx.call('request-board.createCard', {
+                    data: {
+                        companyId: ctx.params.data.companyId,
+                        createdBy: ctx.params.data.createdBy
+                    }
+                })
+                .then((card) => {
+                    return server.mongodb.Draft.create({
+                        draftId: draftId,
+                        companyId: ctx.params.data.companyId,
+                        createdBy: ctx.params.data.createdBy,
+                        data: ctx.params.data.data,
+                        cardId: card.id,
+                        type: 'request',
+                        isSingle: false
+                    }).then((draft) => {
+                        server.io.to(`company/${ctx.params.data.companyId}`).emit('draft.create',new EventResponse(draft))
+                        return draft
+                    })                    
                 })
             })
         },

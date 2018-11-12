@@ -8,6 +8,7 @@ module.exports = {
             draftId: Number, 
             companyId: Number,
             createdBy: Number,
+            cardId: Number,
             type: {
                 type: String,
                 enum: {

@@ -71,7 +71,7 @@ module.exports = {
                     type: TIMESTAMP
                 },
                 status: {
-                    type: Sequelize.ENUM('pending','finished','canceled','in-displacement')
+                    type: Sequelize.ENUM('pending','finished','canceled','in-displacement', 'draft')
                 }
             }, {
                 tableName: "request",
@@ -86,7 +86,7 @@ module.exports = {
     },
 
     postSettings: ({Request,Company,Client,User,RequestOrder,RequestClientPhone,RequestClientAddress,RequestTimeline,
-        ClientPhone,ClientAddress,RequestPayment, PaymentMethod, RequestPaymentBill, RequestChatItem}) => {
+        ClientPhone,ClientAddress,RequestPayment, PaymentMethod, RequestPaymentBill, RequestChatItem, RequestCard}) => {
 
         Request.belongsTo(Company, {as: 'company', foreignKey: 'companyId'})
         Request.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
@@ -107,6 +107,9 @@ module.exports = {
         Request.belongsToMany(ClientAddress, { through: RequestClientAddress, as: 'clientAddresses', foreignKey: 'requestId' })
 
         Request.hasMany(RequestChatItem, {as: 'requestChatItems', foreignKey: 'requestId'})
+
+        Request.hasOne(RequestCard, {as: 'requestCard', foreignKey: 'requestId'})
+
     }
 
 }

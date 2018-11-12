@@ -87,7 +87,7 @@ module.exports = class Events {
                     socket.activeCompany = _.find(socket.user.companies, {
                         id: socket.activeUserCompany.companyId
                     })
-                    if(!socket.activeCompany) socket.activeCompany =  _.first(socket.user.companies)
+                    if(!socket.activeCompany) socket.activeCompany = _.first(socket.user.companies)
 
                     return this.server.broker.call('socket.active', {
                         userId: socket.user.id,
@@ -100,6 +100,7 @@ module.exports = class Events {
                             socket.instance.join('company/' + socket.activeCompany.id)
 
                             return new Promise((resolve, reject) => {
+                               
                                 // join the user to its company events
                                 if(roomsConsult) {
                                     const promises = []
@@ -143,9 +144,10 @@ module.exports = class Events {
                                         console.log(err)
                                     })
                                 })
-                                this.server.broker.call('socket.presenceLoad', {
+                                this.server.broker.call('socket.conected', {
                                     companyId: socket.activeCompany.id,
-                                    activeSocketId: socket.instance.id
+                                    activeSocketId: socket.instance.id,
+                                    userId: socket.user.id
                                 }).then(() => {
                                     // Importing all events
                                     this.events.forEach((event) => {
@@ -210,7 +212,7 @@ module.exports = class Events {
                 if(!!this._versionInterval){
                     clearInterval(this._versionInterval)
                 }
-
+                
                 this.server.io.in('company/' + socket.activeCompany.id).emit('presence:remove', new EventResponse(socket.user.id))
 
                 this.server.broker.call('socket.remove', {
