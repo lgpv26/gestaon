@@ -1,5 +1,5 @@
 <template>
-    <div class="board-section" :style="{ width: sectionWidth }">
+    <div class="board-section" v-show="sectionCards.length" :style="{ width: sectionWidth }">
         <div class="board-section__header" :style="{ height: options.headerHeight + 'px' }">
             <div class="header__section-title">
                 <h3>{{ section.name }}</h3>
@@ -22,19 +22,13 @@
             </div>
         </div>
         <div class="scrollable-content">
-            <app-scrollable ref="scrollable" @updated="onSectionScrollUpdated($event)">
-                <div class="board-section__viewport" :style="{ 'width': sectionWidth, 'height': sectionHeight }">
-                    <app-draggable class="board-section__cards" :data-section-id="section.id" :value="section.cards" :options="cardDraggableOptions"
-                        :style="{'padding-bottom': options.gutterSize + 'px', 'padding-left': options.gutterSize + 'px'}"
-                        @input="onCardDraggableInput($event, section)" @start="onCardDragStart($event, section)" @end="onCardDragEnd($event, section)"
-                        @change="onCardPositionChange($event, section)">
-                        <div class="request-card" v-for="card in section.cards" v-show="card.state.showCard" @mousedown="onMouseDown(section)" :key="'card-' + card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}">
-                            <app-request-board-card class="request-card__main" :card="card" :isDragging="isDraggingCard" @click="requestCardClicked(card, $event)"></app-request-board-card>
+                <app-perfect-scrollbar class="board-section__viewport" :style="{ 'width': sectionWidth, 'height': sectionHeight }">
+                    <div class="board-section__cards" :style="{'padding-bottom': options.gutterSize + 'px', 'padding-left': options.gutterSize + 'px'}">
+                        <div class="request-card" v-for="card in sectionCards" :key="'card-' + card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}" @click="cardClick(card, $event)">
+                            <app-request-board-card class="request-card__main" :card="card"></app-request-board-card>
                         </div>
-                    </app-draggable>
-                    <div class="drag-space-hider" :style="{ width: '100%', position: 'absolute', top: 0, height: dragSpaceHiderHeight }"></div>
-                </div>
-            </app-scrollable>
+                    </div>
+                </app-perfect-scrollbar>
         </div>
     </div>
 </template>
@@ -43,15 +37,18 @@
     import { mapMutations, mapState, mapGetters } from 'vuex'
     import DraggableComponent from 'vuedraggable'
     import _ from 'lodash'
+    import shortid from 'shortid'
 
+    import RequestBoardDraftCard from './RequestBoardDraftCard.vue'
     import RequestBoardCard from './RequestBoardCard.vue'
 
     export default {
         components: {
             'app-draggable': DraggableComponent,
+            'app-request-board-draft-card': RequestBoardDraftCard,
             'app-request-board-card': RequestBoardCard
         },
-        props: ['section', 'options', 'scrollables'],
+        props: ['section', 'options'],
         data(){
             return {
                 cardDraggableOptions: {
@@ -94,21 +91,30 @@
             sectionHeight(){
                 return this.mainContentArea.height - this.options.headerHeight - (this.options.gutterSize * 2) + 'px'
             },
-            dragSpaceHiderHeight(){
-                const numberOfVisibleSectionCards = _.sumBy(this.section.cards, (card) => {
-                    if(card.state.showCard) return 1
-                    else return 0
-                })
-                let baseHeight = this.options.gutterSize + (Math.floor((numberOfVisibleSectionCards / this.section.size)) * (this.options.cardHeight + this.options.gutterSize))
-                if(this.isDraggingCard) baseHeight -= (this.options.cardHeight + this.options.gutterSize)
-                return baseHeight + 'px'
+            sectionCards(){
+                switch(this.section.id){
+                    case "in-edition":
+                        return []
+                    case "requests":
+                        return this.$store.getters['entities/cards/query']().withAll().get()
+                    case "scheduled":
+                        return []
+                }
             }
         },
         methods: {
             ...mapMutations('morph-screen', []),
             ...mapMutations('request-board', [
-                'REAPLY_FILTERS','RESET_REQUESTS','ADD_SECTION','SET_SECTIONS','REMOVE_SECTION','SET_SECTION','ADD_REQUEST','SET_SECTION_REQUESTS'
             ]),
+
+            cardClick(card){
+                this.$store.dispatch('entities/windows/update', {
+                    where: card.windowId,
+                    data: {
+                        show: true
+                    }
+                })
+            },
 
             /* Sections */
 
@@ -116,9 +122,7 @@
                 this.sectionMenuParams.lastHoveredSection = section
             },
             removeSection(params){
-                this.$socket.emit('request-board:section-remove', {
-                    sectionId: params.lastHoveredSection.id
-                })
+                console.log("Remoção de seção não está implementado")
             },
             expandSection(section){
                 if(section.size < 3){
@@ -139,136 +143,6 @@
                         }
                     })
                 }
-            },
-            onSectionScrollUpdated(els){
-                const dragSpaceHiderEl = _.first(els.viewportElement.getElementsByClassName('drag-space-hider'));
-                dragSpaceHiderEl.style.top = els.contentElement.style.top;
-            },
-
-            /* Request / Cards */
-
-            onMouseDown(section){
-                this.lastSectionMove = section.id
-            },
-
-            onCardDragStart(ev){
-                /*this.lastSectionMove.from = JSON.parse(JSON.stringify(section))
-                console.log(this.lastSectionMove.from)*/
-                this.isDraggingCard = true
-                const boardCardContainer = _.first(ev.item.getElementsByClassName('request-board-card__container'));
-                boardCardContainer.style.display = 'none';
-                const tippies = Array.from(document.querySelectorAll('[data-card-tippy]'), el => el._tippy)
-                tippies.forEach((tippy) => {
-                    if(tippy){
-                        tippy.hide()
-                        tippy.disable()
-                    }
-                })
-            },
-            onCardDragEnd(ev){
-                this.isDraggingCard = false
-                const boardCardContainer = _.first(ev.item.getElementsByClassName('request-board-card__container'));
-                boardCardContainer.style.display = 'flex';
-                const tippies = Array.from(document.querySelectorAll('[data-card-tippy]'), el => el._tippy)
-                tippies.forEach((tippy) => {
-                    if(tippy){
-                        tippy.enable()
-                    }
-                })
-            },
-            /**
-             * When cards changes its positions, its vuex state should be updated through mutations
-             */
-            onCardDraggableInput(sectionCards, section){
-                this.SET_SECTION_REQUESTS({
-                    sectionId: section.id,
-                    requests: sectionCards
-                })
-            },
-            onCardPositionChange(ev, section){
-                let card, fromIndex, toIndex
-                if(_.has(ev,'moved')){ // when moved to same section
-                    fromIndex = ev.moved.oldIndex
-                    toIndex = ev.moved.newIndex
-                    card = ev.moved.element
-                    this.emitCardPositionChange(section, card, toIndex, fromIndex)
-                }
-                else if(_.has(ev,'added')){ // when moved to a different section
-                    toIndex = ev.added.newIndex
-                    card = ev.added.element
-                    this.emitCardPositionChange(section, card, toIndex, null)
-                }
-                this.REAPLY_FILTERS()
-            },
-            emitCardPositionChange(toSection, card, toIndex){
-                const fromSection = card.sectionId
-                const prevCard = toSection.cards[toIndex - 1]
-                const currCard = toSection.cards[toIndex]
-                const nextCard = toSection.cards[toIndex + 1]
-
-                if (nextCard && prevCard) {
-                    const emitData = {
-                        cardId: card.id,
-                        location: 'middle',
-                        fromSection: fromSection,
-                        toSection: toSection.id,
-                        prevCard: prevCard.id,
-                        nextCard: nextCard.id
-                    }
-                    console.log("middle", emitData)
-                    this.$socket.emit('request-board:card-move', emitData)
-                }
-                // is first
-                else if (nextCard && !prevCard) {
-                    const emitData = {
-                        cardId: currCard.id,
-                        location: 'first',
-                        fromSection: fromSection,
-                        toSection: toSection.id,
-                        prevCard: null,
-                        nextCard: nextCard.id
-                    }
-                    console.log("first", emitData)
-                    this.$socket.emit('request-board:card-move', emitData)
-                }
-                // is last or is the only card
-                else if (!nextCard && prevCard) {
-                    const emitData = {
-                        cardId: currCard.id,
-                        location: 'last',
-                        fromSection: fromSection,
-                        toSection: toSection.id,
-                        prevCard: prevCard.id,
-                        nextCard: null
-                    }
-                    console.log("last", emitData)
-                    this.$socket.emit('request-board:card-move', emitData)
-                }
-                else if (!nextCard && !prevCard) {
-                    const emitData = {
-                        cardId: currCard.id,
-                        fromSection: fromSection,
-                        toSection: toSection.id,
-                        prevCard: null,
-                        nextCard: null,
-                        location: 'last-and-only'
-                    }
-                    console.log("last and only", emitData)
-                    this.$socket.emit('request-board:card-move', emitData)
-                }
-            }
-        },
-        mounted(){
-            this.$refs.scrollable['id'] = _.uniqueId('scrollable#')
-            this.scrollables.push({
-                id: this.$refs.scrollable['id'],
-                scrollable: this.$refs.scrollable
-            })
-        },
-        beforeDestroy(){
-            const scrollableIndex = _.findIndex(this.scrollables, { id: this.$refs.scrollable.id })
-            if(scrollableIndex !== -1){
-                this.scrollables.splice(scrollableIndex, 1)
             }
         }
     }
@@ -283,9 +157,6 @@
         flex-shrink: 0;
     }
     .board-section > .board-section__header {
-        cursor: -webkit-grab;
-        cursor: -moz-grab;
-        cursor: grab;
         padding: 10px 10px 8px;
         height: 50px;
         background: var(--bg-color--2);

@@ -1,92 +1,89 @@
 <template>
-    <div id="caller-id" :class="{ open }" @mouseover="mouseOver($event)" @mouseleave="setTimeoutToClose()">
-        <div class="opener" @click="toggleCallerID()">
-            <icon-phone></icon-phone>
-        </div>
-        <div class="container">
-            <div class="header" @click="toggleCallerID()">
-                <h3>Últimas 10 ligações</h3>
+    <div class="call">
+        <div class="call__header">
+            <div class="number__container">
+                <a class="number clipboard" v-if="!call.isAnonymous && call.isValid" :data-clipboard-text="call.number">{{ utils.formatPhone(call.number) }}</a>
+                <span class="number anonymous" v-else-if="false">Privado</span>
+                <span class="number invalid" v-else-if="call.isAnonymous || !call.isValid">Não identificado</span>
+                <span class="number" v-else>Número desconhecido</span>
             </div>
-            <div ref="scrollbar">
-                <div class="calls">
-                    <div v-for="(call, index) in calls" :key="index" class="call">
-                        <a class="number clipboard" v-if="!call.isAnonymous && call.isValid" :data-clipboard-text="call.number">{{ utils.formatPhone(call.number) }}</a>
-                        <span class="number anonymous" v-else-if="false">Privado</span>
-                        <span class="number invalid" v-else-if="call.isAnonymous || !call.isValid">Não identificado</span>
-                        <span class="number" v-else>Número desconhecido</span>
-                        <span class="time">{{ moment(call.createdAt).format("DD/MM/YYYY HH:mm:ss") }}</span>
-                        <span class="destination">{{ call.destination }}</span>
-                        <div v-if="call.clients.length" v-for="(client, index) in call.clients" :key="index">
-                            <div class="client existent-client">
-                                <span style="font-weight: bold;">{{ client.name }}</span>
-                            </div>
+            <span class="push-both-sides"></span>
+            <span class="time">{{ moment(call.createdAt).format("DD/MM HH:mm") }}</span>
+        </div>
+        <div class="call__body" style="display: flex; flex-direction: row; justify-content: space-between;">
+            <div class="call__column">
+                <div class="section__details">
+                    <span class="time">{{ moment(call.createdAt).format("DD/MM HH:mm") }}</span> -
+                    <span class="destination">{{ call.destination }}</span>
+                </div>
+                <div class="section__clients">
+                    <div class="section__client" v-if="client">
+                        <div class="client existent-client">
+                            <span style="font-weight: bold;">{{ client.name }}</span>
                         </div>
-                        <div class="client new-client" v-if="!call.clients.length">
+                    </div>
+                    <div class="section__client" v-if="!client">
+                        <div class="client new-client">
                             Cliente novo
                         </div>
-                        <a href="javascript:void(0)" v-if="canCreateDraft" class="start-service" style="float: right" @click="createRequestDraft(call)">Iniciar atendimento</a>
                     </div>
                 </div>
             </div>
+            <div class="call__column">
+                <span class="buy-infos" style="font-size: 12px; color: var(--font-color--7)">{{ (false) ? "COMPROU" : "SEM COMPRAS" }}</span>
+            </div>
         </div>
+        <div class="call__footer" style="display: flex; flex-direction: row;">
+            <div ref="autoCloseProgress" style="width: 34px;"></div>
+            <span class="push-both-sides"></span>
+            <a href="javascript:void(0)" class="btn duplicate" @click="createRequestDraft(call)">
+                <i class="mi mi-add-to-photos"></i> Duplicar
+            </a>
+            <a href="javascript:void(0)" class="btn start-service" style="float: right" @click="createRequestDraft(call)">
+                <i class="mi mi-center-focus-strong"></i> Iniciar
+            </a>
+        </div>
+
     </div>
 </template>
 
 <script>
     import _ from 'lodash'
+    import moment from 'moment'
     import shortid from 'shortid'
 
-    import ClientsAPI from '../../../api/clients'
+    import ClientsAPI from '../../../../api/clients'
 
     import { mapGetters, mapActions, mapState } from 'vuex'
-    import Scrollbar from 'smooth-scrollbar'
 
-    import {createRequest} from '../../../models/RequestModel'
+    import {createRequest} from '../../../../models/RequestModel'
 
     import Clipboard from 'clipboard'
+    import ProgressBar from 'progressbar.js'
 
     export default {
         components: {
         },
+        props: ['call','client'],
         data(){
             return {
                 open: false,
-                scrollbar: null,
-                timeoutInstance: null,
-                clipboardInstance: null
+                callActiveTime: 0,
+                intervalInstance: null,
+                clipboardInstance: null,
+                autoCloseProgressInstance: null
             }
         },
         computed: {
             ...mapState('auth', ['user','company']),
             ...mapState('caller-id', ['calls']),
             ...mapState('morph-screen', ['isShowing']),
-            ...mapGetters('morph-screen', ['activeMorphScreen']),
-            canCreateDraft(){
-                return !this.isShowing
-            }
+            ...mapGetters('morph-screen', ['activeMorphScreen'])
         },
         methods: {
             ...mapActions('morph-screen', ['createDraft']),
             ...mapActions('caller-id', ['setCall','loadCalls']),
             ...mapActions('toast',['showToast']),
-            mouseOver(){
-                if(this.timeoutInstance){
-                    clearTimeout(this.timeoutInstance)
-                    this.timeoutInstance = null
-                }
-            },
-            setTimeoutToClose(timeout = 2000){
-                if(this.open === true){
-                    this.timeoutInstance = setTimeout(() => {
-                        clearTimeout(this.timeoutInstance)
-                        this.timeoutInstance = null
-                        this.open = false
-                    }, timeout)
-                }
-            },
-            toggleCallerID(){
-                this.open = !this.open
-            },
             createRequestDraft(call){
                 if(this.canCreateDraft) {
                     if (!call.clients.length) {
@@ -99,7 +96,7 @@
                             this.createRequestDraftExistentClient(call, data)
                         })
                     }
-                    this.toggleCallerID()
+                    // this.toggleCallerID()
                 }
                 else {
                     this.showToast({
@@ -183,34 +180,38 @@
                 this.createDraft(createDraftArgs)
             }
         },
-        created(){
-            const vm = this
-            vm.loadCalls({
-                companyId: vm.company.id
-            })
-            /**
-             * On new call
-             * @param ev = { success:Boolean, evData:Draft }
-             */
-            vm.$options.sockets['caller-id.new'] = (ev) => {
-                console.log("Received caller-id.new", ev)
-                if(ev.success){
-                    vm.open = true
-                    vm.$bus.$emit('sound-play')
-                    vm.setCall(ev.evData)
-                    vm.setTimeoutToClose(5000)
-                }
-            }
-        },
         mounted(){
-            this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
-                overscrollEffect: 'bounce',
-                alwaysShowTracks: true
+            const vm = this
+            vm.clipboardInstance = new Clipboard('.clipboard')
+            vm.autoCloseProgressInstance = new ProgressBar.Circle(vm.$refs.autoCloseProgress, {
+                color: 'var(--font-color--terciary)',
+                strokeWidth: 12,
+                trailWidth: 1,
+                text: {
+                    value: '?'
+                }
             })
-            this.clipboardInstance = new Clipboard('.clipboard')
+            vm.callActiveTime = moment().diff(moment(vm.call.createdAt), 'seconds')
+            vm.intervalInstance = setInterval(() => {
+                vm.callActiveTime += 1
+                if(vm.callActiveTime > 120){
+                    clearInterval(vm.intervalInstance)
+                    vm.$store.dispatch('entities/calls/delete', vm.call.id)
+                }
+                else {
+                    vm.autoCloseProgressInstance.animate(vm.callActiveTime / 120, {
+                        duration: 800
+                    })
+                }
+                vm.autoCloseProgressInstance.setText(vm.callActiveTime)
+            }, 1000)
         },
         beforeDestroy(){
+            if(this.intervalInstance){
+                clearInterval(this.intervalInstance)
+            }
             this.clipboardInstance.destroy()
+            this.autoCloseProgressInstance.destroy()
         }
     }
 </script>
@@ -218,13 +219,13 @@
     #caller-id {
         position: absolute;
         z-index: 500000;
-        top: 75px;
-        bottom: 15px;
-        right: -240px;
+        top: 60px;
+        bottom: 0;
+        right: 0;
         display: flex;
         flex-direction: row;
-        pointer-events: none;
         transition: .2s all;
+        background: rgba(21,23,28,.5);
         .opener {
             cursor: pointer;
             height: 30px;
@@ -236,7 +237,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            pointer-events: auto;
             transition: .2s all;
         }
         .opener:hover {
@@ -244,7 +244,7 @@
         }
         .container {
             height: 100%;
-            width: 240px;
+            width: 320px;
             display: flex;
             flex-direction: column;
             .header {
@@ -256,27 +256,77 @@
                 padding: 0 20px;
                 flex-shrink: 0;
                 margin-bottom: 10px;
-                pointer-events: auto;
                 cursor: pointer;
             }
             .calls {
                 flex-grow: 1;
                 flex-shrink: 0;
-                pointer-events: auto;
                 display: flex;
                 flex-direction: column;
-                width: 240px;
+                width: 100%;
+                padding: 10px 22px 10px 10px;
                 .call {
                     flex-shrink: 0;
-                    background: rgb(30,30,30); /* For browsers that do not support gradients */
-                    background: linear-gradient(to right, rgba(15,15,15,0), rgba(15,15,15,.6), rgba(15,15,15,1));
+                    background: var(--bg-color--1);
                     margin-bottom: 10px;
-                    padding: 10px 20px 10px;
-                    text-align: right;
+                    padding: 8px 12px;
                     display: flex;
                     flex-direction: column;
+                    .call__header {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                    }
+                    .call__section {
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                    }
+                    .call__body {
+                        margin-bottom: 10px;
+                        .section__clients {
+                            .section__client {
+                                div {
+                                    font-size: 12px;
+                                    text-transform: uppercase;
+                                    color: var(--font-color--7);
+                                }
+                            }
+                        }
+                    }
+                    .call__footer {
+                        .btn {
+                            float: right;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background-color: var(--font-color--primary);
+                            color: var(--font-color--10);
+                            font-weight: 600;
+                            i {
+                                font-size: 16px;
+                                margin-right: 5px
+                            }
+                            &.duplicate {
+                                width: 105px;
+                            }
+                            &.start-service {
+                                margin-left: 10px;
+                                width: 86px;
+                            }
+                            &:hover {
+                                background-color: #3A65BC;
+                                color: var(--font-color--10);
+                            }
+                        }
+                    }
+                    span.destination {
+                        color: var(--font-color--primary);
+                        font-size: 12px;
+                        font-weight: 600;
+                    }
                     a.number {
-                        pointer-events: auto;
                         cursor: copy;
                         width: auto;
                         align-self: flex-end;
@@ -300,26 +350,9 @@
                         color: var(--font-color--7);
                         font-size: 12px;
                     }
-                    span.destination {
-                        color: var(--font-color--7);
-                        font-size: 12px;
-                    }
-                    div.client {
-                        margin: 10px 0 0;
-                    }
-                    a.start-service {
-                        margin-top: 10px;
-                        color: var(--font-color--primary);
-                        pointer-events: auto;
-                        width: auto;
-                        align-self: flex-end;
-                    }
                     a.start-service:hover {
                         color: var(--font-color--primary)
                     }
-                }
-                .call:last-child {
-                    margin-bottom: 0;
                 }
             }
         }

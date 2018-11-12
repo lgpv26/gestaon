@@ -1,6 +1,7 @@
 module.exports = {
     devServer: {
-        port: 3000
+        port: 3000,
+        host: '0.0.0.0'
     },
     configureWebpack: {
         module: {
@@ -9,7 +10,8 @@ module.exports = {
                     test: /\.(svg)(\?.*)?$/,
                     loader: 'vue-svg-loader'
                 }
-            ]
+            ],
+
         }
     },
     chainWebpack: config => {

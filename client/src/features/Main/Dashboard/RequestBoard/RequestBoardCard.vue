@@ -4,7 +4,7 @@
             <span>Carregando...</span>
         </div>
         <div class="request-board-card__container">
-            <div class="card__header">
+            <div class="card__header" v-if="card.request && card.request.client">
                 <app-popover :contentStyle="popoverContentStyle" style="flex-grow: 1" :placement="'bottom-start'" :verticalOffset="5">
                     <template slot="triggerer">
                         <h3 class="card__client-name">{{ card.request.client.name }}</h3>
@@ -22,16 +22,21 @@
                     </template>
                 </app-popover>
             </div>
+            <div class="card__header" v-else>
+                <h3 class="card__client-name">Rascunho {{ card.id }}</h3>
+            </div>
             <div style="display: flex; flex-direction: row;">
+                <!--
                 <h3 class="card__client-address" v-if="requestClientAddress">
                     {{ requestClientAddress }}
                 </h3>
                 <h3 class="card__phone-line" v-if="card.request.phoneLine">
                     {{ card.request.phoneLine }}
                 </h3>
+                -->
             </div>
             <div class="card__middle">
-                <div class="card__timer">
+                <!--<div class="card__timer">
                     <div class="timer__objects">
                         <div class="objects__timer">
                             <app-popover :placement="'right'" :verticalOffset="5" :contentStyle="popoverContentStyle" :triggererStyle="{justifyContent: 'center'}">
@@ -46,9 +51,9 @@
                             </app-popover>
                         </div>
                         <div class="objects__timeline">
-                            <div class="timeline__progress--current" v-if="!deadline.isOver && form.status !== 'finished'" :style="{left: current.left + 'px'}">
+                            <div class="timeline__progress&#45;&#45;current" v-if="!deadline.isOver && form.status !== 'finished'" :style="{left: current.left + 'px'}">
                                 <span class="progress__progress">{{ current.time.value }}</span>
-                                <span class="progress__progress--unit">{{ current.time.abbUnit }}</span>
+                                <span class="progress__progress&#45;&#45;unit">{{ current.time.abbUnit }}</span>
                                 <request-board-icon-progress-shield></request-board-icon-progress-shield>
                             </div>
                             <div class="timeline__progress" v-for="(inProgressRequestTimelineItem, index) in inProgressRequestTimeline" :key="'ti' + index"
@@ -56,7 +61,7 @@
                                 <app-popover :contentStyle="popoverContentStyle" :verticalOffset="5" :triggererStyle="{justifyContent: 'center'}">
                                     <template slot="triggerer">
                                         <span class="progress__progress">{{ inProgressRequestTimelineItem.timeUntilNow.value }}</span>
-                                        <span class="progress__progress--unit">{{ inProgressRequestTimelineItem.timeUntilNow.abbUnit }}</span>
+                                        <span class="progress__progress&#45;&#45;unit">{{ inProgressRequestTimelineItem.timeUntilNow.abbUnit }}</span>
                                         <request-board-icon-progress-shield></request-board-icon-progress-shield>
                                     </template>
                                     <template slot="content">
@@ -90,11 +95,11 @@
                         </div>
                     </div>
                     <div class="timer__line"></div>
-                </div>
+                </div>-->
             </div>
-            <div class="card-unread-item-chat-count" v-if="card.request.unreadChatItemCount">{{ card.request.unreadChatItemCount }}</div>
+            <!--<div class="card-unread-item-chat-count" v-if="card.request.unreadChatItemCount">{{ card.request.unreadChatItemCount }}</div>-->
             <div class="card__footer">
-                <div style="display: flex; position: relative;">
+                <!--<div style="display: flex; position: relative;">
                     <a class="chat-button" href="javascript:void(0)" @click="$modal.show('request-chat', { requestChat: { requestId: card.request.id , cardId: card.id  } })">
                         <i class="mi mi-chat"></i>
                     </a>
@@ -128,13 +133,8 @@
                     <template slot="content">
                         <app-rbc-user id="rbc-user" :cardId="card.id" v-model="form.responsibleUserId"></app-rbc-user>
                     </template>
-                </app-popover>
+                </app-popover>-->
             </div>
-            <!--
-            <app-rbc-progress v-for="(requestTimelineItem, index) in requestTimeline" :key="requestTimelineItem.data.id"
-            :card="card" :requestTimelineItem="requestTimelineItem"
-            :id="'rbc-progress' + '-' + requestTimelineItem.data.id"></app-rbc-progress>
-            -->
         </div>
     </div>
 </template>
@@ -167,18 +167,17 @@
         watch: {
             'card.request.requestTimeline': {
                 handler(requestTimeline){
-                    const sortedRequestTimeline = _.sortBy(requestTimeline, (requestTimelineItem) => {
+                   /* const sortedRequestTimeline = _.sortBy(requestTimeline, (requestTimelineItem) => {
                         return requestTimelineItem.dateCreated
                     })
                     const lastRequestTimelineItem = _.last(sortedRequestTimeline)
                     this.form.status = lastRequestTimelineItem.status
-                    this.form.responsibleUserId = lastRequestTimelineItem.userId
+                    this.form.responsibleUserId = lastRequestTimelineItem.userId*/
                 },
                 immediate: true,
                 deep: true
             }
         },
-
         sockets: {
             requestBoardRequestTimelineChangeUser(ev){
                 if(ev.success && ev.evData.cardId === this.card.id){
@@ -301,10 +300,10 @@
         },
         methods: {
             ...mapActions('request-board',['updateCard']),
-
+            
         },
         mounted(){
-            const vm = this
+            /*const vm = this
             setTimeout(() => {
                 vm.loading = false;
             }, 1000)
@@ -317,8 +316,8 @@
                 vm.inProgressRequestTimeline = _.map(_.filter(vm.card.request.requestTimeline, (requestTimelineItem) => {
                     // if(requestTimelineItem.action === 'create') return false
                     const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
-                    /*const diffUntilTimelineItemInSec = moment.duration(requestTimelineItemDate.diff(startDate)).asSeconds()
-                    const diffUntilNowInSec = moment.duration(deliveryDate.diff(nowDate)).asSeconds()*/
+                    /!*const diffUntilTimelineItemInSec = moment.duration(requestTimelineItemDate.diff(startDate)).asSeconds()
+                    const diffUntilNowInSec = moment.duration(deliveryDate.diff(nowDate)).asSeconds()*!/
 
                     const deadlineToTimelineItemInSec = moment.duration(deliveryDate.diff(requestTimelineItemDate)).asSeconds()
 
@@ -395,10 +394,10 @@
                 }
             }
             eachInterval()
-            vm.requestTimelineInterval = setInterval(() => eachInterval(), 3000)
+            vm.requestTimelineInterval = setInterval(() => eachInterval(), 3000)*/
         },
         beforeDestroy(){
-            clearInterval(this.requestTimelineInterval)
+            //clearInterval(this.requestTimelineInterval)
         }
     }
 </script>

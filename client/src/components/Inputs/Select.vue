@@ -1,5 +1,5 @@
 <template>
-    <app-popover v-bind="popoverProps" :useScroll="true" :verticalOffset="5">
+    <app-popover v-bind="popoverProps" :useScroll="true">
         <template slot="triggerer">
             <slot></slot>
         </template>

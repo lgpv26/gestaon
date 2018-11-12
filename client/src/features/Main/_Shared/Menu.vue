@@ -52,6 +52,7 @@
     nav.main-menu ul {
         display: flex;
         flex-direction: column;
+        padding: 0;
     }
 
     nav.main-menu ul li {

@@ -1,0 +1,66 @@
+{
+  "lastSync": "2018-08-02 08:20:00",
+  "queue": [
+    {
+      "type": "card",
+      "event": "create",
+      "data": {
+        "id": "tmp/jasrgce"
+      },
+      "date": "2018-08-02 08:20:00"
+    },
+    {
+      "type": "card",
+      "event": "move",
+      "data": {},
+      "date": "2018-08-02 08:20:00"
+    },
+    {
+      "type": "section",
+      "event": "create",
+      "data": {
+        "id": "tmp/jasrgce"
+      },
+      "date": "2018-08-02 08:20:00"
+    },
+    {
+      "type": "card",
+      "event": "remove",
+      "data": {
+        "id": "tmp/4fdgf44"
+      },
+      "date": "2018-08-02 08:20:00"
+    },
+    {
+      "type": "request",
+      "event": "create",
+      "data": {
+        "id": "tmp/jasrgce",
+        "cardId": ""
+      },
+      "date": "2018-08-02 08:20:00"
+    },
+    {
+      "type": "section",
+      "event": "move",
+      "data": {
+      },
+      "date": "2018-08-02 08:20:00"
+    },
+    {
+      "type": "request",
+      "event": "update",
+      "data": {
+        "id": "tmp/jasrgce"
+      },
+      "date": "2018-08-02 08:20:00"
+    },
+    {
+      "type": "section",
+      "event": "remove",
+      "data": {
+      },
+      "date": "2018-08-02 08:20:00"
+    }
+  ]
+}

@@ -2,6 +2,7 @@
     <div class="body" v-if="system.initialized">
         <app-caller-id></app-caller-id>
         <app-morph-screen></app-morph-screen>
+        <app-windows></app-windows>
         <app-modals></app-modals>
         <transition name="app-animation">
             <div id="content" class="app-content" v-show="!showSettings">
@@ -30,6 +31,17 @@
                             </div>
                         </div>
                         <span class="push-both-sides"></span>
+                        <ul class="header__menu">
+                            <li><i class="mi mi-notifications-none"></i></li>
+                            <li @click="addRequest()"><i class="mi mi-add-circle-outline"></i></li>
+                            <li v-if="!isCallerIdDisabled" @click="(isCallerIdDisabled) ? activateCallerId() : disableCallerId()">
+                                <i class="mi mi-phone-in-talk"></i>
+                            </li>
+                            <li v-else @click="(isCallerIdDisabled) ? activateCallerId() : disableCallerId()">
+                                <i class="mi mi-call-end"></i>
+                            </li>
+                        </ul>
+                        <!--
                         <app-search></app-search>
                         <div class="header__draft-menu" v-if="screens.length > 0" @click="showMorphScreen()">
                             <div class="count">
@@ -37,6 +49,7 @@
                             </div>
                             <icon-draft-list></icon-draft-list>
                         </div>
+                        -->
                     </header>
                     <main id="main">
                         <keep-alive include="app-dashboard">
@@ -54,13 +67,15 @@
     import { MorphScreen } from "./MorphScreen/index"
     import RequestBoardFilterComponent from "./Dashboard/RequestBoard/RequestBoardFilter.vue"
     import SearchComponent from "./_Shared/Search.vue"
-    import CallerIDComponent from "./_Shared/CallerID.vue"
+    import CallerIDComponent from "./_Shared/CallerID/CallerID.vue"
     import MenuComponent from "./_Shared/Menu.vue"
     import Modals from "./Dashboard/Modals.vue"
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue"
+    import Windows from "./_Shared/Windows/Windows.vue"
     import ConnectedUsersComponent from "./_Shared/Sidebar/ConnectedUsers.vue"
 
     import _ from 'lodash'
+    import shortid from 'shortid'
     import moment from 'moment'
 
     import SessionHandler from './SessionHandler'
@@ -68,6 +83,7 @@
     export default {
         name: 'app-main',
         components: {
+            "app-windows": Windows,
             "app-modals": Modals,
             "app-morph-screen": MorphScreen,
             "app-dropdown-menu": DropdownMenuComponent,
@@ -80,6 +96,7 @@
         mixins: [SessionHandler],
         data(){
             return {
+                requestInterval: null,
                 showSettings: false,
                 menuList: [
                     /*{text: 'Add. empresa', type: 'system', action: this.addCompany, onlyAdmin: true},*/
@@ -92,6 +109,10 @@
             ...mapState(['app', 'system']),
             ...mapState('auth', ['user','tokens','company']),
             ...mapState('morph-screen', ['screens']),
+            ...mapState('caller-id', {
+                isCallerIdDisabled: 'disabled'
+
+            }),
             ...mapState(['dimensions']),
             truncatedName(){
                 return _.truncate(this.user.name, {
@@ -136,12 +157,85 @@
             ...mapActions('morph-screen', [
                 'showMorphScreen', 'loadMorphScreenData'
             ]),
+            ...mapActions('caller-id', [
+                'activateCallerId', 'disableCallerId'
+            ]),
             ...mapActions('toast', [
                 'showToast', 'showError'
             ]),
             ...mapActions('presence', [
                 'setConnectedUsers'
             ]),
+            ...mapActions('elasticlunr', [
+                'setLunrIndex'
+            ]),
+            toggleCallerIdFunctionality(){
+                console.log(this.isCallerIdDisabled)
+                if(this.isCallerIdDisabled){
+                    this.activateCallerId()
+                }
+                else {
+                    this.disableCallerId()
+                }
+            },
+            async addRequest(){
+                const windowTmpId = `tmp/${shortid.generate()}`
+                const cardTmpId = `tmp/${shortid.generate()}`
+                const requestPaymentTmpId = `tmp/${shortid.generate()}`
+                const requestOrderTmpId = `tmp/${shortid.generate()}`
+                const requestOrderProductTmpId = `tmp/${shortid.generate()}`
+                const requestTmpId = `tmp/${shortid.generate()}`
+                const clientTmpId = `tmp/${shortid.generate()}`
+                const clientPhoneTmpId = `tmp/${shortid.generate()}`
+                this.$store.dispatch('entities/windows/insert', {
+                    data: {
+                        id: windowTmpId,
+                        zIndex: this.$store.getters['entities/windows/query']().max('zIndex') + 1
+                    }
+                })
+                this.$store.dispatch('entities/cards/insert',{
+                    data: {
+                        id: cardTmpId,
+                        windowId: windowTmpId,
+                        requestId: requestTmpId
+                    }
+                })
+                this.$store.dispatch('entities/requestPayments/insert',{
+                    data: {
+                        id: requestPaymentTmpId,
+                        requestId: requestTmpId
+                    }
+                })
+                this.$store.dispatch('entities/requestOrderProducts/insert',{
+                    data: {
+                        id: requestOrderProductTmpId,
+                        requestOrderId: requestOrderTmpId
+                    }
+                })
+                this.$store.dispatch('entities/requestOrders/insert',{
+                    data: {
+                        id: requestOrderTmpId
+                    }
+                })
+                this.$store.dispatch('entities/clients/insert',{
+                    data: {
+                        id: clientTmpId,
+                    }
+                })
+                this.$store.dispatch('entities/clientPhones/insert',{
+                    data: {
+                        id: clientPhoneTmpId,
+                        clientId: clientTmpId
+                    }
+                })
+                this.$store.dispatch('entities/requests/insert',{
+                    data: {
+                        id: requestTmpId,
+                        clientId: clientTmpId,
+                        requestOrderId: requestOrderTmpId
+                    }
+                })
+            },
             changeCompany(userCompany){
                 const vm = this;
                 if(vm.company.id === userCompany.company.id){
@@ -157,17 +251,20 @@
                     vm.changeCompanyAction(userCompany.company.id).then(() => {
                         vm.stopLoading(); // tracker watch becomes resposible to reload devices
                         vm.$bus.$emit('system-initialized')
-                    });
-                }, 1000);
+                    })
+                }, 1000)
             },
             registerSoundEventListeners(){
                 new Howl({
                     src: [alarmSound]
                 }).play()
+            },
+            runRequestQueue(){
             }
         },
         created(){
             this.$bus.$on('sound-play', this.registerSoundEventListeners)
+            this.runRequestQueue()
         },
         beforeDestroy(){
             this.$bus.$off('sound-play', this.registerSoundEventListeners)
@@ -237,6 +334,7 @@
     .router-animation-leave-active {
         transition: all 0s ease-out;
     }
+
     .router-animation-enter, .router-animation-leave-to {
       opacity: 0;
     }
@@ -305,6 +403,7 @@
         user-select: none;
     }
 
+
     .main-column__header {
         display: flex;
         flex-direction: row;
@@ -312,7 +411,37 @@
         flex-shrink: 0;
         box-shadow: var(--main-header-shadow);
         align-items: center;
-        padding: 0 10px;
+        padding: 0 0 0 10px;
+        .header__menu {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+            li {
+                width: 60px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                font-size: 24px;
+                margin-left: 1px;
+                background-color: var(--bg-color--10);
+                cursor: pointer;
+                &:hover {
+                    background-color: var(--bg-color--9);
+                }
+                &:active {
+                    background-color: var(--bg-color--primary);
+                    i {
+                        color: var(--font-color--10)
+                    }
+                }
+                i {
+                    position: relative;
+                    top: -1px;
+                    color: var(--font-color--7);
+                }
+            }
+        }
     }
 
     .main-column__header .header__draft-menu {

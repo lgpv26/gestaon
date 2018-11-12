@@ -6,7 +6,8 @@ import 'material-icons/css/material-icons.min.css'
 import 'izitoast/dist/css/iziToast.min.css'
 import 'smooth-scrollbar/dist/smooth-scrollbar.css'
 import 'flatpickr/dist/flatpickr.css'
-import 'flatpickr/dist/themes/airbnb.css'
+import 'flatpickr/dist/themes/dark.css'
+/*import 'flatpickr/dist/themes/airbnb.css'*/
 import './assets/styles/reset.css'
 import './assets/styles/main.css'
 import './assets/styles/dark-theme.css'
@@ -18,11 +19,16 @@ import './utils/resize-listener'
 import Vue from 'vue'
 import Resource from 'vue-resource'
 import Router from 'vue-router'
-import { TheMask } from 'vue-the-mask'
+import VueTheMask, { TheMask } from 'vue-the-mask'
 import VueModal from 'vue-js-modal'
 import VueTimeago from 'vue-timeago'
 import VueResize from 'vue-resize'
 import VueTippy from 'vue-tippy'
+import VueStatic from 'vue-static'
+import VueWorker from 'vue-worker'
+import VuePerfectScrollbar from 'vue-perfect-scrollbar'
+
+import DexieRelationships from 'dexie-relationships'
 
 import ElementPtBr from 'element-ui/lib/locale/lang/pt-br'
 import ElementLocale from 'element-ui/lib/locale'
@@ -44,15 +50,22 @@ import OAuthAPI from './api/oauth'
 import moment from 'moment'
 import _ from 'lodash'
 
+// or import all icons if you don't care about bundle size
+import 'vue-awesome/icons'
+import Icon from 'vue-awesome/components/Icon'
+
 /* Set Vue */
 Vue.set(Vue.prototype, '_', _)
 Vue.set(Vue.prototype, 'config', config)
 Vue.set(Vue.prototype, 'utils', utils)
-Vue.set(Vue.prototype, 'moment', moment)
 
 /* Resource Configs */
 
 Vue.use(Resource)
+
+/* Workers */
+
+Vue.use(VueWorker)
 
 /* Vue Plugins */
 
@@ -65,11 +78,19 @@ Vue.use(VueTimeago, {
     }
 })
 
+Vue.use(VueTheMask)
+
 Vue.use(VueResize)
 
 Vue.use(VueModal)
 
 Vue.use(VueTippy)
+
+Vue.component('v-icon', Icon)
+
+Vue.use(VueStatic, {
+    namespaced: true
+})
 
 Vue.use(VueMoney, {
     decimal: ',',
@@ -83,6 +104,7 @@ Vue.use(VueMoney, {
 /* Mask */
 
 Vue.component('app-mask', TheMask);
+Vue.component('app-perfect-scrollbar', VuePerfectScrollbar);
 
 /* Element eleme */
 

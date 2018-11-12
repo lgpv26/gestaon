@@ -14,6 +14,31 @@ module.exports = (server, restify) => {
 
     /* SEARCH */
 
+    server.get('/clients/import', (req, res, next) => {
+        server.mysql.Client.count().then((totalItems) => {
+            let items = [], offset = 0, limit = 500, run = true
+            const findFunc = function(){
+                if(!run) return true
+                console.log("Running " + offset + "-" + (offset + limit) + "/totalItems: " + totalItems)
+                return server.mysql.Client.findAll({
+                    limit,
+                    offset
+                }).then((result) => {
+                    items = _.concat(items, result)
+                    if(result.length < limit){
+                        run = false
+                    }
+                    offset += limit
+                    findFunc()
+                })
+            }
+            findFunc()
+            return res.send(200, { data: items.length })
+        })
+    })
+
+    /* SEARCH */
+
     server.get('/clients/search', (req, res, next) => {
         clientsController.search(req).then((searchResult) => {
             return res.send(200, { data: searchResult })

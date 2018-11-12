@@ -11,7 +11,8 @@
     export default {
         props: {
             value: null,
-            disabled: false
+            disabled: false,
+            readonly: false,
         },
         data(){
             return {
@@ -20,7 +21,7 @@
         },
         methods: {
             toggle(){
-                if(!this.disabled) {
+                if(!this.disabled && !this.readonly) {
                     if (this.$refs.switch.classList.contains('on')) {
                         this.on = false;
                         this.$refs.switch.classList.remove("on");

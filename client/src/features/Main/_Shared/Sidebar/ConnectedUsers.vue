@@ -56,6 +56,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 0;
             li {
                 width: 32px;
                 height: 32px;

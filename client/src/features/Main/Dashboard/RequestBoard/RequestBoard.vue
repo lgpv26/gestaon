@@ -1,15 +1,13 @@
 <template>
     <div id="request-panel" ref="requestPanel">
-        <app-draggable class="board" ref="board" :value="sections" :options="sectionDraggableOptions"
-            @input="onSectionDraggableInput($event)" @start="onSectionDragStart" @end="onSectionDragEnd" :move="onSectionMove">
-            <app-request-board-section ref="sections" v-for="section in sections" :key="'section-' + section.id" :data-id="section.id" :class="{dragging: isDraggingSection}"
-                    :scrollables="scrollables" :options="boardOptions" :section="section"
-                    @updateScrolls="updateScrolls()">
-            </app-request-board-section>
-        </app-draggable>
-        <a class="add-section" @click="addSection()">
-            <request-board-icon-add-section></request-board-icon-add-section>
-        </a>
+        <div class="board">
+            <app-request-board-section :options="boardOptions"
+                   :section="{ id: 'in-edition', name: 'Em Edição', size: 1 }" />
+            <app-request-board-section :options="boardOptions"
+                   :section="{ id: 'requests', name: 'Pedidos', size: 1 }" />
+            <app-request-board-section :options="boardOptions"
+                   :section="{ id: 'scheduled', name: 'Agendados', size: 1 }" />
+        </div>
     </div>
 </template>
 
@@ -20,6 +18,7 @@
     import Vue from 'vue'
     import _ from 'lodash'
     import moment from 'moment'
+    import shortid from 'shortid'
     import utils from '../../../../utils'
     import { createHelpers } from 'vuex-map-fields'
 
@@ -47,7 +46,6 @@
                     handle: '.board-section__header',
                     forceFallback: true
                 },
-                scrollables: [],
                 isDraggingSection: false,
                 lastMove: {
                     from: null,
@@ -63,16 +61,9 @@
             ...mapState(['mainContentArea']),
             ...mapState('auth', ['user', 'tokens', 'company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
-            ...mapState('request-board', ['sections']),
             ...mapGetters('request-board', [])
         },
         watch: {
-            sections: {
-                handler(){
-                    this.updateScrolls()
-                },
-                deep: true
-            },
             filters: {
                 handler(newFilterValue){
                     const filterData = utils.removeReactivity(newFilterValue)
@@ -82,7 +73,7 @@
             }
         },
         sockets: {
-            requestBoardLoad(ev){
+            /*requestBoardLoad(ev){
                 console.log("Received requestBoardLoad", ev)
                 if(ev.success){
                     const vm = this
@@ -169,23 +160,31 @@
                     this.removeCard(ev.evData.removedCardId)
                 }
             },
+            */
         },
         methods: {
             ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', [
-                'REAPLY_FILTERS','SORT_SECTIONS',
-                'REMOVE_SECTION','ADD_SECTION','SET_SECTIONS','SET_SECTION',
-                'RESET_REQUESTS','ADD_REQUEST','SET_SECTION_REQUESTS','MOVE_CARD'
-            ]),
-            ...mapActions('request-board', [
-                'moveCard','updateCard','removeCard','updateCardUnreadChatItemCount'
-            ]),
 
             /* Sections */
 
             addSection(){
-                console.log("Emitting request-board:section-create")
-                this.$socket.emit('request-board:section-create')
+                /*console.log("Emitting request-board:section-create")
+                this.$socket.emit('request-board:section-create')*/
+                let position = 65535
+                let section = this.$store.getters['entities/sections/query']()
+                    .orderBy('position', 'desc')
+                    .first()
+                if(section){
+                    position += section.position
+                }
+                const sectionTmpId = 'tmp/' + shortid.generate()
+                this.$store.dispatch('entities/sections/insert',{
+                    data: {
+                        id: sectionTmpId,
+                        name: "Section " + sectionTmpId,
+                        position
+                    }
+                })
             },
 
             /**
@@ -237,11 +236,6 @@
                 draggingElementViewport.style.display = 'none';
             },
             onSectionDragEnd(ev){
-                this.$nextTick(() => {
-                    this.scrollables.forEach(({ scrollable }) => {
-                        scrollable.updateResizeListeners()
-                    })
-                });
                 const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
                 viewport.style.display = 'initial';
             },
@@ -251,16 +245,6 @@
                 }
                 console.log("Emitted request-board:load", emitData)
                 this.$socket.emit('request-board:load', emitData)
-            },
-
-            /* In-component utilities */
-
-            updateScrolls(){
-                this.$nextTick(() => {
-                    this.scrollables.forEach(({ scrollable }) => {
-                        scrollable.updateScroll()
-                    })
-                });
             }
         },
         mounted(){

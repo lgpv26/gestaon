@@ -6,6 +6,79 @@ body {
     color: #AAA;
 }
 
+/* Buttons */
+
+.button {
+    padding: 5px 8px;
+    background: #3a3d46;
+    color: #FFFFFF;
+}
+
+.button:hover {
+    background: #2C2F36;
+    color: #FFFFFF;
+}
+
+.button.small {
+
+}
+
+.button.large {
+}
+
+.input {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #3a3d46;
+    outline: none;
+    color: #FFFFFF;
+    margin-bottom: 15px;
+    padding-top: 8px;
+    padding-bottom: 3px;
+    width: 100%;
+    font-size: 15px;
+}
+
+.input:hover, .input:active, .input:focus {
+    border-bottom: 1px solid #525662;
+}
+
+.input[disabled], .input[disabled]:hover {
+    border-bottom: 1px solid var(--font-color--2);
+    color: var(--font-color--2)
+}
+
+.input.readonly, .input.readonly:hover, .input.readonly:active, .input.readonly:focus {
+    border-bottom: 1px solid var(--font-color);
+    color: var(--font-color)
+}
+
+.select {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid #3a3d46;
+    outline: none;
+    color: #FFFFFF;
+    margin-bottom: 15px;
+    padding-top: 8px;
+    padding-bottom: 3px;
+    width: 100%;
+    font-size: 15px;
+}
+
+.select:hover, .select:active, .select:focus {
+    border-bottom: 1px solid #525662;
+}
+
+.select[disabled], .select[disabled]:hover {
+    border-bottom: 1px solid var(--font-color--2);
+    color: var(--font-color--2)
+}
+
+.select.readonly {
+    cursor: pointer;
+}
+
 /* Flexbox gutter */
 
 .row {
@@ -362,13 +435,20 @@ li.router-link-active svg.icon {
 
 [data-scrollbar].sticky .scrollbar-track, [scrollbar].sticky .scrollbar-track, scrollbar.sticky .scrollbar-track {
     background: var(--bg-color);
-    border-radius: 5px;
+    border-radius: 0;
 }
 
 [data-scrollbar].sticky .scrollbar-track .scrollbar-thumb, [scrollbar].sticky .scrollbar-track .scrollbar-thumb {
     /*background: transparent;*/
-    background-color: var(--bg-color--1);
+    background-color: #197379;
+    border-radius: 0;
+}
 
+[data-scrollbar].sticky .scrollbar-track.scrollbar-track-y, [scrollbar].sticky .scrollbar-track.scrollbar-track-y {
+    width: 12px;
+}
+[data-scrollbar].sticky .scrollbar-track .scrollbar-thumb.scrollbar-thumb-y, [scrollbar].sticky .scrollbar-track .scrollbar-thumb.scrollbar-thumb-y {
+    width: 12px;
 }
 
 .highcharts-credits {

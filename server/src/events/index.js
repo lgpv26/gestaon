@@ -1,8 +1,13 @@
 import fs from 'fs'
 import path from 'path'
 import _ from 'lodash'
+import shortid from 'shortid'
+import ss from 'socket.io-stream'
 import config from '../config'
 import EventResponse from '../models/EventResponse'
+import pako from 'pako'
+
+import { Op } from 'sequelize'
 
 module.exports = class Events {
 
@@ -31,6 +36,7 @@ module.exports = class Events {
      * set main socket.io events
      */
     _setListeners(){
+        const vm = this
         // for each connected user
         this.server.io.on('connection', (socket) => {
             if(!!this._versionInterval){
@@ -146,6 +152,51 @@ module.exports = class Events {
                                         event.files.forEach((file) => {
                                             const tEventFile = require('./' + event.directoryName + '/' + file)
                                             new tEventFile(this.server, socket)
+                                        })
+                                    })
+                                    ss(socket.instance).on('import', function(stream) {
+                                        const importPromises = []
+                                        importPromises.push(vm.server.mysql.User.findAll())
+                                        importPromises.push(vm.server.mysql.Client.findAll())
+                                        importPromises.push(vm.server.mysql.ClientAddress.findAll())
+                                        importPromises.push(vm.server.mysql.ClientPhone.findAll())
+                                        importPromises.push(vm.server.mysql.ClientCustomField.findAll())
+                                        importPromises.push(vm.server.mysql.Product.findAll())
+                                        importPromises.push(vm.server.mysql.PromotionChannel.findAll())
+                                        importPromises.push(vm.server.mysql.PaymentMethod.findAll())
+                                        importPromises.push(vm.server.mysql.ClientGroup.findAll())
+                                        importPromises.push(vm.server.mysql.CustomField.findAll())
+                                        importPromises.push(vm.server.mysql.Address.findAll({
+                                            where: {
+                                                city: {
+                                                    [Op.or]: ['MARINGÁ','SARANDI']
+                                                }
+                                            }
+                                        }))
+                                        Promise.all(importPromises).then(([
+                                            users, clients, clientAddresses, clientPhones, clientCustomFields,
+                                            products, promotionChannels, paymentMethods, clientGroups, customFields, addresses
+                                        ]) => {
+                                            const fileName = shortid.generate()
+                                            const gzipJson = pako.gzip(JSON.stringify({
+                                                users, clients, clientAddresses, clientPhones, clientCustomFields,
+                                                products, promotionChannels, paymentMethods, clientGroups, customFields, addresses
+                                            }))
+                                            fs.writeFile('src/tmp/' + fileName + '.txt.gz', gzipJson, 'utf8', function(err){
+                                                if(err){
+                                                    console.log("Erro", err)
+                                                }
+                                                else {
+                                                    const stats = fs.statSync('src/tmp/' + fileName + '.txt.gz')
+                                                    const fileSize = stats["size"]
+                                                    socket.instance.emit('import', {
+                                                        fileName: fileName,
+                                                        fileExt: 'gz',
+                                                        fileSize
+                                                    })
+                                                    fs.createReadStream('src/tmp/' + fileName + '.txt.gz').pipe(stream)
+                                                }
+                                            })
                                         })
                                     })
                                 })

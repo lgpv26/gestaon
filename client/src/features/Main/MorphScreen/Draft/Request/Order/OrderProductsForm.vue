@@ -27,6 +27,7 @@
                     <td><money :value="(orderProductRow.unitPrice - orderProductRow.unitDiscount) * orderProductRow.quantity" readonly style="text-align: right;"></money></td>
                     <td style="text-align: center; cursor: pointer; width: 30px;">
                         <div style="display: flex; flex-direction: row; margin-top: -4px;">
+
                             <div style="cursor: pointer; margin-right: 8px;">
                                 <icon-mini-chart></icon-mini-chart>
                             </div>

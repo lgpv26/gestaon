@@ -10,6 +10,8 @@
 </template>
 
 <script>
+    import Vue from 'vue'
+    import Dexie from 'dexie'
     import store from './vuex/store'
     import { mapState, mapMutations } from 'vuex'
     import LoadingComponent from "./components/Utilities/Loading.vue"
@@ -44,6 +46,22 @@
         },
         created(){
             this.SET_APP_VERSION(version)
+            Vue.prototype.$db = new Dexie('gestaon')
+            this.$db.version(1).stores(
+                {
+                    clients: 'id, name',
+                    clientAddresses: 'id, clientId, addressId, name, number, complement',
+                    addresses: 'id, name, neighborhood, state, city, cep',
+                    searchClients: 'id, name, address, number, complement, neighborhood, city, state',
+                    searchAddresses: 'id, name, address, neighborhood, city, state',
+                    users: 'id, name, email, type',
+                    products: 'id, name, price, quantity',
+                    paymentMethods: 'id, name, rule, tax, taxUnit, autoPay, hasDeadline',
+                    promotionChannels: 'id, name',
+                    clientGroups: 'id, name',
+                    customFields: 'id, name'
+                }
+            )
         },
         mounted(){
             this.$nextTick(() => {
@@ -57,5 +75,5 @@
     }
 </script>
 
-<style>
+<style lang="scss">
 </style>
