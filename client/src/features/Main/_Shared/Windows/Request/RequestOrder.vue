@@ -19,8 +19,12 @@
                             <tbody>
                                 <tr v-for="requestOrderProduct in request.requestOrder.requestOrderProducts" :key="requestOrderProduct.id">
                                     <td style="padding-right: 8px;">
-                                        <app-select :items="getSelectProducts" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                            <input type="text" class="select readonly" style="margin-bottom: 0;" readonly value="--- SELECIONE ---"/>
+                                        <app-select :items="getSelectProducts"
+                                                    :value="requestOrderProduct.id"
+                                                    @input="updateValue('entities/requestOrderProducts/update','productId',requestOrderProduct.id,$event)"
+                                                    :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                            <input type="text" class="select readonly" style="margin-bottom: 0;" readonly
+                                                   :value="(_.has(requestOrderProduct,'product.name')) ? requestOrderProduct.product.name : '-- SELECIONE --'"/>
                                             <template slot="item" slot-scope="slotProps">
                                                 <span>{{ slotProps.text }}</span>
                                             </template>
@@ -40,13 +44,13 @@
                                     </td>
                                     <td style="padding-right: 8px;">
                                         <money class="input"
-                                               @input.native="onRequestOrderProductMoneyUpdate('unitDiscount',requestOrderProduct.id,$event)"
+                                               @input.native="updateMoneyValue('entities/requestOrderProducts/update','unitDiscount',requestOrderProduct.id,$event)"
                                                :value="requestOrderProduct.unitDiscount"
                                                style="margin-bottom: 0; text-align: right;"></money>
                                     </td>
                                     <td style="padding-right: 8px;">
                                         <money class="input readonly" disabled
-                                               :value="requestOrderProduct.unitDiscount"
+                                               :value="requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)"
                                                style="margin-bottom: 0; text-align: right;"></money>
                                     </td>
                                     <td>
@@ -63,8 +67,8 @@
                                         <a class="button" @click="addRequestOrderProduct()">INCLUIR PRODUTO</a>
                                     </td>
                                     <td style="padding-top: 15px; padding-right: 8px;" colspan="2"></td>
-                                    <td style="padding-top: 15px; padding-right: 8px; text-align: right;">R$ 120,00</td>
-                                    <td style="padding-top: 15px; padding-right: 8px; text-align: right;">R$ 120,00</td>
+                                    <td style="padding-top: 15px; padding-right: 8px; text-align: right;"></td>
+                                    <td style="padding-top: 15px; padding-right: 8px; text-align: right;">{{ getOrderTotalPrice }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -75,21 +79,33 @@
                             <thead>
                             <tr>
                                 <th>Forma de pagamento</th>
+                                <th style="width: 100px; text-align: left; padding-right: 8px;">Código</th>
+                                <th style="width: 100px; text-align: left; padding-right: 8px;">Venc.</th>
                                 <th style="width: 100px; text-align: center;">Recebido</th>
-                                <th style="width: 100px; text-align: right; padding-right: 8px;">Desc.</th>
                                 <th style="width: 100px; text-align: right; padding-right: 8px;">Subtotal</th>
                                 <th style="width: 20px;"></th>
+
                             </tr>
                             </thead>
                             <tbody>
                             <tr v-for="requestPayment in request.requestPayments" :key="requestPayment.id">
                                 <td style="padding-right: 8px;">
-                                    <app-select :items="getSelectPaymentMethods" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                        <input type="text" class="select readonly" style="margin-bottom: 0;" readonly value="--- SELECIONE ---"/>
+                                    <app-select :items="getSelectPaymentMethods"
+                                                :value="requestPayment.id"
+                                                @input="updateValue('entities/requestPayments/update','paymentMethodId',requestPayment.id,$event)"
+                                                :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                        <input type="text" class="select readonly" style="margin-bottom: 0;" readonly
+                                               :value="(_.has(requestPayment,'paymentMethod.name')) ? requestPayment.paymentMethod.name : '-- SELECIONE --'"/>
                                         <template slot="item" slot-scope="slotProps">
                                             <span>{{ slotProps.text }}</span>
                                         </template>
                                     </app-select>
+                                </td>
+                                <td style="padding-right: 8px;">
+                                    <input type="text" class="input readonly" style="margin-bottom: 0;" disabled value="---" />
+                                </td>
+                                <td style="padding-right: 8px;">
+                                    <input type="text" class="input" style="margin-bottom: 0;" />
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: row; justify-content: center; margin-top: 7px;">
@@ -98,9 +114,6 @@
                                 </td>
                                 <td style="padding-right: 8px;">
                                     <money class="input" style="margin-bottom: 0; text-align: right;" :value="requestPayment.amount" @input.native="onRequestOrderProductMoneyUpdate('unitDiscount',requestOrderProduct.id,$event)"></money>
-                                </td>
-                                <td style="padding-right: 8px;">
-                                    <!--<money class="input" style="margin-bottom: 0; text-align: right;" disabled  :value="requestOrderProduct.unitDiscount"></money>-->
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: row;">
@@ -116,9 +129,9 @@
                                     <a class="button" @click="addRequestPayment()">INCLUIR PAGAMENTO</a>
                                 </td>
                                 <td></td>
-                                <td style="padding-top: 15px; padding-right: 8px; text-align: right;">R$ 120,00</td>
-                                <td style="padding-top: 15px; padding-right: 8px; text-align: right;">R$ 120,00</td>
                                 <td></td>
+                                <td></td>
+                                <td style="padding-top: 15px; padding-right: 8px; text-align: right;">R$ 120,00</td>
                             </tr>
                             </tbody>
                         </table>
@@ -220,6 +233,11 @@
             }
         },
         computed: {
+            getOrderTotalPrice(){
+                return this.utils.formatMoney(_.sumBy(this.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                    return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
+                }), 2, 'R$ ', '.', ',')
+            },
             getSelectUsers(){
                 return _.map(this.$store.getters['entities/users/all'](), (user) => {
                     return {
@@ -255,6 +273,7 @@
         },
         methods: {
             updateValue(path, field, id, value){
+                console.log(this.request)
                 const data = {}
                 data[field] = value
                 this.$store.dispatch(path, {

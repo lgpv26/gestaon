@@ -49,7 +49,8 @@ body {
 }
 
 .input.readonly, .input.readonly:hover, .input.readonly:active, .input.readonly:focus {
-    border-bottom: 1px solid var(--font-color);
+    /*border-bottom: 1px solid var(--font-color);*/
+    border-bottom: 1px solid #3a3d46;
     color: var(--font-color)
 }
 

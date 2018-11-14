@@ -4,7 +4,7 @@
         <a class="btn btn--primary" @click="remove()">Remover</a>
         <a class="btn btn--primary" @click="getAll()">Pegar todos</a>-->
         <div class="windows__container">
-            <app-window v-for="window in $store.getters['entities/windows/query']().withAllRecursive().get()" :window="window"></app-window>
+            <app-window v-for="window in $store.getters['entities/windows/query']().withAllRecursive(5).get()" :window="window"></app-window>
         </div>
     </div>
 </template>

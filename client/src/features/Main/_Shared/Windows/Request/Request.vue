@@ -15,7 +15,9 @@
                                 <div class="box">
                                     <div class="form" style="display: flex; flex-direction: column; flex-grow: 1;">
                                         <label style="margin-bottom: 5px;">Nome</label>
-                                        <input type="text" class="input" :value="request.client.name" @input="updateValue('entities/clients/update','name',request.client.id,$event)"></input>
+                                        <input type="text" class="input"
+                                               :value="request.client.name"
+                                               @input="updateValue('entities/clients/update','name',request.client.id,$event.target.value)"></input>
                                     </div>
                                 </div>
                                 <div v-if="false" class="box">
@@ -69,7 +71,10 @@
                                 <div class="box">
                                     <h3>Telefones</h3>
                                     <div class="box__item" v-for="clientPhone in request.client.clientPhones" :key="clientPhone.id">
-                                        <app-mask :mask="['(##) ####-####','(##) #####-####']" :value="clientPhone.number" placeholder="(##) #####-####" class="input"
+                                        <app-mask :mask="['(##) ####-####','(##) #####-####']"
+                                                  :value="clientPhone.number"
+                                                  @input="updateValue('entities/clientPhones/update','number',clientPhone.id,$event)"
+                                                  placeholder="(##) #####-####" class="input"
                                                   style="margin-bottom: 0;"></app-mask>
                                         <a :class="{disabled: request.client.clientPhones.length <= 1}" href="javascript:void(0)" @click="removeClientPhone(clientPhone.id)" style="margin-top: 7px; margin-left: 7px; padding: 0 3px; align-self: baseline;">
                                             <i class="mi mi-close" style="font-size: 18px;"></i>
@@ -119,8 +124,6 @@
                         <span class="push-both-sides"></span>
                     </div>
                 </div>
-
-                
 
                 <!--<div class="sections" v-if="activeTab === 'client'">
                     <div class="left-side">
@@ -278,6 +281,7 @@
                 console.log(this.$store.getters['entities/paymentMethods/all']())
             },
             updateValue(path, field, id, value){
+                console.log(value)
                 const data = {}
                 data[field] = value
                 this.$store.dispatch(path, {
