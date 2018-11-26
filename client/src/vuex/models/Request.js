@@ -6,6 +6,7 @@ import Client from "./Client"
 import RequestOrder from "./RequestOrder"
 import moment from "moment/moment"
 import RequestPayment from "./RequestPayment"
+import RequestClientAddress from "./RequestClientAddress"
 
 export default class Request extends Model {
     static entity = 'requests'
@@ -19,6 +20,7 @@ export default class Request extends Model {
             requestOrderId: this.attr(null),
             requestOrder: this.belongsTo(RequestOrder,'requestOrderId'),
             requestPayments: this.hasMany(RequestPayment, 'requestId'),
+            requestClientAddresses: this.hasMany(RequestClientAddress, 'requestId'),
             deliveryDate: this.attr(moment()),
             dateUpdated: this.attr(moment()),
             dateCreated: this.attr(moment()),

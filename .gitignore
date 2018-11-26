@@ -7,3 +7,5 @@ server/src/config/config.developer\.js
 client/package-lock\.json
 
 server/package-lock\.json
+
+server/src/tmp/

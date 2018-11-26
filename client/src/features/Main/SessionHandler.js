@@ -255,6 +255,7 @@ export default {
                                         vm.$db.users.bulkPut(downloadedData.users)
                                         vm.$db.clients.bulkPut(downloadedData.clients)
                                         vm.$db.addresses.bulkPut(downloadedData.addresses)
+                                        vm.$db.clientPhones.bulkPut(downloadedData.clientPhones)
                                         vm.$db.clientAddresses.bulkPut(downloadedData.clientAddresses)
                                         vm.$db.products.bulkPut(downloadedData.products)
                                         vm.$db.promotionChannels.bulkPut(downloadedData.promotionChannels)

@@ -1,5 +1,8 @@
 <template>
     <div class="request__window">
+        <div class="request__overlay">
+            <a href="javascript:void(0)" class="back"><i class="mi mi-arrow-back"></i></a>
+        </div>
         <div class="request__search">
             <input type="text" class="input--borderless" placeholder="..." v-model="searchValue" @focus="searchShow = true" @input="search()" />
             <a href="javascript:void(0)" v-if="searchValue && searchItems.length && searchShow" @click="searchShow = false">
@@ -15,55 +18,74 @@
                                 <div class="box">
                                     <div class="form" style="display: flex; flex-direction: column; flex-grow: 1;">
                                         <label style="margin-bottom: 5px;">Nome</label>
-                                        <input type="text" class="input"
-                                               :value="request.client.name"
-                                               @input="updateValue('entities/clients/update','name',request.client.id,$event.target.value)"></input>
+                                        <input type="text" class="input" :value="request.client.name"
+                                               @input="updateValue('entities/clients/update','name',request.client.id,$event.target.value)" />
                                     </div>
                                 </div>
-                                <div v-if="false" class="box">
+                                <div v-if="(request.client.clientAddresses.length > 0) && !requestClientAddressForm" class="box">
                                     <h3 style="margin-bottom: 5px;">Endereços</h3>
                                     <table style="margin: 3px 0 12px 0;">
                                         <tbody>
-                                            <tr v-for="clientAddresses in request.client.addresses">
-                                                <td>lalal</td>
-                                                <td>lala</td>
+                                            <tr v-for="clientAddress in request.client.clientAddresses">
+                                                <td>
+                                                    {{ clientAddress.address.name }},
+                                                    {{ clientAddress.number + ((clientAddress.complement) ? ' - ' + clientAddress.complement : '') }}
+                                                </td>
+                                                <td>{{ clientAddress.address.neighborhood }} - {{ clientAddress.address.city }}</td>
+                                                <td style="text-align: right">
+                                                    <a href="javascript:void(0)" @click="editClientAddress(clientAddress.id)">
+                                                        <i class="mi mi-edit" style="font-size: 18px; padding: 2px;"></i>
+                                                    </a>
+                                                    <a href="javascript:void(0)" @click="removeClientAddress(clientAddress.id)" style="margin-left: 7px;">
+                                                        <i class="mi mi-close" style="font-size: 18px; padding: 2px;"></i>
+                                                    </a>
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
+                                    <div style="display: flex;">
+                                        <a class="button" style="float: right;" @click="addClientAddress()">INCLUIR ENDEREÇO</a>
+                                        <span class="push-both-sides"></span>
+                                    </div>
                                 </div>
-                                <div class="box">
+                                <div class="box" v-if="requestClientAddressForm">
                                     <h3 style="margin-bottom: 15px;">Novo endereço</h3>
                                     <div style="display: flex; flex-direction: row;">
                                         <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px;">
                                             <label>Endereço</label>
-                                            <input type="text" class="input" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.address.name" />
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 50px; margin-right: 8px;">
                                             <label>Nº</label>
-                                            <input type="text" class="input" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.number" />
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 170px;">
                                             <label>Complemento</label>
-                                            <input type="text" class="input" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.complement" />
                                         </div>
                                     </div>
                                     <div style="display: flex; flex-direction: row;">
                                         <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px">
                                             <label>Bairro</label>
-                                            <input type="text" class="input" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.address.neighborhood" />
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 100px; margin-right: 8px">
                                             <label>CEP</label>
-                                            <input type="text" class="input" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.address.cep" />
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 170px; margin-right: 8px">
                                             <label>Cidade</label>
-                                            <input type="text" class="input" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.address.city" />
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 50px;">
                                             <label>Estado</label>
-                                            <input type="text" class="input" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.address.state" />
                                         </div>
+                                    </div>
+                                    <div style="display: flex;">
+                                        <a class="button" @click="cancel()">VOLTAR</a>
+                                        <span class="push-both-sides"></span>
+                                        <a class="button" @click="requestClientAddressForm = !requestClientAddressForm">SALVAR ENDEREÇO</a>
                                     </div>
                                 </div>
                             </div>
@@ -110,92 +132,16 @@
                         <span class="push-both-sides"></span>
                     </div>
                 </div>
-                
                 <div class="request__section" :class="{active: activeTab === 'order'}">
                     <app-request-order :request="request"></app-request-order>
                     <div class="section__summary" @click="activeTab = 'order'">
                         <div class="summary-radio" style="margin-right: 5px;">
-                            <!--<v-radio-group v-model="activeTab" :height="20" :mandatory="false" hide-details>
-                                <v-radio :ripple="false" value="order"></v-radio>
-                            </v-radio-group>-->
                             <app-switch :readonly="true" :value="activeTab === 'order'"></app-switch>
                         </div>
                         <h3>Venda</h3>
                         <span class="push-both-sides"></span>
                     </div>
                 </div>
-
-                <!--<div class="sections" v-if="activeTab === 'client'">
-                    <div class="left-side">
-                        <div class="box">
-                            <div class="form">
-                                <v-text-field label="Cliente / Empresa" :value="request.client.name" @change="oi($event)"></v-text-field>
-                            </div>
-                        </div>
-                        <div class="box">
-                            <div style="display: flex; flex-direction: row;">
-                                <div style="display: flex; flex-direction: column; flex-grow: 1;">
-                                    <v-text-field label="Endereço"></v-text-field>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: row;">
-                                <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px">
-                                    <v-text-field label="Número"></v-text-field>
-                                </div>
-                                <div style="display: flex; flex-direction: column; flex-grow: 1;">
-                                    <v-text-field label="Complemento"></v-text-field>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: row;">
-                                <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px">
-                                    <v-text-field label="Bairro"></v-text-field>
-                                </div>
-                                <div style="display: flex; flex-direction: column; flex-grow: 1;">
-                                    <v-text-field label="CEP" v-mask="'#####-###'"></v-text-field>
-                                </div>
-                            </div>
-                            <div style="display: flex; flex-direction: row;">
-                                <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px">
-                                    <v-text-field label="Cidade"></v-text-field>
-                                </div>
-                                <div style="display: flex; flex-direction: column; flex-grow: 1;">
-                                    <v-text-field label="Estado"></v-text-field>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="right-side">
-                        <div class="box">
-                            <div class="box__item">
-                                <v-text-field label="Telefone" v-mask="['(##) ####-####','(##) #####-####']"></v-text-field>
-                                <a href="javascript:void(0)"><i class="mi mi-add" style="margin-left: 5px; font-size: 18px;"></i></a>
-                            </div>
-                        </div>
-                        <div class="box" style="padding: 10px 12px;">
-                            <div class="box__item">
-                                <v-select
-                                    :items="items"
-                                    label="Grupo do cliente"
-                                    z-index="500010"
-                                ></v-select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="sections" v-if="activeTab === 'order'">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Produto</th>
-                                <th>Quantidade</th>
-                                <th>Valor Un.</th>
-                                <th>Desc.</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-                -->
             </div>
             <div class="request__footer">
                 <span class="push-both-sides"></span>
@@ -252,16 +198,9 @@
 
                 activeTab: 'client',
 
-                items: [{
-                    text: "Ois",
-                    value: 1
-                },{
-                    text: "xD",
-                    value: 2
-                },{
-                    text: "ASs",
-                    value: 3
-                }],
+                requestClientAddressForm: false,
+
+                isAddingClientAddress: false,
 
                 price: 0
             }
@@ -277,6 +216,15 @@
             }
         },
         methods: {
+            cancel(){
+                if(this.isAddingClientAddress){
+                    const clientAddressId = this.request.requestClientAddresses[0].clientAddressId
+                    this.removeClientAddress(clientAddressId)
+                    this.isAddingClientAddress = false
+                }
+                this.requestClientAddressForm = false
+
+            },
             createRequest(){
                 console.log(this.$store.getters['entities/paymentMethods/all']())
             },
@@ -295,7 +243,57 @@
                         id: `tmp/${shortid.generate()}`,
                         clientId: this.request.client.id
                     }
+
+
                 })
+            },
+            addClientAddress(){
+                this.isAddingClientAddress = true
+                this.requestClientAddressForm = true
+                const requestClientAddressId = this.request.requestClientAddresses[0].id
+                if(requestClientAddressId){
+                    const clientAddressTmpId = `tmp/${shortid.generate()}`
+                    const addressTmpId = `tmp/${shortid.generate()}`
+                    this.$store.dispatch('entities/addresses/insert',{
+                        data: {
+                            id: addressTmpId
+                        }
+                    }).then(() => {
+                        this.$store.dispatch('entities/clientAddresses/insert',{
+                            data: {
+                                id: clientAddressTmpId,
+                                clientId: this.request.clientId,
+                                addressId: addressTmpId
+                            }
+                        }).then(() => {
+                            this.$store.dispatch('entities/requestClientAddresses/delete',requestClientAddressId).then(() => {
+                                this.$store.dispatch('entities/requestClientAddresses/insert', {
+                                    data: {
+                                        id: `tmp/${shortid.generate()}`,
+                                        requestId: this.request.id,
+                                        clientAddressId: clientAddressTmpId
+                                    }
+                                })
+                            })
+                        })
+                    })
+                }
+            },
+            editClientAddress(clientAddressId){
+                this.isAddingClientAddress = false
+                this.requestClientAddressForm = true
+                const requestClientAddressId = this.request.requestClientAddresses[0].id
+                if(requestClientAddressId){
+                    this.$store.dispatch('entities/requestClientAddresses/update', {
+                        where: requestClientAddressId,
+                        data: {
+                            clientAddressId: clientAddressId
+                        }
+                    })
+                }
+            },
+            removeClientAddress(clientAddressId){
+                this.$store.dispatch('entities/clientAddresses/delete', clientAddressId)
             },
             removeClientPhone(clientPhoneId){
                 if(this.request.client.clientPhones.length <= 1){
@@ -304,23 +302,58 @@
                 this.$store.dispatch('entities/clientPhones/delete', clientPhoneId)
             },
             selectSearchItem(searchItem){
+                const vm = this
+
                 const clientId = parseInt(searchItem.id.split('#')[0])
                 const clientAddressId = parseInt(searchItem.id.split('#')[1])
-                /*this.$db.clients.where({
+
+                console.log(clientId, clientAddressId)
+                this.$db.clients.where({
                     'id': clientId
                 }).first().then((client) => {
-                    this.$db.clientAddresses.where({
-                        'id': clientAddressId
-                    }).first().then((clientAddress) => {
-                        if(clientAddress.addressId){
-                            this.$db.addresses.where({
-                                'id': clientAddress.addressId
-                            }).first().then((address) => {
-                                console.log(client, clientAddress, address)
-                            })
-                        }
+                    this.$db.clientPhones.where({
+                        'clientId': clientId
+                    }).toArray().then((clientPhones) => {
+                        this.$db.clientAddresses.where({
+                            'clientId': clientId
+                        }).toArray().then((clientAddresses) => {
+                            const clientAddress = _.find(clientAddresses, {id: clientAddressId})
+                            if(clientAddress.addressId){
+                                this.$db.addresses.where({
+                                    'id': clientAddress.addressId
+                                }).first().then((address) => {
+                                    this.$store.dispatch('entities/addresses/insert', {
+                                        data: address
+                                    })
+                                    this.$store.dispatch('entities/clients/insert',{
+                                        data: client
+                                    })
+                                    this.$store.dispatch('entities/clientPhones/insert',{
+                                        data: clientPhones
+                                    })
+                                    this.$store.dispatch('entities/clientAddresses/insert',{
+                                        data: clientAddresses
+                                    })
+                                    this.$store.dispatch('entities/requestClientAddresses/insert',{
+                                        data: {
+                                            id: `tmp/${shortid.generate()}`,
+                                            requestId: vm.request.id,
+                                            clientAddressId: clientAddress.id
+                                        }
+                                    })
+                                    this.$store.dispatch('entities/requests/update',{
+                                        where: vm.request.id,
+                                        data: {
+                                            clientId: clientId
+                                        }
+                                    })
+                                    vm.searchShow = false
+                                    vm.requestClientAddressForm = true
+                                })
+                            }
+                        })
                     })
-                })*/
+                })
             },
             search(){
                 if(this.searchTimeout) clearTimeout(this.searchTimeout)
@@ -364,7 +397,8 @@
             })
         },
         mounted(){
-            console.log("Ahaaa", this.request)
+
+
         }
     }
 </script>
@@ -376,6 +410,24 @@
         flex-grow: 1;
         display: flex;
         flex-direction: column;
+        position: relative;
+        .request__overlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 99;
+            background-color: var(--bg-color--2);
+            a.back {
+                position: absolute;
+                right: 20px;
+                top: 20px;
+                i {
+                    font-size: 48px;
+                }
+            }
+        }
         .request__search {
             height: 50px;
             border-top: 1px solid var(--border-color--0);

@@ -126,6 +126,7 @@
                             </tr>
                             <tr>
                                 <td style="padding-top: 15px; padding-right: 8px;">
+                                    
                                     <a class="button" @click="addRequestPayment()">INCLUIR PAGAMENTO</a>
                                 </td>
                                 <td></td>
@@ -135,10 +136,11 @@
                             </tr>
                             </tbody>
                         </table>
+
                     </div>
                 </div>
                 <div class="right-side">
-                    <div><span ></span></div>
+                    <div><span></span></div>
                     <div class="box" style="padding: 10px 12px;">
                         <div class="box__item" style="display: flex; flex-direction: column;">
                             <h3>Responsável</h3>
@@ -168,6 +170,7 @@
                     <div class="box" style="padding: 10px 12px;">
                         <div class="box__item" style="display: flex; flex-direction: column;">
                             <h3>Canal de divulgação</h3>
+
                             <app-select :items="getSelectPromotionChannels"
                                         :value="request.requestOrder.promotionChannelId"
                                         @input="updateValue('entities/requestOrders/update','promotionChannelId',request.requestOrder.id,$event)"

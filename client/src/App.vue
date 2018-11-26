@@ -50,6 +50,7 @@
             this.$db.version(1).stores(
                 {
                     clients: 'id, name',
+                    clientPhones: 'id, clientId, name, number',
                     clientAddresses: 'id, clientId, addressId, name, number, complement',
                     addresses: 'id, name, neighborhood, state, city, cep',
                     searchClients: 'id, name, address, number, complement, neighborhood, city, state',
