@@ -153,7 +153,7 @@
       n.r(e)
       var r = {
           name: "NotFound",
-          metaInfo: { title: "Page Not Found | Vue Design System", htmlAttrs: { lang: "en" } },
+          metaInfo: { title: "Page Not Found | GestaON DS", htmlAttrs: { lang: "en" } },
           props: { type: { type: String, default: "div" } },
         },
         a = (n("74Cn"), n("KHd+")),
@@ -671,7 +671,7 @@
           name: "Index",
           status: "deprecated",
           release: "1.0.0",
-          metaInfo: { title: "Vue Design System", htmlAttrs: { lang: "en" } },
+          metaInfo: { title: "GestaON DS", htmlAttrs: { lang: "en" } },
           props: { type: { type: String, default: "div" } },
         },
         a = (n("w9Xg"), n("KHd+")),
@@ -699,11 +699,11 @@
                 e(
                   "Wrapper",
                   [
-                    e("Heading", [this._v("Vue Design System")]),
+                    e("Heading", [this._v("GestaON DS")]),
                     this._v(" "),
                     e("Paragraph", [
                       e("a", { attrs: { href: "https://vueds.com" } }, [
-                        this._v("Vue Design System"),
+                        this._v("GestaON DS"),
                       ]),
                       this._v(
                         "is an open-source tool for building design systems with Vue.js. It provides you and your team a set of organized tools, patterns & practices. It works as the foundation for your application development.\n    "

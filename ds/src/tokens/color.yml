@@ -7,86 +7,87 @@
 # utilize both global & local tokens for colors.
 #
 
-aliases:
-  vermilion:
-    value: "7, 83%"
-  ucla_gold:
-    value: "43, 100%"
-  bleu_de_france:
-    value: "210, 86%"
-  oxford_blue:
-    value: "210, 100%"
-  rich_black:
-    value: "#001123"
-  white:
-    value: "#fff"
 props:
+# Primary color, our brand color
+  color_primary:
+    value: "#276E73"
+    category: primary_colors
+  color_primary_10:
+    value: "#BBE5E8"
+    category: primary_colors
+  color_primary_20:
+    value: "#82CFD5"
+    category: primary_colors
+  color_primary_30:
+    value: "#58BFC6"
+    category: primary_colors
+  color_primary_40:
+    value: "#369AA1"
+    category: primary_colors
+  color_primary_50:
+    value: "#197379"
+    category: primary_colors
+  color_primary_60:
+    value: "#1F585C"
+    category: primary_colors
+  color_primary_70:
+    value: "#174245"
+    category: primary_colors
+  color_primary_80:
+    value: "#102C2E"
+    category: primary_colors
+  color_primary_90:
+    value: "#081718"
+    category: primary_colors
+
+
+#  Accent Shades used to emphasis, contrast or create rhythm
   color_accent_1:
     value: "#E0634A"
-    category: color_accents
+    category: accent_colors
   color_accent_2:
     value: "#49DFEA"
-    category: color_accents
-  color_vermilion_dark:
-    value: "hsla({!vermilion}, 43%, 1)"
-    category: color_group_1
-  color_vermilion:
-    value: "hsla({!vermilion}, 53%, 1)"
-    category: color_group_1
-  color_vermilion_light:
-    value: "hsla({!vermilion}, 63%, 1)"
-    category: color_group_1
-  color_vermilion_lighter:
-    value: "hsla({!vermilion}, 75%, 1)"
-    category: color_group_1
+    category: accent_colors
+  color_accent_3:
+    value: "#4D76C8"
+    category: accents_colors
 
-  color_ucla_gold_darker:
-    value: "hsla({!ucla_gold}, 35%, 1)"
-    category: color_group_2
-  color_ucla_gold_dark:
-    value: "hsla({!ucla_gold}, 45%, 1)"
-    category: color_group_2
-  color_ucla_gold:
-    value: "hsla({!ucla_gold}, 52%, 1)"
-    category: color_group_2
-  color_ucla_gold_light:
-    value: "hsla({!ucla_gold}, 65%, 1)"
-    category: color_group_2
-  color_ucla_gold_lighter:
-    value: "hsla({!ucla_gold}, 75%, 1)"
-    category: color_group_2
+# Basic and Gray Shades
+  color_base:
+    value: "#373C42"
+    category: base_colors
+  color_base_10:
+    value: "#E7E8E8"
+    category: base_colors
+  color_base_20:
+    value: "#C3C5C6"
+    category: base_colors
+  color_base_30:
+    value: "#9B9EA1"
+    category: base_colors
+  color_base_40:
+    value: "#73777B"
+    category: base_colors
+  color_base_50:
+    value: "#55595E"
+    category: base_colors
+  color_base_60:
+    value: "#31363C"
+    category: base_colors
+  color_base_70:
+    value: "#2A2E33"
+    category: base_colors
+  color_base_80:
+    value: "#23272B"
+    category: base_colors
 
-  color_bleu_de_france_darker:
-    value: "hsla({!bleu_de_france}, 34%, 1)"
-    category: color_group_3
-  color_bleu_de_france_dark:
-    value: "hsla({!bleu_de_france}, 44%, 1)"
-    category: color_group_3
-  color_bleu_de_france:
-    value: "hsla({!bleu_de_france}, 54%, 1)"
-    category: color_group_3
-  color_bleu_de_france_light:
-    value: "hsla({!bleu_de_france}, 64%, 1)"
-    category: color_group_3
-  color_bleu_de_france_lighter:
-    value: "hsla({!bleu_de_france}, 74%, 1)"
-    category: color_group_3
-
-  color_oxford_blue:
-    value: "hsla({!oxford_blue}, 15%, 1)"
-    category: color_group_4
-  color_rich_black:
-    value: "{!rich_black}"
-    category: color_group_4
   color_white:
-    value: "{!white}"
-    category: color_group_4
-  color_silver:
-    value: "#7F8891"
-    category: color_group_4
-  color_cloud:
-    value: "#E9F3FD"
-    category: color_group_4
+    value: "#fefefe"
+    category: base_colors
+  color_black:
+    value: "#161A1A"
+    category: base_colors
+
 global:
   type: color
   category: color

@@ -59,7 +59,7 @@ export default {
   margin-bottom: $space-xs;
   font-size: $size-s;
   font-family: $font-text;
-  color: $color-rich-black;
+  color: $color-black;
   background: tint(#c4cdd5, 85%);
   text-align: center;
   position: relative;

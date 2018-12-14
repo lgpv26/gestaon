@@ -59,8 +59,8 @@ export default {
 
 <style lang="scss" scoped>
 // Design Tokens with local scope
-$color-nav-link: $color-bleu-de-france;
-$color-nav-link-active: $color-bleu-de-france;
+$color-nav-link: $color-primary;
+$color-nav-link-active: $color-primary;
 
 .nav {
   @include stack-space($space-m);
@@ -83,9 +83,9 @@ $color-nav-link-active: $color-bleu-de-france;
       color: $color-nav-link-active;
     }
     &.active {
-      border-bottom: 2px solid $color-nav-link;
+      border-bottom: 2px solid $color-primary;
       font-weight: $weight-bold;
-      color: $color-nav-link;
+      color: $color-primary;
     }
   }
 }

@@ -46,7 +46,7 @@ $positive-text: #7cb518;
 .text-style {
   @include reset;
   @include stack-space($space-s);
-  color: $color-rich-black;
+  color: $color-accent-1;
   font-family: $font-text;
   font-weight: $weight-normal;
   font-size: $size-m;
@@ -55,7 +55,7 @@ $positive-text: #7cb518;
     // This is how you’d use design tokens with media queries
   }
   &.disabled {
-    color: tint($color-rich-black, 50%);
+    color: tint($color-accent-1, 50%);
     text-decoration: line-through;
   }
   &.strong {
@@ -65,7 +65,7 @@ $positive-text: #7cb518;
     color: shade($positive-text, 20%);
   }
   &.negative {
-    color: $color-vermilion;
+    color: $color-accent-3;
   }
 }
 </style>

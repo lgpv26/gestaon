@@ -90,10 +90,11 @@ export default {
 <docs>
   ```jsx
   <div>
-    <Icon name="ready" aria-label="Component is ready" fill="#7cb518" />
+    <Icon name="ready" aria-label="Component is ready" fill="#7cb518" /><br /><span>Ready</span>
     <Icon name="review" fill="rgb(255,186,10)" />
     <Icon name="deprecated" fill="rgb(235,59,36)" />
     <Icon name="prototype" fill="rgb(37,138,239)" />
+    <Icon name="ic-dashboard" fill="rgb(37,138,239)" />
   </div>
   ```
 </docs>

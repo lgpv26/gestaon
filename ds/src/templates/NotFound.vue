@@ -24,7 +24,7 @@
 export default {
   name: "NotFound",
   metaInfo: {
-    title: "Page Not Found | Vue Design System",
+    title: "Page Not Found | GestaON DS",
     htmlAttrs: {
       lang: "en",
     },
@@ -43,11 +43,11 @@ export default {
 
 <style lang="scss" scoped>
 // Design Tokens with local scope
-$color-template-background: $color-rich-black;
+$color-template-background: $color-black;
 $color-template-background-top: tint($color-template-background, 5%);
 $color-template-background-bottom: shade($color-template-background, 5%);
 $color-template-text: $color-white;
-$color-template-link: $color-bleu-de-france;
+$color-template-link: $color-primary;
 
 .not-found {
   @include reset;

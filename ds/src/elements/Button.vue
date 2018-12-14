@@ -98,21 +98,21 @@ export default {
   align-items: center;
   justify-content: center;
   border: 0;
-  box-shadow: inset 0 0 0 2px $color-bleu-de-france;
+  box-shadow: inset 0 0 0 2px $color-primary;
   border-radius: $radius-default;
   background: transparent;
-  color: $color-bleu-de-france;
+  color: $color-primary;
   cursor: pointer;
   &:hover,
   &.hover {
     color: $color-white;
-    background: $color-bleu-de-france;
+    background: $color-primary;
     transform: translateZ(0) scale(1.03);
   }
   &:active,
   &.active {
     transition: none;
-    background: $color-bleu-de-france-dark;
+    background: $color-primary-70;
     box-shadow: none;
     color: $color-white;
     transform: translateZ(0) scale(1);
@@ -120,7 +120,7 @@ export default {
 
   &:focus,
   &.focus {
-    background: $color-bleu-de-france-darker;
+    background: $color-primary-70;
     box-shadow: none;
     color: $color-white;
     transform: translateZ(0) scale(1);
@@ -131,7 +131,7 @@ export default {
   .icon {
     float: right;
     margin: -#{$space-xs} -#{$space-xs} -#{$space-s} $space-xs/2;
-    color: $color-bleu-de-france;
+    color: $color-primary;
   }
 
   // Various button sizes
@@ -150,16 +150,16 @@ export default {
 
   // Primary button
   &.primary {
-    background: $color-bleu-de-france;
+    background: $color-primary;
     color: $color-white;
     box-shadow: none;
     &:hover,
     &.hover {
-      background-color: shade($color-bleu-de-france, 12%);
+      background-color: shade($color-primary, 12%);
     }
     &:active,
     &.active {
-      background-color: shade($color-bleu-de-france, 20%);
+      background-color: shade($color-primary, 20%);
       transition: none;
     }
     &:focus {

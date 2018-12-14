@@ -46,7 +46,7 @@ import designTokens from "@/assets/tokens/tokens.raw.json"
 import orderBy from "lodash/orderBy"
 
 /**
- * A list of available tokens in Vue Design System. Use these tokens in place
+ * A list of available tokens in GestaON DS. Use these tokens in place
  * of hard-coded values in order to maintain a scalable and consistent system.
  * To edit these tokens and add more, see
  * [/src/tokens/](https://github.com/viljamis/vue-design-system/blob/master/src/tokens).
@@ -80,7 +80,7 @@ export default {
   font-family: $font-heading;
   font-weight: $weight-normal;
   line-height: $line-height-xs;
-  color: $color-rich-black;
+  color: $color-black;
   margin-bottom: $space-s;
   font-style: normal;
   @media (max-width: 1000px) {
@@ -93,10 +93,10 @@ export default {
   }
   thead th {
     padding: $space-s $space-l $space-s $space-s;
-    background: $color-cloud;
+    background: $color-accent-1;
     font-size: $size-s;
     font-weight: $weight-bold;
-    color: $color-oxford-blue;
+    color: $color-accent-2;
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: $weight-semi-bold;

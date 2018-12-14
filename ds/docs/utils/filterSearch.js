@@ -1,5 +1,5 @@
 /**
- * This is Vue Design System’s helper util that makes
+ * This is GestaON DS’s helper util that makes
  * sure that filtering will reveal hidden links too.
  */
 

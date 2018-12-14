@@ -1,7 +1,7 @@
 {
   "name": "ds",
   "version": "3.5.7",
-  "description": "Vue Design System is an open-source tool for building Design Systems with Vue.js",
+  "description": "GestaON DS is an open-source tool for building Design Systems with Vue.js",
   "author": "viljamis <me@viljamis.com>",
   "main": "dist/system/system.js",
   "files": [
@@ -37,7 +37,7 @@
     "url": "git+https://github.com/viljamis/vue-design-system.git"
   },
   "keywords": [
-    "vue design system",
+    "GestaON DS",
     "design system",
     "vue.js",
     "vue",

@@ -1,12 +1,12 @@
 [![Build status](https://travis-ci.org/viljamis/vue-design-system.svg?branch=master)](https://travis-ci.org/viljamis/vue-design-system/) ![Dependencies status](https://david-dm.org/viljamis/vue-design-system.svg) ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg) [![Gitter](https://badges.gitter.im/gitterHQ/gitter.svg)](https://gitter.im/vueds/Lobby)
 
-# Vue Design System
+# GestaON DS
 
-**Vue Design System** is an open source tool for building UI Design Systems with [Vue.js](https://vuejs.org). It provides you and your team a set of organized tools, patterns & practices that work as the foundation for your application development.
+**GestaON DS** is an open source tool for building UI Design Systems with [Vue.js](https://vuejs.org). It provides you and your team a set of organized tools, patterns & practices that work as the foundation for your application development.
 
 The tool is built on top of [Vue.js](https://vuejs.org), [Vue Styleguidist](https://github.com/vue-styleguidist/vue-styleguidist), [Webpack](https://webpack.js.org), and [Theo](https://github.com/salesforce-ux/theo) and is aimed for designers and front-end developers who have at least basic knowledge of component based workflows + HTML, SCSS & JavaScript.
 
-**Made by [@viljamis](https://twitter.com/viljamis) and other contributors. See also [the official website](https://vueds.com) of Vue Design System and [read my article](https://viljamis.com/2018/vue-design-system/) on the processes and workflow I use to get started with a new design system project.**
+**Made by [@viljamis](https://twitter.com/viljamis) and other contributors. See also [the official website](https://vueds.com) of GestaON DS and [read my article](https://viljamis.com/2018/vue-design-system/) on the processes and workflow I use to get started with a new design system project.**
 
 [![Screenshot](./docs/preview.gif)](https://vueds.com/)
 
@@ -26,7 +26,7 @@ The tool is built on top of [Vue.js](https://vuejs.org), [Vue Styleguidist](http
 
 ## Documentation
 
-- **[Getting Started](https://github.com/viljamis/vue-design-system/wiki/getting-started): How to install and run Vue Design System.**
+- **[Getting Started](https://github.com/viljamis/vue-design-system/wiki/getting-started): How to install and run GestaON DS.**
 - [Terminology](https://github.com/viljamis/vue-design-system/wiki/terminology): Introduction to the system concepts and its hierarchy.
 - [Naming of Things](https://github.com/viljamis/vue-design-system/wiki/naming-of-Things): Naming is hard, so it’s good to have clear guidelines.
 - [Directory Structure](https://github.com/viljamis/vue-design-system/wiki/directory-structure): What goes where and why.
@@ -42,9 +42,9 @@ The tool is built on top of [Vue.js](https://vuejs.org), [Vue Styleguidist](http
 ## Examples
 
 - **[Official example](https://vueds.com/example)**
-- [Using Vue Design System as NPM dependency on Vue.js project](https://github.com/viljamis/vue-design-system-example)
-- [Using Vue Design System as NPM Dependency on Nuxt.js project](https://github.com/viljamis/nuxt-design-system)
-- [Using Vue Design System as NPM Dependency on a static website](https://github.com/viljamis/vue-design-system-example-website)
+- [Using GestaON DS as NPM dependency on Vue.js project](https://github.com/viljamis/vue-design-system-example)
+- [Using GestaON DS as NPM Dependency on Nuxt.js project](https://github.com/viljamis/nuxt-design-system)
+- [Using GestaON DS as NPM Dependency on a static website](https://github.com/viljamis/vue-design-system-example-website)
 
 ## Roadmap
 

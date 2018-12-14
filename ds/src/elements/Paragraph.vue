@@ -44,12 +44,12 @@ export default {
   font-family: $font-text;
   font-weight: $weight-normal;
   line-height: $line-height-m;
-  color: shade($color-silver, 70%);
+  color: shade($color-base-40, 70%);
   a {
-    color: $color-bleu-de-france;
+    color: $color-primary;
     text-decoration: none;
     &:hover {
-      color: darken($color-bleu-de-france, 20%);
+      color: darken($color-accent-3, 90%);
     }
   }
   &.intro {

@@ -135,7 +135,7 @@ export default {
   font-family: $font-heading;
   font-weight: $weight-normal;
   line-height: $line-height-xs;
-  color: $color-rich-black;
+  color: $color-black;
   margin-bottom: $space-s;
   font-style: normal;
   @media (max-width: 1000px) {
