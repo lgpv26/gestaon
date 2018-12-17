@@ -1,0 +1,93 @@
+#
+# COLOR TOKENS
+# Use these tokens to set a color.
+# For reference, see http://hslpicker.com/
+#
+# To make things a little simpler for your team,
+# utilize both global & local tokens for colors.
+#
+
+props:
+# Primary color, our brand color
+  color_primary:
+    value: "#276E73"
+    category: primary_colors
+  color_primary_10:
+    value: "#BBE5E8"
+    category: primary_colors
+  color_primary_20:
+    value: "#82CFD5"
+    category: primary_colors
+  color_primary_30:
+    value: "#58BFC6"
+    category: primary_colors
+  color_primary_40:
+    value: "#369AA1"
+    category: primary_colors
+  color_primary_50:
+    value: "#197379"
+    category: primary_colors
+  color_primary_60:
+    value: "#1F585C"
+    category: primary_colors
+  color_primary_70:
+    value: "#174245"
+    category: primary_colors
+  color_primary_80:
+    value: "#102C2E"
+    category: primary_colors
+  color_primary_90:
+    value: "#081718"
+    category: primary_colors
+
+
+#  Accent Shades used to emphasis, contrast or create rhythm
+  color_accent_1:
+    value: "#E0634A"
+    category: accent_colors
+  color_accent_2:
+    value: "#49DFEA"
+    category: accent_colors
+  color_accent_3:
+    value: "#4D76C8"
+    category: accents_colors
+
+# Basic and Gray Shades
+  color_base:
+    value: "#373C42"
+    category: base_colors
+  color_base_10:
+    value: "#E7E8E8"
+    category: base_colors
+  color_base_20:
+    value: "#C3C5C6"
+    category: base_colors
+  color_base_30:
+    value: "#9B9EA1"
+    category: base_colors
+  color_base_40:
+    value: "#73777B"
+    category: base_colors
+  color_base_50:
+    value: "#55595E"
+    category: base_colors
+  color_base_60:
+    value: "#31363C"
+    category: base_colors
+  color_base_70:
+    value: "#2A2E33"
+    category: base_colors
+  color_base_80:
+    value: "#23272B"
+    category: base_colors
+
+  color_white:
+    value: "#fefefe"
+    category: base_colors
+  color_black:
+    value: "#161A1A"
+    category: base_colors
+
+global:
+  type: color
+  category: color
