@@ -37,6 +37,7 @@ body {
     padding-bottom: 3px;
     width: 100%;
     font-size: 15px;
+    text-transform: uppercase;
 }
 
 .input:hover, .input:active, .input:focus {

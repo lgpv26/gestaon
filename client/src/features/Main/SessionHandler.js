@@ -203,6 +203,35 @@ export default {
                                 vm.setSystemInitialized(true)
                             })
                         })
+                        vm.$static.searchAddressesIndex = elasticlunr(function () {
+                            _.forEach(elasticlunr.Pipeline.registeredFunctions, (value, key) => {
+                                if(key === 'stemmer'){
+                                    this.pipeline.remove(value)
+                                }
+                                else if(key === 'stopWordFilter'){
+                                    this.pipeline.remove(value)
+                                }
+                            })
+                            this.setRef('id')
+                            this.addField('name')
+                            this.addField('address')
+                            this.addField('neighborhood')
+                            this.addField('city')
+                            this.addField('state')
+                            this.addField('cep')
+                            this.addField('country')
+                            vm.$db.searchAddresses.toArray().then((documents) => {
+                                documents.forEach(function(doc){
+                                    this.addDoc(doc)
+                                }, this)
+                                // initialize
+                                if(window.isAppLoading()) {
+                                    window.removeAppLoading()
+                                }
+                                vm.stopLoading()
+                                vm.setSystemInitialized(true)
+                            })
+                        })
                         vm.$db.products.toArray().then((products) => {
                             vm.$store.dispatch('entities/products/insert', {
                                 data: products
@@ -309,6 +338,29 @@ export default {
                                             })
                                         })
                                     }
+                                    const processChunkOfAddresses = function(chunkOfAddresses){
+                                        return new Promise((resolve, reject) => {
+                                            const arrayToIndex = []
+                                            async.each(chunkOfAddresses, (address, cb) => {
+                                                arrayToIndex.push({
+                                                    id: address.id,
+                                                    name: _.get(address,'name',null),
+                                                    address: _.get(address,'name',null),
+                                                    neighborhood: _.get(address,'neighborhood',null),
+                                                    city: _.get(address,'city',null),
+                                                    state: _.get(address,'state',null),
+                                                    cep: _.get(address,'cep',null),
+                                                    country: _.get(address,'country',null)
+                                                })
+                                                cb(null, address)
+                                            }, (err, addresses) => {
+                                                resolve(arrayToIndex)
+                                            })
+                                        })
+                                    }
+
+                                    // begin clients import
+
                                     vm.$db.clients.count().then((numberOfClients) => {
                                         return new Promise((resolve, reject) => {
                                             let resultArray = []
@@ -342,13 +394,52 @@ export default {
                                             documents.forEach((doc) => {
                                                 this.addDoc(doc)
                                             }, this)
-                                            // initialize
-                                            if(window.isAppLoading()){
-                                                window.removeAppLoading()
-                                            }
-                                            vm.stopLoading()
-                                            vm.setSystemInitialized(true)
                                         })
+
+                                        // begin addresses import
+
+                                        vm.$db.addresses.count().then((numberOfAddresses) => {
+                                            return new Promise((resolve, reject) => {
+                                                let resultArray = []
+                                                let offset = 0, limit = 100
+                                                const processInChunks = function(){
+                                                    if(offset > numberOfAddresses){
+                                                        return resolve(resultArray)
+                                                    }
+                                                    window.setAppLoadingText(`Carregando endereços: ${Math.round(offset/numberOfAddresses * 100)}%`)
+                                                    vm.$db.addresses.offset(offset).limit(limit).toArray().then((addresses) => {
+                                                        processChunkOfAddresses(addresses).then((processedChunkOfAddresses) => {
+                                                            resultArray = _.concat(resultArray, processedChunkOfAddresses)
+                                                            offset += limit
+                                                            processInChunks()
+                                                        })
+                                                    })
+                                                }
+                                                processInChunks()
+                                            })
+                                        }).then((documents) => {
+                                            vm.$db.searchAddresses.bulkPut(documents)
+                                            vm.$static.searchAddressesIndex = elasticlunr(function () {
+                                                this.setRef('id')
+                                                this.addField('name')
+                                                this.addField('address')
+                                                this.addField('neighborhood')
+                                                this.addField('city')
+                                                this.addField('state')
+                                                this.addField('cep')
+                                                this.addField('country')
+                                                documents.forEach((doc) => {
+                                                    this.addDoc(doc)
+                                                }, this)
+                                                // initialize
+                                                if(window.isAppLoading()){
+                                                    window.removeAppLoading()
+                                                }
+                                                vm.stopLoading()
+                                                vm.setSystemInitialized(true)
+                                            })
+                                        })
+
                                     })
                                 })
                             })

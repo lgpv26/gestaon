@@ -184,8 +184,11 @@
                 const requestPaymentTmpId = `tmp/${shortid.generate()}`
                 const requestOrderTmpId = `tmp/${shortid.generate()}`
                 const requestOrderProductTmpId = `tmp/${shortid.generate()}`
+                const requestClientAddressTmpId = `tmp/${shortid.generate()}`
                 const requestTmpId = `tmp/${shortid.generate()}`
                 const clientTmpId = `tmp/${shortid.generate()}`
+                const addressTmpId = `tmp/${shortid.generate()}`
+                const clientAddressTmpId = `tmp/${shortid.generate()}`
                 const clientPhoneTmpId = `tmp/${shortid.generate()}`
                 this.$store.dispatch('entities/windows/insert', {
                     data: {
@@ -203,13 +206,17 @@
                 this.$store.dispatch('entities/requestPayments/insert',{
                     data: {
                         id: requestPaymentTmpId,
-                        requestId: requestTmpId
+                        requestId: requestTmpId,
+                        paymentMethodId: 1,
+                        amount: this.$store.getters['entities/products/find'](1).price
                     }
                 })
                 this.$store.dispatch('entities/requestOrderProducts/insert',{
                     data: {
                         id: requestOrderProductTmpId,
-                        requestOrderId: requestOrderTmpId
+                        requestOrderId: requestOrderTmpId,
+                        productId: 1,
+                        unitPrice: this.$store.getters['entities/products/find'](1).price
                     }
                 })
                 this.$store.dispatch('entities/requestOrders/insert',{
@@ -228,11 +235,31 @@
                         clientId: clientTmpId
                     }
                 })
+                this.$store.dispatch('entities/addresses/insert',{
+                    data: {
+                        id: addressTmpId,
+                    }
+                })
+                this.$store.dispatch('entities/clientAddresses/insert',{
+                    data: {
+                        id: clientAddressTmpId,
+                        clientId: clientTmpId,
+                        addressId: addressTmpId
+                    }
+                })
+                this.$store.dispatch('entities/requestClientAddresses/insert',{
+                    data: {
+                        id: requestClientAddressTmpId,
+                        requestId: requestTmpId,
+                        clientAddressId: clientAddressTmpId
+                    }
+                })
                 this.$store.dispatch('entities/requests/insert',{
                     data: {
                         id: requestTmpId,
                         clientId: clientTmpId,
-                        requestOrderId: requestOrderTmpId
+                        requestOrderId: requestOrderTmpId,
+                        status: 'draft'
                     }
                 })
             },

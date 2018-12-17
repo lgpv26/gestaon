@@ -5,7 +5,7 @@
                 <span class="target__title">Data</span>
                 <div class="target__amount">
                     <div></div>
-                    <app-datetime-selector class="input--borderless" v-model="deliveryDate" :config="datetimeSelectorConfig" @on-change="onFilterChange($event)" placeholder="..."></app-datetime-selector>
+                    <app-datetime-selector class="select" v-model="deliveryDate" :config="datetimeSelectorConfig" @on-change="onFilterChange($event)" placeholder="..."></app-datetime-selector>
                 </div>
             </div>
         </div>
@@ -214,6 +214,13 @@
             height: 32px;
             cursor: pointer;
             padding: 0 0 0 10px;
+
+            .select {
+                margin-bottom: 0;
+                padding: 5px 0;
+                width: 74px;
+                border-bottom: 0;
+            }
         }
 
         .request-board__filter:first-child {

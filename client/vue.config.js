@@ -11,7 +11,6 @@ module.exports = {
                     loader: 'vue-svg-loader'
                 }
             ],
-
         }
     },
     chainWebpack: config => {

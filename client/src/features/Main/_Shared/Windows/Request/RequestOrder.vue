@@ -9,7 +9,7 @@
                             <thead>
                                 <tr>
                                     <th style="width: 300px;">Nome</th>
-                                    <th style="width: 50px;">Qnt.</th>
+                                    <th style="text-align: center; padding-right: 8px;">Qnt.</th>
                                     <th style="text-align: right; padding-right: 8px;">Valor Un.</th>
                                     <th style="text-align: right; padding-right: 8px;">Desc.</th>
                                     <th style="text-align: right; padding-right: 8px;">Subtotal</th>
@@ -21,7 +21,7 @@
                                     <td style="padding-right: 8px;">
                                         <app-select :items="getSelectProducts"
                                                     :value="requestOrderProduct.id"
-                                                    @input="updateValue('entities/requestOrderProducts/update','productId',requestOrderProduct.id,$event)"
+                                                    @input="selectOrderProduct(requestOrderProduct,$event)"
                                                     :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
                                             <input type="text" class="select readonly" style="margin-bottom: 0;" readonly
                                                    :value="(_.has(requestOrderProduct,'product.name')) ? requestOrderProduct.product.name : '-- SELECIONE --'"/>
@@ -34,9 +34,10 @@
                                         <input class="input" type="text"
                                                @input="updateValue('entities/requestOrderProducts/update','quantity',requestOrderProduct.id,$event.target.value)"
                                                :value="requestOrderProduct.quantity"
-                                               style="width: 34px; margin-bottom: 0;" />
+                                               style="width: 50px; margin-bottom: 0; text-align: center;" />
                                     </td>
                                     <td style="padding-right: 8px;">
+
                                         <money class="input"
                                                @input.native="updateMoneyValue('entities/requestOrderProducts/update','unitPrice',requestOrderProduct.id,$event)"
                                                :value="requestOrderProduct.unitPrice"
@@ -79,10 +80,10 @@
                             <thead>
                             <tr>
                                 <th>Forma de pagamento</th>
-                                <th style="width: 100px; text-align: left; padding-right: 8px;">Código</th>
-                                <th style="width: 100px; text-align: left; padding-right: 8px;">Venc.</th>
+                                <th style="width: 100px; text-align: center; padding-right: 8px;">Código</th>
+                                <th style="width: 100px; text-align: right; padding-right: 8px;">Vencimento</th>
                                 <th style="width: 100px; text-align: center;">Recebido</th>
-                                <th style="width: 100px; text-align: right; padding-right: 8px;">Subtotal</th>
+                                <th style="width: 100px; text-align: right; padding-right: 8px;">Valor</th>
                                 <th style="width: 20px;"></th>
 
                             </tr>
@@ -102,10 +103,12 @@
                                     </app-select>
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <input type="text" class="input readonly" style="margin-bottom: 0;" disabled value="---" />
+                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', true)" type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
+                                    <input v-else type="text" class="input readonly" style="margin-bottom: 0; text-align: center;" disabled value="---" />
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <input type="text" class="input" style="margin-bottom: 0;" />
+                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', true)" type="text" class="input" style="margin-bottom: 0; text-align: right;" placeholder="##/##/####" />
+                                    <input v-else type="text" class="input readonly" disabled style="margin-bottom: 0; text-align: right;" value="---" />
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: row; justify-content: center; margin-top: 7px;">
@@ -113,7 +116,8 @@
                                     </div>
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <money class="input" style="margin-bottom: 0; text-align: right;" :value="requestPayment.amount" @input.native="onRequestOrderProductMoneyUpdate('unitDiscount',requestOrderProduct.id,$event)"></money>
+                                    <money class="input" style="margin-bottom: 0; text-align: right;" :value="requestPayment.amount"
+                                           @input.native="updateMoneyValue('entities/requestPayments/update','amount',requestPayment.id,$event)"></money>
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: row;">
@@ -129,10 +133,9 @@
                                     
                                     <a class="button" @click="addRequestPayment()">INCLUIR PAGAMENTO</a>
                                 </td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td style="padding-top: 15px; padding-right: 8px; text-align: right;">R$ 120,00</td>
+                                <td colspan="4" style="padding-top: 15px; padding-right: 8px; text-align: right;">
+                                    {{ getOrderTotalPrice }} - {{ getOrderPaymentsTotalPrice }} = {{ getOrderLeftPrice }}
+                                </td>
                             </tr>
                             </tbody>
                         </table>
@@ -194,6 +197,7 @@
     import { mapMutations, mapState, mapActions } from 'vuex'
     import _ from 'lodash'
     import shortid from 'shortid'
+    import Vue from 'vue'
     import ClientSearchComponent from '../_Shared/Search/ClientSearch'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
@@ -241,6 +245,20 @@
                     return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
                 }), 2, 'R$ ', '.', ',')
             },
+            getOrderPaymentsTotalPrice(){
+                return this.utils.formatMoney(_.sumBy(this.request.requestPayments, (requestPayment) => {
+                    return parseFloat(requestPayment.amount)
+                }), 2, 'R$ ', '.', ',')
+            },
+            getOrderLeftPrice(){
+                const orderTotalPrice = _.sumBy(this.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                    return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
+                })
+                const orderPaymentsTotalPrice = _.sumBy(this.request.requestPayments, (requestPayment) => {
+                    return parseFloat(requestPayment.amount)
+                })
+                return this.utils.formatMoney(parseFloat(orderTotalPrice) - parseFloat(orderPaymentsTotalPrice), 2, 'R$ ', '.', ',')
+            },
             getSelectUsers(){
                 return _.map(this.$store.getters['entities/users/all'](), (user) => {
                     return {
@@ -276,7 +294,6 @@
         },
         methods: {
             updateValue(path, field, id, value){
-                console.log(this.request)
                 const data = {}
                 data[field] = value
                 this.$store.dispatch(path, {
@@ -294,8 +311,21 @@
                     })
                 }
             },
+
+            /* Order Product */
+            selectOrderProduct(requestOrderProduct, productId){
+                this.updateValue('entities/requestOrderProducts/update','productId',requestOrderProduct.id,productId)
+                const product = this.$store.getters['entities/products/find'](productId)
+                this.$store.dispatch('entities/requestOrderProducts/update',{
+                    where: requestOrderProduct.id,
+                    data: {
+                        productId: product.id,
+                        unitPrice: product.price
+                    }
+                })
+            },
             addRequestOrderProduct(){
-                this.$store.dispatch('entities/requestOrderProducts/insert',{
+                this.$store.dispatch('entities/requestOrderProducts/insert', {
                     data: {
                         id: `tmp/${shortid.generate()}`,
                         requestOrderId: this.request.requestOrder.id
@@ -308,6 +338,7 @@
                 }
                 this.$store.dispatch('entities/requestOrderProducts/delete', requestOrderProductId)
             },
+
             addRequestPayment(){
                 this.$store.dispatch('entities/requestPayments/insert',{
                     data: {
@@ -322,22 +353,6 @@
                 }
                 this.$store.dispatch('entities/requestPayments/delete', requestPaymentId)
             },
-            onRequestOrderProductMoneyUpdate(field, id, value){
-                console.log(value)
-                /*const data = {}
-                data[field] = parseFloat(value)
-
-                this.$store.dispatch('entities/requestOrderProducts/update', {
-                    where: id,
-                    data
-                })*/
-            }
-        },
-        created(){
-            const vm = this
-        },
-        mounted(){
-            console.log(this.request)
         }
     }
 </script>

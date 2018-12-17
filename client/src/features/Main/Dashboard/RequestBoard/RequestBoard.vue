@@ -2,7 +2,7 @@
     <div id="request-panel" ref="requestPanel">
         <div class="board">
             <app-request-board-section :options="boardOptions"
-                   :section="{ id: 'in-edition', name: 'Em Edição', size: 1 }" />
+                   :section="{ id: 'drafts', name: 'Rascunhos', size: 1 }" />
             <app-request-board-section :options="boardOptions"
                    :section="{ id: 'requests', name: 'Pedidos', size: 1 }" />
             <app-request-board-section :options="boardOptions"

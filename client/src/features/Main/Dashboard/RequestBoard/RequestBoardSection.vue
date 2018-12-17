@@ -42,6 +42,8 @@
     import RequestBoardDraftCard from './RequestBoardDraftCard.vue'
     import RequestBoardCard from './RequestBoardCard.vue'
 
+    import Request from '../../../../vuex/models/Request'
+
     export default {
         components: {
             'app-draggable': DraggableComponent,
@@ -93,10 +95,18 @@
             },
             sectionCards(){
                 switch(this.section.id){
-                    case "in-edition":
-                        return []
+                    case "drafts":
+                        return Request.query()
+                            .where('status', 'draft')
+                            .orWhere('status', 'processing')
+                            .withAll().get()
                     case "requests":
-                        return this.$store.getters['entities/cards/query']().withAll().get()
+                        return Request.query()
+                            .where('status', 'pending')
+                            .orWhere('status', 'finished')
+                            .orWhere('status', 'in-displacement')
+                            .orWhere('status', 'canceled')
+                            .withAll().get()
                     case "scheduled":
                         return []
                 }
@@ -108,6 +118,7 @@
             ]),
 
             cardClick(card){
+                console.log("Yop", card.windowId)
                 this.$store.dispatch('entities/windows/update', {
                     where: card.windowId,
                     data: {

@@ -1,8 +1,6 @@
 <template>
     <div class="request__window">
-        <div class="request__overlay">
-            <a href="javascript:void(0)" class="back"><i class="mi mi-arrow-back"></i></a>
-        </div>
+        <app-request-history :show="showClientOrderTimeline" @close="showClientOrderTimeline = false"></app-request-history>
         <div class="request__search">
             <input type="text" class="input--borderless" placeholder="..." v-model="searchValue" @focus="searchShow = true" @input="search()" />
             <a href="javascript:void(0)" v-if="searchValue && searchItems.length && searchShow" @click="searchShow = false">
@@ -18,31 +16,43 @@
                                 <div class="box">
                                     <div class="form" style="display: flex; flex-direction: column; flex-grow: 1;">
                                         <label style="margin-bottom: 5px;">Nome</label>
-                                        <input type="text" class="input" :value="request.client.name"
-                                               @input="updateValue('entities/clients/update','name',request.client.id,$event.target.value)" />
+                                        <div style="display: flex; flex-direction: row; flex-wrap: nowrap;">
+                                            <input type="text" class="input" :value="request.client.name"
+                                                   @input="updateValue('entities/clients/update','name',request.client.id,$event.target.value)" />
+                                            <div v-if="!isNewClient" style="margin-left: 8px; display: flex; align-items: flex-end;">
+                                                <a class="button" style="white-space: nowrap; margin-bottom: 15px;" @click="addClient()">NOVO CLIENTE</a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div v-if="(request.client.clientAddresses.length > 0) && !requestClientAddressForm" class="box">
+                                <div v-if="!requestClientAddressForm" class="box">
                                     <h3 style="margin-bottom: 5px;">Endereços</h3>
-                                    <table style="margin: 3px 0 12px 0;">
+                                    <table class="client-addresses" style="margin: 3px 0 12px 0;" v-if="request.client.clientAddresses.length > 0">
                                         <tbody>
-                                            <tr v-for="clientAddress in request.client.clientAddresses">
+                                            <tr v-for="clientAddress in request.client.clientAddresses"
+                                                :class="{selected: request.requestClientAddresses[0].clientAddressId === clientAddress.id}"
+                                                :key="clientAddress.id"
+                                                v-if="clientAddress.address"
+                                                @click="selectClientAddress(clientAddress.id)">
                                                 <td>
-                                                    {{ clientAddress.address.name }},
-                                                    {{ clientAddress.number + ((clientAddress.complement) ? ' - ' + clientAddress.complement : '') }}
+                                                    {{ clientAddress.address.name }}, {{ clientAddress.number }}<br/>
+                                                    {{ ((clientAddress.complement) ? clientAddress.complement : 'S/ COMPLEMENTO') }}
                                                 </td>
-                                                <td>{{ clientAddress.address.neighborhood }} - {{ clientAddress.address.city }}</td>
-                                                <td style="text-align: right">
-                                                    <a href="javascript:void(0)" @click="editClientAddress(clientAddress.id)">
+                                                <td>{{ clientAddress.address.neighborhood }}<br/>{{ clientAddress.address.city }}/{{ clientAddress.address.state }}</td>
+                                                <td style="text-align: right; white-space: nowrap;">
+                                                    <a href="javascript:void(0)" @click.stop="editClientAddress(clientAddress.id)">
                                                         <i class="mi mi-edit" style="font-size: 18px; padding: 2px;"></i>
                                                     </a>
-                                                    <a href="javascript:void(0)" @click="removeClientAddress(clientAddress.id)" style="margin-left: 7px;">
+                                                    <a href="javascript:void(0)" @click.stop="removeClientAddress(clientAddress.id)" style="margin-left: 7px;">
                                                         <i class="mi mi-close" style="font-size: 18px; padding: 2px;"></i>
                                                     </a>
                                                 </td>
                                             </tr>
                                         </tbody>
                                     </table>
+                                    <div style="margin: 3px 0 12px 0;" v-else>
+                                        <p>Este cliente não possui endereço cadastrado.</p>
+                                    </div>
                                     <div style="display: flex;">
                                         <a class="button" style="float: right;" @click="addClientAddress()">INCLUIR ENDEREÇO</a>
                                         <span class="push-both-sides"></span>
@@ -53,15 +63,20 @@
                                     <div style="display: flex; flex-direction: row;">
                                         <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px;">
                                             <label>Endereço</label>
-                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.address.name" />
+                                            <app-address-search-input
+                                                    :value="request.requestClientAddresses[0].clientAddress.address.name"
+                                                    @input="updateValue('entities/addresses/update','name',request.requestClientAddresses[0].clientAddress.address.id,$event)"
+                                                    @select="onAddressSelect($event)"></app-address-search-input>
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 50px; margin-right: 8px;">
                                             <label>Nº</label>
-                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.number" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.number"
+                                                   @input="updateValue('entities/clientAddresses/update','number',request.requestClientAddresses[0].clientAddress.id,$event.target.value)" />
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 170px;">
                                             <label>Complemento</label>
-                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.complement" />
+                                            <input type="text" class="input" :value="request.requestClientAddresses[0].clientAddress.complement"
+                                                   @input="updateValue('entities/clientAddresses/update','complement',request.requestClientAddresses[0].clientAddress.id,$event.target.value)"/>
                                         </div>
                                     </div>
                                     <div style="display: flex; flex-direction: row;">
@@ -83,7 +98,7 @@
                                         </div>
                                     </div>
                                     <div style="display: flex;">
-                                        <a class="button" @click="cancel()">VOLTAR</a>
+                                        <a class="button" v-if="request.client.clientAddresses.length >= 1" @click="cancel()">VOLTAR</a>
                                         <span class="push-both-sides"></span>
                                         <a class="button" @click="requestClientAddressForm = !requestClientAddressForm">SALVAR ENDEREÇO</a>
                                     </div>
@@ -105,6 +120,7 @@
                                     <div class="box__item">
                                         <a class="button" style="margin-top: 10px;" @click="addClientPhone()">ADICIONAR TELEFONE</a>
                                     </div>
+
                                 </div>
                                 <div class="box" style="padding: 10px 12px;">
                                     <div class="box__item" style="display: flex; flex-direction: column;">
@@ -129,7 +145,32 @@
                             <app-switch :readonly="true" :value="activeTab === 'client'"></app-switch>
                         </div>
                         <h3>Cliente</h3>
+                        <div v-if="activeTab !== 'client'" style="margin-left: 12px; display: flex; flex-direction: row; align-items: center;">
+                            <div class="dot-separator"></div>
+                            <div v-if="hasClientSelected" style="display: flex; flex-direction: row; align-items: center;">
+                                <h3 style="margin-left: 8px; margin-right: 8px;">{{ utils.getShortString(request.client.name, 14, '[...]') }}</h3>
+                                <div class="dot-separator"></div>
+                                <h3 style="margin-left: 8px; margin-right: 8px;">
+                                    {{ utils.getShortString(request.requestClientAddresses[0].clientAddress.address.name, 22, '[...]') }},
+                                    {{ (request.requestClientAddresses[0].clientAddress.number) ? request.requestClientAddresses[0].clientAddress.number : 'S/ N' }}
+                                </h3>
+                                <div class="dot-separator"></div>
+                                <h3 style="margin-left: 8px;" v-if="request.requestClientAddresses[0].clientAddress.complement">
+                                    {{ utils.getShortString(request.requestClientAddresses[0].clientAddress.complement, 9, '[...]') }}
+                                </h3>
+                                <h3 style="margin-left: 8px;" v-else>
+                                    S/ COMPLEMENTO
+                                </h3>
+                            </div>
+                            <div v-else style="display: flex; flex-direction: row; align-items: center;">
+                                <h3 style="margin-left: 8px;">S/CLIENTE</h3>
+                            </div>
+                        </div>
                         <span class="push-both-sides"></span>
+                        <a class="button"
+                           v-if="!isNewClient"
+                           @click.stop="showClientOrderTimeline = true"
+                           style="display: flex; align-items: center; align-self: center; text-transform: uppercase;">últimas compras</a>
                     </div>
                 </div>
                 <div class="request__section" :class="{active: activeTab === 'order'}">
@@ -168,15 +209,20 @@
 <script>
     import { mapMutations, mapState, mapActions } from 'vuex'
     import _ from 'lodash'
+    import Vue from 'vue'
     import shortid from 'shortid'
     import ClientSearchComponent from '../_Shared/Search/ClientSearch'
+    import AddressSearchInputComponent from '../_Shared/Search/AddressSearchInput'
     import RequestOrder from './RequestOrder'
+    import RequestHistory from './RequestHistory'
 
     export default {
         props: ['request'],
         components: {
             'app-request-order': RequestOrder,
-            'app-client-search': ClientSearchComponent
+            'app-request-history': RequestHistory,
+            'app-client-search': ClientSearchComponent,
+            'app-address-search-input': AddressSearchInputComponent
         },
         data(){
             return {
@@ -198,14 +244,22 @@
 
                 activeTab: 'client',
 
-                requestClientAddressForm: false,
+                showClientOrderTimeline: false,
 
-                isAddingClientAddress: false,
+                requestClientAddressForm: true,
+
+                isAddingClientAddress: true,
 
                 price: 0
             }
         },
         computed: {
+            hasClientSelected(){
+                return _.get(this.request, "client.name", false) && this.request.client.name.trim()
+            },
+            isNewClient(){
+                return this.utils.isTmp(this.request.clientId)
+            },
             getSelectClientGroups(){
                 return _.map(this.$store.getters['entities/clientGroups/all'](), (clientGroup) => {
                     return {
@@ -216,6 +270,15 @@
             }
         },
         methods: {
+            ...mapActions('request-queue', ['addToQueue']),
+            updateValue(path, field, id, value){
+                const data = {}
+                data[field] = value
+                this.$store.dispatch(path, {
+                    where: id,
+                    data
+                })
+            },
             cancel(){
                 if(this.isAddingClientAddress){
                     const clientAddressId = this.request.requestClientAddresses[0].clientAddressId
@@ -226,80 +289,37 @@
 
             },
             createRequest(){
-                console.log(this.$store.getters['entities/paymentMethods/all']())
-            },
-            updateValue(path, field, id, value){
-                console.log(value)
-                const data = {}
-                data[field] = value
-                this.$store.dispatch(path, {
-                    where: id,
-                    data
+                const request = this.$store.getters['entities/requests/query']().where('id', this.request.id).withAllRecursive(5).first()
+                this.addToQueue({
+                    type: 'request',
+                    op: 'create',
+                    data: this.utils.removeReactivity(request)
                 })
-            },
-            addClientPhone(){
-                this.$store.dispatch('entities/clientPhones/insert',{
+                this.$store.dispatch('entities/requests/update',{
+                    where: this.request.id,
                     data: {
-                        id: `tmp/${shortid.generate()}`,
-                        clientId: this.request.client.id
+                        status: 'processing'
                     }
-
-
                 })
             },
-            addClientAddress(){
-                this.isAddingClientAddress = true
-                this.requestClientAddressForm = true
-                const requestClientAddressId = this.request.requestClientAddresses[0].id
-                if(requestClientAddressId){
-                    const clientAddressTmpId = `tmp/${shortid.generate()}`
-                    const addressTmpId = `tmp/${shortid.generate()}`
-                    this.$store.dispatch('entities/addresses/insert',{
-                        data: {
-                            id: addressTmpId
-                        }
-                    }).then(() => {
-                        this.$store.dispatch('entities/clientAddresses/insert',{
-                            data: {
-                                id: clientAddressTmpId,
-                                clientId: this.request.clientId,
-                                addressId: addressTmpId
-                            }
-                        }).then(() => {
-                            this.$store.dispatch('entities/requestClientAddresses/delete',requestClientAddressId).then(() => {
-                                this.$store.dispatch('entities/requestClientAddresses/insert', {
-                                    data: {
-                                        id: `tmp/${shortid.generate()}`,
-                                        requestId: this.request.id,
-                                        clientAddressId: clientAddressTmpId
-                                    }
-                                })
-                            })
-                        })
-                    })
-                }
-            },
-            editClientAddress(clientAddressId){
-                this.isAddingClientAddress = false
-                this.requestClientAddressForm = true
-                const requestClientAddressId = this.request.requestClientAddresses[0].id
-                if(requestClientAddressId){
-                    this.$store.dispatch('entities/requestClientAddresses/update', {
-                        where: requestClientAddressId,
-                        data: {
-                            clientAddressId: clientAddressId
-                        }
-                    })
-                }
-            },
-            removeClientAddress(clientAddressId){
-                this.$store.dispatch('entities/clientAddresses/delete', clientAddressId)
-            },
-            removeClientPhone(clientPhoneId){
-                if(this.request.client.clientPhones.length <= 1){
-                    return;
-                }
-                this.$store.dispatch('entities/clientPhones/delete', clientPhoneId)
+
+
+            /* Client */
+
+            addClient(){
+                const clientTmpId = `tmp/${shortid.generate()}`
+                this.$store.dispatch('entities/clients/insert',{
+                    data: {
+                        id: clientTmpId
+                    }
+                })
+                this.$store.dispatch('entities/requests/update',{
+                    where: this.request.id,
+                    data: {
+                        clientId: clientTmpId
+                    }
+                })
+                this.addClientAddress()
             },
             selectSearchItem(searchItem){
                 const vm = this
@@ -307,7 +327,6 @@
                 const clientId = parseInt(searchItem.id.split('#')[0])
                 const clientAddressId = parseInt(searchItem.id.split('#')[1])
 
-                console.log(clientId, clientAddressId)
                 this.$db.clients.where({
                     'id': clientId
                 }).first().then((client) => {
@@ -334,10 +353,9 @@
                                     this.$store.dispatch('entities/clientAddresses/insert',{
                                         data: clientAddresses
                                     })
-                                    this.$store.dispatch('entities/requestClientAddresses/insert',{
+                                    this.$store.dispatch('entities/requestClientAddresses/update',{
+                                        where: _.first(this.request.requestClientAddresses).id,
                                         data: {
-                                            id: `tmp/${shortid.generate()}`,
-                                            requestId: vm.request.id,
                                             clientAddressId: clientAddress.id
                                         }
                                     })
@@ -348,7 +366,8 @@
                                         }
                                     })
                                     vm.searchShow = false
-                                    vm.requestClientAddressForm = true
+                                    vm.requestClientAddressForm = false
+                                    vm.isAddingClientAddress = false
                                 })
                             }
                         })
@@ -379,6 +398,93 @@
                         })
                     }
                 }, 500)
+            },
+
+            /* Client Phones */
+
+            addClientPhone(){
+                this.$store.dispatch('entities/clientPhones/insert',{
+                    data: {
+                        id: `tmp/${shortid.generate()}`,
+                        clientId: this.request.client.id
+                    }
+                })
+            },
+            removeClientPhone(clientPhoneId){
+                if(this.request.client.clientPhones.length <= 1){
+                    return;
+                }
+                this.$store.dispatch('entities/clientPhones/delete', clientPhoneId)
+            },
+
+            /* Client Address */
+
+            addClientAddress(){
+                /*
+                */
+                const requestClientAddressId = this.request.requestClientAddresses[0].id
+                if(requestClientAddressId){
+                    const clientAddressTmpId = `tmp/${shortid.generate()}`
+                    const addressTmpId = `tmp/${shortid.generate()}`
+                    this.$store.dispatch('entities/addresses/insert',{
+                        data: {
+                            id: addressTmpId
+                        }
+                    }).then(() => {
+                        Vue.nextTick(() => {
+                            this.$store.dispatch('entities/clientAddresses/insert',{
+                                data: {
+                                    id: clientAddressTmpId,
+                                    clientId: this.request.clientId,
+                                    addressId: addressTmpId
+                                }
+                            }).then(() => {
+                                    this.$store.dispatch('entities/requestClientAddresses/update', {
+                                        where: requestClientAddressId,
+                                        data: {
+                                            clientAddressId: clientAddressTmpId,
+                                            number: 0,
+                                            complement: null
+                                        }
+                                    }).then(() => {
+                                        this.isAddingClientAddress = true
+                                        this.requestClientAddressForm = true
+                                    })
+                            })
+                        })
+                    })
+                }
+            },
+            editClientAddress(clientAddressId){
+                this.isAddingClientAddress = false
+                this.requestClientAddressForm = true
+                const requestClientAddressId = this.request.requestClientAddresses[0].id
+                if(requestClientAddressId){
+                    this.$store.dispatch('entities/requestClientAddresses/update', {
+                        where: requestClientAddressId,
+                        data: {
+                            clientAddressId: clientAddressId
+                        }
+                    })
+                }
+            },
+            selectClientAddress(clientAddressId){
+                this.updateValue('entities/requestClientAddresses/update','clientAddressId',this.request.requestClientAddresses[0].id,clientAddressId)
+            },
+            removeClientAddress(clientAddressId){
+                this.$store.dispatch('entities/clientAddresses/delete', clientAddressId)
+                console.log(this.request.requestClientAddresses)
+            },
+            onAddressSelect(address){
+                this.$store.dispatch('entities/addresses/update', {
+                    where: this.request.requestClientAddresses[0].clientAddress.address.id,
+                    data: {
+                        neighborhood: address.neighborhood,
+                        city: address.city,
+                        state: address.state,
+                        cep: address.cep
+                    }
+                })
             }
         },
         created(){
@@ -411,23 +517,6 @@
         display: flex;
         flex-direction: column;
         position: relative;
-        .request__overlay {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 99;
-            background-color: var(--bg-color--2);
-            a.back {
-                position: absolute;
-                right: 20px;
-                top: 20px;
-                i {
-                    font-size: 48px;
-                }
-            }
-        }
         .request__search {
             height: 50px;
             border-top: 1px solid var(--border-color--0);
@@ -547,6 +636,43 @@
                         }
                         &:last-child {
                             margin-bottom: 8px;
+                        }
+                        .client-addresses {
+                            tr {
+                                td {
+                                    cursor: pointer;
+                                    padding-top: 8px;
+                                    padding-bottom: 8px;
+                                    border-bottom: 1px solid var(--border-color--0);
+                                }
+                                &.selected {
+                                    td {
+                                        color: var(--font-color--primary)
+                                    }
+                                    &:hover {
+                                        td {
+                                            color: var(--font-color--primary)
+                                        }
+                                    }
+                                }
+                                &:hover {
+                                    td {
+                                        color: var(--font-color--6)
+                                    }
+                                }
+                                &:first-child {
+                                    td {
+                                        padding-top: 0;
+                                    }
+                                }
+                                &:last-child {
+                                    td {
+                                        padding-bottom: 0;
+                                        margin-bottom: 0;
+                                        border-bottom: 0;
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -93,6 +93,9 @@
             }
         },
         methods: {
+            update(){
+                this.popper.scheduleUpdate()
+            },
             onMouseOver(ev){
                 if(this.leaveTimeout){
                     clearTimeout(this.leaveTimeout);
@@ -133,9 +136,7 @@
             openPopover(){
                 this.visible = true
                 this.$emit('open', true)
-                Vue.nextTick(() => {
-                    this.popper.update()
-                })
+                this.popper.scheduleUpdate()
             },
             closePopover(){
                 // check if there is popovers in higher hierarchy, so it can't close

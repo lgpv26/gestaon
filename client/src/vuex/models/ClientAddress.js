@@ -15,7 +15,7 @@ export default class ClientAddress extends Model {
             addressId: this.attr(null),
             address: this.belongsTo(Address,'addressId'),
             name: this.attr(null),
-            number: this.attr(0),
+            number: this.attr(null),
             complement: this.attr(null),
             dateUpdated: this.attr(moment()),
             dateCreated: this.attr(moment()),

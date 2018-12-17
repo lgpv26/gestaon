@@ -1,7 +1,10 @@
 <template>
     <div class="request-board-card" :class="{'request-board-card--in-displacement': form.status === 'in-displacement'}">
+        <div class="request-board-card__loading" v-if="_.get(card,'request.status', false) === 'processing'">
+            <span>Processando...</span>
+        </div>
         <div class="request-board-card__loading" v-if="false">
-            <span>Carregando...</span>
+            <span>Processando...</span>
         </div>
         <div class="request-board-card__container">
             <div class="card__header" v-if="card.request && card.request.client">

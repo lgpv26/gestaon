@@ -15,6 +15,10 @@ export default {
         return JSON.parse(JSON.stringify(obj));
     },
 
+    isTmp(id){
+        return id.toString().includes("tmp/")
+    },
+
     /*
      * Masks
      * */

@@ -13,7 +13,7 @@
     import Vue from 'vue'
     import Dexie from 'dexie'
     import store from './vuex/store'
-    import { mapState, mapMutations } from 'vuex'
+    import { mapState, mapMutations, mapActions } from 'vuex'
     import LoadingComponent from "./components/Utilities/Loading.vue"
     import { version } from '../package.json'
 
@@ -37,6 +37,7 @@
                 'SET_WINDOW_DIMENSIONS',
                 'SET_APP_VERSION'
             ]),
+            ...mapActions('request-queue',['initializeRequestQueue']),
             setWindowDimensions() {
                 this.SET_WINDOW_DIMENSIONS({
                     width: document.documentElement.clientWidth,
@@ -52,9 +53,9 @@
                     clients: 'id, name',
                     clientPhones: 'id, clientId, name, number',
                     clientAddresses: 'id, clientId, addressId, name, number, complement',
-                    addresses: 'id, name, neighborhood, state, city, cep',
+                    addresses: 'id, name, neighborhood, state, city, cep, country',
                     searchClients: 'id, name, address, number, complement, neighborhood, city, state',
-                    searchAddresses: 'id, name, address, neighborhood, city, state',
+                    searchAddresses: 'id, name, address, neighborhood, city, state, cep, country',
                     users: 'id, name, email, type',
                     products: 'id, name, price, quantity',
                     paymentMethods: 'id, name, rule, tax, taxUnit, autoPay, hasDeadline',
@@ -63,6 +64,7 @@
                     customFields: 'id, name'
                 }
             )
+            this.initializeRequestQueue()
         },
         mounted(){
             this.$nextTick(() => {
