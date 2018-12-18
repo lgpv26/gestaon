@@ -1,4 +1,6 @@
 import _ from 'lodash'
+import moment from 'moment'
+import RequestQueueAPI from '../../api/request-queue'
 
 const state = {
     pendingQueue: [],
@@ -32,13 +34,18 @@ const mutations = {
 
 const actions = {
     initializeRequestQueue(ctx){
-        setInterval(() => {
-            ctx.commit('PROCESS_QUEUE', (processingQueue) => {
-                console.log(`Processando ${processingQueue.length} item(s) na fila!`, processingQueue)
-                setTimeout(() => {
-                    ctx.commit('REMOVE_PROCESSED_QUEUE_ITEMS')
-                }, 5000)
+        const sendRequestQueue = (processingQueue) => {
+            console.log(`Processando ${processingQueue.length} item(s) na fila!`, processingQueue)
+            RequestQueueAPI.send(processingQueue,{
+                timeout: 3000
+            }).then((result) => {
+                console.log("Sucesso", result)
+            }).catch((err) => {
+                console.log("Erro", err)
             })
+        }
+        setInterval(() => {
+            ctx.commit('PROCESS_QUEUE', sendRequestQueue)
         }, 1000 * 5)
     },
     addToQueue(ctx, {type,op,data}){

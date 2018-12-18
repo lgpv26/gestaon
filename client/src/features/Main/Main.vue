@@ -208,7 +208,7 @@
                         id: requestPaymentTmpId,
                         requestId: requestTmpId,
                         paymentMethodId: 1,
-                        amount: this.$store.getters['entities/products/find'](1).price
+                        amount: (_.get(this.$store.getters['entities/products/find'](1),'price',false)) ? this.$store.getters['entities/products/find'](1).price : 0
                     }
                 })
                 this.$store.dispatch('entities/requestOrderProducts/insert',{
@@ -216,7 +216,7 @@
                         id: requestOrderProductTmpId,
                         requestOrderId: requestOrderTmpId,
                         productId: 1,
-                        unitPrice: this.$store.getters['entities/products/find'](1).price
+                        unitPrice: (_.get(this.$store.getters['entities/products/find'](1),'price',false)) ? this.$store.getters['entities/products/find'](1).price : 0
                     }
                 })
                 this.$store.dispatch('entities/requestOrders/insert',{
