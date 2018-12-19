@@ -108,7 +108,7 @@ module.exports = (server) => {
             removeArrayTempIds(data, path, select, request){
                 let newValue = []
                 const promises = []
-                _.map(_.get(data, path), (obj) => {
+                _.map(_.get(data, path), (obj, index) => {
                     promises.push(new Promise((resolve, reject) => {
                         if(select && _.has(request, select)){
                             if(obj.id === _.get(request, select)){
@@ -117,6 +117,10 @@ module.exports = (server) => {
                             else{
                                 obj.select = false
                             }                        
+                        }
+                        if(_.has(obj, 'address') && obj.address.id && obj.address.id.substring(0,4) === "tmp/") {
+                            _.set(obj.address, 'tempId', obj.address.id)
+                            _.set(obj.address, 'id', null)
                         }
                         if(_.get(obj, 'id', false) && !_.isNumber(obj.id) && obj.id.substring(0,4) === "tmp/"){
                             obj.tempId = obj.id

@@ -14,15 +14,17 @@ module.exports = (server, restify) => {
     /* CRUD */
 
 
-    server.post('/queues/persistence', (req, res, next) => {
+    server.post('/request-queue', authGuard, (req, res, next) => {
+        //console.log(req.body)
         return server.broker.call('data/request-queue.start', {
             data: req.body,
             userId: req.auth.id,
             companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
         }).then((request) => {
+            //console.log('request')
             return res.send(200, new EventResponse(request))
         }).catch((err) => {
-            //console.log('chatch da wqueue route')
+            //console.log(err, 'chatch da wqueue route')
             return res.send(200, new EventResponse(err))
         })
     })

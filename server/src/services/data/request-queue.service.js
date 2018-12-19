@@ -11,25 +11,30 @@ module.exports = (server) => {
         actions: {
 
             start(ctx){
+                
                 const vm = this
-                if(ctx.params.data && ctx.params.data.queue){
+                if(ctx.params.data && ctx.params.data.length){
+
+                    //console.log(ctx.params)
 
                     let initialOffset = 0
                     let limitReached = false
-                    const totalItemsLimit = (ctx.params.data.queue.length - 1)
+                    const totalItemsLimit = (ctx.params.data.length - 1)
 
                     const mapIds = {}
 
                     const objReturn = []
+                    
                     return new Promise((resolve, reject) => {
 
                         const bunch = function (offset) {                   
                             console.log("Objeto index " + (offset + 1) + "/" + (totalItemsLimit + 1))
-                            
+
                             return new Promise((resolve, reject) => {
                                 async function start() {
-                                    let obj = ctx.params.data.queue[offset]
+                                    let obj = ctx.params.data[offset]
                                     try{
+
                                         const objId = obj.data.id
                                         const path = await vm.path(obj)
                                         const checkId = await vm.checkId(obj, mapIds)
@@ -43,8 +48,7 @@ module.exports = (server) => {
                                         obj.data = await vm.cleanTempIds(obj, mapIds)
                                       
                                         if(obj.data.id) await vm.validDate(obj)
-                                       
-
+                                    
                                         const newData = await vm.validParams(obj)
                                         if(newData) obj.data = newData
 
@@ -65,7 +69,7 @@ module.exports = (server) => {
 
                                     }
                                     catch(err) {
-                                        console.log('catch try - queue')
+                                        console.log(err, 'catch try - queue')
                                         reject(err)
                                     }
                                 }
@@ -80,12 +84,32 @@ module.exports = (server) => {
                                 }
                                 else {
                                     console.log("Sincronização concluida! Total: ", offset)
-                                    resolve(objReturn)
+
+                                    return ctx.call('socket.processedQueue', {
+                                        userId: ctx.params.userId,
+                                        companyId: ctx.params.companyId,
+                                        data: objReturn
+                                    })
+                                    .then(() => {
+                                        resolve(objReturn)
+                                    })
+
+                                    
                                 }
                             })
                             .catch((err) => {
-                                //console.log(err, offset)
-                                reject(err)
+                                return ctx.call('socket.processedQueue', {
+                                    userId: ctx.params.userId,
+                                    companyId: ctx.params.companyId,
+                                    data: objReturn,
+                                    offset,
+                                    error: true
+                                }).then(() => {
+                                    reject({
+                                        data: objReturn,
+                                        offset
+                                    })
+                                })
                             })
                         }
 
@@ -100,7 +124,7 @@ module.exports = (server) => {
                 return new Promise((resolve, reject) => {
                     switch(obj.type){
                         case "card":
-                            switch(obj.event){
+                            switch(obj.op){
                                 case "create":
                                     resolve('request-board.createCard')
                                 break
@@ -112,7 +136,7 @@ module.exports = (server) => {
                             }
                         break
                         case "section":
-                            switch(obj.event){
+                            switch(obj.op){
                                 case "create":
                                     resolve('request-board.createSection')
                                 break
@@ -124,7 +148,7 @@ module.exports = (server) => {
                             }
                         break
                         default:
-                            switch(obj.event){
+                            switch(obj.op){
                                 case "create":
                                     resolve('data/request.start')
                                 break
@@ -141,7 +165,7 @@ module.exports = (server) => {
                 return new Promise((resolve, reject) => {
                     if(_.get(obj, 'data.id') && _.isNumber(obj.data.id)) return resolve(obj.data.id)
                     if(obj.data.id.substring(0,4) === "tmp/" && mapIds[obj.data.id]) return resolve(_.get(mapIds, obj.data.id))
-                    if(obj.event === "create") return resolve(null)
+                    if(obj.op === "create") return resolve(null)
                     else{
                         return reject('Não foi possível verificar o item!')
                     }                    
@@ -175,8 +199,14 @@ module.exports = (server) => {
                     const promises = []
                     _.forEach(obj.data, (value, key) => {
                         promises.push(new Promise((resolve, reject) => {
-                            if(_.get(obj, 'data.' + key) && _.isNumber(value)) return resolve()
+                            if(_.get(obj, 'data.' + key) && _.isNumber(value) || key.substring(0,1) === "$") return resolve()
                             if(key === 'clientAddressId' || key === 'clientPhoneId') return resolve()
+                            if(typeof _.get(obj, 'data.' + key) == 'object' && _.has(obj.data[key], 'id') && !_.isNumber(obj.data[key].id)) {
+                                if(obj.data[key].id.substring(0,4) === "tmp/") {
+                                    _.set(obj.data[key], 'tempId', obj.data[key].id)
+                                    _.set(obj.data[key], 'id', null)
+                                }
+                            }
                             if((typeof _.get(obj, 'data.' + key) != 'object') && value.substring(0,4) === "tmp/") {
                                 if(mapIds[value]){
                                     _.set(obj.data, key, _.get(mapIds, value))
@@ -198,7 +228,7 @@ module.exports = (server) => {
                 })
             },
             validDate(obj){
-                if(obj.event === 'create') return Promise.resolve()
+                if(obj.op === 'create') return Promise.resolve()
 
                 switch(obj.type){
                     case "card":

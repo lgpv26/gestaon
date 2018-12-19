@@ -3,7 +3,11 @@ import config from '~config'
 import EventResponse from '../models/EventResponse'
 import { base64encode, base64decode } from 'nodejs-base64'
 import moment from 'moment'
-
+import fs from 'fs'
+import ss from 'socket.io-stream'
+import { Op } from 'sequelize'
+import shortid from 'shortid'
+import pako from 'pako'
 
 module.exports = (server) => {
     return {
@@ -71,6 +75,86 @@ module.exports = (server) => {
                         }
                     })
                 })
+            },
+
+            stream(ctx){
+                const socket = server.io.sockets.sockets[ctx.params.socketId]
+
+                ss(socket).on(ctx.params.event, function(stream, data) {
+                    const importPromises = []
+                    const where = {}
+
+                    if(_.has(data, "dateLastSynced") && data.dateLastSynced && !_.isEmpty(data.dateLastSynced)){
+                        where.dateUpdated = {
+                            [Op.gte]: data.dateLastSynced
+                        }
+                    }
+
+                    importPromises.push(server.mysql.User.findAll({where}))
+                    importPromises.push(server.mysql.Client.findAll({where}))
+                    importPromises.push(server.mysql.ClientAddress.findAll({where}))
+                    importPromises.push(server.mysql.ClientPhone.findAll({where}))
+                    importPromises.push(server.mysql.ClientCustomField.findAll({where}))
+                    importPromises.push(server.mysql.Product.findAll({where}))
+                    importPromises.push(server.mysql.PromotionChannel.findAll({where}))
+                    importPromises.push(server.mysql.PaymentMethod.findAll({where}))
+                    importPromises.push(server.mysql.ClientGroup.findAll({where}))
+                    importPromises.push(server.mysql.CustomField.findAll({where}))
+                    importPromises.push(server.mysql.Address.findAll({
+                        where: _.assign(where, {
+                            city: {
+                                [Op.or]: ['MARINGÁ','SARANDI']
+                            }
+                        })
+                    }))
+                    Promise.all(importPromises).then(([
+                        users, clients, clientAddresses, clientPhones, clientCustomFields,
+                        products, promotionChannels, paymentMethods, clientGroups, customFields, addresses
+                    ]) => {
+                        const fileName = shortid.generate()
+                        const gzipJson = pako.gzip(JSON.stringify({
+                            users, clients, clientAddresses, clientPhones, clientCustomFields,
+                            products, promotionChannels, paymentMethods, clientGroups, customFields, addresses
+                        }))
+                        fs.writeFile('src/tmp/' + fileName + '.txt.gz', gzipJson, 'utf8', function(err){
+                            if(err){
+                                console.log("Erro", err)
+                            }
+                            else {
+                                const stats = fs.statSync('src/tmp/' + fileName + '.txt.gz')
+                                const fileSize = stats["size"]
+                                if(ctx.params.event == 'import'){
+                                    socket.emit('import', {
+                                        fileName: fileName,
+                                        fileExt: 'gz',
+                                        fileSize
+                                    })
+                                }
+
+                                fs.createReadStream('src/tmp/' + fileName + '.txt.gz').pipe(stream)
+                            }
+                        })
+                    })
+                })
+            },
+            processedQueue(ctx){
+                let response
+
+                if(ctx.params.error) {
+                    response = new Error({
+                        triggeredBy: ctx.params.userId,
+                        processedQueue: ctx.params.data,
+                        offset: ctx.params.offset
+                    })
+                }
+                else{
+                    response = {
+                        triggeredBy: ctx.params.userId,
+                        processedQueue: ctx.params.data
+                    }
+                }                
+
+                server.io.to('company/' + ctx.params.companyId).emit('presence:load', new EventResponse(response))
             },
 
             conected(ctx){
@@ -157,7 +241,6 @@ module.exports = (server) => {
                     return Promise.resolve(online)
                 }
             },
-
 
             active(ctx){
                 return server.redisClient.set("socket:" + _.toString(ctx.params.activeSocketId), _.toString(ctx.params.userId), (err, res) => {

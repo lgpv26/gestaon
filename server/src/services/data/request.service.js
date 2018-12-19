@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import moment from 'moment'
+import { POINT_CONVERSION_COMPRESSED } from 'constants';
 const Op = require('sequelize').Op
 
 module.exports = (server) => {
@@ -8,6 +9,7 @@ module.exports = (server) => {
         actions: {
 
             start(ctx){
+                //console.log(' REQUEST',ctx.params)
                 const vm = this
                 const companyId = ctx.params.data.companyId
                 const userId = ctx.params.data.userId
@@ -17,14 +19,15 @@ module.exports = (server) => {
                                     try{
                                         let oldRequest = null
                                         const data = await vm.checkTempIds(ctx.params.data)
-                                        if(data.id) oldRequest = await vm.oldRequest(data, companyId)                                   
-
+                                        if(data.id) oldRequest = await vm.consultRequest(data, companyId)     
+                                        
+                                    
                                         const client = await vm.checkClient(
                                             data.client || null,
                                             { request: data},
                                             transaction,
                                             companyId)
-                                        
+
                                         const requestOrder = await vm.checkRequestOrder(
                                             data.requestOrder || null,
                                             transaction,
@@ -44,7 +47,7 @@ module.exports = (server) => {
                                                 isScheduled: !!data.deliveryDate,
                                                 phoneLine: (data.phoneLine) ? data.phoneLine : null,
                                                 obs: (data.obs) ? data.obs : null,
-                                                status: (data.status) ? (_.get(client, 'id', null)) ? data.status : (data.status === 'finished' || data.status === 'canceled') ? data.status : 'finished' : (_.get(client, 'id', null)) ? 'pending' : 'finished',
+                                                status: (data.status && data.status !== "processing" && data.status !== "draft") ? (_.get(client, 'id', null)) ? data.status : (data.status === 'finished' || data.status === 'canceled') ? data.status : 'finished' : (_.get(client, 'id', null)) ? 'pending' : 'finished',
                                                 tempId: _.get(data, 'tempId', null)
                                             },
                                             transaction)
@@ -55,7 +58,7 @@ module.exports = (server) => {
                                             companyId: companyId,
                                             action: (data.id) ? 'update' : 'create',
                                             userId: (data.responsibleUserId) ? data.responsibleUserId : userId,
-                                            status: (data.status) ? (_.get(client, 'id', null)) ? data.status : data.status : (_.get(client, 'id', null)) ? 'pending' : 'finished'
+                                            status: (data.status && data.status !== "processing" && data.status !== "draft") ? (_.get(client, 'id', null)) ? data.status : data.status : (_.get(client, 'id', null)) ? 'pending' : 'finished'
                                         },
                                         transaction)
 
@@ -68,11 +71,12 @@ module.exports = (server) => {
 
                                         const requestDetails = await vm.checkRequestDetails(
                                             data,
-                                            request,
                                             client,
                                             userId,
                                             transaction
                                         )
+
+                                        console.log(requestDetails)
 
                                         await vm.dashboard(request, client, oldRequest, companyId, transaction)
 
@@ -341,17 +345,27 @@ module.exports = (server) => {
                     transaction
                 })
             },
-            checkRequestDetails(data, request, client, userId, transaction){
-                if(!_.has(data, 'clientAddressId') || !_.has(data, 'clientPhoneId')) return Promise.resolve(null)
+            checkRequestDetails(detailsData, request, client, userId, transaction){
 
-                const clientAddressSelect = _.find(client.clientAddresses, 'select')
-                const clientPhoneSelect = _.find(client.clientPhones, 'select')
+                //if(!_.has(data, 'requestClientAddresses') || !_.has(data, 'requestClientPhones')) return Promise.resolve(null)
+
+               const data = {}
+
+                if(_.has(detailsData, 'requestClientAddresses')) {
+                    detailsData.requestClientAddresses.forEach((requestClientAddress, index) => {
+                        //console.log(requestClientAddress.clientAddress, requestClientAddress.clientAddressId)
+                        data.requestClientAddress = _.find(client.clientAddresses, (clientAddress) => { return clientAddress.tempId == requestClientAddress.clientAddressId })
+                    })
+                }
+
+                if(_.has(detailsData, 'requestClientPhones')) {
+                    detailsData.requestClientPhones.forEach((requestClientPhone, index) => {
+                        data.requestClientPhone = _.find(client.clientPhones, (clientPhone) => { return clientPhone.tempId == requestClientPhone.clientPhoneId })
+                    })
+                }
 
                 return server.broker.call('data/request-details.start', {
-                    data: {
-                        clientAddressSelect,
-                        clientPhoneSelect
-                    },
+                    data,
                     request,
                     userId,
                     transaction
