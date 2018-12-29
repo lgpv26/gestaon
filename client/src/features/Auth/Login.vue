@@ -59,18 +59,19 @@
             ...mapActions('toast',['showToast']),
             login(){
                 const vm = this;
-                vm.setLoadingText("Tentando realizar o login...");
-                vm.startLoading();
+                window.showAppLoading()
+                window.setAppLoadingText("Tentando realizar o login...")
                 vm.authenticate(this.form).then(() => {
-                    vm.setLoadingText("Sucesso! Aguarde...");
+                    window.setAppLoadingText("Sucesso! Aguarde...")
+                    window.showAppLoading()
                     setTimeout(() => {
                         if(this.authenticated){
-                            vm.$router.replace("/");
+                            vm.$router.replace("/")
                         }
                     }, 1000);
                 }).catch((error) => {
                     console.log(error);
-                    vm.stopLoading();
+                    window.removeAppLoading()
                     vm.showToast({
                         type: 'error',
                         message: error.data.message

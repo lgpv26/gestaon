@@ -1,6 +1,6 @@
 <template>
-    <div class="request__window">
-        <app-request-history :show="showClientOrderTimeline" @close="showClientOrderTimeline = false"></app-request-history>
+    <div v-if="_.has(request,'requestUIState') && _.has(request,'client')" class="request__window">
+        <app-request-history :show="request.requestUIState.showClientOrderTimeline" @close="updateValue('entities/requestUIState/update','showClientOrderTimeline',request.requestUIState.id,false)"></app-request-history>
         <div class="request__search">
             <input type="text" class="input--borderless" placeholder="..." v-model="searchValue" @focus="searchShow = true" @input="search()" />
             <a href="javascript:void(0)" v-if="searchValue && searchItems.length && searchShow" @click="searchShow = false">
@@ -9,7 +9,7 @@
         </div>
         <div class="request__main">
             <div class="request__body">
-                <div class="request__section" :class="{active: activeTab === 'client'}">
+                <div class="request__section" :class="{active: request.requestUIState.activeTab === 'client'}">
                     <app-perfect-scrollbar class="section__content">
                         <div class="columns">
                             <div class="left-side">
@@ -25,7 +25,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div v-if="!requestClientAddressForm" class="box">
+                                <div v-if="!request.requestUIState.requestClientAddressForm" class="box">
                                     <h3 style="margin-bottom: 5px;">Endereços</h3>
                                     <table class="client-addresses" style="margin: 3px 0 12px 0;" v-if="request.client.clientAddresses.length > 0">
                                         <tbody>
@@ -58,7 +58,7 @@
                                         <span class="push-both-sides"></span>
                                     </div>
                                 </div>
-                                <div class="box" v-if="requestClientAddressForm">
+                                <div class="box" v-if="request.requestUIState.requestClientAddressForm">
                                     <h3 style="margin-bottom: 15px;">Novo endereço</h3>
                                     <div style="display: flex; flex-direction: row;">
                                         <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px;">
@@ -100,7 +100,7 @@
                                     <div style="display: flex;">
                                         <a class="button" v-if="request.client.clientAddresses.length >= 1" @click="cancel()">VOLTAR</a>
                                         <span class="push-both-sides"></span>
-                                        <a class="button" @click="requestClientAddressForm = !requestClientAddressForm">SALVAR ENDEREÇO</a>
+                                        <a class="button" @click="updateValue('entities/requestUIState/update','requestClientAddressForm',request.requestUIState.id,!request.requestUIState.requestClientAddressForm)">SALVAR ENDEREÇO</a>
                                     </div>
                                 </div>
                             </div>
@@ -140,12 +140,12 @@
                             </div>
                         </div>
                     </app-perfect-scrollbar>
-                    <div class="section__summary" @click="activeTab = 'client'">
+                    <div class="section__summary" @click="updateValue('entities/requestUIState/update','activeTab',request.requestUIState.id,'client')">
                         <div class="summary-radio" style="margin-right: 5px;">
-                            <app-switch :readonly="true" :value="activeTab === 'client'"></app-switch>
+                            <app-switch :readonly="true" :value="request.requestUIState.activeTab === 'client'"></app-switch>
                         </div>
                         <h3>Cliente</h3>
-                        <div v-if="activeTab !== 'client'" style="margin-left: 12px; display: flex; flex-direction: row; align-items: center;">
+                        <div v-if="request.requestUIState.activeTab !== 'client'" style="margin-left: 12px; display: flex; flex-direction: row; align-items: center;">
                             <div class="dot-separator"></div>
                             <div v-if="hasClientSelected" style="display: flex; flex-direction: row; align-items: center;">
                                 <h3 style="margin-left: 8px; margin-right: 8px;">{{ utils.getShortString(request.client.name, 14, '[...]') }}</h3>
@@ -169,15 +169,15 @@
                         <span class="push-both-sides"></span>
                         <a class="button"
                            v-if="!isNewClient"
-                           @click.stop="showClientOrderTimeline = true"
+                           @click.stop="updateValue('entities/requestUIState/update','showClientOrderTimeline',request.requestUIState.id,true)"
                            style="display: flex; align-items: center; align-self: center; text-transform: uppercase;">últimas compras</a>
                     </div>
                 </div>
-                <div class="request__section" :class="{active: activeTab === 'order'}">
+                <div class="request__section" :class="{active: request.requestUIState.activeTab === 'order'}">
                     <app-request-order :request="request"></app-request-order>
-                    <div class="section__summary" @click="activeTab = 'order'">
+                    <div class="section__summary" @click="activateTab('order')">
                         <div class="summary-radio" style="margin-right: 5px;">
-                            <app-switch :readonly="true" :value="activeTab === 'order'"></app-switch>
+                            <app-switch :readonly="true" :value="request.requestUIState.activeTab === 'order'"></app-switch>
                         </div>
                         <h3>Venda</h3>
                         <span class="push-both-sides"></span>
@@ -186,6 +186,15 @@
             </div>
             <div class="request__footer">
                 <span class="push-both-sides"></span>
+                <app-select :items="selectStatusItems"
+                            :value="request.status"
+                            @input="updateValue('entities/requests/update','status',request.id,$event)"
+                            :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                    <input type="text" class="select readonly" style="margin-bottom: 0;" readonly :value="getStatusText"/>
+                    <template slot="item" slot-scope="slotProps">
+                        <span>{{ slotProps.text }}</span>
+                    </template>
+                </app-select>
                 <a class="button"
                    @click="createRequest()"
                    style="display: flex; align-items: center; align-self: center; margin-right: 8px; text-transform: uppercase;">Criar pedido</a>
@@ -203,6 +212,9 @@
                 </div>
             </app-perfect-scrollbar>
         </div>
+    </div>
+    <div v-else class="request__window">
+        <span>Aguarde...</span>
     </div>
 </template>
 
@@ -232,25 +244,33 @@
                     precision: 2,
                 },
 
+                selectStatusItems: [
+                    {
+                        text: 'PENDENTE',
+                        value: 'pending'
+                    },
+                    {
+                        text: 'CANCELADO',
+                        value: 'canceled'
+                    },
+                    {
+                        text: 'EM DESLOCAMENTO',
+                        value: 'in-displacement'
+                    },
+                    {
+                        text: 'FINALIZADO',
+                        value: 'finished'
+                    },
+                    {
+                        text: 'RASCUNHO',
+                        value: 'draft'
+                    }
+                ],
+
                 searchShow: false,
                 searchTimeout: null,
                 searchValue: null,
-                searchItems: [],
-
-                users: [],
-                products: [],
-                clientGroups: [],
-                promotionChannels: [],
-
-                activeTab: 'client',
-
-                showClientOrderTimeline: false,
-
-                requestClientAddressForm: true,
-
-                isAddingClientAddress: true,
-
-                price: 0
+                searchItems: []
             }
         },
         computed: {
@@ -267,10 +287,21 @@
                         text: clientGroup.name
                     }
                 })
+            },
+            getStatusText(){
+                const selectStatusItem = _.find(this.selectStatusItems, { value: this.request.status })
+                if(selectStatusItem){
+                    return selectStatusItem.text
+                } else {
+                    return '-- SELECIONE --'
+                }
             }
         },
         methods: {
             ...mapActions('request-queue', ['addToQueue']),
+            ...mapActions('toast', [
+                'showToast', 'showError'
+            ]),
             updateValue(path, field, id, value){
                 const data = {}
                 data[field] = value
@@ -279,13 +310,25 @@
                     data
                 })
             },
+            activateTab(tab){
+                if(tab === 'order'){
+                    if(this.request.client.name.trim().length && !_.get(this.request,'requestClientAddresses[0].clientAddress.address.name',false)){
+                        this.showError("")
+                        return
+                    }
+                    this.updateValue('entities/requestUIState/update','activeTab',this.request.requestUIState.id,tab)
+                }
+                else {
+                    this.updateValue('entities/requestUIState/update','activeTab',this.request.requestUIState.id,tab)
+                }
+            },
             cancel(){
-                if(this.isAddingClientAddress){
+                if(this.request.requestUIState.isAddingClientAddress){
                     const clientAddressId = this.request.requestClientAddresses[0].clientAddressId
                     this.removeClientAddress(clientAddressId)
-                    this.isAddingClientAddress = false
+                    this.updateValue('entities/requestUIState/update','isAddingClientAddress',this.request.requestUIState.id,false)
                 }
-                this.requestClientAddressForm = false
+                this.updateValue('entities/requestUIState/update','requestClientAddressForm',this.request.requestUIState.id,false)
 
             },
             createRequest(){
@@ -294,6 +337,12 @@
                     type: 'request',
                     op: 'create',
                     data: this.utils.removeReactivity(request)
+                })
+                this.$store.dispatch('entities/windows/update', {
+                    where: this.request.card.windowId,
+                    data: {
+                        show: false
+                    }
                 })
                 this.$store.dispatch('entities/requests/update',{
                     where: this.request.id,
@@ -366,8 +415,8 @@
                                         }
                                     })
                                     vm.searchShow = false
-                                    vm.requestClientAddressForm = false
-                                    vm.isAddingClientAddress = false
+                                    vm.updateValue('entities/requestUIState/update','requestClientAddressForm',this.request.requestUIState.id,false)
+                                    vm.updateValue('entities/requestUIState/update','isAddingClientAddress',this.request.requestUIState.id,false)
                                 })
                             }
                         })
@@ -447,8 +496,8 @@
                                             complement: null
                                         }
                                     }).then(() => {
-                                        this.isAddingClientAddress = true
-                                        this.requestClientAddressForm = true
+                                        this.updateValue('entities/requestUIState/update','isAddingClientAddress',this.request.requestUIState.id,true)
+                                        this.updateValue('entities/requestUIState/update','requestClientAddressForm',this.request.requestUIState.id,true)
                                     })
                             })
                         })
@@ -456,8 +505,8 @@
                 }
             },
             editClientAddress(clientAddressId){
-                this.isAddingClientAddress = false
-                this.requestClientAddressForm = true
+                this.updateValue('entities/requestUIState/update','isAddingClientAddress',this.request.requestUIState.id,false)
+                this.updateValue('entities/requestUIState/update','requestClientAddressForm',this.request.requestUIState.id,true)
                 const requestClientAddressId = this.request.requestClientAddresses[0].id
                 if(requestClientAddressId){
                     this.$store.dispatch('entities/requestClientAddresses/update', {
@@ -487,24 +536,8 @@
                 })
             }
         },
-        created(){
-            const vm = this
-            vm.$db.users.toArray().then((users) => {
-                vm.users = users
-            })
-            vm.$db.products.toArray().then((products) => {
-                vm.products = products
-            })
-            vm.$db.clientGroups.toArray().then((clientGroups) => {
-                vm.clientGroups = clientGroups
-            })
-            vm.$db.promotionChannels.toArray().then((promotionChannels) => {
-                vm.promotionChannels = promotionChannels
-            })
-        },
         mounted(){
-
-
+            console.log("Request window", this.request)
         }
     }
 </script>

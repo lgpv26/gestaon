@@ -24,3 +24,7 @@ export const SET_WINDOW_DIMENSIONS = (state, { width = 0, height = 0 }) => {
     state.dimensions.window.width = width
     state.dimensions.window.height = height
 };
+
+export const SET_LAST_DATA_SYNCED_DATE = (state, date) => {
+    state.lastDataSyncedDate = date
+};

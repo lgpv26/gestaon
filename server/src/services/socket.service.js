@@ -84,12 +84,11 @@ module.exports = (server) => {
                     const importPromises = []
                     const where = {}
 
-                    if(_.has(data, "dateLastSynced") && data.dateLastSynced && !_.isEmpty(data.dateLastSynced)){
+                    if(data && data.dateLastSynced){
                         where.dateUpdated = {
-                            [Op.gte]: data.dateLastSynced
+                            [Op.gte]: moment(data.dateLastSynced).toDate()
                         }
                     }
-
                     importPromises.push(server.mysql.User.findAll({where}))
                     importPromises.push(server.mysql.Client.findAll({where}))
                     importPromises.push(server.mysql.ClientAddress.findAll({where}))
@@ -150,11 +149,14 @@ module.exports = (server) => {
                 else{
                     response = {
                         triggeredBy: ctx.params.userId,
+
                         processedQueue: ctx.params.data
                     }
-                }                
 
-                server.io.to('company/' + ctx.params.companyId).emit('presence:load', new EventResponse(response))
+                }
+                console.log("Processed Queue")
+                //processedQueue
+                server.io.emit('request-queue:sync', new EventResponse(response))
             },
 
             conected(ctx){
@@ -191,6 +193,7 @@ module.exports = (server) => {
                         server.io.sockets.sockets[ctx.params.activeSocketId].emit('requestBoardLoad', new EventResponse({sections}))
                         return Promise.resolve()
                     }).catch((err) => {
+
                         //console.log('aquii', err)
                     })
                 })

@@ -54,203 +54,17 @@
             }
         },
         computed: {
-            ...mapFields([
-                'filters',
-                'filters.deliveryDate',
-            ]),
             ...mapState(['mainContentArea']),
             ...mapState('auth', ['user', 'tokens', 'company']),
             ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
             ...mapGetters('request-board', [])
         },
-        watch: {
-            filters: {
-                handler(newFilterValue){
-                    const filterData = utils.removeReactivity(newFilterValue)
-                    this.load(filterData)
-                },
-                deep: true
-            }
-        },
-        sockets: {
-            /*requestBoardLoad(ev){
-                console.log("Received requestBoardLoad", ev)
-                if(ev.success){
-                    const vm = this
-                    vm.SET_SECTIONS([])
-                    ev.evData.sections.forEach((section) => {
-                        vm.ADD_SECTION(section)
-                    })
-                    this.REAPLY_FILTERS()
-                }
-                else {
-                    console.log("ERROR", ev.error)
-                }
-            },
-            requestBoardSectionCreate(ev){
-                console.log("Received requestBoardSectionCreate", ev)
-                if(ev.success) {
-                    this.ADD_SECTION(ev.evData)
-                }
-                else {
-                    console.log("ERROR", ev.error)
-                }
-            },
-            requestBoardSectionRemove(ev){
-                console.log("Received requestBoardSectionRemove", ev)
-                if(ev.success){
-                    this.REMOVE_SECTION(ev.evData.sectionId)
-                }
-                else {
-                    console.log("ERROR", ev.error)
-                }
-            },
-            requestBoardSectionMove(ev){
-                console.log("Received requestBoardSectionMove", ev)
-                if(ev.success) {
-                    this.SET_SECTION({
-                        sectionId: ev.evData.id,
-                        section: {
-                            position: ev.evData.position
-                        }
-                    })
-                    Vue.nextTick(() => {
-                        this.SORT_SECTIONS()
-                    })
-                }
-                else {
-                    console.log("ERROR", ev.error)
-                }
-            },
-            requestBoardCardCreate(request){
-                console.log("Received requestBoardCardCreate", request)
-                const card = request.data.card
-                const start = moment(this.deliveryDate).startOf("day")
-                const finish = moment(this.deliveryDate).endOf("day")
-                if(moment(card.deliveryDate).isBetween(start, finish, null, '[]')){
-                    this.ADD_REQUEST(card)
-                }
-            },
-            requestBoardCardUpdate(ev){
-                console.log("Received requestBoardCardUpdate", ev)
-                if(ev.success){
-                    const card = ev.evData
-                    const start = moment(this.deliveryDate).startOf("day")
-                    const finish = moment(this.deliveryDate).endOf("day")
-                    if(moment(card.deliveryDate).isBetween(start, finish, null, '[]')){
-                        this.updateCard({
-                            cardId: card.id,
-                            card: card
-                        })
-                    }
-                    else {
-                        this.removeCard(card.id)
-                    }
-                }
-            },
-            requestBoardCardMove(ev){
-                console.log("Received requestBoardCardMove", ev)
-                if(ev.success){
-                    this.moveCard(ev.evData.card)
-                }
-            },
-            requestBoardCardRemove(ev){
-                console.log("Received requestBoardCardRemove", ev)
-                if(ev.success){
-                    this.removeCard(ev.evData.removedCardId)
-                }
-            },
-            */
-        },
         methods: {
-            ...mapMutations('morph-screen', []),
-
-            /* Sections */
-
-            addSection(){
-                /*console.log("Emitting request-board:section-create")
-                this.$socket.emit('request-board:section-create')*/
-                let position = 65535
-                let section = this.$store.getters['entities/sections/query']()
-                    .orderBy('position', 'desc')
-                    .first()
-                if(section){
-                    position += section.position
-                }
-                const sectionTmpId = 'tmp/' + shortid.generate()
-                this.$store.dispatch('entities/sections/insert',{
-                    data: {
-                        id: sectionTmpId,
-                        name: "Section " + sectionTmpId,
-                        position
-                    }
-                })
-            },
-
-            /**
-             * When sections changes its positions
-             */
-            onSectionDraggableInput(sections){
-                // vuex state should be updated through mutations
-                this.SET_SECTIONS(sections)
-                Vue.nextTick(() => {
-                    const prevSection = this.sections[this.lastMove.to - 1]
-                    const currSection = this.sections[this.lastMove.to]
-                    const nextSection = this.sections[this.lastMove.to + 1]
-                    // is in middle
-                    if(nextSection && prevSection){
-                        console.log("middle", (prevSection.position + nextSection.position) / 2)
-                        this.$socket.emit('request-board:section-move', {
-                            sectionId: currSection.id,
-                            location: 'middle',
-                            position: (prevSection.position + nextSection.position) / 2
-                        })
-                    }
-                    // is first
-                    else if(nextSection && !prevSection){
-                        console.log("first")
-                        this.$socket.emit('request-board:section-move', {
-                            sectionId: currSection.id,
-                            location: 'first'
-                        })
-                    }
-                    // is last
-                    else if(!nextSection && prevSection){
-                        console.log("last")
-                        this.$socket.emit('request-board:section-move', {
-                            sectionId: currSection.id,
-                            location: 'last'
-                        })
-                    }
-                })
-            },
-            onSectionMove(ev){
-                this.lastMove.from = ev.draggedContext.index
-                this.lastMove.to = ev.draggedContext.futureIndex
-            },
-            onSectionDragStart(ev){
-                const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
-                viewport.style.display = 'none';
-                const draggingElement = _.last(ev.from.getElementsByClassName('board-section'));
-                const draggingElementViewport = _.first(draggingElement.getElementsByClassName('board-section__viewport'));
-                draggingElementViewport.style.display = 'none';
-            },
-            onSectionDragEnd(ev){
-                const viewport = _.first(ev.item.getElementsByClassName('board-section__viewport'));
-                viewport.style.display = 'initial';
-            },
-            load(filterData = { deliveryDate: moment().startOf('day').toISOString() }){
-                const emitData = {
-                    filter: btoa(JSON.stringify(filterData))
-                }
-                console.log("Emitted request-board:load", emitData)
-                this.$socket.emit('request-board:load', emitData)
-            }
+            ...mapMutations('morph-screen', [])
         },
         mounted(){
             const vm = this
-            vm.load()
-            vm.$options.sockets['request-board:chat'] = (ev) => {
+            /*vm.$options.sockets['request-board:chat'] = (ev) => {
                 if (ev.success) {
                     vm.updateCardUnreadChatItemCount({
                         cardId: ev.evData.cardId,
@@ -259,6 +73,11 @@
                 }
                 console.log("Received request-board:chat", ev)
             }
+            vm.$options.sockets['request-queue:sync'] = (ev) => {
+                console.log("Received request-queue:sync", ev)
+            }*/
+
+            console.log(vm)
         }
     }
 </script>

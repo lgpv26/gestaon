@@ -1,12 +1,12 @@
 <template>
     <div class="request-board-card" :class="{'request-board-card--in-displacement': form.status === 'in-displacement'}">
-        <div class="request-board-card__loading" v-if="_.get(card,'request.status', false) === 'processing'">
+        <div class="request-board-card__loading" v-if="false && _.get(card,'request.status', false) === 'processing'">
             <span>Processando...</span>
         </div>
         <div class="request-board-card__loading" v-if="false">
             <span>Processando...</span>
         </div>
-        <div class="request-board-card__container">
+        <div class="request-board-card__container" v-if="false">
             <div class="card__header" v-if="card.request && card.request.client">
                 <app-popover :contentStyle="popoverContentStyle" style="flex-grow: 1" :placement="'bottom-start'" :verticalOffset="5">
                     <template slot="triggerer">
@@ -27,6 +27,7 @@
             </div>
             <div class="card__header" v-else>
                 <h3 class="card__client-name">Rascunho {{ card.id }}</h3>
+                <h3 class="card__client-name">ID do pedido {{ card.request.id }}</h3>
             </div>
             <div style="display: flex; flex-direction: row;">
                 <!--
@@ -139,6 +140,14 @@
                 </app-popover>-->
             </div>
         </div>
+        <div class="request-board-card__container" v-else>
+            <div class="card__header">
+                <h3 class="card__client-name">Card {{ (_.has(card,'id')) ? card.id : "Sem card.id" }}</h3>
+            </div>
+            <div class="card__header">
+                <h3 class="card__client-name">Request {{ (_.has(request,'id')) ? request.id : "Sem request.id" }}</h3>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -157,7 +166,7 @@
     import RBCUser from './RequestBoardCard/RBCUser.vue'
 
     export default {
-        props: ['card','isDragging'],
+        props: ['card','request','isDragging'],
         components: {
             'app-rbc-location': RBCLocation,
             'app-rbc-client': RBCClient,
@@ -306,6 +315,9 @@
             
         },
         mounted(){
+            setInterval(() => {
+                console.log(this.card)
+            }, 5000)
             /*const vm = this
             setTimeout(() => {
                 vm.loading = false;

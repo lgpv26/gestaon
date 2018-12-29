@@ -12,6 +12,7 @@ const getters = {
 
 const mutations = {
     PROCESS_QUEUE(state, callback){
+        console.log("PROCESS_QUEUE", state.processingQueue)
         if(state.processingQueue.length === 0){
             state.pendingQueue.forEach((queueItem) => {
                 state.processingQueue.push(queueItem)
@@ -39,6 +40,7 @@ const actions = {
             RequestQueueAPI.send(processingQueue,{
                 timeout: 3000
             }).then((result) => {
+                ctx.commit('REMOVE_PROCESSED_QUEUE_ITEMS')
                 console.log("Sucesso", result)
             }).catch((err) => {
                 console.log("Erro", err)
@@ -57,6 +59,9 @@ const actions = {
         }
         console.log("Item adicionado para fila",queueItem)
         ctx.commit('ADD', queueItem)
+    },
+    clearProcessingQueue(ctx){
+        ctx.commit("REMOVE_PROCESSED_QUEUE_ITEMS")
     }
 }
 

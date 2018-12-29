@@ -118,11 +118,11 @@ module.exports = (server) => {
                                 obj.select = false
                             }                        
                         }
-                        if(_.has(obj, 'address') && obj.address.id && obj.address.id.substring(0,4) === "tmp/") {
+                        if(_.has(obj, 'address') && obj.address.id && obj.address.id.toString().substring(0,4) === "tmp/") {
                             _.set(obj.address, 'tempId', obj.address.id)
                             _.set(obj.address, 'id', null)
                         }
-                        if(_.get(obj, 'id', false) && !_.isNumber(obj.id) && obj.id.substring(0,4) === "tmp/"){
+                        if(_.get(obj, 'id', false) && obj.id && obj.id.toString().substring(0,4) === "tmp/"){
                             obj.tempId = obj.id
                             obj.id = null              
                         }
@@ -187,11 +187,13 @@ module.exports = (server) => {
                 }).then((clientAddressWithAddress) => {
                     let clientAddressesArray = []
                     clientAddressWithAddress.forEach((result) => {
+                        console.log("Ecnontrou aqui", result.address)
                         clientAddressesArray.push({
                             id: (result.id) ? result.id : null,
                             status: 'activated',
                             clientId: (clientId) ? parseInt(clientId) : null,
                             addressId: parseInt(result.address.id),
+                            address: (result.address) ? result.address : null,
                             name: (result.name) ? result.name : null,
                             number: (result.number) ? result.number : null,
                             complement: (result.complement) ? result.complement : null,

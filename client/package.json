@@ -63,7 +63,8 @@
     "vue-worker": "^1.2.1",
     "vuedraggable": "^2.15.0",
     "vuex": "^2.1.1",
-    "vuex-map-fields": "^1.1.7"
+    "vuex-map-fields": "^1.1.7",
+    "vuex-persistedstate": "^2.5.4"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.0.0-beta.15",

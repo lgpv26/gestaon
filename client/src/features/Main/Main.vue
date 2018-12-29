@@ -74,6 +74,8 @@
     import Windows from "./_Shared/Windows/Windows.vue"
     import ConnectedUsersComponent from "./_Shared/Sidebar/ConnectedUsers.vue"
 
+    import Card from '../../vuex/models/Card'
+
     import _ from 'lodash'
     import shortid from 'shortid'
     import moment from 'moment'
@@ -106,7 +108,7 @@
             }
         },
         computed: {
-            ...mapState(['app', 'system']),
+            ...mapState(['app', 'system', 'lastDataSyncedDate']),
             ...mapState('auth', ['user','tokens','company']),
             ...mapState('morph-screen', ['screens']),
             ...mapState('caller-id', {
@@ -124,6 +126,7 @@
         },
         methods: {
             ...mapMutations(['setApp','setSystemInitialized']),
+            ...mapActions(['setLastDataSyncedDate']),
             ...mapActions('auth', {
                 logoutAction: 'logout',
                 setAuthUser: 'setAuthUser',
@@ -169,6 +172,9 @@
             ...mapActions('elasticlunr', [
                 'setLunrIndex'
             ]),
+            ...mapActions('request-queue', [
+                'clearProcessingQueue'
+            ]),
             toggleCallerIdFunctionality(){
                 console.log(this.isCallerIdDisabled)
                 if(this.isCallerIdDisabled){
@@ -181,6 +187,7 @@
             async addRequest(){
                 const windowTmpId = `tmp/${shortid.generate()}`
                 const cardTmpId = `tmp/${shortid.generate()}`
+                const requestUIStateTmpId = `tmp/${shortid.generate()}`
                 const requestPaymentTmpId = `tmp/${shortid.generate()}`
                 const requestOrderTmpId = `tmp/${shortid.generate()}`
                 const requestOrderProductTmpId = `tmp/${shortid.generate()}`
@@ -199,6 +206,13 @@
                 this.$store.dispatch('entities/cards/insert',{
                     data: {
                         id: cardTmpId,
+                        windowId: windowTmpId,
+                        requestId: requestTmpId
+                    }
+                })
+                this.$store.dispatch('entities/requestUIState/insert',{
+                    data: {
+                        id: requestUIStateTmpId,
                         windowId: windowTmpId,
                         requestId: requestTmpId
                     }
@@ -287,11 +301,129 @@
                 }).play()
             },
             runRequestQueue(){
+            },
+            onSystemInitialized(){
+                const vm = this
+                console.log("System initialized")
+                vm.$socket.on('request-queue:sync', (ev) => {
+                    if(ev.success){
+                        ev.evData.processedQueue.forEach((request) => {
+                            const cards = Card.query().where('requestId',_.get(request,'tempId',request.id)).get()
+                            const card = _.first(cards)
+                            console.log ("Before", card.id, request)
+
+                            const targetRequestId = _.get(request,'tempId',request.id)
+
+                            const windowTmpId = `tmp/${shortid.generate()}`
+                            const cardTmpId = `tmp/${shortid.generate()}`
+                            const requestUIStateTmpId = `tmp/${shortid.generate()}`
+                            const requestPaymentTmpId = `tmp/${shortid.generate()}`
+                            const requestOrderTmpId = `tmp/${shortid.generate()}`
+                            const requestOrderProductTmpId = `tmp/${shortid.generate()}`
+                            const requestClientAddressTmpId = `tmp/${shortid.generate()}`
+                            const requestTmpId = `tmp/${shortid.generate()}`
+                            const clientTmpId = `tmp/${shortid.generate()}`
+                            const addressTmpId = `tmp/${shortid.generate()}`
+                            const clientAddressTmpId = `tmp/${shortid.generate()}`
+                            const clientPhoneTmpId = `tmp/${shortid.generate()}`
+                            this.$store.dispatch('entities/windows/insert', {
+                                data: {
+                                    id: windowTmpId,
+                                    zIndex: this.$store.getters['entities/windows/query']().max('zIndex') + 1
+                                }
+                            })
+                            this.$store.dispatch('entities/cards/insert',{
+                                data: {
+                                    id: cardTmpId,
+                                    windowId: windowTmpId,
+                                    requestId: request.id
+                                }
+                            })
+                            this.$store.dispatch('entities/requestUIState/insert',{
+                                data: {
+                                    id: requestUIStateTmpId,
+                                    windowId: windowTmpId,
+                                    requestId: request.id
+                                }
+                            })
+                            this.$store.dispatch('entities/requestPayments/insertOrUpdate',{
+                                data: request.requestPayments
+                            })
+                            this.$store.dispatch('entities/requestOrderProducts/insertOrUpdate',{
+                                data: request.requestOrderProducts
+                            })
+                            this.$store.dispatch('entities/requestOrders/insertOrUpdate',{
+                                data: request.requestOrder
+                            })
+                            this.$store.dispatch('entities/clients/insertOrUpdate',{
+                                data: request.client
+                            })
+                            request.client.clientAddresses.forEach((clientAddress) => {
+                                vm.$store.dispatch('entities/addresses/insertOrUpdate',{
+                                    data: clientAddress.address
+                                })
+                            })
+                            this.$store.dispatch('entities/clientAddresses/insertOrUpdate',{
+                                data: request.client.clientAddresses
+                            })
+                            this.$store.dispatch('entities/requestClientAddresses/insertOrUpdate',{
+                                data: request.requestClientAddresses
+                            })
+                            this.$store.dispatch('entities/requests/insertOrUpdate',{
+                                data: request
+                            })
+
+                            /*
+                            console.log(request)
+                            let requestWhere = null
+                            if(_.has(request,'tempId')){
+                                requestWhere = request.tempId
+                            }
+                            else {
+                                requestWhere = request.id
+                            }
+                            console.log("requestWhere", requestWhere)
+
+                            vm.$store.dispatch('entities/requests/update',{
+                                where: requestWhere,
+                                data: {
+                                    id: request.id
+                                }
+                            })
+
+                            vm.$store.dispatch('entities/requestUIState/update',{
+                                where: {
+                                    requestId: requestWhere
+                                },
+                                data: {
+                                    requestId: request.id
+                                }
+                            })
+
+
+
+                            // update card
+                            const cards = Card.query().where('requestId',requestWhere).get()
+                            const card = _.first(cards)
+                            console.log ("Before", card.id, request)
+                            vm.$store.dispatch('entities/cards/update',{
+                                where: card.id,
+                                data: {
+                                    requestId: request.id
+                                }
+                            })
+                            console.log ("After", card)
+                            */
+                        })
+                    }
+                    console.log("Processed Queue", ev)
+                })
             }
         },
         created(){
             this.$bus.$on('sound-play', this.registerSoundEventListeners)
             this.runRequestQueue()
+            this.clearProcessingQueue()
         },
         beforeDestroy(){
             this.$bus.$off('sound-play', this.registerSoundEventListeners)

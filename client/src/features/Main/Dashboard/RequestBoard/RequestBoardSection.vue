@@ -1,5 +1,5 @@
 <template>
-    <div class="board-section" v-show="sectionCards.length" :style="{ width: sectionWidth }">
+    <div class="board-section" v-show="sectionRequests.length" :style="{ width: sectionWidth }">
         <div class="board-section__header" :style="{ height: options.headerHeight + 'px' }">
             <div class="header__section-title">
                 <h3>{{ section.name }}</h3>
@@ -24,8 +24,8 @@
         <div class="scrollable-content">
                 <app-perfect-scrollbar class="board-section__viewport" :style="{ 'width': sectionWidth, 'height': sectionHeight }">
                     <div class="board-section__cards" :style="{'padding-bottom': options.gutterSize + 'px', 'padding-left': options.gutterSize + 'px'}">
-                        <div class="request-card" v-for="card in sectionCards" :key="'card-' + card.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}" @click="cardClick(card, $event)">
-                            <app-request-board-card class="request-card__main" :card="card"></app-request-board-card>
+                        <div class="request-card" v-for="request in sectionRequests" :key="'request-' + request.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}" @click="cardClick(request.card, request, $event)">
+                            <app-request-board-card class="request-card__main" :card="request.card" :request="request"></app-request-board-card>
                         </div>
                     </div>
                 </app-perfect-scrollbar>
@@ -93,20 +93,21 @@
             sectionHeight(){
                 return this.mainContentArea.height - this.options.headerHeight - (this.options.gutterSize * 2) + 'px'
             },
-            sectionCards(){
+            sectionRequests(){
                 switch(this.section.id){
                     case "drafts":
                         return Request.query()
                             .where('status', 'draft')
                             .orWhere('status', 'processing')
-                            .withAll().get()
+                            .with('card').get()
                     case "requests":
                         return Request.query()
                             .where('status', 'pending')
                             .orWhere('status', 'finished')
                             .orWhere('status', 'in-displacement')
+
                             .orWhere('status', 'canceled')
-                            .withAll().get()
+                            .with('card').get()
                     case "scheduled":
                         return []
                 }
@@ -117,8 +118,10 @@
             ...mapMutations('request-board', [
             ]),
 
-            cardClick(card){
-                console.log("Yop", card.windowId)
+            cardClick(card, request){
+
+                console.log("cardClick", request)
+
                 this.$store.dispatch('entities/windows/update', {
                     where: card.windowId,
                     data: {

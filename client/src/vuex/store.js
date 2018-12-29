@@ -21,6 +21,7 @@ import RequestPayment from './models/RequestPayment'
 import RequestOrder from './models/RequestOrder'
 import RequestOrderProduct from './models/RequestOrderProduct'
 import RequestClientAddress from './models/RequestClientAddress'
+import RequestUIState from './models/RequestUIState'
 import Section from './models/Section'
 import Card from './models/Card'
 
@@ -40,8 +41,11 @@ import requestPayments from './orm-modules/request-payments'
 import requestOrders from './orm-modules/request-orders'
 import requestOrderProducts from './orm-modules/request-order-products'
 import requestClientAddresses from './orm-modules/request-client-addresses'
+import requestUIState from './orm-modules/request-ui-state'
 import sections from './orm-modules/sections'
 import cards from './orm-modules/cards'
+
+import createPersistedState from 'vuex-persistedstate'
 
 Vue.use(Vuex);
 
@@ -58,6 +62,7 @@ database.register(Call, calls)
 database.register(PromotionChannel, promotionChannels)
 database.register(PaymentMethod, paymentMethods)
 database.register(Product, products)
+database.register(RequestUIState, requestUIState)
 database.register(Request, requests)
 database.register(RequestPayment, requestPayments)
 database.register(RequestOrder, requestOrders)
@@ -67,7 +72,7 @@ database.register(Section, sections)
 database.register(Card, cards)
 
 export default new Vuex.Store({
-    plugins: [VuexORM.install(database)],
+    plugins: [VuexORM.install(database),createPersistedState()],
     state: {
         app: {
             title: "ERP",
@@ -86,7 +91,8 @@ export default new Vuex.Store({
                 width: 0,
                 height: 0
             }
-        }
+        },
+        lastDataSyncedDate: null
     },
     mutations,
     actions,

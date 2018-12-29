@@ -94,14 +94,13 @@
              * On new call
              * @param ev = { success:Boolean, evData:Draft }
              */
-            vm.$options.sockets['caller-id.new'] = (ev) => {
+            /*vm.$options.sockets['caller-id.new'] = (ev) => {
                 console.log("Received caller-id.new", ev)
                 if(ev.success){
                     vm.open = true
-                    /*vm.$bus.$emit('sound-play')*/
                     vm.addCall(ev.evData)
                 }
-            }
+            }*/
         },
         mounted(){
             this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {

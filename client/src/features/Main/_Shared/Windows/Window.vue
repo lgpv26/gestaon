@@ -51,8 +51,6 @@
             }
         },
         mounted(){
-            console.log("Mounted", this.window)
-
             const vm = this
             if(!vm.windowInteractInstance){
                 vm.windowInteractInstance = interact(vm.$refs.window).draggable({
