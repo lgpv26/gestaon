@@ -21,8 +21,8 @@ module.exports = (server) => {
                             try {
                                 const requestClient = {}
 
-                                if(_.has(ctx.params.data, "clientAddressSelect")) {
-                                    await vm.setRequestClientAddresses([_.assign({clientAddressId: ctx.params.data.clientAddressSelect.id,
+                                if(_.has(ctx.params.data, "requestClientAddresses")) {
+                                    await vm.setRequestClientAddresses([_.assign({clientAddressId: ctx.params.data.requestClientAddresses[0].id,
                                         requestId: request.id
                                     })],
                                     request.id,
@@ -31,8 +31,8 @@ module.exports = (server) => {
                                         _.set(requestClient, 'requestClientAddresses', clientAddresses)
                                     })
                                 }
-                                if(_.has(ctx.params.data, "clientPhoneSelect")) {
-                                    await vm.setRequestClientPhones( [_.assign({clientPhoneId: ctx.params.data.clientPhoneSelect.id,
+                                if(_.has(ctx.params.data, "requestClientPhones")) {
+                                    await vm.setRequestClientPhones( [_.assign({clientPhoneId: ctx.params.data.requestClientPhones.id,
                                         requestId: request.id
                                     })],
                                     request.id,
