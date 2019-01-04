@@ -174,7 +174,7 @@ export default {
     }
   }
 
-  // Primary button
+  // Accent button
   &.accent {
     background: $color-accent-3;
     color: $color-white;
@@ -182,11 +182,11 @@ export default {
     border-radius: 5px;
     &:hover,
     &.hover {
-      background-color: $color-accent-2;
+      background-color: shade($color-accent-3, 10%);
     }
     &:active,
     &.active {
-      background-color: shade($color-accent-2, 20%);
+      background-color: shade($color-accent-3, 20%);
       transition: none;
     }
     &:focus {
@@ -205,7 +205,7 @@ export default {
   ```jsx
   <div>
     <Button variation="primary" size="large">Primary Button</Button>
-    <Button variation="accent" size="x-large">Primary Button</Button>
+    <Button variation="accent" size="large">Accent Button</Button>
     <Button variation="primary" size="medium">Medium</Button>
     <Button variation="primary" size="small">Small</Button>
     <br />
