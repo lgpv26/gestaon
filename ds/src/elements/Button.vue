@@ -135,6 +135,10 @@ export default {
   }
 
   // Various button sizes
+  &.x-large {
+    @include inset-squish-space($space-s);
+    font-size: $size-xxl;
+  }
   &.large {
     @include inset-squish-space($space-s);
     font-size: $size-l;
@@ -169,6 +173,31 @@ export default {
     &.focus {
     }
   }
+
+  // Primary button
+  &.accent {
+    background: $color-accent-3;
+    color: $color-white;
+    box-shadow: none;
+    border-radius: 5px;
+    &:hover,
+    &.hover {
+      background-color: $color-accent-2;
+    }
+    &:active,
+    &.active {
+      background-color: shade($color-accent-2, 20%);
+      transition: none;
+    }
+    &:focus {
+      outline: 0;
+    }
+    .user-is-tabbing &:focus,
+    &.focus {
+    }
+  }
+
+
 }
 </style>
 
@@ -176,6 +205,7 @@ export default {
   ```jsx
   <div>
     <Button variation="primary" size="large">Primary Button</Button>
+    <Button variation="accent" size="x-large">Primary Button</Button>
     <Button variation="primary" size="medium">Medium</Button>
     <Button variation="primary" size="small">Small</Button>
     <br />
