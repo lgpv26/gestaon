@@ -48,7 +48,7 @@ module.exports = (server) => {
                                                 phoneLine: (data.phoneLine) ? data.phoneLine : null,
                                                 obs: (data.obs) ? data.obs : null,
                                                 status: (data.status && data.status !== "processing" && data.status !== "draft") ? (_.get(client, 'id', null)) ? data.status : (data.status === 'finished' || data.status === 'canceled') ? data.status : 'finished' : (_.get(client, 'id', null)) ? 'pending' : 'finished',
-                                                tempId: _.get(data, 'tempId', null)
+                                                tmpId: _.get(data, 'tmpId', null)
                                             },
                                             transaction)
 
@@ -71,12 +71,11 @@ module.exports = (server) => {
 
                                         const requestDetails = await vm.checkRequestDetails(
                                             data,
+                                            request,
                                             client,
                                             userId,
                                             transaction
                                         )
-
-                                        console.log(requestDetails)
 
                                         await vm.dashboard(request, client, oldRequest, companyId, transaction)
 
@@ -157,7 +156,7 @@ module.exports = (server) => {
                 return Promise.all(removeTemps).then(() => {
                     const id = _.get(data, 'id', false)
                     if((typeof id == 'string') && id.substring(0,4) === "tmp/") {
-                        _.set(data, 'tempId', id)
+                        _.set(data, 'tmpId', id)
                         _.set(data, 'id', null)
                     }
 
@@ -170,7 +169,7 @@ module.exports = (server) => {
                 _.map(_.get(data, path), (obj) => {
                     promises.push(new Promise((resolve, reject) => {
                         if(_.get(obj, 'id', false) && !_.isNumber(obj.id) && obj.id.substring(0,4) === "tmp/"){
-                            obj.tempId = obj.id
+                            obj.tmpId = obj.id
                             obj.id = null              
                         }
                         newValue.push(obj)
@@ -320,7 +319,7 @@ module.exports = (server) => {
                     return server.mysql.Request.create(data, {transaction})
                     .then((request) => {
                         if (!request) return Promise.reject('Erro ao cadastrar o Request!')
-                        return _.assign(JSON.parse(JSON.stringify(request)), {tempId: data.tempId})
+                        return _.assign(JSON.parse(JSON.stringify(request)), {tmpId: data.tmpId})
                     }).catch((err) => {
                         console.log(err, "Erro em: data/request.create")
                         return Promise.reject('Erro ao criar o pedido.')
@@ -350,20 +349,22 @@ module.exports = (server) => {
                 //if(!_.has(data, 'requestClientAddresses') || !_.has(data, 'requestClientPhones')) return Promise.resolve(null)
 
                const data = {}
-
+                
                 if(_.has(detailsData, 'requestClientAddresses')) {
+                    data.requestClientAddresses = []
                     detailsData.requestClientAddresses.forEach((requestClientAddress, index) => {
-                        //console.log(requestClientAddress.clientAddress, requestClientAddress.clientAddressId)
-                        data.requestClientAddress = _.find(client.clientAddresses, (clientAddress) => { return clientAddress.tempId == requestClientAddress.clientAddressId })
+                        data.requestClientAddresses.push(_.find(client.clientAddresses, (clientAddress) => { 
+                            return clientAddress.tmpId == requestClientAddress.clientAddressId   
+                        }))
                     })
                 }
-
+                
                 if(_.has(detailsData, 'requestClientPhones')) {
                     detailsData.requestClientPhones.forEach((requestClientPhone, index) => {
-                        data.requestClientPhone = _.find(client.clientPhones, (clientPhone) => { return clientPhone.tempId == requestClientPhone.clientPhoneId })
+                        data.requestClientPhones.push(_.find(client.clientPhones, (clientPhone) => { return clientPhone.tmpId == requestClientPhone.clientPhoneId }))
                     })
                 }
-
+                
                 return server.broker.call('data/request-details.start', {
                     data,
                     request,

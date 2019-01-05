@@ -97,7 +97,7 @@ module.exports = (server) => {
                 return Promise.all(removeTemps).then(() => {
                     const id = _.get(data, 'id', false)
                     if((typeof id == 'string') && id.substring(0,4) === "tmp/") {
-                        _.set(data, 'tempId', id)
+                        _.set(data, 'tmpId', id)
                         _.set(data, 'id', null)
                     }
 
@@ -118,12 +118,12 @@ module.exports = (server) => {
                                 obj.select = false
                             }                        
                         }
-                        if(_.has(obj, 'address') && obj.address.id && obj.address.id.toString().substring(0,4) === "tmp/") {
-                            _.set(obj.address, 'tempId', obj.address.id)
+                        if(_.has(obj, 'address') && obj.address.id && obj.address.id.substring(0,4) === "tmp/") {
+                            _.set(obj.address, 'tmpId', obj.address.id)
                             _.set(obj.address, 'id', null)
                         }
-                        if(_.get(obj, 'id', false) && obj.id && obj.id.toString().substring(0,4) === "tmp/"){
-                            obj.tempId = obj.id
+                        if(_.get(obj, 'id', false) && !_.isNumber(obj.id) && obj.id.substring(0,4) === "tmp/"){
+                            obj.tmpId = obj.id
                             obj.id = null              
                         }
                         newValue.push(obj)
@@ -167,7 +167,7 @@ module.exports = (server) => {
                     return server.mysql.Client.create(data, {transaction})
                     .then((client) => {
                         client = JSON.parse(JSON.stringify(client))
-                        if(data.tempId) _.set(client, 'tempId', data.tempId)
+                        if(data.tmpId) _.set(client, 'tmpId', data.tmpId)
                         return client
                     }).catch(() => {
                         console.log("Nenhum registro encontrado. Create.")
@@ -187,7 +187,6 @@ module.exports = (server) => {
                 }).then((clientAddressWithAddress) => {
                     let clientAddressesArray = []
                     clientAddressWithAddress.forEach((result) => {
-                        console.log("Ecnontrou aqui", result.address)
                         clientAddressesArray.push({
                             id: (result.id) ? result.id : null,
                             status: 'activated',
@@ -198,8 +197,9 @@ module.exports = (server) => {
                             number: (result.number) ? result.number : null,
                             complement: (result.complement) ? result.complement : null,
                             type: [1,3,5],
-                            tempId: (result.tempId) ? result.tempId : null,
-                            select: result.select
+                            tmpId: (result.tmpId) ? result.tmpId : null,
+                            select: result.select,
+                            address: result.address
                         })
                     })
 
@@ -248,7 +248,7 @@ module.exports = (server) => {
                                     }
                                     return server.mysql.ClientAddress.findById(clientAddress.id, {transaction})
                                     .then((ClientAddress) => {
-                                        return _.assign(JSON.parse(JSON.stringify(ClientAddress)), { type: clientAddress.type, select: clientAddress.select })
+                                        return _.assign(JSON.parse(JSON.stringify(ClientAddress)), { type: clientAddress.type, select: clientAddress.select, address: clientAddress.address })
                                     })
                                 })
                             )
@@ -261,7 +261,7 @@ module.exports = (server) => {
                                             console.log("Nenhum registro encontrado. Create.")
                                             return Promise.reject("Erro ao cadastrar endereço do cliente.")
                                         }
-                                        return _.assign(JSON.parse(JSON.stringify(clientAddressCreate)), { type: clientAddress.type, select: clientAddress.select, tempId: clientAddress.tempId })
+                                        return _.assign(JSON.parse(JSON.stringify(clientAddressCreate)), { type: clientAddress.type, select: clientAddress.select, tmpId: clientAddress.tmpId, address: clientAddress.address })
                                     })
                             )
                         }
@@ -318,7 +318,7 @@ module.exports = (server) => {
                                         console.log("Nenhum registro encontrado. Create clientPhone.")
                                         return Promise.reject("Erro ao cadastrar telefone do cliente.")
                                     }
-                                    return _.assign(JSON.parse(JSON.stringify(clientPhoneCreate)), { select: clientPhone.select, tempId: clientPhone.tempId})
+                                    return _.assign(JSON.parse(JSON.stringify(clientPhoneCreate)), { select: clientPhone.select, tmpId: clientPhone.tmpId})
                                 })
                             )
                         }
@@ -376,7 +376,7 @@ module.exports = (server) => {
                                         console.log("Nenhum registro encontrado. Create clientCustomField.")
                                         return Promise.reject("Erro ao cadastrar dados do cliente.")
                                     }
-                                    return _.assign(JSON.parse(JSON.stringify(clientCustomFieldCreate)), { tempId: clientCustomField.tempId})
+                                    return _.assign(JSON.parse(JSON.stringify(clientCustomFieldCreate)), { tmpId: clientCustomField.tmpId})
                                 })
                             )
                         }

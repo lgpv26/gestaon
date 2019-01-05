@@ -114,7 +114,7 @@ module.exports = (server) => {
                                         console.log("Nenhum registro encontrado. Create. Request Order Product.")
                                         return Promise.reject("Erro ao cadastrar o produto no pedido.")
                                     }
-                                    return _.assign(JSON.parse(JSON.stringify(requestOrderProductCreate)), { tempId: requestOrderProduct.tempId})
+                                    return _.assign(JSON.parse(JSON.stringify(requestOrderProductCreate)), { tmpId: requestOrderProduct.tmpId})
                                 })
                             )
                         }

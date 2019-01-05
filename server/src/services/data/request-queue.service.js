@@ -61,7 +61,7 @@ module.exports = (server) => {
                                         })
 
                                         if(!checkId) _.set(mapIds, objId, action.id)
-                                        _.set(action, 'tempId', objId)
+                                        _.set(action, 'tmpId', objId)
 
                                         objReturn.push(action)
                                         
@@ -203,7 +203,7 @@ module.exports = (server) => {
                             if(key === 'clientAddressId' || key === 'clientPhoneId') return resolve()
                             if(typeof _.get(obj, 'data.' + key) == 'object' && _.has(obj.data[key], 'id') && !_.isNumber(obj.data[key].id)) {
                                 if(obj.data[key].id.substring(0,4) === "tmp/") {
-                                    _.set(obj.data[key], 'tempId', obj.data[key].id)
+                                    _.set(obj.data[key], 'tmpId', obj.data[key].id)
                                     _.set(obj.data[key], 'id', null)
                                 }
                             }
