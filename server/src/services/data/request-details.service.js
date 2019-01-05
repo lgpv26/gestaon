@@ -22,19 +22,31 @@ module.exports = (server) => {
                                 const requestClient = {}
 
                                 if(_.has(ctx.params.data, "requestClientAddresses")) {
-                                    await vm.setRequestClientAddresses([_.assign({clientAddressId: ctx.params.data.requestClientAddresses[0].id,
-                                        requestId: request.id
-                                    })],
+                                    
+                                    const requestClientAddresses = _.map(ctx.params.data.requestClientAddresses, (requestClientAddress) => {
+                                        return _.assign({clientAddressId: requestClientAddress.id,
+                                            requestId: request.id
+                                        })
+                                    })
+                                    
+                                    await vm.setRequestClientAddresses(
+                                    requestClientAddresses,
                                     request.id,
                                     transaction)
                                     .then((clientAddresses) => {
                                         _.set(requestClient, 'requestClientAddresses', clientAddresses)
                                     })
                                 }
+                            
                                 if(_.has(ctx.params.data, "requestClientPhones")) {
-                                    await vm.setRequestClientPhones( [_.assign({clientPhoneId: ctx.params.data.requestClientPhones.id,
-                                        requestId: request.id
-                                    })],
+
+                                    const requestClientPhones = _.map(ctx.params.data.requestClientPhones, (requestClientPhone) => {
+                                        return _.assign({clientPhoneId: requestClientPhone.id,
+                                            requestId: request.id
+                                        })
+                                    })
+                                    await vm.setRequestClientPhones(
+                                    requestClientPhones,
                                     request.id,
                                     transaction)
                                     .then((clientPhones) => {

@@ -118,7 +118,7 @@ module.exports = (server) => {
                                 obj.select = false
                             }                        
                         }
-                        if(_.has(obj, 'address') && obj.address.id && obj.address.id.substring(0,4) === "tmp/") {
+                        if(_.has(obj, 'address') && obj.address.id && !_.isNumber(obj.address.id) && obj.address.id.substring(0,4) === "tmp/") {
                             _.set(obj.address, 'tmpId', obj.address.id)
                             _.set(obj.address, 'id', null)
                         }
@@ -232,14 +232,14 @@ module.exports = (server) => {
                 }).then(() => {
                     let clientAddressesPromises = []
                     data.forEach((clientAddress) => {
-                        if (clientAddress.id) {
-                            clientAddressesPromises.push(
+                        if (clientAddress.id) { clientAddressesPromises.push(
                                 server.mysql.ClientAddress.update(_.assign(clientAddress, {
                                     dateRemoved: null
                                 }), {
                                     where: {
                                         id: clientAddress.id
                                     },
+                                    paranoid: false,
                                     transaction
                                 }).then((clientAddressUpdate) => {
                                     if(parseInt(_.toString(clientAddressUpdate)) < 1 ){
@@ -297,6 +297,7 @@ module.exports = (server) => {
                                     where: {
                                         id: clientPhone.id
                                     },
+                                    paranoid: false,
                                     transaction
                                 }).then((clientPhoneUpdate) => {
                                     if(parseInt(_.toString(clientPhoneUpdate)) < 1 ){
@@ -327,6 +328,7 @@ module.exports = (server) => {
                     return Promise.all(clientPhonesPromises).then((clientPhones) => {
                         return clientPhones
                     }).catch((err) => {
+                        console.log(err)
                         console.log("Erro em: data/client.saveClientPhones - Promise ALL")
                         return Promise.reject("Erro ao atualizar telefones do cliente.")
                     })

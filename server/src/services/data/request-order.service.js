@@ -81,9 +81,9 @@ module.exports = (server) => {
                 return server.mysql.RequestOrderProduct.destroy({
                     where: {
                         requestOrderId: orderId
-                    }
+                    },
+                    transaction
                 }).then(() => {
-
                     let requestOrderProductPromises = []
                     data.forEach((requestOrderProduct) => {
                         if (requestOrderProduct.id) {
@@ -93,6 +93,7 @@ module.exports = (server) => {
                                     where: {
                                         id: requestOrderProduct.id
                                     },
+                                    paranoid: false,
                                     transaction
                                 }).then((requestOrderProductUpdate) => {
                                     if(parseInt(_.toString(requestOrderProductUpdate)) < 1 ){
@@ -104,7 +105,7 @@ module.exports = (server) => {
                                         return JSON.parse(JSON.stringify(requestOrderProductUpdated))
                                     })
                                 })
-                            )                        
+                            )                 
                         }
                         else {
                             requestOrderProductPromises.push(

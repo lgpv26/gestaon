@@ -354,14 +354,27 @@ module.exports = (server) => {
                     data.requestClientAddresses = []
                     detailsData.requestClientAddresses.forEach((requestClientAddress, index) => {
                         data.requestClientAddresses.push(_.find(client.clientAddresses, (clientAddress) => { 
-                            return clientAddress.tmpId == requestClientAddress.clientAddressId   
+                            if(_.has(clientAddress, 'tmpId')) {
+                                return clientAddress.tmpId == requestClientAddress.clientAddressId  
+                            }
+                            else {
+                                return clientAddress.id == requestClientAddress.clientAddressId  
+                            }
+                             
                         }))
                     })
                 }
                 
                 if(_.has(detailsData, 'requestClientPhones')) {
                     detailsData.requestClientPhones.forEach((requestClientPhone, index) => {
-                        data.requestClientPhones.push(_.find(client.clientPhones, (clientPhone) => { return clientPhone.tmpId == requestClientPhone.clientPhoneId }))
+                        data.requestClientPhones.push(_.find(client.clientPhones, (clientPhone) => { 
+                            if(_.has(clientPhone, 'tmpId')) {
+                                return clientPhone.tmpId == requestClientPhone.clientPhoneId  
+                            }
+                            else {
+                                return clientPhone.id == requestClientPhone.clientPhoneId  
+                            }
+                        }))
                     })
                 }
                 
