@@ -312,12 +312,11 @@
         },
         methods: {
             ...mapActions('request-board',['updateCard']),
-            
         },
         mounted(){
-            setInterval(() => {
+            /*setInterval(() => {
                 console.log(this.card)
-            }, 5000)
+            }, 5000)*/
             /*const vm = this
             setTimeout(() => {
                 vm.loading = false;

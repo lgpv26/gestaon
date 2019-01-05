@@ -308,11 +308,11 @@
                 vm.$socket.on('request-queue:sync', (ev) => {
                     if(ev.success){
                         ev.evData.processedQueue.forEach((request) => {
-                            const cards = Card.query().where('requestId',_.get(request,'tempId',request.id)).get()
+                            const cards = Card.query().where('requestId',_.get(request,'tmpId',request.id)).get()
                             const card = _.first(cards)
                             console.log ("Before", card.id, request)
 
-                            const targetRequestId = _.get(request,'tempId',request.id)
+                            const targetRequestId = _.get(request,'tmpId',request.id)
 
                             const windowTmpId = `tmp/${shortid.generate()}`
                             const cardTmpId = `tmp/${shortid.generate()}`
@@ -376,8 +376,8 @@
                             /*
                             console.log(request)
                             let requestWhere = null
-                            if(_.has(request,'tempId')){
-                                requestWhere = request.tempId
+                            if(_.has(request,'tmpId')){
+                                requestWhere = request.tmpId
                             }
                             else {
                                 requestWhere = request.id

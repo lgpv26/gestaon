@@ -105,7 +105,6 @@
                             .where('status', 'pending')
                             .orWhere('status', 'finished')
                             .orWhere('status', 'in-displacement')
-
                             .orWhere('status', 'canceled')
                             .with('card').get()
                     case "scheduled":
