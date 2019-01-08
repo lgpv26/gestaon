@@ -8,7 +8,7 @@
 #
 
 props:
-# Primary color, our brand color
+  # Primary color, our brand color
   color_primary:
     value: "#276E73"
     category: primary_colors
@@ -40,8 +40,7 @@ props:
     value: "#081718"
     category: primary_colors
 
-
-#  Accent Shades used to emphasis, contrast or create rhythm
+  #  Accent Shades used to emphasis, contrast or create rhythm
   color_accent_1:
     value: "#E0634A"
     category: accent_colors
@@ -52,7 +51,7 @@ props:
     value: "#4D76C8"
     category: accents_colors
 
-# Basic and Gray Shades
+  # Basic and Gray Shades
   color_base:
     value: "#373C42"
     category: base_colors
@@ -79,6 +78,9 @@ props:
     category: base_colors
   color_base_80:
     value: "#23272B"
+    category: base_colors
+  color_Cyan:
+    value: "#008B8B"
     category: base_colors
 
   color_white:
