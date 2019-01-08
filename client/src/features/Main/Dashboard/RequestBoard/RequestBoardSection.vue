@@ -1,263 +1,361 @@
 <template>
-    <div class="board-section" v-show="sectionRequests.length" :style="{ width: sectionWidth }">
-        <div class="board-section__header" :style="{ height: options.headerHeight + 'px' }">
-            <div class="header__section-title">
-                <h3>{{ section.name }}</h3>
-                <span class="push-both-sides"></span>
-                <ul style="display: flex; flex-direction: row">
-                    <li @click="collapseSection(section)" style="width: 21px; height: 16px;">
-                        <icon-section-collapse></icon-section-collapse>
-                    </li>
-                    <li @click="expandSection(section)" style="width: 21px; height: 16px;">
-                        <icon-section-expand></icon-section-expand>
-                    </li>
-                    <li @mouseover="setLastHoveredSection(section)" class="section-title__settings-button" style="width: 15px; height: 16px;">
-                        <app-dropdown-menu :menuList="sectionMenuList" :params="sectionMenuParams" :closeOnSelect="true">
-                            <a href="javascript:void(0)" style="display: flex; height: 16px;">
-                                <icon-section-settings></icon-section-settings>
-                            </a>
-                        </app-dropdown-menu>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="scrollable-content">
-                <app-perfect-scrollbar class="board-section__viewport" :style="{ 'width': sectionWidth, 'height': sectionHeight }">
-                    <div class="board-section__cards" :style="{'padding-bottom': options.gutterSize + 'px', 'padding-left': options.gutterSize + 'px'}">
-                        <div class="request-card" v-for="request in sectionRequests" :key="'request-' + request.id" :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px'}" @click="cardClick(request.card, request, $event)">
-                            <app-request-board-card class="request-card__main" :card="request.card" :request="request"></app-request-board-card>
-                        </div>
-                    </div>
-                </app-perfect-scrollbar>
-        </div>
+  <div
+    class="board-section"
+    v-show="sectionRequests.length"
+    :style="{ width: sectionWidth }"
+  >
+    <div
+      class="board-section__header"
+      :style="{ height: options.headerHeight + 'px' }"
+    >
+      <div class="header__section-title">
+        <h3>{{ section.name }}</h3>
+        <span class="push-both-sides"></span>
+        <ul style="display: flex; flex-direction: row">
+          <li
+            @click="collapseSection(section)"
+            style="width: 21px; height: 16px;"
+          >
+            <icon-section-collapse></icon-section-collapse>
+          </li>
+          <li
+            @click="expandSection(section)"
+            style="width: 21px; height: 16px;"
+          >
+            <icon-section-expand></icon-section-expand>
+          </li>
+          <li
+            @mouseover="setLastHoveredSection(section)"
+            class="section-title__settings-button"
+            style="width: 15px; height: 16px;"
+          >
+            <app-dropdown-menu
+              :menuList="sectionMenuList"
+              :params="sectionMenuParams"
+              :closeOnSelect="true"
+            >
+              <a href="javascript:void(0)" style="display: flex; height: 16px;">
+                <icon-section-settings></icon-section-settings>
+              </a>
+            </app-dropdown-menu>
+          </li>
+        </ul>
+      </div>
     </div>
+    <div class="scrollable-content">
+      <app-perfect-scrollbar
+        class="board-section__viewport"
+        :style="{ width: sectionWidth, height: sectionHeight }"
+      >
+        <div
+          class="board-section__cards"
+          :style="{
+            'padding-bottom': options.gutterSize + 'px',
+            'padding-left': options.gutterSize + 'px'
+          }"
+        >
+          <div
+            class="request-card"
+            v-for="request in sectionRequests"
+            :key="'request-' + request.id"
+            :style="{
+              height: options.cardHeight + 'px',
+              width: options.columnWidth + 'px',
+              'margin-top': options.gutterSize + 'px',
+              'margin-right': options.gutterSize + 'px'
+            }"
+            @click.stop="cardClick(request.card, request, $event)"
+          >
+            <app-request-board-card
+              class="request-card__main"
+              :card="request.card"
+              :request="request"
+            ></app-request-board-card>
+          </div>
+        </div>
+      </app-perfect-scrollbar>
+    </div>
+  </div>
 </template>
 
 <script>
-    import { mapMutations, mapState, mapGetters } from 'vuex'
-    import DraggableComponent from 'vuedraggable'
-    import _ from 'lodash'
-    import shortid from 'shortid'
+import { mapMutations, mapState, mapGetters } from "vuex";
+import DraggableComponent from "vuedraggable";
+import _ from "lodash";
+import shortid from "shortid";
 
-    import RequestBoardDraftCard from './RequestBoardDraftCard.vue'
-    import RequestBoardCard from './RequestBoardCard.vue'
+import RequestBoardDraftCard from "./RequestBoardDraftCard.vue";
+import RequestBoardCard from "./RequestBoardCard.vue";
 
-    import Request from '../../../../vuex/models/Request'
+import Request from "../../../../vuex/models/Request";
 
-    export default {
-        components: {
-            'app-draggable': DraggableComponent,
-            'app-request-board-draft-card': RequestBoardDraftCard,
-            'app-request-board-card': RequestBoardCard
-        },
-        props: ['section', 'options'],
-        data(){
-            return {
-                cardDraggableOptions: {
-                    handle: '.request-card__main',
-                    scroll: false,
-                    forceFallback: false,
-                    ghostClass: 'ghost',
-                    group: 'cards',
-                    filter: '.ignore'
-                },
-                lastHoveredSection: null,
-                lastSectionMove: null,
-                lastCardMove: {
-                    sectionId: null,
-                    from: null,
-                    to: null
-                },
-                sectionMenuParams: {},
-                sectionMenuList: [
-                    {
-                        text: 'Remover seção',
-                        type: 'system',
-                        param: {},
-                        action: this.removeSection
-                    }
-                ],
-                isDraggingBoardColumn: false,
-                isDraggingCard: false
-            }
-        },
-        computed: {
-            ...mapState(['mainContentArea']),
-            ...mapState('auth', ['user', 'tokens', 'company']),
-            ...mapState('morph-screen', { isShowingMorphScreen: 'isShowing' }),
-            ...mapState('request-board', ['sections']),
-            ...mapGetters('request-board', []),
-            sectionWidth(){
-                return this.options.gutterSize + ((this.section.size * this.options.columnWidth) + ((this.section.size + 1) * this.options.gutterSize)) + 'px'
-            },
-            sectionHeight(){
-                return this.mainContentArea.height - this.options.headerHeight - (this.options.gutterSize * 2) + 'px'
-            },
-            sectionRequests(){
-                switch(this.section.id){
-                    case "drafts":
-                        return Request.query()
-                            .where('status', 'draft')
-                            .orWhere('status', 'processing')
-                            .with('card').get()
-                    case "requests":
-                        return Request.query()
-                            .where('status', 'pending')
-                            .orWhere('status', 'finished')
-                            .orWhere('status', 'in-displacement')
-                            .orWhere('status', 'canceled')
-                            .with('card').get()
-                    case "scheduled":
-                        return []
-                }
-            }
-        },
-        methods: {
-            ...mapMutations('morph-screen', []),
-            ...mapMutations('request-board', [
-            ]),
-
-            cardClick(card, request){
-
-                console.log("cardClick", request)
-
-                this.$store.dispatch('entities/windows/update', {
-                    where: card.windowId,
-                    data: {
-                        show: true
-                    }
-                })
-            },
-
-            /* Sections */
-
-            setLastHoveredSection(section){
-                this.sectionMenuParams.lastHoveredSection = section
-            },
-            removeSection(params){
-                console.log("Remoção de seção não está implementado")
-            },
-            expandSection(section){
-                if(section.size < 3){
-                    this.SET_SECTION({
-                        sectionId: section.id,
-                        section: {
-                            size: section.size + 1
-                        }
-                    })
-                }
-            },
-            collapseSection(section){
-                if(section.size > 1){
-                    this.SET_SECTION({
-                        sectionId: section.id,
-                        section: {
-                            size: section.size - 1
-                        }
-                    })
-                }
-            }
+export default {
+  components: {
+    "app-draggable": DraggableComponent,
+    "app-request-board-draft-card": RequestBoardDraftCard,
+    "app-request-board-card": RequestBoardCard
+  },
+  props: ["section", "options"],
+  data() {
+    return {
+      cardDraggableOptions: {
+        handle: ".request-card__main",
+        scroll: false,
+        forceFallback: false,
+        ghostClass: "ghost",
+        group: "cards",
+        filter: ".ignore"
+      },
+      lastHoveredSection: null,
+      lastSectionMove: null,
+      lastCardMove: {
+        sectionId: null,
+        from: null,
+        to: null
+      },
+      sectionMenuParams: {},
+      sectionMenuList: [
+        {
+          text: "Remover seção",
+          type: "system",
+          param: {},
+          action: this.removeSection
         }
+      ],
+      isDraggingBoardColumn: false,
+      isDraggingCard: false
+    };
+  },
+  computed: {
+    ...mapState(["mainContentArea"]),
+    ...mapState("auth", ["user", "tokens", "company"]),
+    ...mapState("morph-screen", { isShowingMorphScreen: "isShowing" }),
+    ...mapState("request-board", ["sections"]),
+    ...mapGetters("request-board", []),
+    sectionWidth() {
+      return (
+        this.options.gutterSize +
+        (this.section.size * this.options.columnWidth +
+          (this.section.size + 1) * this.options.gutterSize) +
+        "px"
+      );
+    },
+    sectionHeight() {
+      return (
+        this.mainContentArea.height -
+        this.options.headerHeight -
+        this.options.gutterSize * 2 +
+        "px"
+      );
+    },
+    sectionRequests() {
+      switch (this.section.id) {
+        case "drafts":
+          return Request.query()
+            .where("status", "draft")
+            .orWhere("status", "processing")
+            .with("card")
+            .with("client|client.clientAddresses.address")
+            .with(
+              "requestClientAddresses|requestClientAddresses.clientAddress.address"
+            )
+            .with("requestUIState")
+            .with("requestOrder.requestOrderProducts.product")
+            .with("requestPayments.paymentMethod")
+            .get();
+        case "requests":
+          return Request.query()
+            .where("status", "pending")
+            .orWhere("status", "finished")
+            .orWhere("status", "in-displacement")
+            .orWhere("status", "canceled")
+            .with("card")
+            .with("client|client.clientAddresses.address")
+            .with(
+              "requestClientAddresses|requestClientAddresses.clientAddress.address"
+            )
+            .with("requestUIState")
+            .with("requestOrder.requestOrderProducts.product")
+            .with("requestPayments.paymentMethod")
+            .get();
+        case "scheduled":
+          return [];
+      }
     }
+  },
+  methods: {
+    ...mapMutations("morph-screen", []),
+    ...mapMutations("request-board", []),
+    cardClick(card, request) {
+      this.$store.dispatch("entities/windows/update", {
+        where: card.windowId,
+        data: {
+          show: true
+        }
+      });
+      this.$store.dispatch("entities/requestUIState/update", {
+        where: request.requestUIState.id,
+        data: {
+          activeTab: "order"
+        }
+      });
+    },
+
+    /* Sections */
+
+    setLastHoveredSection(section) {
+      this.sectionMenuParams.lastHoveredSection = section;
+    },
+    removeSection(params) {
+      console.log("Remoção de seção não está implementado");
+    },
+    expandSection(section) {
+      if (section.size < 3) {
+        this.SET_SECTION({
+          sectionId: section.id,
+          section: {
+            size: section.size + 1
+          }
+        });
+      }
+    },
+    collapseSection(section) {
+      if (section.size > 1) {
+        this.SET_SECTION({
+          sectionId: section.id,
+          section: {
+            size: section.size - 1
+          }
+        });
+      }
+    }
+  }
+};
 </script>
 
 <style>
-    .board-section {
-        margin: 10px 10px 10px 0;
-        padding: 0;
-        background: rgba(21,23,28,.5);
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-    .board-section > .board-section__header {
-        padding: 10px 10px 8px;
-        height: 50px;
-        background: var(--bg-color--2);
-    }
-    .board-section > .board-section__header {
-        display: flex;
-        color: var(--base-color);
-    }
-    .board-section > .board-section__header > .header__section-title {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-    }
-    .board-section > .board-section__header > .header__section-title > h3 {
-        color: var(--font-color--8);
-        flex-grow: 1;
-        font-size: 14px;
-    }
-    .board-section > .board-section__header > .header__section-title > ul > li {
-        cursor: pointer;
-        margin-right: 5px;
-    }
-    .board-section > .board-section__header > .header__section-title ul li svg {
-        pointer-events: none;
-    }
-    .board-section > .board-section__header > .header__section-title ul li .fill,
-    .board-section > .board-section__header > .header__section-title ul li .colorizable {
-        fill: var(--font-color--2)
-    }
-    .board-section > .board-section__header > .header__section-title ul li .stroke
-    {
-        stroke: var(--font-color--2)
-    }
-    .board-section > .board-section__header > .header__section-title ul li:hover .fill,
-    .board-section > .board-section__header > .header__section-title ul li:hover .colorizable {
-        fill: var(--font-color--primary)
-    }
-    .board-section > .board-section__header > .header__section-title ul li:hover .stroke
-    {
-        stroke: var(--font-color--primary)
-    }
-    .board-section > .board-section__header > .header__section-title ul li.section-title__settings-button {
-        margin-right: 0;
-    }
-    .board-section > .board-section__header > .header__section-title ul li.section-title__settings-button svg {
-        position: relative;
-        top: 1px;
-    }
-    .board-section__viewport {
-        position: relative;
-        overflow: hidden;
-        float: left;
-    }
-    .board-section__viewport .board-section__cards {
-        display: flex;
-        flex-flow: row wrap;
-        min-height: 100%;
-        align-content: flex-start;
-        width: 100%;
-        position: absolute;
-        max-width: 100%;
-    }
-    .board-section__viewport::-webkit-scrollbar {
-        background-color: rgba(0,0,0,.2);
-        width: 10px;
-    }
-    .board-section__viewport::-webkit-scrollbar-thumb {
-        background-color: rgba(0,0,0,.7);
-        width: 10px;
-    }
+.board-section {
+  margin: 10px 10px 10px 0;
+  padding: 0;
+  background: rgba(21, 23, 28, 0.5);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.board-section > .board-section__header {
+  padding: 10px 10px 8px;
+  height: 50px;
+  background: var(--bg-color--2);
+}
+.board-section > .board-section__header {
+  display: flex;
+  color: var(--base-color);
+}
+.board-section > .board-section__header > .header__section-title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.board-section > .board-section__header > .header__section-title > h3 {
+  color: var(--font-color--8);
+  flex-grow: 1;
+  font-size: 14px;
+}
+.board-section > .board-section__header > .header__section-title > ul > li {
+  cursor: pointer;
+  margin-right: 5px;
+}
+.board-section > .board-section__header > .header__section-title ul li svg {
+  pointer-events: none;
+}
+.board-section > .board-section__header > .header__section-title ul li .fill,
+.board-section
+  > .board-section__header
+  > .header__section-title
+  ul
+  li
+  .colorizable {
+  fill: var(--font-color--2);
+}
+.board-section > .board-section__header > .header__section-title ul li .stroke {
+  stroke: var(--font-color--2);
+}
+.board-section
+  > .board-section__header
+  > .header__section-title
+  ul
+  li:hover
+  .fill,
+.board-section
+  > .board-section__header
+  > .header__section-title
+  ul
+  li:hover
+  .colorizable {
+  fill: var(--font-color--primary);
+}
+.board-section
+  > .board-section__header
+  > .header__section-title
+  ul
+  li:hover
+  .stroke {
+  stroke: var(--font-color--primary);
+}
+.board-section
+  > .board-section__header
+  > .header__section-title
+  ul
+  li.section-title__settings-button {
+  margin-right: 0;
+}
+.board-section
+  > .board-section__header
+  > .header__section-title
+  ul
+  li.section-title__settings-button
+  svg {
+  position: relative;
+  top: 1px;
+}
+.board-section__viewport {
+  position: relative;
+  overflow: hidden;
+  float: left;
+}
+.board-section__viewport .board-section__cards {
+  display: flex;
+  flex-flow: row wrap;
+  min-height: 100%;
+  align-content: flex-start;
+  width: 100%;
+  position: absolute;
+  max-width: 100%;
+}
+.board-section__viewport::-webkit-scrollbar {
+  background-color: rgba(0, 0, 0, 0.2);
+  width: 10px;
+}
+.board-section__viewport::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.7);
+  width: 10px;
+}
 
-    /* card */
+/* card */
 
-    .request-card {
-        display: flex;
-        position: relative;
-        z-index: 9;
-    }
-    .request-card > .request-card__main {
-        cursor: pointer;
-        flex-grow:1;
-        max-width: 100%;
-    }
-    .request-card.ghost > .request-card__main {
-        border: 2px dashed rgba(255,255,255,.1);
-        opacity: .8;
-    }
-
+.request-card {
+  display: flex;
+  position: relative;
+  z-index: 9;
+}
+.request-card > .request-card__main {
+  cursor: pointer;
+  flex-grow: 1;
+  max-width: 100%;
+}
+.request-card.ghost > .request-card__main {
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  opacity: 0.8;
+}
 </style>
