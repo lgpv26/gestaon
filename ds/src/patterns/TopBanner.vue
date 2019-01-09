@@ -1,35 +1,22 @@
 <template>
-  <component :is="type" class="index">
-    <Heading>Lorem ipsum sit amet arem ipsum sit amet'</Heading>
-
-    <component :is="type" class="block1">
-      <Wrapper>
-        <Paragraph class="paragraph1">
-          Lorem ipsum dolor sit amet, consectetur adipiscing.
-        </Paragraph>
-        <Paragraph class="paragraph2">
-          Duis aute irure dolor in reprehenderit<br />in voluptate velit esse cillum dolore eu<br />fugiat
-          nulla pariatur. Excepteur sint<br />accaecat cupidatat
-        </Paragraph>
-        <Button variation="primary" size="large">Primary Button</Button>
-      </Wrapper>
-    </component>
-
-    <component :is="type" class="block2">
-      <Wrapper> <img src="" /> </Wrapper>
-
-      <component :is="type" class="block3">
-        <Wrapper> <img src="" /> </Wrapper>
-      </component>
-    </component>
-  </component>
+  <carousel class="index" :data="data"></carousel>
 </template>
 
 <script>
-/**
- * Shows how to layout and structure a home page.
- */
+import Vue from "vue"
+import VueCarousel from "@chenfengyuan/vue-carousel"
+Vue.component(VueCarousel.name, VueCarousel)
+
 export default {
+  data() {
+    return {
+      data: [
+        '<div class="example-slide"><Banner01 style="background:white;"/></div>',
+        '<div class="example-slide"><Banner01 style="background:gray;"/></div>',
+        '<div class="example-slide"><Banner01 style="background:tomato;"/></div>',
+      ],
+    }
+  },
   name: "TopBanner",
   status: "deprecated",
   release: "1.0.0",
@@ -59,13 +46,14 @@ $color-template-background-bottom: shade($color-template-background, 5%);
 $color-template-text: $color-white;
 $color-template-link: $color-accent-3;
 
+.component {
+  margin: 0px;
+}
 .index {
   @include reset;
-  @include inset-space($space-m);
+  @include inset-space($size-l);
   min-height: $space-xxl * 4;
-  background: $color-base-10;
   position: relative;
-  float: left;
   height: 100%;
   width: 100%;
   @media #{$media-query-l} {
