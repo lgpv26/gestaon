@@ -282,6 +282,7 @@
                     <span class="push-both-sides"></span>
                     <a
                       class="button"
+                      v-if="request.requestUIState.isAddingClientAddress"
                       @click="
                         updateValue(
                           'entities/requestUIState/update',
@@ -688,9 +689,11 @@ export default {
     },
     cancel() {
       if (this.request.requestUIState.isAddingClientAddress) {
-        const clientAddressId = this.request.requestClientAddresses[0]
-          .clientAddressId;
-        this.removeClientAddress(clientAddressId);
+        if (this.utils.isTmp(this.request.requestClientAddresses[0].id)) {
+          const clientAddressId = this.request.requestClientAddresses[0]
+            .clientAddressId;
+          this.removeClientAddress(clientAddressId);
+        }
         this.updateValue(
           "entities/requestUIState/update",
           "isAddingClientAddress",
@@ -969,9 +972,9 @@ export default {
     },
     removeClientAddress(clientAddressId) {
       this.$store.dispatch("entities/clientAddresses/delete", clientAddressId);
-      console.log(this.request.requestClientAddresses);
     },
     onAddressSelect(address) {
+      console.log("Selecionou", address);
       this.$store.dispatch("entities/addresses/update", {
         where: this.request.requestClientAddresses[0].clientAddress.address.id,
         data: {
