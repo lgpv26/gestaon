@@ -15,9 +15,9 @@
         systems with Vue.js. It provides you and your team a set of organized tools, patterns &amp;
         practices. It works as the foundation for your application development.
       </Paragraph>
-      <Button variation="primary" size="large" >Primary Button</Button>
-
+      <Button variation="primary" size="large">Primary Button</Button>
     </Wrapper>
+    <TopBanner />
   </component>
 </template>
 
