@@ -1,5 +1,5 @@
 <template>
-  <component :is="level" class="heading"> <slot /> </component>
+  <component :is="level" class="heading" :style="{ 'text-align': textAlign }"> <slot /> </component>
 </template>
 
 <script>
@@ -22,6 +22,13 @@ export default {
       default: "h1",
       validator: value => {
         return value.match(/(h1|h2|h3|h4|h5|h6)/)
+      },
+    },
+    textAlign: {
+      type: String,
+      default: "left",
+      validator: value => {
+        return value.match(/(left|justify|center|right)/)
       },
     },
   },
@@ -77,6 +84,8 @@ h6 {
     <Heading level="h2">The quick brown fox</Heading>
     <Heading level="h3">The quick brown fox</Heading>
     <Heading level="h4">The quick brown fox</Heading>
+    <Heading level="h5">The quick brown fox</Heading>
+    <Heading level="h6">The quick brown fox</Heading>
   </div>
   ```
 </docs>

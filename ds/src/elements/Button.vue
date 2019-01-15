@@ -169,9 +169,6 @@ export default {
     &:focus {
       outline: 0;
     }
-    .user-is-tabbing &:focus,
-    &.focus {
-    }
   }
 
   // Accent button
@@ -191,9 +188,6 @@ export default {
     }
     &:focus {
       outline: 0;
-    }
-    .user-is-tabbing &:focus,
-    &.focus {
     }
   }
 }

@@ -2,7 +2,8 @@
   <component :is="type" class="header">
     <div class="row">
       <div
-        class="center-xs
+        class="row start-xs
+        center-xs
                   center-md
                   center-sm
                   start-lg
