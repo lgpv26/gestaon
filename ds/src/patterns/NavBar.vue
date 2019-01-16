@@ -110,9 +110,14 @@ export default {
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 // Design Tokens with local scope
-$color-nav-link: $color-primary;
-$color-nav-link-active: $color-primary;
-
+.Wrapper1 {
+  margin: 0px;
+  padding: 5px;
+}
+.cx {
+  margin: 0px;
+  padding: 15px;
+}
 .nav {
   @include stack-space($space-m);
   font-family: $font-text;
@@ -147,6 +152,20 @@ $color-nav-link-active: $color-primary;
   .questions {
     color: #276e73;
   }
+}
+a {
+  margin-left: 24px;
+  text-decoration: none;
+  color: $color-primary-40;
+  font-size: 18px;
+}
+a:hover {
+  color: $color-primary-60;
+}
+.button1 {
+  width: 150px;
+  height: 45px;
+  font-size: 18px;
 }
 </style>
 

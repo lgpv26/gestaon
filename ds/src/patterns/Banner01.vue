@@ -1,7 +1,9 @@
 <template>
-  <Wrapper class="Wrapper1">
-    <Heading level="h3" class="Heading1 cx-1">Lorem ipsum sit amet arem ipsum sit amet'</Heading>
-    <Wrapper class="Wrapper2 cx-2">
+  <Wrapper class="Wrapper1 row">
+    <Heading level="h3" class="Heading1 col-xs-12"
+      >Lorem ipsum sit amet arem ipsum sit amet'</Heading
+    >
+    <Wrapper class="Wrapper2 col-xs">
       <Paragraph class="paragraph1">
         Lorem ipsum dolor sit amet, consectetur adipiscing.
       </Paragraph>
@@ -11,9 +13,9 @@
       </Paragraph>
       <button>Explorar Recursos</button>
     </Wrapper>
-    <Wrapper class="Wrapper3 cx-3">
+    <Wrapper class="Wrapper3 col-xs">
       <img
-        src="https://lh3.googleusercontent.com/yZ74mRJ6EQGfl8S2tHlQtZYD67i_KFrptJdAiThCrFVpuqMcSuGE723TtyGcaWIaC6iN7TfvGhqMIZZuh1C2=w1366-h657"
+        src="https://lh4.googleusercontent.com/7BLk-Wo82esCj_VCPqlj6ONX6q4vdSw0Ui6mfL4g7Pdu-oLxU0K0Y1_CmZBW-tf-a8ANIwm87LVuTw=w1366-h657"
       />
     </Wrapper>
   </Wrapper>
@@ -61,29 +63,6 @@ $color-template-link: $color-accent-3;
   background: $color-white;
   position: relative;
   float: left;
-  height: 80vh;
-  display: grid;
-  grid-template-columns: 50% 50% 50% 50%;
-  grid-template-rows: 20vh 40vh 40vh 20vh;
-  grid-template-areas:
-    "Cabecalho Cabecalho"
-    "Button  Imagem"
-    "Rodape Rodape";
-  @media #{$media-query-l} {
-    // This is how you’d use design tokens with media queries
-  }
-}
-.cx-1 {
-  grid-area: Cabecalho;
-}
-.cx-2 {
-  grid-area: Button;
-}
-.cx-3 {
-  grid-area: Imagem;
-}
-.cx-4 {
-  grid-area: Rodape;
 }
 .Heading1 {
   text-align: center;
@@ -140,29 +119,6 @@ $color-template-link: $color-accent-3;
     background: $color-white;
     position: relative;
     float: left;
-    height: 65vh;
-    display: grid;
-    grid-template-columns: 50% 50% 50% 50%;
-    grid-template-rows: 20vh 34vh 34vh 20vh;
-    grid-template-areas:
-      "Cabecalho Cabecalho"
-      "Button  Imagem"
-      "Rodape Rodape";
-    @media #{$media-query-l} {
-      // This is how you’d use design tokens with media queries
-    }
-  }
-  .cx-1 {
-    grid-area: Cabecalho;
-  }
-  .cx-2 {
-    grid-area: Button;
-  }
-  .cx-3 {
-    grid-area: Imagem;
-  }
-  .cx-4 {
-    grid-area: Rodape;
   }
   .Heading1 {
     text-align: center;
