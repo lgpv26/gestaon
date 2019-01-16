@@ -110,14 +110,9 @@ export default {
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 // Design Tokens with local scope
-.Wrapper1 {
-  margin: 0px;
-  padding: 5px;
-}
-.cx {
-  margin: 0px;
-  padding: 15px;
-}
+$color-nav-link: $color-primary;
+$color-nav-link-active: $color-primary;
+
 .nav {
   @include stack-space($space-m);
   font-family: $font-text;
