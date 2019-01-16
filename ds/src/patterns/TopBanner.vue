@@ -91,6 +91,14 @@ a {
 .button {
   margin-top: $size-m;
 }
+@media screen and(max-width: 1024px) {
+  .index {
+    width: 96%;
+    height: 80%;
+    margin-left: 2%;
+    margin-right: 2%;
+  }
+}
 </style>
 
 <docs>

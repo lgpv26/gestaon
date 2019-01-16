@@ -1,13 +1,25 @@
 <template>
-  <component :is="type" class="nav">
-    <a
-      v-for="(item, index) in navItems"
-      :key="index"
-      :href="item.href"
-      :class="{ active: localActive === item.component }"
-      v-html="item.name"
-    />
-  </component>
+  <Wrapper class="Wrapper1 row col-xs-12">
+    <Wrapper class="cx col-xs-2">
+      <img
+        src="https://lh6.googleusercontent.com/iAFNZ3UbXyVWgUhVWbtBFkgousIF3Xu2XliUiKAdjN6HhMgG9dNpeawJQcxhqhJxdjU_86rDpHrGHw=w1366-h657"
+      />
+    </Wrapper>
+    <Wrapper class="cx col-xs">
+      <nav class="nav">
+        <a
+          v-for="(item, index) in navItems"
+          :key="index"
+          :href="item.href"
+          :class="[{ active: localActive === item.component }, item.class]"
+          v-html="item.name"
+        />
+      </nav>
+    </Wrapper>
+    <Wrapper class="Wrapper1 col-xs-2">
+      <Button class="button1" variation="accent" size="small">Demonstração</Button>
+    </Wrapper>
+  </Wrapper>
 </template>
 
 <script>
@@ -27,7 +39,7 @@ export default {
      */
     type: {
       type: String,
-      default: "nav",
+      default: "div",
     },
     /**
      * State which tab is active when initiated (using name of the component).
@@ -58,46 +70,37 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 // Design Tokens with local scope
-$color-nav-link: $color-primary;
-$color-nav-link-active: $color-primary;
-
+.Wrapper1 {
+  margin: 0px;
+  padding: 5px;
+}
+.cx {
+  margin: 0px;
+  padding: 15px;
+}
 .nav {
-  @include stack-space($space-m);
-  font-family: $font-text;
-  font-size: $size-s;
-  line-height: $line-height-m;
-  color: $color-white;
-  text-align: center;
-  width: 100%;
-  @media #{$media-query-l} {
-    // This is how you’d use design tokens with media queries
-  }
-  a {
-    color: $color-nav-link;
-    padding: $space-xs 0;
-    margin: 0 $space-xs;
-    text-decoration: none;
-    display: inline-block;
-    &:hover {
-      color: $color-nav-link-active;
-    }
-    &.active {
-      border-bottom: 2px solid $color-primary;
-      font-weight: $weight-bold;
-      color: $color-primary;
-    }
-  }
+  float: right;
+}
+a {
+  margin-left: 24px;
+  text-decoration: none;
+  color: $color-primary-40;
+  font-size: 18px;
+}
+a:hover {
+  color: $color-primary-60;
+}
+.button1 {
+  width: 150px;
+  height: 45px;
+  font-size: 18px;
 }
 </style>
 
 <docs>
   ```jsx
-  <NavBar active="Dashboard" :navItems="[
-    {name: 'Dashboard', component: 'Dashboard', href: '/example/'},
-    {name: 'Posts', component: 'Posts', href: '/example/'},
-    {name: 'Users', component: 'Users', href: '/example/'},
-    {name: 'Settings', component: 'Settings', href: '/example/'}
-  ]"/>
+  <NavBar />
   ```
 </docs>
