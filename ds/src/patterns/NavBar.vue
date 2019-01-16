@@ -152,7 +152,6 @@ a {
   margin-left: 24px;
   text-decoration: none;
   color: $color-primary-40;
-  font-size: 18px;
 }
 a:hover {
   color: $color-primary-60;
