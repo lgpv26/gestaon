@@ -1,36 +1,36 @@
 <template>
-  <Wrapper class="conteiner row">
-    <Heading level="h3" class="cx-1 col-xs-12">Lorem ipsum sit amet orem ipsum sit amet’</Heading>
-    <Wrapper class="row">
-      <Wrapper class="cx-2 col-xs">
-        <Wrapper class="cx-3"><img src=""/></Wrapper>
-        <Paragraph class="Paragraph1 col-xs-12 ">Lorem ipsum sit amet</Paragraph>
-        <Paragraph class="Paragraph2 col-xs-12 "
-          >Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+  <div class="conteiner row">
+    <h1 class="cx-1 col-xs-12">Lorem ipsum sit amet orem ipsum sit amet’</h1>
+    <div class="cx-2 row">
+      <div class="cx-3 col-xs-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="cx-4"><img src="../assets/proccess.png" /></div>
+        <p class="pr-1">Lorem ipsum sit amet</p>
+        <p class="pr-2">
+          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
           nulla pariatur. Excepteur sint occaecat cupidatat, dolore eu fugiat nulla pariatur.
-          Excepteur sint occaecat cupidatat</Paragraph
-        >
-      </Wrapper>
-      <Wrapper class="cx-2 col-xs">
-        <Wrapper class="cx-3"><img src=""/></Wrapper>
-        <Paragraph class="Paragraph1 col-xs-12 ">Lorem ipsum sit amet</Paragraph>
-        <Paragraph class="Paragraph2 col-xs-12 "
-          >Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+          Excepteur sint occaecat cupidatat
+        </p>
+      </div>
+      <div class="cx-3 col-xs-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="cx-4"><img src="../assets/proccess.png" /></div>
+        <p class="pr-1">Lorem ipsum sit amet</p>
+        <p class="pr-2">
+          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
           nulla pariatur. Excepteur sint occaecat cupidatat, dolore eu fugiat nulla pariatur.
-          Excepteur sint occaecat cupidatat</Paragraph
-        >
-      </Wrapper>
-      <Wrapper class="cx-2 col-xs">
-        <Wrapper class="cx-3"><img src=""/></Wrapper>
-        <Paragraph class="Paragraph1 col-xs-12 ">Lorem ipsum sit amet</Paragraph>
-        <Paragraph class="Paragraph2 col-xs-12 "
-          >Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+          Excepteur sint occaecat cupidatat
+        </p>
+      </div>
+      <div class="cx-3 col-xs-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="cx-4"><img src="../assets/proccess.png" /></div>
+        <p class="pr-1">Lorem ipsum sit amet</p>
+        <p class="pr-2">
+          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
           nulla pariatur. Excepteur sint occaecat cupidatat, dolore eu fugiat nulla pariatur.
-          Excepteur sint occaecat cupidatat</Paragraph
-        >
-      </Wrapper>
-    </Wrapper>
-  </Wrapper>
+          Excepteur sint occaecat cupidatat
+        </p>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -59,74 +59,46 @@ export default {
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 .conteiner {
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  margin-bottom: 100px;
 }
-.cx-1 {
+h1 {
   color: $color-primary-60;
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 80px;
+  margin-top: 50px;
 }
 .cx-2 {
-  padding-top: 0px;
-  margin-left: 12px;
-  margin-right: 12px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 90%;
 }
 .cx-3 {
-  background: rgba(0, 0, 0, 0.678);
-  text-align: center;
-  width: 40px;
-  height: 40px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 20px;
-  border-radius: 80px;
+  padding: 0px 20px 0px 30px;
+  width: 90%;
 }
-.Paragraph1 {
-  font-size: $size-l;
+.cx-3 .pr-1 {
   text-align: left;
-  padding: 0px;
-  width: 86%;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 10px;
+  margin: 0px;
+  padding: 0px 0px 0px 10px;
   color: $color-primary-50;
+  font-size: 24px;
 }
-.Paragraph2 {
-  font-size: $size-l - 5;
+.cx-3 .pr-2 {
   text-align: left;
-  padding: 0px;
-  width: 86%;
+  margin: 0px;
+  padding: 10px 0px 100px 10px;
+  color: $color-primary-40;
+  font-size: 18px;
+}
+.cx-4 {
+  width: 100px;
+  height: 100px;
+  border-radius: 100px;
+  margin-bottom: 20px;
   margin-left: auto;
   margin-right: auto;
-  color: $color-primary-40;
-}
-@media screen and(max-width: 1024px) {
-  .conteiner {
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .cx-1 {
-    color: $color-primary-60;
-    font-size: $size-l + 4;
-  }
-  .Paragraph1 {
-    font-size: $size-m + 5;
-    text-align: left;
-    padding: 0px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 10px;
-    color: $color-primary-50;
-  }
-  .Paragraph2 {
-    font-size: $size-m;
-    text-align: left;
-    padding: 0px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    color: $color-primary-40;
-  }
 }
 </style>
 
