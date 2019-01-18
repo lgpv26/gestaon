@@ -9,6 +9,12 @@
       ]"
     />
     <TopBanner />
+    <Proccess />
+    <Advantages />
+    <Features />
+    <Reviews />
+    <Plans />
+    <Footer />
   </component>
 </template>
 

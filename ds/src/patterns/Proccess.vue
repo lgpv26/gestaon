@@ -3,31 +3,31 @@
     <h1 class="cx-1 col-xs-12">Lorem ipsum sit amet orem ipsum sit amet’</h1>
     <div class="cx-2 row">
       <div class="cx-3 col-xs-12 col-sm-8 col-md-6 col-lg-4">
-        <div class="cx-4"><img src="../assets/proccess.png" /></div>
-        <p class="pr-1">Lorem ipsum sit amet</p>
-        <p class="pr-2">
+        <div class="cx-4"><img src="../assets/proccess.BG.png" /></div>
+        <h2 class="pr-1">Lorem ipsum sit amet</h2>
+        <h3 class="pr-2">
           Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
           nulla pariatur. Excepteur sint occaecat cupidatat, dolore eu fugiat nulla pariatur.
           Excepteur sint occaecat cupidatat
-        </p>
+        </h3>
       </div>
       <div class="cx-3 col-xs-12 col-sm-8 col-md-6 col-lg-4">
-        <div class="cx-4"><img src="../assets/proccess.png" /></div>
-        <p class="pr-1">Lorem ipsum sit amet</p>
-        <p class="pr-2">
+        <div class="cx-4"><img src="../assets/proccess.BG.png" /></div>
+        <h2 class="pr-1">Lorem ipsum sit amet</h2>
+        <h3 class="pr-2">
           Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
           nulla pariatur. Excepteur sint occaecat cupidatat, dolore eu fugiat nulla pariatur.
           Excepteur sint occaecat cupidatat
-        </p>
+        </h3>
       </div>
       <div class="cx-3 col-xs-12 col-sm-8 col-md-6 col-lg-4">
-        <div class="cx-4"><img src="../assets/proccess.png" /></div>
-        <p class="pr-1">Lorem ipsum sit amet</p>
-        <p class="pr-2">
+        <div class="cx-4"><img src="../assets/proccess.BG.png" /></div>
+        <h2 class="pr-1">Lorem ipsum sit amet</h2>
+        <h3 class="pr-2">
           Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
           nulla pariatur. Excepteur sint occaecat cupidatat, dolore eu fugiat nulla pariatur.
           Excepteur sint occaecat cupidatat
-        </p>
+        </h3>
       </div>
     </div>
   </div>
@@ -75,21 +75,21 @@ h1 {
   width: 90%;
 }
 .cx-3 {
-  padding: 0px 20px 0px 30px;
+  padding: 0px 30px 0px 40px;
   width: 90%;
 }
 .cx-3 .pr-1 {
   text-align: left;
   margin: 0px;
   padding: 0px 0px 0px 10px;
-  color: $color-primary-50;
+  color: $color-primary-60;
   font-size: 24px;
 }
 .cx-3 .pr-2 {
   text-align: left;
   margin: 0px;
   padding: 10px 0px 100px 10px;
-  color: $color-primary-40;
+  color: $color-primary-50;
   font-size: 18px;
 }
 .cx-4 {

@@ -3,13 +3,13 @@
     <h1 class="col-xs-12">Lorem ipsum sit amet arem ipsum sit amet'</h1>
     <div class="col-xs-12 col-sm-8 col-md-6 col-lg-6 cx-1">
       <div class="start-xs ">
-        <p class="p1">Lorem ipsum dolor sit amet, consectetur adipiscing.</p>
+        <h2 class="p1">Lorem ipsum dolor sit amet, consectetur adipiscing.</h2>
       </div>
       <div class="start-xs ">
-        <p class="p2">
+        <h3 class="p2">
           Duis aute irure dolor in reprehenderit<br />in voluptate velit esse cillum dolore eu<br />fugiat
           nulla pariatur. Excepteur sint<br />accaecat cupidatat
-        </p>
+        </h3>
       </div>
       <div class="start-xs"><button>Explorar Recursos</button></div>
     </div>
@@ -48,10 +48,10 @@ export default {
   margin: 20px 0px 50px 0px;
 }
 .cx-1 {
-  padding: 40px;
+  padding: 50px 0px 0px 60px;
 }
 .cx-2 {
-  padding: 30px;
+  padding: 0px 30px 0px 30px;
 }
 h1 {
   text-align: center;
@@ -61,16 +61,16 @@ h1 {
 .p1 {
   margin: 0px 0px 0px 30px;
   padding: 0px;
-  font-size: 26px;
+  font-size: 24px;
   text-align: left;
-  color: $color-primary-40;
+  color: $color-primary-50;
 }
 .p2 {
   margin: 10px 0px 0px 30px;
   padding: 0px;
-  font-size: 32px;
+  font-size: 28px;
   text-align: left;
-  color: $color-primary-50;
+  color: $color-primary-60;
 }
 button {
   margin: 20px 0px 0px 30px;
@@ -90,7 +90,7 @@ button:hover {
 }
 img {
   width: 80%;
-  height: 80%;
+  height: 90%;
   border-radius: 10px;
 }
 </style>

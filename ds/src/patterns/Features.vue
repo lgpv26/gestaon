@@ -1,37 +1,92 @@
 <template>
-  <Wrapper class="row">
-    <Heading level="h3" class="color1 col-xs-12">Lorem ipsum sit amet orem ipsum sit amet’</Heading>
-    <Wrapper class="color2 col-xs"> <Heading level="h5">Recurso 1</Heading> </Wrapper>
-    <Wrapper class="color3 col-xs"> <Heading level="h5">Recurso 2</Heading> </Wrapper>
-    <Wrapper class="color4 col-xs"> <Heading level="h5">Recurso 3</Heading> </Wrapper>
-    <Wrapper class="color5 col-xs"> <Heading level="h5">Recurso 4</Heading> </Wrapper>
-    <Wrapper class="row">
-      <Wrapper class="color6 col-xs"></Wrapper>
-      <Wrapper class="color7 col-xs">
-        <Wrapper class="color1 row">
-          <Wrapper class="color6 col-xs"></Wrapper>
-          <Wrapper class="color4 col-xs"></Wrapper>
-        </Wrapper>
-        <Wrapper class="color2 row">
-          <Wrapper class="color4 col-xs"></Wrapper>
-          <Wrapper class="color6 col-xs"></Wrapper>
-        </Wrapper>
-      </Wrapper>
-    </Wrapper>
-  </Wrapper>
+  <div class="bloco">
+    <div class="row">
+      <h1 class="head-1 row center-xs col-xs-12">Lorem ipsum sit amet orem ipsum sit amet’</h1>
+    </div>
+    <div class="cx-1 row col-xs-12">
+      <div class="cx-2 col-xs">
+        <a class="a1" href="#"><h5>Recurso 1</h5></a>
+      </div>
+      <div class="cx-2 col-xs ">
+        <a class="a1" href="#"><h5>Recurso 2</h5></a>
+      </div>
+      <div class="cx-2 col-xs">
+        <a class="a1" href="#"><h5>Recurso 3</h5></a>
+      </div>
+      <div class="cx-2 col-xs">
+        <a class="a1" href="#"><h5>Recurso 4</h5></a>
+      </div>
+      <div class="cx-2 col-xs">
+        <a class="a1" href="#"><h5>Recurso 5</h5></a>
+      </div>
+    </div>
+    <div class=" cx-3 row col-xs">
+      <div class="col-xs"><img class="img1" src="../assets/sem.imagens.png" /></div>
+      <div class=" col-xs">
+        <div class="cx-4 row">
+          <div class="row col-xs">
+            <div class="row">
+              <div class="start-xs"><img src="../assets/proccess.png" /></div>
+              <h2>Lorem ipsum sit amet</h2>
+            </div>
+            <h3>
+              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+              nulla pariatur.
+            </h3>
+          </div>
+          <div class="row col-xs">
+            <div class="row">
+              <div class="start-xs"><img src="../assets/proccess.png" /></div>
+              <h2>Lorem ipsum sit amet</h2>
+            </div>
+            <h3>
+              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+              nulla pariatur.
+            </h3>
+          </div>
+        </div>
+
+        <div class="cx-4 row">
+          <div class="row col-xs">
+            <div class="row">
+              <div class="start-xs"><img src="../assets/proccess.png" /></div>
+              <h2>Lorem ipsum sit amet</h2>
+            </div>
+            <h3>
+              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+              nulla pariatur.
+            </h3>
+          </div>
+          <div class="row col-xs">
+            <div class="row">
+              <div class="start-xs"><img src="../assets/proccess.png" /></div>
+              <h2>Lorem ipsum sit amet</h2>
+            </div>
+            <h3>
+              Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+              nulla pariatur.
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 export default {
   name: "Features",
-  status: "ready",
+  status: "deprecated",
   release: "1.0.0",
-  model: {
-    prop: "active",
+  metaInfo: {
+    title: "Primeiro frame",
+    htmlAttrs: {
+      lang: "en",
+    },
   },
   props: {
     /**
-     * The html element name used for the nav bar.
+     * The html element name used for the component.
      */
     type: {
       type: String,
@@ -41,42 +96,57 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
-.color1 {
-  background: red;
-  padding: 0px;
-  margin: 0px;
+.bloco {
+  margin-bottom: 100px;
 }
-.color2 {
-  background: rgb(94, 255, 0);
-  padding: 0px;
-  margin: 0px;
+.head-1 {
+  text-align: center;
+  color: $color-primary-50;
+  font-size: 36px;
 }
-.color3 {
-  background: rgb(14, 173, 152);
-  padding: 0px;
-  margin: 0px;
+.cx-1 {
+  margin: 20px 0px 40px 0px;
+  padding: 0px 80px 0px 80px;
 }
-.color4 {
-  background: rgb(178, 223, 158);
-  padding: 0px;
+.cx-2 {
+  background: $color-base-50;
   margin: 0px;
+  padding: 0px;
 }
-.color5 {
-  background: rgb(255, 238, 0);
-  padding: 0px;
-  margin: 0px;
+.cx-2 h5 {
+  color: $color-white;
+  margin: 0px 0px 0px 0px;
+  padding: 20px 0px 20px 0px;
 }
-.color6 {
-  background: rgb(255, 166, 0);
-  padding: 0px;
-  margin: 0px;
+.cx-2 a {
+  text-decoration: none;
+  text-align: center;
 }
-.color7 {
-  background: rgb(68, 0, 255);
-  padding: 0px;
+h5:hover {
+  background: $color-primary-60;
+}
+.cx-3 {
   margin: 0px;
+  padding: 0px 80px 0px 20px;
+}
+.cx-4 {
+  margin: 0px;
+  padding: 30px 0px 0px 40px;
+}
+.cx-4 h2 {
+  margin: 0px;
+  padding: 0px 0px 0px 10px;
+  font-size: 24px;
+  color: $color-primary-60;
+}
+.cx-4 h3 {
+  margin: 0px;
+  padding: 0px;
+  text-align: left;
+  font-size: 22px;
+  color: $color-primary-50;
 }
 </style>
 
