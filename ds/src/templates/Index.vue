@@ -1,15 +1,17 @@
 <template>
   <component :is="type" class="index">
-    <!--<NavBar
+    <NavBar
       active="Index"
       :navItems="[
         { name: 'Home', component: 'Index', href: '/#/' },
         { name: 'Recursos', href: 'http://localhost:6060/' },
         { name: 'Duvidas', href: '/#/' },
       ]"
-    />-->
+    />
     <TopBanner />
     <Proccess />
+    <Reviews />
+    <Advantages />
     <Features />
     <Plans />
     <Footer />
