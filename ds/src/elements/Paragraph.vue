@@ -1,7 +1,8 @@
 <template>
-  <component :is="type" :class="['paragraph', variation]"> <slot /> </component>
+  <component :is="type" class="paragraph" :style="{ 'text-align': textAlign }">
+    <slot />
+  </component>
 </template>
-
 <script>
 export default {
   name: "Paragraph",
@@ -28,6 +29,13 @@ export default {
       default: "medium",
       validator: value => {
         return value.match(/(medium|intro|large|small)/)
+      },
+    },
+    textAlign: {
+      type: String,
+      default: "left",
+      validator: value => {
+        return value.match(/(left|justify|center|right)/)
       },
     },
   },

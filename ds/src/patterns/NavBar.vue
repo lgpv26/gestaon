@@ -1,12 +1,57 @@
 <template>
-  <component :is="type" class="nav">
-    <a
-      v-for="(item, index) in navItems"
-      :key="index"
-      :href="item.href"
-      :class="{ active: localActive === item.component }"
-      v-html="item.name"
-    />
+  <component :is="type" class="header">
+    <div class="row">
+      <div
+        class="   row start-xs
+                  center-xs
+                  center-md
+                  center-sm
+                  start-lg
+                  col-xs-12
+                  col-sm-12
+                  col-md-12
+                  col-lg-6"
+      >
+        <div class="box"><img :src="logo" class="logo" /></div>
+      </div>
+      <div
+        class="center-xs
+                  center-md
+                  center-sm
+                  end-lg
+                  col-xs-12
+                  col-sm-12
+                  col-md-12
+                  col-lg-4"
+      >
+        <div class="box">
+          <nav class="nav">
+            <a
+              v-for="(item, index) in navItems"
+              :key="index"
+              :href="item.href"
+              :class="[{ active: localActive === item.component }, item.class]"
+              v-html="item.name"
+            />
+          </nav>
+        </div>
+      </div>
+      <div
+        class="center-xs
+                  center-md
+                  center-sm
+                  end-lg
+                  col-xs-12
+                  col-sm-12
+                  col-md-12
+                  col-lg-2"
+        style="display: flex;"
+      >
+        <div style="width: 100%; display: flex; align-items: center;">
+          <Button variation="accent" size="small" style="width: 100%;">Demonstração</Button>
+        </div>
+      </div>
+    </div>
   </component>
 </template>
 
@@ -27,7 +72,7 @@ export default {
      */
     type: {
       type: String,
-      default: "nav",
+      default: "div",
     },
     /**
      * State which tab is active when initiated (using name of the component).
@@ -44,6 +89,11 @@ export default {
       type: Array,
     },
   },
+  data() {
+    return {
+      logo: require("../assets/logo.png"),
+    }
+  },
   computed: {
     localActive: {
       get() {
@@ -58,6 +108,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 // Design Tokens with local scope
 $color-nav-link: $color-primary;
 $color-nav-link-active: $color-primary;
@@ -68,8 +119,8 @@ $color-nav-link-active: $color-primary;
   font-size: $size-s;
   line-height: $line-height-m;
   color: $color-white;
-  text-align: center;
   width: 100%;
+  margin-bottom: 0;
   @media #{$media-query-l} {
     // This is how you’d use design tokens with media queries
   }
@@ -83,21 +134,41 @@ $color-nav-link-active: $color-primary;
       color: $color-nav-link-active;
     }
     &.active {
-      border-bottom: 2px solid $color-primary;
       font-weight: $weight-bold;
       color: $color-primary;
     }
   }
+  .home {
+    color: #58bfc6;
+  }
+  .resource {
+    color: #276e73;
+  }
+  .questions {
+    color: #276e73;
+  }
+}
+a {
+  margin-left: 24px;
+  text-decoration: none;
+  color: $color-primary-40;
+}
+a:hover {
+  color: $color-primary-60;
+}
+.button1 {
+  width: 150px;
+  height: 45px;
+  font-size: 18px;
 }
 </style>
 
 <docs>
   ```jsx
-  <NavBar active="Dashboard" :navItems="[
-    {name: 'Dashboard', component: 'Dashboard', href: '/example/'},
-    {name: 'Posts', component: 'Posts', href: '/example/'},
-    {name: 'Users', component: 'Users', href: '/example/'},
-    {name: 'Settings', component: 'Settings', href: '/example/'}
+  <NavBar active="Home" :navItems="[
+    {name: 'Home', component: 'Home', href: '/example/', class: 'home'},
+    {name: 'Recursos', component: 'Recursos', href: '/example/', class: 'resource'},
+    {name: 'Dúvidas', component: 'Dúvidas', href: '/example/', class: 'questions'},
   ]"/>
   ```
 </docs>

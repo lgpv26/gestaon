@@ -169,9 +169,6 @@ export default {
     &:focus {
       outline: 0;
     }
-    .user-is-tabbing &:focus,
-    &.focus {
-    }
   }
 
   // Accent button
@@ -192,12 +189,7 @@ export default {
     &:focus {
       outline: 0;
     }
-    .user-is-tabbing &:focus,
-    &.focus {
-    }
   }
-
-
 }
 </style>
 
@@ -208,6 +200,7 @@ export default {
     <Button variation="accent" size="large">Accent Button</Button>
     <Button variation="primary" size="medium">Medium</Button>
     <Button variation="primary" size="small">Small</Button>
+    <Button variation="accent" size="small">Small</Button>
     <br />
     <Button>Default Button</Button>
     <Button state="hover">:hover</Button>
