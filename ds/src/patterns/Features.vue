@@ -99,7 +99,10 @@ export default {
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 .bloco {
-  margin-bottom: 100px;
+  max-width: 1200px;
+  padding: 40px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .head-1 {
   text-align: center;
@@ -108,7 +111,7 @@ export default {
 }
 .cx-1 {
   margin: 20px 0px 40px 0px;
-  padding: 0px 80px 0px 80px;
+  padding: 0px 40px 0px 40px;
 }
 .cx-2 {
   background: $color-base-50;
@@ -129,11 +132,11 @@ h5:hover {
 }
 .cx-3 {
   margin: 0px;
-  padding: 0px 80px 0px 20px;
+  padding: 0px 40px 0px 0px;
 }
 .cx-4 {
   margin: 0px;
-  padding: 30px 0px 0px 40px;
+  padding: 30px 0px 10px 0px;
 }
 .cx-4 h2 {
   margin: 0px;

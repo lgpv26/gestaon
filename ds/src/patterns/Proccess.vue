@@ -61,6 +61,10 @@ export default {
 .conteiner {
   width: 100%;
   margin-bottom: 100px;
+  max-width: 1200px;
+  padding: 40px;
+  margin-left: auto;
+  margin-right: auto;
 }
 h1 {
   color: $color-primary-60;

@@ -45,13 +45,16 @@ export default {
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 .banner {
-  margin: 20px 0px 50px 0px;
+  max-width: 1200px;
+  padding: 40px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .cx-1 {
-  padding: 50px 0px 0px 60px;
+  padding: 30px 0px 0px 60px;
 }
 .cx-2 {
-  padding: 0px 30px 0px 30px;
+  padding: 0px 0px 0px 0px;
 }
 h1 {
   text-align: center;

@@ -1,8 +1,8 @@
 <template>
-  <div class="row">
-    <div class="row center-xs">
+  <div class="conteiner row">
+    <div class=" row center-xs">
       <h2 class="cx-1 col-xs-12">Nossos Planos</h2>
-      <h3 class="cx-2 col-xs-7 ">
+      <h3 class="cx-2 col-xs-8">
         We believe we have created the most efficient SaaS landing page for your users Landing page
         with features that will convince you to use it for your SaaS business
       </h3>
@@ -13,6 +13,7 @@
         <input class="I2" type="button" value="Anual" />
       </div>
     </div>
+    <!-- Mensal -->
     <div class="bloco row col-xs-12">
       <div class="cx-4 col-xs">
         <div class="row center-xs">
@@ -40,7 +41,49 @@
         <h3 class="Paragraph2">SaaS landing page</h3>
         <div class="row center-xs"><button class="bt b2">Assinar</button></div>
       </div>
-      <div class="cx-4 col-xs ">
+      <div class="cx-4 col-xs">
+        <div class="row center-xs">
+          <a href="#"> <h2 class="Heading1">ENTERPRISE</h2> </a>
+        </div>
+        <div class="precos"><img class="img3" src="../assets/Group (2).png" /></div>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <div class="row center-xs"><button class="bt b3">Assinar</button></div>
+      </div>
+    </div>
+    <!-- Anual -->
+    <div class="bloco2 row col-xs-12">
+      <div class="cx-4 col-xs">
+        <div class="row center-xs">
+          <a href="#"> <h2 class="Heading1">ESSENCIAL</h2> </a>
+        </div>
+        <div class="precos"><img class="img1" src="../assets/Group.png" /></div>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <div class="row center-xs"><button class="bt b1">Assinar</button></div>
+      </div>
+      <div class="cx-4 col-xs">
+        <div class="row center-xs">
+          <a href="#"> <h2 class="Heading1">PROFESSIONAL</h2> </a>
+        </div>
+        <div class="precos"><img class="img2" src="../assets/Group (1).png" /></div>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2">SaaS landing page</h3>
+        <div class="row center-xs"><button class="bt b2">Assinar</button></div>
+      </div>
+      <div class="cx-4 col-xs">
         <div class="row center-xs">
           <a href="#"> <h2 class="Heading1">ENTERPRISE</h2> </a>
         </div>
@@ -73,12 +116,22 @@ export default {
       type: String,
       default: "div",
     },
+    data: {
+      anual: false,
+      mensal: false,
+    },
   },
 }
 </script>
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+.conteiner {
+  max-width: 1200px;
+  padding: 40px;
+  margin-left: auto;
+  margin-right: auto;
+}
 .cx-1 {
   color: $color-primary-60;
   font-size: 36px;
@@ -88,7 +141,7 @@ export default {
 .cx-2 {
   color: $color-primary-50;
   text-align: left;
-  font-size: 22px;
+  font-size: 21px;
   margin: 20px 0px 20px 0px;
   padding: 0px;
 }
@@ -111,17 +164,23 @@ input[type="button"]:hover {
   color: $color-white;
 }
 .I1 {
-  margin-right: -15px;
+  margin-right: -14px;
   height: 35px;
   position: relative;
 }
 .I2 {
-  margin-left: -15px;
+  margin-left: -14px;
   height: 35px;
 }
 .bloco {
   padding: 0px 80px 0px 80px;
+  display: flex;
 }
+.bloco2 {
+  padding: 0px 80px 0px 80px;
+  display: none;
+}
+
 .cx-4 {
   background: #e5e5e5;
   margin: 0px 10px 40px 10px;
