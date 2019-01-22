@@ -713,24 +713,23 @@ export default {
         .where("id", this.request.id)
         .withAllRecursive(5)
         .first();
-      console.log("Request", request);
-      /*this.addToQueue({
-                    type: 'request',
-                    op: 'create',
-                    data: this.utils.removeReactivity(request)
-                })
-                this.$store.dispatch('entities/windows/update', {
-                    where: this.request.card.windowId,
-                    data: {
-                        show: false
-                    }
-                })
-                this.$store.dispatch('entities/requests/update',{
-                    where: this.request.id,
-                    data: {
-                        status: 'processing'
-                    }
-                })*/
+      this.addToQueue({
+        type: "request",
+        op: "create",
+        data: this.utils.removeReactivity(request)
+      });
+      this.$store.dispatch("entities/windows/update", {
+        where: this.request.card.windowId,
+        data: {
+          show: false
+        }
+      });
+      this.$store.dispatch("entities/requests/update", {
+        where: this.request.id,
+        data: {
+          status: "processing"
+        }
+      });
     },
 
     /* Client */
