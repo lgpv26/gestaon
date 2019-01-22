@@ -95,6 +95,7 @@ export default {
     <Icon name="deprecated" fill="rgb(235,59,36)" />
     <Icon name="prototype" fill="rgb(37,138,239)" />
     <Icon name="ic-dashboard" fill="rgb(37,138,239)" />
+    <Icon name="Vector"  />
   </div>
   ```
 </docs>

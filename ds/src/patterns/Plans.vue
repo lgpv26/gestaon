@@ -9,90 +9,70 @@
     </div>
     <div class="row center-xs col-xs-12">
       <div class="cx-3">
-        <input class="I1" type="button" value="Mensal" />
-        <input class="I2" type="button" value="Anual" />
+        <button class="I1" @click="type = 'monthly'">Mensal</button>
+        <button class="I2" @click="type = 'yearly'">Anual</button>
       </div>
     </div>
-    <!-- Mensal -->
     <div class="bloco row col-xs-12">
       <div class="cx-4 col-xs">
         <div class="row center-xs">
           <a href="#"> <h2 class="Heading1">ESSENCIAL</h2> </a>
         </div>
-        <div class="precos"><img class="img1" src="../assets/Group.png" /></div>
+        <div class="precos" v-if="type === 'monthly'">
+          <img class="img1" src="../assets/Group.png" />
+        </div>
+        <div class="precos" v-else>anual</div>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2" style="text-decoration: line-through;">SaaS landing page</h3>
+        <h3 class="Paragraph2" style="text-decoration: line-through;">SaaS landing page</h3>
+        <h3 class="Paragraph2" style="text-decoration: line-through;">SaaS landing page</h3>
         <div class="row center-xs"><button class="bt b1">Assinar</button></div>
       </div>
       <div class="cx-4 col-xs">
         <div class="row center-xs">
           <a href="#"> <h2 class="Heading1">PROFESSIONAL</h2> </a>
         </div>
-        <div class="precos"><img class="img2" src="../assets/Group (1).png" /></div>
+        <div class="precos" v-if="type === 'monthly'">
+          <img class="img2" src="../assets/Group (1).png" />
+        </div>
+        <div class="precos" v-else>anual</div>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
+        <h3 class="Paragraph2" style="text-decoration: line-through;">SaaS landing page</h3>
         <div class="row center-xs"><button class="bt b2">Assinar</button></div>
       </div>
       <div class="cx-4 col-xs">
         <div class="row center-xs">
           <a href="#"> <h2 class="Heading1">ENTERPRISE</h2> </a>
         </div>
-        <div class="precos"><img class="img3" src="../assets/Group (2).png" /></div>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <div class="row center-xs"><button class="bt b3">Assinar</button></div>
-      </div>
-    </div>
-    <!-- Anual -->
-    <div class="bloco2 row col-xs-12">
-      <div class="cx-4 col-xs">
-        <div class="row center-xs">
-          <a href="#"> <h2 class="Heading1">ESSENCIAL</h2> </a>
+        <div class="precos" v-if="type === 'monthly'">
+          <img class="img3" src="../assets/Group (2).png" />
         </div>
-        <div class="precos"><img class="img1" src="../assets/Group.png" /></div>
+        <div class="precos" v-else>anual</div>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <div class="row center-xs"><button class="bt b1">Assinar</button></div>
-      </div>
-      <div class="cx-4 col-xs">
-        <div class="row center-xs">
-          <a href="#"> <h2 class="Heading1">PROFESSIONAL</h2> </a>
-        </div>
-        <div class="precos"><img class="img2" src="../assets/Group (1).png" /></div>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <div class="row center-xs"><button class="bt b2">Assinar</button></div>
-      </div>
-      <div class="cx-4 col-xs">
-        <div class="row center-xs">
-          <a href="#"> <h2 class="Heading1">ENTERPRISE</h2> </a>
-        </div>
-        <div class="precos"><img class="img3" src="../assets/Group (2).png" /></div>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <h3 class="Paragraph2">SaaS landing page</h3>
+        <Icon size="small" name="Vector" class="icon" />
         <h3 class="Paragraph2">SaaS landing page</h3>
         <div class="row center-xs"><button class="bt b3">Assinar</button></div>
       </div>
@@ -108,6 +88,11 @@ export default {
   model: {
     prop: "active",
   },
+  data() {
+    return {
+      type: "monthly",
+    }
+  },
   props: {
     /**
      * The html element name used for the nav bar.
@@ -115,10 +100,6 @@ export default {
     type: {
       type: String,
       default: "div",
-    },
-    data: {
-      anual: false,
-      mensal: false,
     },
   },
 }
@@ -132,6 +113,7 @@ export default {
   margin-left: auto;
   margin-right: auto;
 }
+// caixas da pagina
 .cx-1 {
   color: $color-primary-60;
   font-size: 36px;
@@ -150,7 +132,14 @@ export default {
   padding: 10px;
   margin: 0px 0px 30px 0px;
 }
-.cx-3 input[type="button"] {
+.cx-4 {
+  background: #e5e5e5;
+  margin: 0px 10px 40px 10px;
+  border: 0px;
+  border-radius: 10px;
+}
+// componentes da caixa
+.cx-3 button {
   width: 10%;
   border: 0px;
   border-radius: 40px;
@@ -159,9 +148,16 @@ export default {
   cursor: pointer;
   font-size: 24px;
 }
-input[type="button"]:hover {
+.cx-3 button:hover {
   background: $color-accent-3;
   color: $color-white;
+}
+.cx-4:hover {
+  background: #a4eff5;
+  .bt {
+    border: 2px solid #276e73;
+    color: #276e73;
+  }
 }
 .I1 {
   margin-right: -14px;
@@ -170,29 +166,12 @@ input[type="button"]:hover {
 }
 .I2 {
   margin-left: -14px;
+  padding-right: 0px;
   height: 35px;
 }
 .bloco {
   padding: 0px 80px 0px 80px;
   display: flex;
-}
-.bloco2 {
-  padding: 0px 80px 0px 80px;
-  display: none;
-}
-
-.cx-4 {
-  background: #e5e5e5;
-  margin: 0px 10px 40px 10px;
-  border: 0px;
-  border-radius: 10px;
-}
-.cx-4:hover {
-  background: #a4eff5;
-  .bt {
-    border: 2px solid #276e73;
-    color: #276e73;
-  }
 }
 .Paragraph2 {
   padding: 0px;
@@ -241,6 +220,11 @@ a {
 .bt:hover {
   width: 51%;
   height: 42px;
+}
+.icon {
+  padding: 0px 0px 0px 30px;
+  margin: 0px -100px 0px 15px;
+  float: left;
 }
 </style>
 

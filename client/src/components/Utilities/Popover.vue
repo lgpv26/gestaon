@@ -36,7 +36,7 @@
       ref="triggerer"
       :style="[triggererDefaultStyle, triggererStyle]"
       class="popover-triggerer"
-      @mousedown="onTriggererClick()"
+      @mousedown="onTriggererClick($event)"
       @mouseover="onMouseOver($event)"
       @mouseleave="onMouseLeave($event)"
     >
@@ -146,7 +146,7 @@ export default {
         }, 1000);
       }
     },
-    onTriggererClick() {
+    onTriggererClick(ev) {
       const contents = document.querySelectorAll("div.popover-content");
       _.forEach(contents, content => {
         if (content === this.$refs.content) {
@@ -156,6 +156,7 @@ export default {
         }
       });
       this.openPopover();
+      ev.stopImmediatePropagation();
     },
     onBodyClick(ev) {
       // verify if the user is not clicking the triggerer with the popup opened

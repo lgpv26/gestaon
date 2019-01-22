@@ -3,23 +3,23 @@
     <div class="row">
       <h1 class="head-1 row center-xs col-xs-12">Lorem ipsum sit amet orem ipsum sit amet’</h1>
     </div>
-    <div class="cx-1 row col-xs-12">
-      <div class="cx-2 col-xs">
-        <a class="a1" href="#"><h5>Recurso 1</h5></a>
-      </div>
-      <div class="cx-2 col-xs ">
-        <a class="a1" href="#"><h5>Recurso 2</h5></a>
-      </div>
-      <div class="cx-2 col-xs">
-        <a class="a1" href="#"><h5>Recurso 3</h5></a>
-      </div>
-      <div class="cx-2 col-xs">
-        <a class="a1" href="#"><h5>Recurso 4</h5></a>
-      </div>
-      <div class="cx-2 col-xs">
-        <a class="a1" href="#"><h5>Recurso 5</h5></a>
-      </div>
-    </div>
+    <ul class="cx-1 row col-xs-12">
+      <li class="cx-2 col-xs">
+        <a class="a1 active" href="#"><h5>Recurso 1</h5></a>
+      </li>
+      <li class="cx-2 col-xs ">
+        <a class="a1 active" href="#"><h5>Recurso 2</h5></a>
+      </li>
+      <li class="cx-2 col-xs">
+        <a class="a1 active" href="#"><h5>Recurso 3</h5></a>
+      </li>
+      <li class="cx-2 col-xs">
+        <a class="a1 active" href="#"><h5>Recurso 4</h5></a>
+      </li>
+      <li class="cx-2 col-xs">
+        <a class="a1 active" href="#"><h5>Recurso 5</h5></a>
+      </li>
+    </ul>
     <div class=" cx-3 row col-xs">
       <div class="col-xs"><img class="img1" src="../assets/sem.imagens.png" /></div>
       <div class=" col-xs">
@@ -123,9 +123,17 @@ export default {
   margin: 0px 0px 0px 0px;
   padding: 20px 0px 20px 0px;
 }
-.cx-2 a {
+li {
+  list-style: none;
+}
+a {
   text-decoration: none;
   text-align: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+li.active {
+  background: $color-primary-60;
 }
 h5:hover {
   background: $color-primary-60;

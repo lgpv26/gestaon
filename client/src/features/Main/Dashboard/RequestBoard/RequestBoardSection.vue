@@ -13,13 +13,13 @@
         <span class="push-both-sides"></span>
         <ul style="display: flex; flex-direction: row">
           <li
-            @click="collapseSection(section)"
+            @click="collapseSection(section.id)"
             style="width: 21px; height: 16px;"
           >
             <icon-section-collapse></icon-section-collapse>
           </li>
           <li
-            @click="expandSection(section)"
+            @click="expandSection(section.id)"
             style="width: 21px; height: 16px;"
           >
             <icon-section-expand></icon-section-expand>
@@ -64,7 +64,7 @@
               'margin-top': options.gutterSize + 'px',
               'margin-right': options.gutterSize + 'px'
             }"
-            @click.stop="cardClick(request.card, request, $event)"
+            @click="cardClick(request.card, request, $event)"
           >
             <app-request-board-card
               class="request-card__main"
@@ -79,7 +79,7 @@
 </template>
 
 <script>
-import { mapMutations, mapState, mapGetters } from "vuex";
+import { mapMutations, mapState, mapGetters, mapActions } from "vuex";
 import DraggableComponent from "vuedraggable";
 import _ from "lodash";
 import shortid from "shortid";
@@ -130,13 +130,14 @@ export default {
     ...mapState(["mainContentArea"]),
     ...mapState("auth", ["user", "tokens", "company"]),
     ...mapState("morph-screen", { isShowingMorphScreen: "isShowing" }),
-    ...mapState("request-board", ["sections"]),
+    ...mapState("request-board", ["sections", "filters"]),
     ...mapGetters("request-board", []),
     sectionWidth() {
+      const size = _.get(this.sections, `${this.section.id}.size`, 1);
       return (
         this.options.gutterSize +
-        (this.section.size * this.options.columnWidth +
-          (this.section.size + 1) * this.options.gutterSize) +
+        (size * this.options.columnWidth +
+          (size + 1) * this.options.gutterSize) +
         "px"
       );
     },
@@ -150,25 +151,8 @@ export default {
     },
     sectionRequests() {
       switch (this.section.id) {
-        case "drafts":
-          return Request.query()
-            .where("status", "draft")
-            .orWhere("status", "processing")
-            .with("card")
-            .with("client|client.clientAddresses.address")
-            .with(
-              "requestClientAddresses|requestClientAddresses.clientAddress.address"
-            )
-            .with("requestUIState")
-            .with("requestOrder.requestOrderProducts.product")
-            .with("requestPayments.paymentMethod")
-            .get();
         case "requests":
           return Request.query()
-            .where("status", "pending")
-            .orWhere("status", "finished")
-            .orWhere("status", "in-displacement")
-            .orWhere("status", "canceled")
             .with("card")
             .with("client|client.clientAddresses.address")
             .with(
@@ -185,20 +169,30 @@ export default {
   },
   methods: {
     ...mapMutations("morph-screen", []),
-    ...mapMutations("request-board", []),
-    cardClick(card, request) {
-      this.$store.dispatch("entities/windows/update", {
-        where: card.windowId,
-        data: {
-          show: true
+    ...mapActions("request-board", ["expandSection", "collapseSection"]),
+    cardClick(card, request, ev) {
+      let shouldOpenWindow = true;
+      ev.path.forEach(pathItem => {
+        if (pathItem.classList && pathItem.classList.contains("ignore")) {
+          shouldOpenWindow = false;
         }
       });
-      this.$store.dispatch("entities/requestUIState/update", {
-        where: request.requestUIState.id,
-        data: {
-          activeTab: "order"
-        }
-      });
+      if (shouldOpenWindow) {
+        this.$store.dispatch("entities/windows/update", {
+          where: card.windowId,
+          data: {
+            show: true,
+            zIndex:
+              this.$store.getters["entities/windows/query"]().max("zIndex") + 1
+          }
+        });
+        this.$store.dispatch("entities/requestUIState/update", {
+          where: request.requestUIState.id,
+          data: {
+            activeTab: "order"
+          }
+        });
+      }
     },
 
     /* Sections */
@@ -208,27 +202,10 @@ export default {
     },
     removeSection(params) {
       console.log("Remoção de seção não está implementado");
-    },
-    expandSection(section) {
-      if (section.size < 3) {
-        this.SET_SECTION({
-          sectionId: section.id,
-          section: {
-            size: section.size + 1
-          }
-        });
-      }
-    },
-    collapseSection(section) {
-      if (section.size > 1) {
-        this.SET_SECTION({
-          sectionId: section.id,
-          section: {
-            size: section.size - 1
-          }
-        });
-      }
     }
+  },
+  mounted() {
+    console.log(this.sections, this.filters);
   }
 };
 </script>
