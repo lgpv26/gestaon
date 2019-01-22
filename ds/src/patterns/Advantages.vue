@@ -1,6 +1,6 @@
 <template>
   <component :is="type" class="image">
-    <div class="row">
+    <div class="conteiner row">
       <div
         class="
         row start-xs
@@ -124,6 +124,12 @@ export default {
 }
 .button {
   margin-top: 20px;
+}
+.conteiner {
+  max-width: 1200px;
+  padding: 40px;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>
 

@@ -1,6 +1,6 @@
 <template>
   <component :is="type" class="header">
-    <div class="row">
+    <div class="conteiner row">
       <div
         class="   row start-xs
                   center-xs
@@ -160,6 +160,12 @@ a:hover {
   width: 150px;
   height: 45px;
   font-size: 18px;
+}
+.conteiner {
+  max-width: 1200px;
+  padding: 40px;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>
 
