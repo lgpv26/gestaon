@@ -64,7 +64,7 @@ h1 {
 .p1 {
   margin: 0px 0px 0px 30px;
   padding: 0px;
-  font-size: 24px;
+  font-size: 21px;
   text-align: left;
   color: $color-primary-50;
 }
