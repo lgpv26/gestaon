@@ -41,7 +41,11 @@
                     col-sm-12
                     col-md-12
                     col-lg-6"
+            style="
+                    display:flex;
+                    align-items: center;"
           >
+            <img src="../assets/adv-icon.png" />
             <Heading level="h5">Lorem ipsum sit</Heading>
           </div>
           <div
@@ -51,7 +55,11 @@
                     col-sm-12
                     col-md-12
                     col-lg-6"
+            style="
+                    display:flex;
+                    align-items:center;"
           >
+            <img src="../assets/adv-icon.png" />
             <Heading level="h5">Lorem ipsum sit</Heading>
           </div>
           <div
@@ -61,7 +69,11 @@
                     col-sm-12
                     col-md-12
                     col-lg-6"
+            style="
+                    display:flex;
+                    align-items:center;"
           >
+            <img src="../assets/adv-icon.png" />
             <Heading level="h5">Lorem ipsum sit</Heading>
           </div>
           <div
@@ -71,7 +83,11 @@
                     col-sm-12
                     col-md-12
                     col-lg-6"
+            style="
+                    display:flex;
+                    align-items:center;"
           >
+            <img src="../assets/adv-icon.png" />
             <Heading level="h5">Lorem ipsum sit</Heading>
           </div>
         </div>
