@@ -39,7 +39,41 @@
         </h3>
       </div>
       <div class="card__middle"></div>
-      <div class="card__footer"></div>
+      <div class="card__footer">
+        <span class="push-both-sides"></span>
+        <app-popover
+          :placement="'bottom-start'"
+          :verticalOffset="5"
+          :horizontalOffset="18"
+          :contentStyle="dropdownMenuPopoverContentStyle"
+        >
+          <template slot="triggerer">
+            <a class="footer__status ignore">
+              <request-board-icon-status></request-board-icon-status>
+              <span>{{ status }}</span>
+            </a>
+          </template>
+          <template slot="content">
+            <app-rbc-status id="rbc-status"></app-rbc-status>
+          </template>
+        </app-popover>
+        <app-popover
+          :placement="'bottom-start'"
+          :verticalOffset="1"
+          :horizontalOffset="19"
+          :useScroll="true"
+        >
+          <template slot="triggerer">
+            <a class="footer__responsible-user ignore"
+              ><request-board-icon-flag></request-board-icon-flag>
+              {{ responsibleUserName }}</a
+            >
+          </template>
+          <template slot="content">
+            <app-rbc-user id="rbc-user"></app-rbc-user>
+          </template>
+        </app-popover>
+      </div>
     </div>
     <div class="request-board-card__container" v-else>
       <div class="card__header">
@@ -184,8 +218,8 @@ export default {
             separator: "",
             omission: "..."
           }) +
-          " " +
-          firstClientAddress.number +
+          ", " +
+          (firstClientAddress.number ? firstClientAddress.number : "S/N") +
           (firstClientAddress.complement
             ? " " + firstClientAddress.complement
             : "");
