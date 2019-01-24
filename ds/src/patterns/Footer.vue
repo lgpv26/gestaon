@@ -1,5 +1,9 @@
 <template>
-  <div class="conteiner"></div>
+  <div class="row col-md-12">
+    <div class="col-md">caixa -1</div>
+    <div class="col-md">caixa -2</div>
+    <div class="col-md">caixa -3</div>
+  </div>
 </template>
 
 <script>
@@ -30,11 +34,23 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
-.conteiner {
-  max-width: 1200px;
-  padding: 40px;
-  margin-left: auto;
-  margin-right: auto;
+.cx-1 {
+  background: rgb(25, 0, 255);
+}
+.cx-2 {
+  background: red;
+}
+.cx-3 {
+  background: red;
+}
+.cx-4 {
+  background: red;
+}
+.cx-5 {
+  background: red;
+}
+.cx-6 {
+  background: red;
 }
 </style>
 

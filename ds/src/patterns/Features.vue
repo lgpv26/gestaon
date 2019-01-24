@@ -7,22 +7,22 @@
     </div>
     <ul class="cx-1 row col-md-12 col-sm-12 col-xs-12">
       <li class="cx-2 col-md col-sm col-xs-12">
-        <a class="a1 active" href="#"><h5>Recurso 1</h5></a>
+        <a class="a1" @click="type = 'recurso1'"><h5>Recurso 1</h5></a>
       </li>
       <li class="cx-2 col-md col-sm col-xs-12">
-        <a class="a1 active" href="#"><h5>Recurso 2</h5></a>
+        <a class="a1" @click="type = 'recurso2'"><h5>Recurso 2</h5></a>
       </li>
       <li class="cx-2 col-md col-sm col-xs-12">
-        <a class="a1 active" href="#"><h5>Recurso 3</h5></a>
+        <a class="a1" @click="type = 'recurso3'"><h5>Recurso 3</h5></a>
       </li>
       <li class="cx-2 col-md col-sm col-xs-12">
-        <a class="a1 active" href="#"><h5>Recurso 4</h5></a>
+        <a class="a1" @click="type = 'recurso4'"><h5>Recurso 4</h5></a>
       </li>
       <li class="cx-2 col-md col-sm col-xs-12">
-        <a class="a1 active" href="#"><h5>Recurso 5</h5></a>
+        <a class="a1" @click="type = 'recurso5'"><h5>Recurso 5</h5></a>
       </li>
     </ul>
-    <div class=" cx-3 row col-md col-sm col-xs-12">
+    <div class=" cx-3 row col-md col-sm col-xs-12" v-if="type === 'recurso1'">
       <div class="col-md col-sm col-xs-12"><img src="../assets/sem.imagens.png" /></div>
       <div class=" col-md col-sm col-xs-12">
         <div class="cx-4 row">
@@ -72,6 +72,10 @@
         </div>
       </div>
     </div>
+    <div class="cx-3" v-if="type === 'recurso2'">recurso 2</div>
+    <div class="cx-3" v-if="type === 'recurso3'">recurso 3</div>
+    <div class="cx-3" v-if="type === 'recurso4'">recurso 4</div>
+    <div class="cx-3" v-if="type === 'recurso5'">recurso 5</div>
   </div>
 </template>
 
@@ -86,6 +90,7 @@ export default {
       lang: "en",
     },
   },
+  data: {},
   props: {
     /**
      * The html element name used for the component.
@@ -147,9 +152,7 @@ export default {
     text-align: center;
     font-weight: bold;
     font-size: 14px;
-  }
-  li.active {
-    background: $color-primary-60;
+    cursor: pointer;
   }
   h5:hover {
     background: $color-primary-60;
@@ -220,9 +223,7 @@ export default {
     text-align: center;
     font-weight: bold;
     font-size: 20px;
-  }
-  li.active {
-    background: $color-primary-60;
+    cursor: pointer;
   }
   h5:hover {
     background: $color-primary-60;

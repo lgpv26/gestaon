@@ -96,6 +96,10 @@ export default {
     <Icon name="prototype" fill="rgb(37,138,239)" />
     <Icon name="ic-dashboard" fill="rgb(37,138,239)" />
     <Icon name="Vector"  />
+    <Icon name="face"/>
+    <Icon name="insta"/>
+    <Icon name="twitter"/>
+    <Icon name="whats"/>
   </div>
   ```
 </docs>
