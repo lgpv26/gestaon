@@ -1,29 +1,30 @@
-import _ from 'lodash'
+import _ from "lodash";
 
 let config = {
-    apiBaseUrl: 'http://api.gestaon.com',
-    socketServer: 'http://server.gestaon.com',
-    system: { // don't change settings under this object if you don't know what you're doing
-        IDMappings: {
-            paymentMethods: {
-                default: 1,
-                bill: 4
-            },
-            products: {
-                default: 1
-            }
-        }
+  apiBaseUrl: "http://localhost:8080",
+  socketServer: "http://localhost:8080",
+  system: {
+    // don't change settings under this object if you don't know what you're doing
+    IDMappings: {
+      paymentMethods: {
+        default: 1,
+        bill: 4
+      },
+      products: {
+        default: 1
+      }
     }
+  }
+};
+
+if (process.env.NODE_ENV !== "production") {
+  try {
+    const developerConfig = require("./config.developer").default;
+    _.assign(config, developerConfig);
+    // do stuff
+  } catch (err) {
+    console.log("Developer config file not found.", err);
+  }
 }
 
-if(process.env.NODE_ENV !== 'production') {
-    try {
-        const developerConfig = require('./config.developer').default
-        _.assign(config, developerConfig)
-        // do stuff
-    } catch (err) {
-        console.log("Developer config file not found.", err)
-    }
-}
-
-export default config
+export default config;
