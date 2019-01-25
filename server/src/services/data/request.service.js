@@ -25,7 +25,9 @@ module.exports = server => {
 
                   const client = await vm.checkClient(
                     data.client || null,
-                    { request: data },
+                    {
+                      request: data
+                    },
                     transaction,
                     companyId
                   );
@@ -69,6 +71,25 @@ module.exports = server => {
                           : _.get(client, "id", null)
                           ? "pending"
                           : "finished",
+                      deliveredBy:
+                        data.status !== "finished"
+                          ? null
+                          : oldRequest.deliveredBy
+                          ? oldRequest.deliveredBy
+                          : data.userId
+                          ? data.userId
+                          : triggeredBy,
+                      finishedBy:
+                        data.status !== "finished"
+                          ? null
+                          : oldRequest.finishedBy
+                          ? oldRequest.finishedBy
+                          : triggeredBy,
+                      deliveredDate: oldRequest.deliveredDate
+                        ? oldRequest.deliveredDate
+                        : data.status === "finished"
+                        ? ctx.params.date
+                        : null,
                       tmpId: _.get(data, "tmpId", null)
                     },
                     transaction
@@ -205,7 +226,9 @@ module.exports = server => {
                           action: "update-user",
                           status
                         },
-                        { transaction }
+                        {
+                          transaction
+                        }
                       )
                     );
 
@@ -288,6 +311,16 @@ module.exports = server => {
                       _.set(ctx.params.data, "triggeredBy", triggeredBy.id);
                       _.set(ctx.params.data, "companyId", companyId);
                       _.set(ctx.params.data, "userId", userId);
+
+                      if (ctx.params.data.status === "finished") {
+                        _.set(ctx.params.data, "deliveredBy", userId); // quem entregou
+                        _.set(ctx.params.data, "finishedBy", triggeredBy.id); // quem finalizou
+                        _.set(
+                          ctx.params.data,
+                          "deliveredDate",
+                          ctx.params.date
+                        ); // Horário que foi feito a entrega
+                      }
                       resolve(ctx.params.data);
                     });
 
@@ -299,7 +332,11 @@ module.exports = server => {
                     const dataTimeline = await new Promise(
                       (resolve, reject) => {
                         _.unset(ctx.params.data, "id");
-                        _.set(ctx.params.data, "action", "update-status");
+                        let action = "update-status";
+                        if (ctx.params.data.status === "finished")
+                          action = "finished";
+                        _.set(ctx.params.data, "action", action);
+
                         resolve(ctx.params.data);
                       }
                     );
@@ -334,7 +371,9 @@ module.exports = server => {
 
                     if (pushNotification)
                       return resolve(
-                        _.assign(createData, { alert: pushNotification })
+                        _.assign(createData, {
+                          alert: pushNotification
+                        })
                       );
 
                     return resolve(createData);
@@ -363,7 +402,9 @@ module.exports = server => {
       getOne(ctx) {
         return server.mysql.Request.findOne({
           where: ctx.params.where || {},
-          include: ctx.params.include || []
+          include: ctx.params.include || [],
+          transaction: ctx.params.transaction || null,
+          attributes: ctx.params.attributes || null
         }).then(request => {
           return JSON.parse(JSON.stringify(request));
         });
@@ -375,7 +416,25 @@ module.exports = server => {
       getList(ctx) {
         return server.mysql.Request.findAll({
           where: ctx.params.where || {},
-          include: ctx.params.include || []
+          include: ctx.params.include || [],
+          transaction: ctx.params.transaction || null,
+          attributes: ctx.params.attributes || null,
+          order: ctx.params.order || null
+        }).then(requests => {
+          return JSON.parse(JSON.stringify(requests));
+        });
+      },
+      getListAndCount(ctx) {
+        return server.mysql.Request.findAndCountAll({
+          where: ctx.params.where || {},
+          include: ctx.params.include || [],
+          transaction: ctx.params.transaction || null,
+          attributes: ctx.params.attributes || {},
+          order: ctx.params.order || [],
+          limit: ctx.params.limit || 10,
+          offset: ctx.params.offset || 0
+        }).then(result => {
+          return JSON.parse(JSON.stringify(result));
         });
       }
     },
@@ -634,7 +693,9 @@ module.exports = server => {
           });
         } else {
           // create request
-          return server.mysql.Request.create(data, { transaction })
+          return server.mysql.Request.create(data, {
+            transaction
+          })
             .then(create => {
               if (!create)
                 return Promise.reject("Erro ao cadastrar o Request!");
@@ -666,7 +727,9 @@ module.exports = server => {
         }
       },
       createTimeline(data, transaction) {
-        return server.mysql.RequestTimeline.create(data, { transaction })
+        return server.mysql.RequestTimeline.create(data, {
+          transaction
+        })
           .then(response => {
             return JSON.parse(JSON.stringify(response));
           })

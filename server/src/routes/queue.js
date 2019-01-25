@@ -8,7 +8,7 @@ module.exports = (server, restify) => {
     restify
   );
 
-  server.use(basePath("/queues", authGuard));
+  server.use(basePath("/request-queue", authGuard));
 
   /* CRUD */
 
@@ -22,11 +22,9 @@ module.exports = (server, restify) => {
           : _.first(req.auth.userCompanies).companyId
       })
       .then(request => {
-        //console.log('request')
         return res.send(200, new EventResponse(request));
       })
       .catch(err => {
-        //console.log(err, 'chatch da wqueue route')
         return res.send(200, new EventResponse(err));
       });
   });

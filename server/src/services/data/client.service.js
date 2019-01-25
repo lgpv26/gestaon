@@ -88,6 +88,65 @@ module.exports = server => {
 
           start();
         });
+      },
+
+      getRequestHistory(ctx) {
+        const vm = this;
+        const companyId = ctx.params.companyId;
+
+        return new Promise((resolve, reject) => {
+          async function start() {
+            try {
+              const requestHistory = await ctx.call(
+                "data/request.getListAndCount",
+                {
+                  where: {
+                    clientId: ctx.params.data.id,
+                    status: "finished",
+                    companyId
+                  },
+                  order: [["deliveredDate", "DESC"]],
+                  include: [
+                    {
+                      model: server.mysql.RequestOrder,
+                      as: "requestOrder",
+                      include: [
+                        {
+                          model: server.mysql.RequestOrderProduct,
+                          as: "requestOrderProducts"
+                        }
+                      ]
+                    },
+                    {
+                      model: server.mysql.RequestPayment,
+                      as: "requestPayments",
+                      include: [
+                        {
+                          model: server.mysql.PaymentMethod,
+                          as: "paymentMethod"
+                        }
+                      ]
+                    }
+                  ],
+                  limit: ctx.params.limit,
+                  offset: ctx.params.offset
+                }
+              );
+
+              return resolve({
+                offset: ctx.params.offset,
+                limit: ctx.params.limit,
+                total: requestHistory.count,
+                previousRequests: requestHistory.rows
+              });
+            } catch (err) {
+              console.log("try catch do getRequestHistory, erro no client");
+              return reject(err);
+            }
+          }
+
+          start();
+        });
       }
     },
     methods: {
