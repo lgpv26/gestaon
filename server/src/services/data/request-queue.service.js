@@ -12,6 +12,8 @@ module.exports = server => {
       start(ctx) {
         const vm = this;
         if (ctx.params.data && ctx.params.data.length) {
+          //console.log(ctx.params)
+
           let initialOffset = 0;
           let limitReached = false;
           const totalItemsLimit = ctx.params.data.length - 1;
@@ -51,8 +53,7 @@ module.exports = server => {
                       data: _.assign(obj.data, {
                         companyId: ctx.params.companyId,
                         createdBy: ctx.params.user
-                      }),
-                      date: obj.date
+                      })
                     });
 
                     if (!checkId) _.set(mapIds, objId, action.id);
