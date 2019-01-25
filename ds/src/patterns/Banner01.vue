@@ -48,6 +48,8 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+@import url("https://fonts.googleapis.com/css?family=Montserrat+Alternates");
+@import url("https://fonts.googleapis.com/css?family=Montserrat");
 .xs-1 {
   margin-bottom: 20px;
 }
@@ -56,9 +58,11 @@ export default {
   /* For tablets: */
   .banner {
     max-width: 1200px;
-    padding: 40px;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 22px;
+    margin-bottom: 0px;
+    padding: 0px 40px 0px 40px;
   }
   .cx-1 {
     padding: 10px 0px 0px 10px;
@@ -68,18 +72,21 @@ export default {
   }
   h1 {
     color: $color-primary-50;
-    font-size: 28px;
+    font-size: 26px;
+    font-family: Montserrat Alternates;
   }
   .p1 {
     margin: 20px 0px 0px 0px;
     padding: 0px;
-    font-size: 14px;
+    font-size: 12px;
+    font-family: Montserrat Alternates;
     color: $color-primary-50;
   }
   .p2 {
     margin: 10px 0px 10px 0px;
     padding: 0px;
-    font-size: 16px;
+    font-size: 14px;
+    font-family: Montserrat Alternates;
     color: $color-primary-60;
   }
   button {
@@ -87,7 +94,8 @@ export default {
     height: 40px;
     border-radius: 5px;
     border: 0px;
-    font-size: 18px;
+    font-size: 16px;
+    font-family: Montserrat;
     color: white;
     background: $color-primary-60;
     cursor: pointer;
@@ -107,12 +115,15 @@ export default {
   /* For desktop: */
   .banner {
     max-width: 1200px;
-    padding: 40px;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 22px;
+    margin-bottom: 0px;
+    padding: 40px 40px 0px 40px;
   }
   .cx-1 {
     padding: 30px 0px 0px 60px;
+    margin: 0px;
   }
   .cx-2 {
     padding: 0px 0px 0px 0px;
@@ -120,19 +131,22 @@ export default {
   h1 {
     text-align: center;
     color: $color-primary-50;
-    font-size: 36px;
+    font-family: Montserrat Alternates;
+    font-size: 30px;
   }
   .p1 {
     margin: 0px 0px 0px 30px;
     padding: 0px;
-    font-size: 20px;
+    font-size: 16px;
+    font-family: Montserrat Alternates;
     text-align: left;
     color: $color-primary-50;
   }
   .p2 {
     margin: 10px 0px 0px 30px;
     padding: 0px;
-    font-size: 26px;
+    font-size: 22px;
+    font-family: Montserrat Alternates;
     text-align: left;
     color: $color-primary-60;
   }
@@ -142,7 +156,8 @@ export default {
     height: 50px;
     border-radius: 5px;
     border: 0px;
-    font-size: 18px;
+    font-size: 16px;
+    font-family: Montserrat;
     color: white;
     background: $color-primary-60;
     cursor: pointer;

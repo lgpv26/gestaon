@@ -58,23 +58,25 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+@import url("https://fonts.googleapis.com/css?family=Montserrat+Alternates");
+@import url("https://fonts.googleapis.com/css?family=Montserrat");
 
 @media only screen and (min-width: 360px) {
   /* For tablets: */
   .conteiner {
     width: 100%;
-    margin-bottom: 100px;
     max-width: 1200px;
-    padding: 40px;
     margin-left: auto;
     margin-right: auto;
+    padding: 0px 40px 0px 40px;
   }
   h1 {
     color: $color-primary-60;
     text-align: center;
-    font-size: 28px;
+    font-size: 26px;
     margin-bottom: 80px;
     margin-top: 50px;
+    font-family: Montserrat Alternates;
   }
   .cx-2 {
     margin-left: auto;
@@ -88,22 +90,23 @@ export default {
   .cx-3 .pr-1 {
     text-align: left;
     margin: 0px;
-    padding: 0px 0px 0px 10px;
+    padding: 10px 0px 0px 10px;
     color: $color-primary-60;
-    font-size: 16px;
+    font-size: 14px;
+    font-family: Montserrat Alternates;
   }
   .cx-3 .pr-2 {
     text-align: left;
     margin: 0px;
     padding: 10px 0px 100px 10px;
     color: $color-primary-50;
-    font-size: 14px;
+    font-size: 12px;
+    font-family: Montserrat Alternates;
   }
   .cx-4 {
     width: 100px;
     height: 100px;
     border-radius: 100px;
-    margin-bottom: 20px;
     margin-left: auto;
     margin-right: auto;
   }
@@ -112,17 +115,17 @@ export default {
   /* For desktop: */
   .conteiner {
     width: 100%;
-    margin-bottom: 100px;
     max-width: 1200px;
-    padding: 40px;
     margin-left: auto;
     margin-right: auto;
+    padding: 0px 40px 0px 40px;
   }
   h1 {
     color: $color-primary-50;
     text-align: center;
-    font-size: 36px;
-    margin-bottom: 80px;
+    font-size: 30px;
+    font-family: Montserrat Alternates;
+    margin-bottom: 30px;
     margin-top: 50px;
   }
   .cx-2 {
@@ -139,22 +142,23 @@ export default {
     margin: 0px;
     padding: 0px 0px 0px 10px;
     color: $color-primary-60;
-    font-size: 24px;
+    font-size: 18px;
+    font-family: Montserrat Alternates;
   }
   .cx-3 .pr-2 {
     text-align: left;
     margin: 0px;
     padding: 10px 0px 100px 10px;
     color: $color-primary-50;
-    font-size: 18px;
+    font-size: 16px;
+    font-family: Montserrat Alternates;
   }
   .cx-4 {
     width: 100px;
-    height: 100px;
     border-radius: 100px;
-    margin-bottom: 20px;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 10px;
   }
 }
 </style>

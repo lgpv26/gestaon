@@ -105,20 +105,21 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
-
+@import url("https://fonts.googleapis.com/css?family=Montserrat+Alternates");
+@import url("https://fonts.googleapis.com/css?family=Montserrat");
 @media only screen and (min-width: 360px) {
   /* For tablets: */
   .bloco {
     max-width: 1200px;
-    padding: 40px;
     margin-left: auto;
     margin-right: auto;
+    padding: 60px 0px 10px 0px;
   }
   .b1 {
     margin-bottom: 15px;
   }
   .cx-3 img {
-    width: 100%;
+    width: 80%;
   }
   .cx-4 img {
     width: 100%;
@@ -128,7 +129,8 @@ export default {
   .head-1 {
     text-align: center;
     color: $color-primary-50;
-    font-size: 28px;
+    font-family: Montserrat Alternates;
+    font-size: 26px;
   }
   .cx-1 {
     margin: 20px 0px 40px 0px;
@@ -151,7 +153,8 @@ export default {
     text-decoration: none;
     text-align: center;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 12px;
+    font-family: Montserrat;
     cursor: pointer;
   }
   h5:hover {
@@ -159,23 +162,25 @@ export default {
   }
   .cx-3 {
     margin: 0px;
-    padding: 0px 0px 0px 40px;
+    padding: 0px 40px 0px 40px;
   }
   .cx-4 {
-    margin: 30px 0px 0px 0px;
+    margin: 20px 0px 0px 0px;
     padding: 0px 0px 0px 10px;
   }
   .cx-4 h2 {
     margin: 0px;
     padding: 10px 0px 0px 5px;
-    font-size: 16px;
+    font-size: 14px;
+    font-family: Montserrat Alternates;
     color: $color-primary-60;
   }
   .cx-4 h3 {
     margin: 0px;
     padding: 0px;
     text-align: left;
-    font-size: 14px;
+    font-size: 12px;
+    font-family: Montserrat Alternates;
     color: $color-primary-50;
   }
 }
@@ -183,13 +188,12 @@ export default {
   /* For desktop: */
   .bloco {
     max-width: 1200px;
-    padding: 40px;
     margin-left: auto;
     margin-right: auto;
+    padding: 60px 0px 10px 0px;
   }
   .cx-3 img {
-    width: 92%;
-    margin-left: 18px;
+    width: 80%;
   }
   .cx-4 img {
     width: 100%;
@@ -199,11 +203,12 @@ export default {
   .head-1 {
     text-align: center;
     color: $color-primary-50;
-    font-size: 36px;
+    font-size: 30px;
+    font-family: Montserrat Alternates;
   }
   .cx-1 {
     margin: 20px 0px 40px 0px;
-    padding: 0px 40px 0px 40px;
+    padding: 0px 60px 0px 60px;
   }
   .cx-2 {
     background: $color-base-50;
@@ -222,7 +227,8 @@ export default {
     text-decoration: none;
     text-align: center;
     font-weight: bold;
-    font-size: 20px;
+    font-size: 16px;
+    font-family: Montserrat;
     cursor: pointer;
   }
   h5:hover {
@@ -230,23 +236,25 @@ export default {
   }
   .cx-3 {
     margin: 0px;
-    padding: 0px 40px 0px 0px;
+    padding: 0px 40px 0px 40px;
   }
   .cx-4 {
     margin: 0px;
-    padding: 25px 0px 10px 0px;
+    padding: 15px 0px 0px 0px;
   }
   .cx-4 h2 {
     margin: 0px;
     padding: 0px 0px 0px 10px;
-    font-size: 24px;
+    font-size: 20px;
+    font-family: Montserrat Alternates;
     color: $color-primary-60;
   }
   .cx-4 h3 {
     margin: 0px;
     padding: 0px;
     text-align: left;
-    font-size: 22px;
+    font-size: 18px;
+    font-family: Montserrat Alternates;
     color: $color-primary-50;
   }
 }

@@ -41,17 +41,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import url("https://fonts.googleapis.com/css?family=Montserrat+Alternates");
+@import url("https://fonts.googleapis.com/css?family=Montserrat");
 .Slide {
-  width: 100%;
   max-width: 1200px;
-  padding: 40px;
   margin-left: auto;
   margin-right: auto;
 }
 .review-title {
-  color: $color-primary-60;
-  font-size: 24px;
+  color: $color-primary-50;
   text-align: center;
+  font-size: 30px;
+  font-family: Montserrat Alternates;
+  margin-bottom: 30px;
+  margin-top: 50px;
 }
 </style>
 

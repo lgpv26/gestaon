@@ -18,7 +18,9 @@
     <div class="bloco row col-md-12 col-sm-12 col-xs-12">
       <div class="cx-4 col-md col-sm col-xs-12">
         <div class="row center-md center-sm center-xs">
-          <a href="#"> <h2 class="Heading1">ESSENCIAL</h2> </a>
+          <a href="#">
+            <h2 class="Heading1"><b>ESSENCIAL</b></h2>
+          </a>
         </div>
         <div class="precos center-md center-sm center-xs" v-if="type === 'monthly'">
           <img class="img1" src="../assets/Group.png" />
@@ -37,7 +39,9 @@
       </div>
       <div class="cx-4 col-md col-sm col-xs-12">
         <div class="row center-md center-sm center-xs">
-          <a href="#"> <h2 class="Heading1">PROFESSIONAL</h2> </a>
+          <a href="#">
+            <h2 class="Heading1"><b>PROFESSIONAL</b></h2>
+          </a>
         </div>
         <div class="precos center-md center-sm center-xs" v-if="type === 'monthly'">
           <img class="img2" src="../assets/Group (1).png" />
@@ -58,7 +62,9 @@
       </div>
       <div class="cx-4 col-xs col-sm col-xs-12">
         <div class="row center-md center-sm center-xs">
-          <a href="#"> <h2 class="Heading1">ENTERPRISE</h2> </a>
+          <a href="#">
+            <h2 class="Heading1"><b>ENTERPRISE</b></h2>
+          </a>
         </div>
         <div class="precos center-md center-sm center-xs" v-if="type === 'monthly'">
           <img class="img3" src="../assets/Group (2).png" />
@@ -109,14 +115,16 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+@import url("https://fonts.googleapis.com/css?family=Montserrat+Alternates");
+@import url("https://fonts.googleapis.com/css?family=Montserrat");
 
 @media only screen and (min-width: 360px) {
   /* For tablets: */
   .conteiner {
     max-width: 1200px;
-    padding: 40px;
     margin-left: auto;
     margin-right: auto;
+    padding: 80px 40px 80px 40px;
   }
   .m1 {
     margin: 0px;
@@ -129,14 +137,16 @@ export default {
   // caixas da pagina
   .cx-1 {
     color: $color-primary-60;
-    font-size: 28px;
+    font-size: 24px;
+    font-family: Montserrat Alternates;
     margin: 0px;
     padding: 0px;
   }
   .cx-2 {
     color: $color-primary-50;
     text-align: left;
-    font-size: 16px;
+    font-size: 14px;
+    font-family: Montserrat Alternates;
     margin: 20px 0px 20px 0px;
     padding: 0px;
   }
@@ -147,19 +157,20 @@ export default {
   }
   .cx-4 {
     background: #e5e5e5;
-    margin: 0px 10px 40px 10px;
+    margin: 0px 10px 0px 10px;
     border: 0px;
     border-radius: 10px;
   }
   // componentes da caixa
   .cx-3 button {
-    width: 20%;
+    width: 25%;
     border: 0px;
     border-radius: 40px;
     background: #e5e5e5;
     color: #c3c5c6;
     cursor: pointer;
     font-size: 16px;
+    font-family: Montserrat Alternates;
     margin: 0px -20px 0px -20px;
   }
   .cx-3 button:hover {
@@ -182,13 +193,13 @@ export default {
   }
   .bloco {
     padding: 0px 80px 0px 80px;
-    display: flex;
   }
   .Paragraph2 {
     padding: 0px;
     margin: 8px 0px 8px 0px;
     color: #276e73;
-    font-size: 16px;
+    font-size: 14px;
+    font-family: Montserrat Alternates;
     text-align: center;
   }
   .precos {
@@ -212,6 +223,7 @@ export default {
   .Heading1 {
     margin: 20px 0px 10px 0px;
     font-size: 16px;
+    font-family: Montserrat;
   }
   a {
     color: $color-primary-60;
@@ -227,6 +239,7 @@ export default {
     color: #4d76c8;
     background: transparent;
     cursor: pointer;
+    font-family: Montserrat Alternates;
   }
   .bt:hover {
     width: 51%;
@@ -242,9 +255,9 @@ export default {
   /* For desktop: */
   .conteiner {
     max-width: 1200px;
-    padding: 40px;
     margin-left: auto;
     margin-right: auto;
+    padding: 80px 40px 80px 40px;
   }
   .m1 {
     margin: 0px;
@@ -257,14 +270,16 @@ export default {
   // caixas da pagina
   .cx-1 {
     color: $color-primary-60;
-    font-size: 36px;
+    font-size: 24px;
+    font-family: Montserrat Alternates;
     margin: 0px;
     padding: 0px;
   }
   .cx-2 {
     color: $color-primary-50;
     text-align: left;
-    font-size: 20px;
+    font-size: 18px;
+    font-family: Montserrat Alternates;
     margin: 20px 0px 20px 0px;
     padding: 0px;
   }
@@ -275,19 +290,19 @@ export default {
   }
   .cx-4 {
     background: #e5e5e5;
-    margin: 0px 10px 40px 10px;
+    margin: 0px 10px 0px 10px;
     border: 0px;
     border-radius: 10px;
   }
   // componentes da caixa
   .cx-3 button {
-    width: 20%;
+    width: 25%;
     border: 0px;
     border-radius: 40px;
     background: #e5e5e5;
     color: #c3c5c6;
     cursor: pointer;
-    font-size: 24px;
+    font-size: 20px;
   }
   .cx-3 button:hover {
     background: $color-accent-3;
@@ -305,22 +320,24 @@ export default {
     height: 35px;
     position: relative;
     float: right;
+    font-family: Montserrat Alternates;
   }
   .I2 {
     margin-left: -21px;
     padding-right: 0px;
     height: 35px;
     float: left;
+    font-family: Montserrat Alternates;
   }
   .bloco {
     padding: 0px 80px 0px 80px;
-    display: flex;
   }
   .Paragraph2 {
     padding: 0px;
     margin: 8px 0px 8px 0px;
     color: #276e73;
-    font-size: 20px;
+    font-size: 16px;
+    font-family: Montserrat Alternates;
     text-align: center;
   }
   .precos {
@@ -343,7 +360,8 @@ export default {
   }
   .Heading1 {
     margin: 20px 0px 10px 0px;
-    font-size: 20px;
+    font-size: 16px;
+    font-family: Montserrat;
   }
   a {
     color: $color-primary-60;
@@ -355,7 +373,8 @@ export default {
     margin-bottom: 20px;
     border-radius: 20px;
     border: 2px solid #4d76c8;
-    font-size: 20px;
+    font-size: 16px;
+    font-family: Montserrat Alternates;
     color: #4d76c8;
     background: transparent;
     cursor: pointer;
