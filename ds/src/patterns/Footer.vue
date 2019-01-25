@@ -1,8 +1,53 @@
 <template>
-  <div class="row col-md-12">
-    <div class="col-md">caixa -1</div>
-    <div class="col-md">caixa -2</div>
-    <div class="col-md">caixa -3</div>
+  <div class="row conteiner">
+    <div class="cx-1 col-md">
+      <div class="col-md-12">
+        <h3>PROPOSTA ÚNICA</h3>
+        <p>
+          Controle o atendimento, vendas e logística em uma tela, nos segundos de uma ligação.
+          Anotação em papel nunca mais!
+        </p>
+      </div>
+      <div class="col-md-12">
+        <img src="../assets/logo.png" />
+        <p>Copyright 2019. Todos os direitos reservados</p>
+      </div>
+    </div>
+    <div class="cx-2 col-md">2</div>
+    <div class="cx-3 row col-md">
+      <div class="col-md-5">
+        <h3>LINKS RÁPIDOS</h3>
+        <ul>
+          <li>
+            <a><b>Home</b></a>
+          </li>
+          <li>
+            <a><b>Processos</b></a>
+          </li>
+          <li>
+            <a><b>Vantagens</b></a>
+          </li>
+          <li>
+            <a><b>O que estão dizendo?</b></a>
+          </li>
+          <li>
+            <a><b>Dúvidas</b></a>
+          </li>
+        </ul>
+      </div>
+      <div class="cx-4 col-md-7">
+        <div class="col-md-12">
+          <h3>GestaON nas redes sociais</h3>
+          <p>Comente e compartilhe, ajude a fazer mais pessoas felizes!</p>
+        </div>
+        <div class="col-md-12">
+          <Icon name="face" size="medium" style="cursor:pointer;" />
+          <Icon name="insta" size="medium" style="cursor:pointer;" />
+          <Icon name="twitter" size="medium" style="cursor:pointer;" />
+          <Icon name="whats" size="medium" style="cursor:pointer;" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -34,23 +79,80 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+@import url("https://fonts.googleapis.com/css?family=Montserrat+Alternates");
+@import url("https://fonts.googleapis.com/css?family=Montserrat");
+.conteiner {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0px 40px 0px 40px;
+}
 .cx-1 {
-  background: rgb(25, 0, 255);
+  margin: 0px;
+  padding: 0px;
+  text-align: left;
+}
+.cx-1 img {
+  width: 88px;
+  height: 22px;
+}
+.cx-1 h3 {
+  margin: 5px 0px 5px 0px;
+  padding: 0px;
+  font-size: 15px;
+  font-family: Montserrat;
+  color: #276e73;
+}
+.cx-1 p {
+  margin: 5px 0px 30px 0px;
+  padding: 0px;
+  font-size: 14px;
+  font-family: Montserrat Alternates;
+  color: #276e73;
 }
 .cx-2 {
-  background: red;
+  background: rgb(94, 255, 0);
 }
 .cx-3 {
-  background: red;
+  margin: 0px;
+  padding: 0px;
+  text-align: left;
+}
+.cx-3 h3 {
+  margin: 5px 0px 5px 0px;
+  padding: 0px;
+  font-size: 15px;
+  font-family: Montserrat;
+  color: #276e73;
+}
+.cx-3 p {
+  margin: 5px 0px 20px 0px;
+  padding: 0px;
+  font-size: 14px;
+  font-family: Montserrat Alternates;
+  color: #276e73;
+}
+.cx-3 ul {
+  margin: 0px;
+  padding: 0px;
+}
+.cx-3 li {
+  list-style-type: none;
+  margin: 2px 0px 2px 0px;
+}
+.cx-3 a:hover {
+  color: #58bfc6;
+}
+.cx-3 a {
+  font-family: Montserrat Alternates;
+  font-size: 12px;
+  color: #276e73;
+  cursor: pointer;
 }
 .cx-4 {
-  background: red;
-}
-.cx-5 {
-  background: red;
-}
-.cx-6 {
-  background: red;
+  margin: 0px;
+  padding: 0px;
+  text-align: right;
 }
 </style>
 

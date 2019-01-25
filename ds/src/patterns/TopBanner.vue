@@ -41,7 +41,6 @@ export default {
 <style lang="scss" scoped>
 .Slide {
   max-width: 1200px;
-  padding: 40px;
   margin-left: auto;
   margin-right: auto;
 }
