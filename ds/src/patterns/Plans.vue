@@ -7,13 +7,9 @@
         with features that will convince you to use it for your SaaS business
       </h3>
     </div>
-    <div class="row center-md col-md-12 center-sm col-sm-12 col-xs-12">
-      <div class="m1 cx-3 end-md col-md-6 end-sm col-sm-6 center-xs col-xs-12">
-        <button class="I1" @click="type = 'monthly'">Mensal</button>
-      </div>
-      <div class="m2 cx-3 start-md col-md-6 start-sm col-sm-6 center-xs col-xs-12">
-        <button class="I2" @click="type = 'yearly'">Anual</button>
-      </div>
+    <div class="liga-desliga row center-md col-md-12 center-sm col-sm-12 col-xs-12">
+      <input type="checkbox" class="liga-desliga__checkbox" id="liga-desliga" />
+      <label for="liga-desliga" class="liga-desliga__botao"></label>
     </div>
     <div class="bloco row col-md-12 col-sm-12 col-xs-12">
       <div class="cx-4 col-md col-sm col-xs-12">
@@ -259,13 +255,58 @@ export default {
     margin-right: auto;
     padding: 80px 40px 80px 40px;
   }
-  .m1 {
-    margin: 0px;
-    padding: 0px 0px 0px 0px;
+  .liga-desliga {
+    margin-bottom: 40px;
+    margin-top: 20px;
   }
-  .m2 {
-    margin: 0px;
-    padding: 0px;
+  .liga-desliga__checkbox {
+    position: absolute;
+    left: -9999px;
+  }
+  .liga-desliga__botao {
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    cursor: pointer;
+  }
+  .liga-desliga__botao::before,
+  .liga-desliga__botao::after {
+    content: "";
+    font-family: Montserrat Alternates;
+    font-size: 18px;
+    color: rgb(162, 165, 167);
+    padding-top: 5px;
+  }
+  .liga-desliga__botao::before {
+    display: inline-block;
+    width: 180px;
+    height: 30px;
+    border-radius: 15px;
+    background: #d6d6d6;
+    content: "Anual";
+    padding-right: 10px;
+    text-align: right;
+  }
+  .liga-desliga__botao::after {
+    position: absolute;
+    left: 1px;
+    width: 100px;
+    height: 30px;
+    border-radius: 15px;
+    background: #4d76c8;
+    content: "Mensal";
+    color: white;
+  }
+  .liga-desliga__checkbox:checked + .liga-desliga__botao::before {
+    background: #d6d6d6;
+    content: "Mensal";
+    padding-left: 10px;
+    text-align: left;
+  }
+  .liga-desliga__checkbox:checked + .liga-desliga__botao::after {
+    content: "Anual";
+    color: white;
+    left: 50%;
   }
   // caixas da pagina
   .cx-1 {
