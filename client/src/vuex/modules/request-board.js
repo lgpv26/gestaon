@@ -16,7 +16,11 @@ const initialState = () => ({
     }
   },
   filters: {
-    deliveryDate: new Date()
+    deliveryDate: null,
+    clientGroups: [],
+    responsibleUsers: [],
+    promotionChannels: [],
+    status: []
   }
 });
 
@@ -27,6 +31,13 @@ const getters = {
 };
 
 const mutations = {
+  SET_FILTER(state, { type, select = true, id }) {
+    if (select && !_.includes(state.filters[type], id)) {
+      state.filters[type].push(id);
+    } else if (!select && _.includes(state.filters[type], id)) {
+      state.filters[type].splice(state.filters[type].indexOf(id), 1);
+    }
+  },
   EXPAND_SECTION(state, sectionId) {
     if (_.get(state, `sections[${sectionId}].size`, false)) {
       state.sections[sectionId].size += 1;

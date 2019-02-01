@@ -85,11 +85,12 @@ module.exports = server => {
                           : oldRequest.finishedBy
                           ? oldRequest.finishedBy
                           : triggeredBy,
-                      deliveredDate: oldRequest.deliveredDate
-                        ? oldRequest.deliveredDate
-                        : data.status === "finished"
-                        ? ctx.params.date
-                        : null,
+                      deliveredDate:
+                        oldRequest && oldRequest.deliveredDate
+                          ? oldRequest.deliveredDate
+                          : data.status === "finished"
+                          ? ctx.params.date
+                          : null,
                       tmpId: _.get(data, "tmpId", null)
                     },
                     transaction
@@ -181,9 +182,9 @@ module.exports = server => {
 
       updateUser(ctx) {
         /*data {
-                    requestId: //int
-                    userId: //int
-                }*/
+                            requestId: //int
+                            userId: //int
+                        }*/
         const vm = this;
         const companyId = ctx.params.data.companyId;
         const triggeredBy = ctx.params.data.createdBy;
@@ -280,9 +281,9 @@ module.exports = server => {
 
       updateStatus(ctx) {
         /*data {
-                    requestId: //int
-                    status: //string
-                }*/
+                            requestId: //int
+                            status: //string
+                        }*/
         const vm = this;
         const companyId = ctx.params.data.companyId;
         const triggeredBy = ctx.params.data.createdBy;

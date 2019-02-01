@@ -226,11 +226,11 @@ export default {
           requestId: requestTmpId,
           paymentMethodId: 1,
           amount: _.get(
-            this.$store.getters["entities/products/find"](1),
+            this.$store.getters["entities/products/find"](6),
             "price",
             false
           )
-            ? this.$store.getters["entities/products/find"](1).price
+            ? this.$store.getters["entities/products/find"](6).price
             : 0
         }
       });
@@ -240,12 +240,10 @@ export default {
           requestOrderId: requestOrderTmpId,
           productId: 1,
           unitPrice: _.get(
-            this.$store.getters["entities/products/find"](1),
+            this.$store.getters["entities/products/find"](6),
             "price",
-            false
+            0
           )
-            ? this.$store.getters["entities/products/find"](1).price
-            : 0
         }
       });
       this.$store.dispatch("entities/requestOrders/insert", {
@@ -323,130 +321,134 @@ export default {
       console.log("System initialized");
       vm.$socket.on("request-queue:sync", ev => {
         if (ev.success) {
+          console.log("request-queue:sync", ev);
           ev.evData.processedQueue.forEach(request => {
-            const cards = Card.query()
-              .where("requestId", _.get(request, "tmpId", request.id))
-              .get();
-            const card = _.first(cards);
-
-            const targetRequestId = _.get(request, "tmpId", request.id);
-
-            const windowTmpId = `tmp/${shortid.generate()}`;
-            const cardTmpId = `tmp/${shortid.generate()}`;
-            const requestUIStateTmpId = `tmp/${shortid.generate()}`;
-            const requestPaymentTmpId = `tmp/${shortid.generate()}`;
-            const requestOrderTmpId = `tmp/${shortid.generate()}`;
-            const requestOrderProductTmpId = `tmp/${shortid.generate()}`;
-            const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
-            const requestTmpId = `tmp/${shortid.generate()}`;
-            const clientTmpId = `tmp/${shortid.generate()}`;
-            const addressTmpId = `tmp/${shortid.generate()}`;
-            const clientAddressTmpId = `tmp/${shortid.generate()}`;
-            const clientPhoneTmpId = `tmp/${shortid.generate()}`;
-            this.$store.dispatch("entities/windows/insert", {
-              data: {
-                id: windowTmpId,
-                zIndex:
-                  this.$store.getters["entities/windows/query"]().max(
-                    "zIndex"
-                  ) + 1,
-                show: false
-              }
-            });
-            this.$store.dispatch("entities/cards/insert", {
-              data: {
-                id: cardTmpId,
-                windowId: windowTmpId,
-                requestId: request.id
-              }
-            });
-            this.$store.dispatch("entities/requestUIState/insert", {
-              data: {
-                id: requestUIStateTmpId,
-                windowId: windowTmpId,
-                requestId: request.id
-              }
-            });
-            this.$store.dispatch("entities/requestPayments/insertOrUpdate", {
-              data: request.requestPayments
-            });
-            this.$store.dispatch("entities/requestOrders/insertOrUpdate", {
-              data: request.requestOrder
-            });
-            this.$store.dispatch(
-              "entities/requestOrderProducts/insertOrUpdate",
-              {
-                data: request.requestOrder.requestOrderProducts
-              }
-            );
-            this.$store.dispatch("entities/clients/insertOrUpdate", {
-              data: request.client
-            });
-            request.client.clientAddresses.forEach(clientAddress => {
-              vm.$store.dispatch("entities/addresses/insertOrUpdate", {
-                data: clientAddress.address
+            if (request.action === "update-status") {
+              Request.update({
+                where: request.requestId,
+                data: {
+                  status: request.status,
+                  dateUpdated: request.dateUpdated
+                }
               });
-            });
-            this.$store.dispatch("entities/clientAddresses/insertOrUpdate", {
-              data: request.client.clientAddresses
-            });
-            this.$store.dispatch(
-              "entities/requestClientAddresses/insertOrUpdate",
-              {
-                data: request.requestClientAddresses
+            } else if (request.action === "update-user") {
+              Request.update({
+                where: request.requestId,
+                data: {
+                  userId: request.userId,
+                  dateUpdated: request.dateUpdated
+                }
+              });
+            } else {
+              console.log("Request", request);
+              const requestId = _.get(request, "tmpId", request.id);
+              const cards = Card.query()
+                .where("requestId", requestId)
+                .with("request.requestUIState")
+                .get();
+              const card = _.first(cards);
+              let windowTmpId = `tmp/${shortid.generate()}`;
+              let cardTmpId = `tmp/${shortid.generate()}`;
+              let requestUIStateTmpId = `tmp/${shortid.generate()}`;
+              if (!Number.isInteger(requestId) && card) {
+                // remove previous card/request/
+                this.$store.dispatch("entities/cards/delete", card.id);
+                this.$store.dispatch("entities/windows/delete", card.windowId);
+                this.$store.dispatch(
+                  "entities/requests/delete",
+                  card.requestId
+                );
+                this.$store.dispatch(
+                  "entities/requestUIState/delete",
+                  card.request.requestUIState.id
+                );
+              } else if (card) {
+                windowTmpId = card.windowId;
+                cardTmpId = card.id;
+                requestUIStateTmpId = card.request.requestUIState.id;
               }
-            );
-            this.$store.dispatch("entities/requests/insertOrUpdate", {
-              data: request
-            });
+              this.$store.dispatch("entities/requests/insertOrUpdate", {
+                data: request
+              });
+              this.$store.dispatch("entities/windows/insert", {
+                data: {
+                  id: windowTmpId,
+                  zIndex:
+                    this.$store.getters["entities/windows/query"]().max(
+                      "zIndex"
+                    ) + 1,
+                  show: false
+                }
+              });
+              this.$store.dispatch("entities/cards/insert", {
+                data: {
+                  id: cardTmpId,
+                  windowId: windowTmpId,
+                  requestId: request.id
+                }
+              });
+              this.$store.dispatch("entities/requestUIState/insert", {
+                data: {
+                  id: requestUIStateTmpId,
+                  windowId: windowTmpId,
+                  requestId: request.id
+                }
+              });
+              this.$store.dispatch("entities/requestPayments/insertOrUpdate", {
+                data: request.requestPayments
+              });
+              this.$store.dispatch("entities/requestOrders/insertOrUpdate", {
+                data: request.requestOrder
+              });
+              this.$store.dispatch(
+                "entities/requestOrderProducts/insertOrUpdate",
+                {
+                  data: request.requestOrder.requestOrderProducts
+                }
+              );
+              this.$store.dispatch("entities/clients/insertOrUpdate", {
+                data: request.client
+              });
+              request.client.clientAddresses.forEach(clientAddress => {
+                vm.$store.dispatch("entities/addresses/insertOrUpdate", {
+                  data: clientAddress.address
+                });
+              });
+              this.$store.dispatch("entities/clientAddresses/insertOrUpdate", {
+                data: request.client.clientAddresses
+              });
+              this.$store.dispatch(
+                "entities/requestClientAddresses/insertOrUpdate",
+                {
+                  data: request.requestClientAddresses
+                }
+              );
 
-            // remove old one
+              const savedRequest = Request.query()
+                .with("card")
+                .with("client")
+                .with("requestOrder.requestOrderProducts")
+                .find(request.id);
 
-            this.$store.dispatch("entities/cards/delete", card.id);
-            this.$store.dispatch("entities/windows/delete", card.windowId);
-            this.$store.dispatch("entities/requests/delete", card.requestId);
+              console.log("Saved request", savedRequest);
 
-            /*
-                            console.log(request)
-                            let requestWhere = null
-                            if(_.has(request,'tmpId')){
-                                requestWhere = request.tmpId
-                            }
-                            else {
-                                requestWhere = request.id
-                            }
-                            console.log("requestWhere", requestWhere)
-
-                            vm.$store.dispatch('entities/requests/update',{
-                                where: requestWhere,
-                                data: {
-                                    id: request.id
-                                }
-                            })
-
-                            vm.$store.dispatch('entities/requestUIState/update',{
-                                where: {
-                                    requestId: requestWhere
-                                },
-                                data: {
-                                    requestId: request.id
-                                }
-                            })
-
-
-
-                            // update card
-                            const cards = Card.query().where('requestId',requestWhere).get()
-                            const card = _.first(cards)
-                            console.log ("Before", card.id, request)
-                            vm.$store.dispatch('entities/cards/update',{
-                                where: card.id,
-                                data: {
-                                    requestId: request.id
-                                }
-                            })
-                            console.log ("After", card)
-                            */
+              Card.update({
+                where: savedRequest.card.id,
+                data: {
+                  clientName: savedRequest.client.name,
+                  orderSubtotal: _.sumBy(
+                    savedRequest.requestOrder.requestOrderProducts,
+                    requestOrderProduct => {
+                      return (
+                        requestOrderProduct.quantity *
+                        (requestOrderProduct.unitPrice -
+                          requestOrderProduct.unitDiscount)
+                      );
+                    }
+                  )
+                }
+              });
+            }
           });
         }
         console.log("Processed Queue", ev);
