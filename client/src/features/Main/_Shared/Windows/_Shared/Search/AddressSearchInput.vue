@@ -1,13 +1,23 @@
 <template>
   <div>
+    <input
+      type="text"
+      class="input"
+      style="margin-bottom: 0; text-transform: uppercase"
+      :value="value"
+      :disabled="isEditing"
+      :class="{ readonly: isEditing }"
+      v-if="isEditing"
+    />
     <app-popover
       ref="popover"
       :placement="'bottom-start'"
-      :forceVisible="isInputFocused"
+      :forceVisible="false"
       :useScroll="true"
       :contentPadding="false"
       :horizontalOffset="-15"
       :verticalOffset="3"
+      v-else
     >
       <template slot="triggerer">
         <input
@@ -25,6 +35,7 @@
         <div class="result__container">
           <div
             v-for="item in items"
+            :key="item.id"
             @click="select(item)"
             class="result-item__container"
           >
@@ -42,9 +53,10 @@
 
 <script>
 import { mapMutations, mapState, mapGetters } from "vuex";
+import _ from "lodash";
 
 export default {
-  props: ["value"],
+  props: ["value", "address"],
   components: {},
   data() {
     return {
@@ -52,7 +64,12 @@ export default {
       items: []
     };
   },
-  computed: {},
+  computed: {
+    isEditing() {
+      console.log(this.address);
+      return Number.isInteger(this.address.id);
+    }
+  },
   methods: {
     focus() {
       this.isInputFocused = true;

@@ -89,6 +89,8 @@ import RequestBoardCard from "./RequestBoardCard.vue";
 
 import Request from "../../../../vuex/models/Request";
 
+import Vue from "vue";
+
 export default {
   components: {
     "app-draggable": DraggableComponent,
@@ -152,7 +154,7 @@ export default {
     sectionRequests() {
       switch (this.section.id) {
         case "requests":
-          return Request.query()
+          const requests = Request.query()
             .with("card")
             .with("client|client.clientAddresses.address")
             .with(
@@ -162,6 +164,33 @@ export default {
             .with("requestOrder.requestOrderProducts.product")
             .with("requestPayments.paymentMethod")
             .get();
+          return _.filter(requests, request => {
+            const responsibleUsers =
+              _.get(this.filters, "responsibleUsers", []).length === 0 ||
+              (_.has(request, "userId") &&
+                _.includes(this.filters.responsibleUsers, request.userId));
+            const clientGroups =
+              _.get(this.filters, "clientGroups", []).length === 0 ||
+              (_.has(request, "client.clientGroupId") &&
+                _.includes(
+                  this.filters.clientGroups,
+                  request.client.clientGroupId
+                ));
+            const promotionChannels =
+              _.get(this.filters, "promotionChannels", []).length === 0 ||
+              (_.has(request, "requestOrder.promotionChannelId") &&
+                _.includes(
+                  this.filters.promotionChannels,
+                  request.requestOrder.promotionChannelId
+                ));
+            const status =
+              _.get(this.filters, "status", []).length === 0 ||
+              (_.has(request, "status") &&
+                _.includes(this.filters.status, request.status));
+            return (
+              responsibleUsers && promotionChannels && clientGroups && status
+            );
+          });
         case "scheduled":
           return [];
       }
@@ -203,9 +232,6 @@ export default {
     removeSection(params) {
       console.log("Remoção de seção não está implementado");
     }
-  },
-  mounted() {
-    console.log(this.sections, this.filters);
   }
 };
 </script>

@@ -13,7 +13,12 @@
         <p>Copyright 2019. Todos os direitos reservados</p>
       </div>
     </div>
-    <div class="cx-2 col-md">2</div>
+    <div class="cx-2 col-md">
+      <div class="row center-md col-md-12">
+        <h3>Sem riscos, testa agora!<br />“time is money”</h3>
+      </div>
+      <div class="row center-md col-md-12"><button>Acessar Demostração</button></div>
+    </div>
     <div class="cx-3 row col-md">
       <div class="col-md-5">
         <h3>LINKS RÁPIDOS</h3>
@@ -111,7 +116,32 @@ export default {
   color: #276e73;
 }
 .cx-2 {
-  background: rgb(94, 255, 0);
+  background-image: url("../assets/Object.png");
+  background-repeat: no-repeat;
+  background-size: 240px;
+  background-position: center;
+  margin: 0px;
+  padding: 0px;
+}
+.cx-2 h3 {
+  font-size: 15px;
+  font-family: Montserrat;
+  color: #276e73;
+  margin-top: 45px;
+  margin-bottom: 40px;
+  margin-left: 15px;
+  text-align: left;
+}
+.cx-2 button {
+  width: 180px;
+  height: 40px;
+  margin-left: 18px;
+  margin-top: 0px;
+  border: 0px;
+  border-radius: 4px;
+  background: #4d76c8;
+  color: white;
+  cursor: pointer;
 }
 .cx-3 {
   margin: 0px;

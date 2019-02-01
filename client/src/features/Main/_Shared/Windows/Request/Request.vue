@@ -58,7 +58,8 @@
                             'entities/clients/update',
                             'name',
                             request.client.id,
-                            $event.target.value
+                            $event.target.value.toUpperCase(),
+                            'uppercase'
                           )
                         "
                       />
@@ -164,6 +165,10 @@
                           request.requestClientAddresses[0].clientAddress
                             .address.name
                         "
+                        :address="
+                          request.requestClientAddresses[0].clientAddress
+                            .address
+                        "
                         @input="
                           updateValue(
                             'entities/addresses/update',
@@ -212,7 +217,8 @@
                             'entities/clientAddresses/update',
                             'complement',
                             request.requestClientAddresses[0].clientAddress.id,
-                            $event.target.value
+                            $event.target.value,
+                            'uppercase'
                           )
                         "
                       />
@@ -226,9 +232,21 @@
                       <input
                         type="text"
                         class="input"
+                        :disabled="isEditingAddress"
+                        :class="{ readonly: isEditingAddress }"
                         :value="
                           request.requestClientAddresses[0].clientAddress
                             .address.neighborhood
+                        "
+                        @input="
+                          updateValue(
+                            'entities/addresses/update',
+                            'neighborhood',
+                            request.requestClientAddresses[0].clientAddress
+                              .address.id,
+                            $event.target.value,
+                            'uppercase'
+                          )
                         "
                       />
                     </div>
@@ -239,9 +257,20 @@
                       <input
                         type="text"
                         class="input"
+                        :disabled="isEditingAddress"
+                        :class="{ readonly: isEditingAddress }"
                         :value="
                           request.requestClientAddresses[0].clientAddress
                             .address.cep
+                        "
+                        @input="
+                          updateValue(
+                            'entities/addresses/update',
+                            'cep',
+                            request.requestClientAddresses[0].clientAddress
+                              .address.id,
+                            $event.target.value
+                          )
                         "
                       />
                     </div>
@@ -252,9 +281,21 @@
                       <input
                         type="text"
                         class="input"
+                        :disabled="isEditingAddress"
+                        :class="{ readonly: isEditingAddress }"
                         :value="
                           request.requestClientAddresses[0].clientAddress
                             .address.city
+                        "
+                        @input="
+                          updateValue(
+                            'entities/addresses/update',
+                            'city',
+                            request.requestClientAddresses[0].clientAddress
+                              .address.id,
+                            $event.target.value,
+                            'uppercase'
+                          )
                         "
                       />
                     </div>
@@ -265,9 +306,21 @@
                       <input
                         type="text"
                         class="input"
+                        :disabled="isEditingAddress"
+                        :class="{ readonly: isEditingAddress }"
                         :value="
                           request.requestClientAddresses[0].clientAddress
                             .address.state
+                        "
+                        @input="
+                          updateValue(
+                            'entities/addresses/update',
+                            'state',
+                            request.requestClientAddresses[0].clientAddress
+                              .address.id,
+                            $event.target.value,
+                            'uppercase'
+                          )
                         "
                       />
                     </div>
@@ -280,6 +333,13 @@
                       >VOLTAR</a
                     >
                     <span class="push-both-sides"></span>
+                    <a
+                      class="button"
+                      style="margin-right: 5px;"
+                      v-if="isEditingAddress"
+                      @click="onAddressUnselect()"
+                      >LIMPAR</a
+                    >
                     <a
                       class="button"
                       v-if="request.requestUIState.isAddingClientAddress"
@@ -424,7 +484,7 @@
                   {{
                     request.requestClientAddresses[0].clientAddress.number
                       ? request.requestClientAddresses[0].clientAddress.number
-                      : "S/ N"
+                      : "S/N"
                   }}
                 </h3>
                 <div class="dot-separator"></div>
@@ -615,6 +675,11 @@ export default {
     };
   },
   computed: {
+    isEditingAddress() {
+      return Number.isInteger(
+        this.request.requestClientAddresses[0].clientAddress.addressId
+      );
+    },
     hasClientSelected() {
       return (
         _.get(this.request, "client.name", false) &&
@@ -650,9 +715,16 @@ export default {
   methods: {
     ...mapActions("request-queue", ["addToQueue"]),
     ...mapActions("toast", ["showToast", "showError"]),
-    updateValue(path, field, id, value) {
+    updateValue(path, field, id, value, modifier = false) {
       const data = {};
-      data[field] = value;
+      switch (modifier) {
+        case "uppercase":
+          data[field] = value.toUpperCase();
+          break;
+        default:
+          data[field] = value;
+      }
+
       this.$store.dispatch(path, {
         where: id,
         data
@@ -713,6 +785,8 @@ export default {
         .where("id", this.request.id)
         .withAllRecursive(5)
         .first();
+
+      console.log(request);
       this.addToQueue({
         type: "request",
         op: "create",
@@ -973,20 +1047,30 @@ export default {
       this.$store.dispatch("entities/clientAddresses/delete", clientAddressId);
     },
     onAddressSelect(address) {
-      console.log("Selecionou", address);
-      this.$store.dispatch("entities/addresses/update", {
-        where: this.request.requestClientAddresses[0].clientAddress.address.id,
+      this.$store.dispatch("entities/addresses/insert", {
+        data: address
+      });
+      this.$store.dispatch("entities/clientAddresses/update", {
+        where: this.request.requestClientAddresses[0].clientAddress.id,
         data: {
-          neighborhood: address.neighborhood,
-          city: address.city,
-          state: address.state,
-          cep: address.cep
+          addressId: address.id
+        }
+      });
+    },
+    onAddressUnselect() {
+      const addressTmpId = `tmp/${shortid.generate()}`;
+      this.$store.dispatch("entities/addresses/insert", {
+        data: {
+          id: addressTmpId
+        }
+      });
+      this.$store.dispatch("entities/clientAddresses/update", {
+        where: this.request.requestClientAddresses[0].clientAddress.id,
+        data: {
+          addressId: addressTmpId
         }
       });
     }
-  },
-  mounted() {
-    console.log("Request window", this.request);
   }
 };
 </script>

@@ -11,19 +11,18 @@
     >
       <span>Processando...</span>
     </div>
-    <div class="request-board-card__loading" v-if="false">
-      <span>Processando...</span>
-    </div>
     <div
       class="request-board-card__container"
       v-if="Number.isInteger(request.id)"
     >
       <!-- if request is persisted -->
-      <div class="card__header" v-if="request.client">
-        <h3 class="card__client-name">{{ request.client.name }}</h3>
+      <div class="card__header" v-if="Number.isInteger(request.id)">
+        <h3 class="card__client-name">
+          {{ card.clientName ? card.clientName : "S/N" }}
+        </h3>
         <span class="push-both-sides"></span>
         <h3 class="card__order">
-          {{ utils.formatMoney(orderSubtotal, 2, "R$ ", ".", ",") }}
+          {{ utils.formatMoney(card.orderSubtotal, 2, "R$ ", ".", ",") }}
         </h3>
       </div>
       <div class="card__header" v-else>
@@ -31,7 +30,11 @@
         <h3 class="card__client-name">ID do pedido {{ request.id }}</h3>
       </div>
       <div style="display: flex; flex-direction: row;">
-        <h3 class="card__client-address" v-if="requestClientAddress">
+        <h3
+          class="card__client-address"
+          :title="fullRequestClientAddress"
+          v-if="requestClientAddress"
+        >
           {{ requestClientAddress }}
         </h3>
         <h3 class="card__phone-line" v-if="request.phoneLine && false">
@@ -54,7 +57,12 @@
             </a>
           </template>
           <template slot="content">
-            <app-rbc-status id="rbc-status"></app-rbc-status>
+            <app-rbc-status
+              :value="request.status"
+              @input="onRequestStatusUpdate($event)"
+              id="rbc-status"
+              :card="card"
+            ></app-rbc-status>
           </template>
         </app-popover>
         <app-popover
@@ -70,7 +78,12 @@
             >
           </template>
           <template slot="content">
-            <app-rbc-user id="rbc-user"></app-rbc-user>
+            <app-rbc-user
+              :value="request.userId"
+              @input="onRequestResponsibleUserUpdate($event)"
+              id="rbc-user"
+              :card="card"
+            ></app-rbc-user>
           </template>
         </app-popover>
       </div>
@@ -103,6 +116,9 @@ import RBCProgress from "./RequestBoardCard/RBCProgress.vue";
 import RBCDeadline from "./RequestBoardCard/RBCDeadline.vue";
 import RBCStatus from "./RequestBoardCard/RBCStatus.vue";
 import RBCUser from "./RequestBoardCard/RBCUser.vue";
+
+import Request from "../../../../vuex/models/Request";
+import User from "../../../../vuex/models/User";
 
 export default {
   props: ["card", "request", "isDragging"],
@@ -207,17 +223,31 @@ export default {
     };
   },
   computed: {
-    ...mapState("data/users", ["users"]),
     requestClientAddress() {
       if (this.request.requestClientAddresses.length) {
         const firstClientAddress = _.first(this.request.requestClientAddresses)
           .clientAddress;
         const address =
           _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), {
-            length: 34,
+            length: 24,
             separator: "",
             omission: "..."
           }) +
+          ", " +
+          (firstClientAddress.number ? firstClientAddress.number : "S/N") +
+          (firstClientAddress.complement
+            ? " " + firstClientAddress.complement
+            : "");
+        return address;
+      }
+      return false;
+    },
+    fullRequestClientAddress() {
+      if (this.request.requestClientAddresses.length) {
+        const firstClientAddress = _.first(this.request.requestClientAddresses)
+          .clientAddress;
+        const address =
+          _.startCase(_.toLower(firstClientAddress.address.name)) +
           ", " +
           (firstClientAddress.number ? firstClientAddress.number : "S/N") +
           (firstClientAddress.complement
@@ -244,7 +274,7 @@ export default {
       };
     },
     status() {
-      switch (this.form.status) {
+      switch (this.request.status) {
         case "pending":
           return "Pendente";
         case "in-displacement":
@@ -258,15 +288,31 @@ export default {
       }
     },
     responsibleUserName() {
-      const responsibleUser = _.find(this.users, {
-        id: this.form.responsibleUserId
-      });
-      if (responsibleUser) return responsibleUser.name;
-      else return "---";
+      const user = User.find(this.request.userId);
+      if (user) {
+        return user.name;
+      }
+      return "---";
     }
   },
   methods: {
-    ...mapActions("request-board", ["updateCard"])
+    ...mapActions("request-board", ["updateCard"]),
+    onRequestStatusUpdate(ev) {
+      Request.update({
+        where: this.card.requestId,
+        data: {
+          status: ev
+        }
+      });
+    },
+    onRequestResponsibleUserUpdate(ev) {
+      Request.update({
+        where: this.card.requestId,
+        data: {
+          userId: ev
+        }
+      });
+    }
   },
   mounted() {
     /*setInterval(() => {
