@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-if="_.has(request, 'requestUIState') && _.has(request, 'client')"
-    class="request__window"
-  >
+  <div v-if="_.has(request, 'requestUIState') && _.has(request, 'client')" class="request__window">
     <app-request-history
       :show="request.requestUIState.showClientOrderTimeline"
       @close="
