@@ -29,10 +29,7 @@ module.exports = (server) => {
                                         })
                                     })
                                     
-                                    await vm.setRequestClientAddresses(
-                                    requestClientAddresses,
-                                    request.id,
-                                    transaction)
+                                    await vm.setRequestClientAddresses(requestClientAddresses, request.id, transaction)
                                     .then((clientAddresses) => {
                                         _.set(requestClient, 'requestClientAddresses', clientAddresses)
                                     })
@@ -45,10 +42,8 @@ module.exports = (server) => {
                                             requestId: request.id
                                         })
                                     })
-                                    await vm.setRequestClientPhones(
-                                    requestClientPhones,
-                                    request.id,
-                                    transaction)
+
+                                    await vm.setRequestClientPhones(requestClientPhones, request.id, transaction)
                                     .then((clientPhones) => {
                                         _.set(requestClient, 'requestClientPhones', clientPhones)
                                     })
@@ -132,6 +127,7 @@ module.exports = (server) => {
                     })
                 })
             },
+            
             setRequestClientPhones(data, requestId, transaction){
                 return server.mysql.RequestClientPhone.destroy({
                     where: {

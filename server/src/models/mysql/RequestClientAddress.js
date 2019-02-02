@@ -50,7 +50,6 @@ module.exports = {
                 updatedAt: 'dateUpdated',
                 createdAt: 'dateCreated',
                 deletedAt: 'dateRemoved',
-                paranoid: true,
                 freezeTableName: true
             })
         }
