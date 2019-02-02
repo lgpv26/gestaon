@@ -314,11 +314,20 @@ module.exports = server => {
                                 _.set(data, "requestOrder.requestOrderProducts", orderProducts)
                             }))
                 }
+
                 if (_.has(data, "requestPayments")) {
                     removeTemps.push(
                         this.removeArrayTempIds(data, "requestPayments")
                             .then((requestPayments) => {
                                 _.set(data, "requestPayments", requestPayments)
+                            }))
+                }
+
+                if (_.has(data, "requestClientAddresses")) {
+                    removeTemps.push(
+                        this.removeArrayTempIds(data, "requestClientAddresses")
+                            .then((requestClientAddresses) => {
+                                _.set(data, "requestClientAddresses", requestClientAddresses)
                             }))
                 }
 
@@ -563,21 +572,31 @@ module.exports = server => {
                     data.requestClientAddresses = []
 
                     detailsData.requestClientAddresses.forEach((requestClientAddress, index) => {
-                            data.requestClientAddresses.push(
-                                _.find(client.clientAddresses, (clientAddress) => {
-                                    if (_.has(clientAddress, "tmpId")) {
-                                        return clientAddress.tmpId == requestClientAddress.clientAddressId
-                                    } 
-                                    else {
-                                        return clientAddress.id == requestClientAddress.clientAddressId
-                                    }
-                                })
-                            )
-                        })
+
+                        let clientAddress = null
+
+                        if(requestClientAddress.clientAddressId && !_.isNumber(requestClientAddress.clientAddressId)){
+                            clientAddress = _.find(client.clientAddresses, (clientAddress) => {
+                                if (_.has(clientAddress, "tmpId")) {
+                                    return clientAddress.tmpId == requestClientAddress.clientAddressId
+                                } 
+                                else {
+                                    return clientAddress.id == requestClientAddress.clientAddressId
+                                }
+                            })
+                        }
+
+                        if(!_.isNumber(requestClientAddress.requestId)) _.set(requestClientAddress, 'requestId', request.id)
+
+                        if(clientAddress) _.set(requestClientAddress, 'clientAddressId', clientAddress.id)
+
+                        data.requestClientAddresses.push(requestClientAddress)
+                    })
                 }
 
                 if (_.has(detailsData, "requestClientPhones")) {
                     detailsData.requestClientPhones.forEach((requestClientPhone, index) => {
+
                             data.requestClientPhones.push(
                                 _.find(client.clientPhones, clientPhone => {
                                     if (_.has(clientPhone, "tmpId")) {

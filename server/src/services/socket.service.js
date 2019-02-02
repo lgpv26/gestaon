@@ -186,7 +186,7 @@ module.exports = server => {
                 }
                 console.log("Processed Queue")
                 //processedQueue
-                server.io.emit("request-queue:sync", new EventResponse(response))
+                server.io.in('company/' + ctx.params.companyId).emit("request-queue:sync", new EventResponse(response))
             },
 
             conected(ctx) {

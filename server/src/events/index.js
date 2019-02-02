@@ -56,22 +56,18 @@ module.exports = class Events {
                 where: {
                     accessToken: token
                 },
-                include: [
-                    {
+                include: [{
                         model: this.server.mysql.User,
                         as: 'user',
-                        include: [
-                            {
+                        attributes: { exclude: ['password']},
+                        include: [{
                                 model: this.server.mysql.Company,
                                 as: 'companies'
-                            },
-                            {
+                            }, {
                                 model: this.server.mysql.CompanyUser,
                                 as: 'userCompanies'
-                            }
-                        ]
-                    }
-                ]
+                            }]
+                    }]
             }).then((userAccessToken) => {
                 if (userAccessToken && typeof userAccessToken.user !== 'undefined') {
                     // initial setting when user connects, or reconnects
@@ -169,8 +165,10 @@ module.exports = class Events {
                 if(!!this._versionInterval){
                     clearInterval(this._versionInterval)
                 }
-                
-                this.server.io.in('company/' + socket.activeCompany.id).emit('presence:remove', new EventResponse(socket.user.id))
+
+                if(socket.activeCompany) this.server.io.in('company/' + socket.activeCompany.id).emit('presence:remove', new EventResponse(socket.user.id))
+                if(!socket.activeCompany && socket.user.activeCompanyUserId) this.server.io.in('company/' + socket.user.activeCompanyUserId).emit('presence:remove', new EventResponse(socket.user.id))
+                if(!socket.activeCompany && socket.user.companies) this.server.io.in('company/' + socket.user.companies[0].id).emit('presence:remove', new EventResponse(socket.user.id))
 
                 this.server.broker.call('socket.remove', {
                     activeSocketId: socket.instance.id

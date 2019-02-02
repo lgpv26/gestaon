@@ -370,7 +370,7 @@ module.exports = server => {
                                         paranoid: false,
                                         transaction
                                     })
-                                    .then(clientPhoneUpdate => {
+                                    .then((clientPhoneUpdate) => {
                                     /*
                                     if (parseInt(_.toString(clientPhoneUpdate)) < 1) {
                                         console.log("Nenhum registro encontrado. Update. clientPhone")
@@ -379,7 +379,7 @@ module.exports = server => {
                                     */
                                     return server.mysql.ClientPhone.findById(clientPhone.id, {
                                         transaction
-                                    }).then(clientPhoneUpdated => {
+                                    }).then((clientPhoneUpdated) => {
                                         return _.assign(JSON.parse(JSON.stringify(clientPhoneUpdated)), {select: clientPhone.select})
                                     })
                                 })
@@ -387,9 +387,9 @@ module.exports = server => {
                         } 
                         else {
                             clientPhonesPromises.push(
-                                server.mysql.ClientPhone.create(clientPhone, {
+                                server.mysql.ClientPhone.create((clientPhone), {
                                     transaction
-                                }).then(clientPhoneCreate => {
+                                }).then((clientPhoneCreate) => {
                                     if (!clientPhoneCreate) {
                                         console.log("Nenhum registro encontrado. Create clientPhone.")
                                         return Promise.reject("Erro ao cadastrar telefone do cliente.")
@@ -402,7 +402,7 @@ module.exports = server => {
                     })
 
                     return Promise.all(clientPhonesPromises)
-                        .then(clientPhones => {
+                        .then((clientPhones) => {
                             return clientPhones
                         })
                         .catch((err) => {
