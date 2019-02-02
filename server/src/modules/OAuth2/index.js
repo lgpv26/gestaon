@@ -18,10 +18,10 @@ module.exports = (server) => {
                                 resolve({
                                     id: config.oAuth2.webClient.encryptedId,
                                     grants: ['password','refresh_token']
-                                });
+                                })
                             }
                             else {
-                                reject(new Error("Invalid client_secret."));
+                                return reject("Invalid client_secret.")
                             }
                             break;
                         case config.oAuth2.rnClient.encryptedId:
@@ -29,14 +29,14 @@ module.exports = (server) => {
                                 resolve({
                                     id: config.oAuth2.rnClient.encryptedId,
                                     grants: ['password','refresh_token']
-                                });
+                                })
                             }
                             else {
-                                reject(new Error("Invalid client_secret."));
+                                return reject("Invalid client_secret.")
                             }
                             break;
                         default:
-                            reject(new Error("Invalid client_id."));
+                        return reject("Invalid client_id.")
                             break;
                     }
                 });
@@ -60,10 +60,10 @@ module.exports = (server) => {
                     ]
                 }).then((user) => {
                     if(!user){
-                        throw new Error('Invalid e-mail or password.');
+                        return reject('Invalid e-mail or password.')
                     }
                     if(!bcrypt.compareSync(password, user.password)){
-                        throw new Error("Password is not valid.");
+                        return reject("Password is not valid.")
                     }
                     return user;
                 });
@@ -76,7 +76,8 @@ module.exports = (server) => {
                         scope: token.scope,
                         appId: client.id,
                         userId: user.id
-                    }, {transaction: t}).then((userAccessToken) => {
+                    }, {transaction: t})
+                    .then((userAccessToken) => {
                         return server.mysql.UserRefreshToken.create({
                             refreshToken: token.refreshToken,
                             expiresAt: token.refreshTokenExpiresAt,
@@ -104,7 +105,7 @@ module.exports = (server) => {
                     };
                 }).catch((err) => {
                     console.log("Error saving user Access Token.", err)
-                    return err;
+                    return Promise.reject(err)
                 });
             },
             getRefreshToken(refreshToken){
@@ -131,9 +132,7 @@ module.exports = (server) => {
                         }
                     ]
                 }).then((refreshToken) => {
-                    if(!refreshToken){
-                        throw new Error("Invalid refresh token.")
-                    }
+                    if(!refreshToken) return Promise.reject("Invalid refresh token.")
                     return {
                         refreshToken: refreshToken.refreshToken,
                         refreshTokenExpiresAt: refreshToken.expiresAt,

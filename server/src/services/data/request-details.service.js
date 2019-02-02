@@ -22,17 +22,8 @@ module.exports = (server) => {
                                 const requestClient = {}
 
                                 if(_.has(ctx.params.data, "requestClientAddresses")) {
-                                    
-                                    const requestClientAddresses = _.map(ctx.params.data.requestClientAddresses, (requestClientAddress) => {
-                                        return _.assign({clientAddressId: requestClientAddress.id,
-                                            requestId: request.id
-                                        })
-                                    })
-                                    
-                                    await vm.setRequestClientAddresses(
-                                    requestClientAddresses,
-                                    request.id,
-                                    transaction)
+                                                                        
+                                    await vm.setRequestClientAddresses(ctx.params.data.requestClientAddresses, request.id, transaction)
                                     .then((clientAddresses) => {
                                         _.set(requestClient, 'requestClientAddresses', clientAddresses)
                                     })
@@ -45,10 +36,8 @@ module.exports = (server) => {
                                             requestId: request.id
                                         })
                                     })
-                                    await vm.setRequestClientPhones(
-                                    requestClientPhones,
-                                    request.id,
-                                    transaction)
+
+                                    await vm.setRequestClientPhones(requestClientPhones, request.id, transaction)
                                     .then((clientPhones) => {
                                         _.set(requestClient, 'requestClientPhones', clientPhones)
                                     })
@@ -69,9 +58,9 @@ module.exports = (server) => {
         methods: {
             setRequestClientAddresses(data, requestId, transaction){
                 const promises = []
-                data.forEach((clientAddress, index) => {
+                data.forEach((requestClientAddressGeo, index) => {
                     promises.push(
-                        this.getGeo(clientAddress.clientAddressId, transaction)
+                        this.getGeo(requestClientAddressGeo.clientAddressId, transaction)
                         .then((geo) => {
                             if (!_.isEmpty(geo)) {
                                 _.set(data[index], 'lat', geo.lat)
@@ -80,7 +69,8 @@ module.exports = (server) => {
                         })
                     )
                 })
-    
+
+                
                 return Promise.all(promises).then(() => {
                     return server.mysql.RequestClientAddress.destroy({
                         where: {
@@ -88,15 +78,45 @@ module.exports = (server) => {
                         },
                         transaction
                     }).then(() => {
-                        return server.mysql.RequestClientAddress.bulkCreate(data, {
-                            updateOnDuplicate: ['requestId', 'clientAddressId', 'type', 'lat', 'lng', 'dateUpdated', 'dateRemoved', 'status'],
-                            transaction
-                        }).then((response) => {
-                            return response
-                        }).catch((error) => {
-                            console.log("Erro: no bulkCreate do data/request.setRequestClientAddresses")
-                            return Promise.reject("Erro ao salvar o endereço do cliente no pedido (google maps)")
+                        let promisesRequest = []
+                        data.forEach((requestClientAddress) => {
+                            if (requestClientAddress.id) {
+                                promisesRequest.push(
+                                    server.mysql.RequestClientAddress.update(_.assign(requestClientAddress, {dateRemoved: null}),{
+                                        where: {
+                                            id: requestClientAddress.id
+                                        },
+                                        paranoid: false,
+                                        transaction
+                                    })
+                                    .then(() => {
+                                        return server.mysql.RequestClientAddress.findById(requestClientAddress.id, {
+                                            transaction
+                                        }).then((RequestClientAddress) => {
+                                            return JSON.parse(JSON.stringify(RequestClientAddress))
+                                        })
+                                    })
+                                )
+                            } 
+                            else {
+                                promisesRequest.push(
+                                    server.mysql.RequestClientAddress.create(requestClientAddress, {
+                                        transaction
+                                    }).then((requestClientAddressCreate) => {
+                                        if (!requestClientAddressCreate) return Promise.reject("Erro ao cadastrar endereço do cliente.")
+                                        return JSON.parse(JSON.stringify(requestClientAddressCreate))
+                                    })
+                                )
+                            }
                         })
+    
+                        return Promise.all(promisesRequest)
+                            .then((requestClientAddresses) => {
+                                return requestClientAddresses
+                            })
+                            .catch((err) => {
+                                return Promise.reject(err,"Erro ao atualizar endereços do cliente no pedido.")
+                            })
                     })
                 })
             },
@@ -107,9 +127,9 @@ module.exports = (server) => {
                         include: [{
                             model: server.mysql.Address,
                             as: 'address'
-                        }]
-                    },
-                    transaction)
+                        }],
+                        transaction
+                    })
                     .then((clientAddress) => {
                         const name = (clientAddress.address.name) ? clientAddress.address.name : ''
                         const number = (clientAddress.number) ? ', ' + clientAddress.number : ''
@@ -132,6 +152,7 @@ module.exports = (server) => {
                     })
                 })
             },
+            
             setRequestClientPhones(data, requestId, transaction){
                 return server.mysql.RequestClientPhone.destroy({
                     where: {

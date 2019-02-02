@@ -128,7 +128,6 @@ module.exports = (server, restify) => {
         })
     })
 
-
     server.post('/requests/persistence/:draftId', (req, res, next) => {
         return server.broker.call('draft/request/persistence.start', {
             request: req.body,
@@ -156,7 +155,8 @@ module.exports = (server, restify) => {
     })
 
     server.post('/requests/importPayments', (req, res, next) => {
-        return server.broker.call('data/request.importPayment').then((request) => {
+        return server.broker.call('data/request.importPayment')
+        .then((request) => {
             return res.send(200, request)
         }).catch((err) => {
             console.log(err)
