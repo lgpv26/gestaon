@@ -547,6 +547,87 @@ module.exports = (server) => { return {
                 }))
                 return ctx.params.data.cardId
             })
+        },
+
+        getDashboard(ctx) {
+            return server.mysql.Request.findAll({
+                where: {
+                    deliveryDate: {
+                        [Op.gte]: moment(ctx.params.date).startOf("day").toDate(),
+                        [Op.lte]: moment(ctx.params.date).endOf("day").toDate()
+                    },
+                    companyId: parseInt(ctx.params.companyId)
+                },
+                include: [{
+                    model: server.mysql.RequestTimeline,
+                    as: "requestTimeline",
+                    include: [{
+                        model: server.mysql.User,
+                        as: "triggeredByUser",
+                        attributes: ['id', 'name', 'email']
+                    }, {
+                        model: server.mysql.User,
+                        as: "user",
+                        attributes: ['id', 'name', 'email']
+                    }]
+                }, {
+                    model: server.mysql.RequestClientPhone,
+                    as: "requestClientPhones",
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: "clientPhone",
+                    }]
+                }, {
+                    model: server.mysql.RequestClientAddress,
+                    as: "requestClientAddresses",
+                    include: [{
+                        model: server.mysql.ClientAddress,
+                        as: "clientAddress",
+                        include: [{
+                            model: server.mysql.Address,
+                            as: "address"
+                        }]
+                    }]
+                }, {
+                    model: server.mysql.Client,
+                    as: "client",
+                    include: [{
+                        model: server.mysql.ClientPhone,
+                        as: 'clientPhones'
+                    }, {
+                        model: server.mysql.ClientAddress,
+                        as: 'clientAddresses',
+                        include: [{
+                            model: server.mysql.Address,
+                            as: 'address'
+                        }]
+                    }, {
+                        model: server.mysql.ClientCustomField,
+                        as: 'clientCustomFields',
+                        include: [{
+                            model: server.mysql.CustomField,
+                            as: 'customField'
+                        }]
+                    }, {
+                        model: server.mysql.ClientGroup,
+                        as: 'clientGroup'
+                    }]
+                }, {
+                    model: server.mysql.RequestOrder,
+                    as: "requestOrder",
+                    include: [{
+                        model: server.mysql.RequestOrderProduct,
+                        as: 'requestOrderProducts'
+                    }]
+                }, {
+                    model: server.mysql.RequestPayment,
+                    as: "requestPayments"
+                }]
+            })
+                .then((requestBoard) => {
+                    return JSON.parse(JSON.stringify(requestBoard))
+                })
+
         }
     }
 }}
