@@ -93,7 +93,11 @@
                                 <td style="padding-right: 8px;">
                                     <app-select :items="getSelectPaymentMethods"
                                                 :value="requestPayment.id"
-                                                @input="updateValue('entities/requestPayments/update','paymentMethodId',requestPayment.id,$event)"
+                                                @input="updateValue(
+                                                'entities/requestPayments/update',
+                                                'paymentMethodId',
+                                                requestPayment.id,
+                                                $event)"
                                                 :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
                                         <input type="text" class="select readonly" style="margin-bottom: 0;" readonly
                                                :value="(_.has(requestPayment,'paymentMethod.name')) ? requestPayment.paymentMethod.name : '-- SELECIONE --'"/>
@@ -103,11 +107,26 @@
                                     </app-select>
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', true)" type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
+                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)"
+                                           :value="requestPayment.code"
+                                           @input="updateValue(
+                                           'entities/requestPayments/update',
+                                           'code',
+                                           requestPayment.id,
+                                           $event.target.value,
+                                           'uppercase')"
+                                           type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
                                     <input v-else type="text" class="input readonly" style="margin-bottom: 0; text-align: center;" disabled value="---" />
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', true)" type="text" class="input" style="margin-bottom: 0; text-align: right;" placeholder="##/##/####" />
+                                    <app-datetime-selector
+                                            v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)"
+                                            class="input no-margin-bottom align-right"
+                                            :value="requestPayment.deadlineDatetime"
+                                            @input="updateValue('entities/requestPayments/update','deadlineDatetime',requestPayment.id,$event)"
+                                            :config="datetimeSelectorConfig"
+                                            placeholder="##/##/####">
+                                    </app-datetime-selector>
                                     <input v-else type="text" class="input readonly" disabled style="margin-bottom: 0; text-align: right;" value="---" />
                                 </td>
                                 <td>
@@ -164,7 +183,8 @@
                             <h3>Data da entrega</h3>
                             <app-datetime-selector
                                     class="input"
-                                    v-model="deliveryDate"
+                                    :value="request.deliveryDate"
+                                    @input="onDeliveryDateChange($event)"
                                     :config="datetimeSelectorConfig"
                                     placeholder="...">
                             </app-datetime-selector>
@@ -210,7 +230,7 @@
             return {
                 datetimeSelectorConfig: {
                     altInput: true,
-                    altFormat: 'd/m/Y H:i',
+                    altFormat: 'd/m/Y',
                     dateFormat: 'Z',
                     locale: Portuguese,
                     time_24hr: true,
@@ -293,9 +313,15 @@
             }
         },
         methods: {
-            updateValue(path, field, id, value){
+            updateValue(path, field, id, value, modifier = false){
                 const data = {}
-                data[field] = value
+                switch (modifier) {
+                    case "uppercase":
+                        data[field] = value.toUpperCase();
+                        break;
+                    default:
+                        data[field] = value;
+                }
                 this.$store.dispatch(path, {
                     where: id,
                     data
@@ -310,6 +336,10 @@
                         data
                     })
                 }
+            },
+
+            onDeliveryDateChange(value){
+                this.updateValue('entities/requests/update','deliveryDate',this.request.id,value)
             },
 
             /* Order Product */
@@ -360,6 +390,11 @@
 <style lang="scss" scoped>
     @import '../window.scss';
     @import './request.scss';
+
+    .deadline-datetime.input {
+        margin-bottom: 0!important;
+    }
+
     .request__window {
         flex-grow: 1;
         display: flex;

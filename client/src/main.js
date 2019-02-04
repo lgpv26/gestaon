@@ -55,9 +55,10 @@ import "vue-awesome/icons";
 import Icon from "vue-awesome/components/Icon";
 
 /* Set Vue */
-Vue.set(Vue.prototype, "_", _);
-Vue.set(Vue.prototype, "config", config);
-Vue.set(Vue.prototype, "utils", utils);
+Vue.set(Vue.prototype, "_", _)
+Vue.set(Vue.prototype, "moment", moment)
+Vue.set(Vue.prototype, "config", config)
+Vue.set(Vue.prototype, "utils", utils)
 Vue.set(Vue.prototype, "modelDefinitions", {
   offlineDBModels: {
     clients: "id, name",
@@ -83,7 +84,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
     STATE_requestUIState:
       "id, activeTab, isAddingClientAddress, requestClientAddressForm, requestId, showClientOrderTimeline",
     STATE_requestPayments:
-      "id, requestId, paymentMethodId, amount, dateUpdated, dateCreated, dateRemoved",
+      "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
     STATE_requestOrderProducts:
       "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
     STATE_requestOrders:
@@ -98,7 +99,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
     STATE_requestClientAddresses:
       "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
     STATE_requests:
-      "id, clientId, dateCreated, dateUpdated, dateRemoved, deliveryDate, requestOrderId, requestUIState, status, userId",
+      "id, clientId, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, requestUIState, status, userId",
     STATE_windows: "id, show, zIndex"
   }
 });

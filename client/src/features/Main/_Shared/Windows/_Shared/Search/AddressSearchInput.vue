@@ -66,7 +66,6 @@ export default {
   },
   computed: {
     isEditing() {
-      console.log(this.address);
       return Number.isInteger(this.address.id);
     }
   },

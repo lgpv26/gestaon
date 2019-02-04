@@ -12,28 +12,14 @@
         <h3>{{ section.name }}</h3>
         <span class="push-both-sides"></span>
         <ul style="display: flex; flex-direction: row">
-          <li
-            @click="collapseSection(section.id)"
-            style="width: 21px; height: 16px;"
-          >
+          <li @click="collapseSection(section.id)" style="width: 21px; height: 16px;">
             <icon-section-collapse></icon-section-collapse>
           </li>
-          <li
-            @click="expandSection(section.id)"
-            style="width: 21px; height: 16px;"
-          >
+          <li @click="expandSection(section.id)" style="width: 21px; height: 16px;">
             <icon-section-expand></icon-section-expand>
           </li>
-          <li
-            @mouseover="setLastHoveredSection(section)"
-            class="section-title__settings-button"
-            style="width: 15px; height: 16px;"
-          >
-            <app-dropdown-menu
-              :menuList="sectionMenuList"
-              :params="sectionMenuParams"
-              :closeOnSelect="true"
-            >
+          <li @mouseover="setLastHoveredSection(section)" class="section-title__settings-button" style="width: 15px; height: 16px;">
+            <app-dropdown-menu :menuList="sectionMenuList" :params="sectionMenuParams" :closeOnSelect="true">
               <a href="javascript:void(0)" style="display: flex; height: 16px;">
                 <icon-section-settings></icon-section-settings>
               </a>
@@ -43,17 +29,8 @@
       </div>
     </div>
     <div class="scrollable-content">
-      <app-perfect-scrollbar
-        class="board-section__viewport"
-        :style="{ width: sectionWidth, height: sectionHeight }"
-      >
-        <div
-          class="board-section__cards"
-          :style="{
-            'padding-bottom': options.gutterSize + 'px',
-            'padding-left': options.gutterSize + 'px'
-          }"
-        >
+      <app-perfect-scrollbar class="board-section__viewport" :style="{ width: sectionWidth, height: sectionHeight }">
+        <div class="board-section__cards" :style="{'padding-bottom': options.gutterSize + 'px','padding-left': options.gutterSize + 'px'}">
           <div
             class="request-card"
             v-for="request in sectionRequests"
@@ -84,10 +61,10 @@ import DraggableComponent from "vuedraggable";
 import _ from "lodash";
 import shortid from "shortid";
 
-import RequestBoardDraftCard from "./RequestBoardDraftCard.vue";
-import RequestBoardCard from "./RequestBoardCard.vue";
+import RequestBoardDraftCard from "./RequestBoardDraftCard.vue"
+import RequestBoardCard from "./RequestBoardCard.vue"
 
-import Request from "../../../../vuex/models/Request";
+import Request from "../../../../vuex/models/Request"
 
 import Vue from "vue";
 
@@ -182,7 +159,7 @@ export default {
                 _.includes(
                   this.filters.promotionChannels,
                   request.requestOrder.promotionChannelId
-                ));
+                ))
             const status =
               _.get(this.filters, "status", []).length === 0 ||
               (_.has(request, "status") &&

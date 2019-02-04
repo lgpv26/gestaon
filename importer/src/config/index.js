@@ -19,14 +19,14 @@ if(process.env.NODE_ENV === 'production'){
             host: 'localhost',
             dbName: 'gestaon-dev',
             user: 'root',
-            password: '140992'
+            password: 'attroot'
         },
         databaseImporter: {
             dialect: 'mysql',
             host: 'localhost',
-            dbName: 'gestaoazul',
+            dbName: 'gestaoazul-azzu',
             user: 'root',
-            password: '140992'
+            password: 'attroot'
         },
         elasticSearch: {
             host: 'localhost',
@@ -52,14 +52,14 @@ else {
             host: 'localhost',
             dbName: 'gestaon-dev',
             user: 'root',
-            password: '140992'
+            password: 'atrroot'
         },
         databaseImporter: {
             dialect: 'mysql',
             host: 'localhost',
-            dbName: 'gestaoazul',
+            dbName: 'gestaoazul-azzu',
             user: 'root',
-            password: '140992'
+            password: 'atrroot'
         },
         elasticSearch: {
             host: 'localhost',

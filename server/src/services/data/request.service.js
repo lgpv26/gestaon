@@ -212,6 +212,7 @@ module.exports = server => {
 
                                     const dataTimeline = await new Promise((resolve, reject) => {
                                         _.unset(ctx.params.data, "id")
+                                        _.set(ctx.params.data, "action", "update-status")
                                         resolve(ctx.params.data)
                                     })
 

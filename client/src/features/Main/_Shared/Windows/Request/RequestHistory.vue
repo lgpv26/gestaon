@@ -1,68 +1,88 @@
 <template>
-    <div class="request__history" v-if="show">
+    <div class="request__history">
         <a href="javascript:void(0)" class="back" @click="$emit('close',true)"><i class="mi mi-undo"></i></a>
-        <div class="timeline">
-            <div class="entry">
-                <div class="title">
-                    <h3>26/04/1994</h3>
-                    <p>Title, Company</p>
+        <app-perfect-scrollbar class="scrollbar">
+            <div class="header">
+                <h3>Histórico de compras de {{ request.client.name }} - {{ requestHistoryCount }}</h3>
+            </div>
+            <div class="timeline">
+                <div class="entry" v-for="historyRequest in historyRequests" :key="historyRequest.id">
+                    <div class="title">
+                        <h3>{{ moment(historyRequest.deliveryDate).format("DD/MM/YYYY HH:mm:ss") }}</h3>
+                        <p>Title, Company</p>
+                    </div>
+                    <div class="body">
+                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
+                        <ul>
+                            <li>Rerum sit libero possimus amet excepturi</li>
+                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
+                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="body">
-                    <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                    <ul>
-                        <li>Rerum sit libero possimus amet excepturi</li>
-                        <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                        <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                    </ul>
+                <div class="entry">
+                    <div class="title">
+                        <h3>AA</h3>
+                        <p>Title, Company</p>
+                    </div>
+                    <div class="body">
+                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
+                        <ul>
+                            <li>Rerum sit libero possimus amet excepturi</li>
+                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
+                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="entry">
+                    <div class="title">
+                        <h3>AA</h3>
+                        <p>Title, Company</p>
+                    </div>
+                    <div class="body">
+                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
+                        <ul>
+                            <li>Rerum sit libero possimus amet excepturi</li>
+                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
+                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="entry">
+                    <div class="title">
+                        <h3>AA</h3>
+                        <p>Title, Company</p>
+                    </div>
+                    <div class="body">
+                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
+                        <ul>
+                            <li>Rerum sit libero possimus amet excepturi</li>
+                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
+                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="entry">
+                    <div class="title">
+                        <h3>AA</h3>
+                        <p>Title, Company</p>
+                    </div>
+                    <div class="body">
+                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
+                        <ul>
+                            <li>Rerum sit libero possimus amet excepturi</li>
+                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
+                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            <div class="entry">
-                <div class="title">
-                    <h3>28/04/1994</h3>
-                    <p>Title, Company</p>
-                </div>
-                <div class="body">
-                    <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                    <ul>
-                        <li>Rerum sit libero possimus amet excepturi</li>
-                        <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                        <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="entry">
-                <div class="title">
-                    <h3>2009 - 2010</h3>
-                    <p>Title, Company</p>
-                </div>
-                <div class="body">
-                    <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                    <ul>
-                        <li>Rerum sit libero possimus amet excepturi</li>
-                        <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                        <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="entry">
-                <div class="title">
-                    <h3>2006 - 2008</h3>
-                    <p>Title, Company</p>
-                </div>
-                <div class="body">
-                    <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                    <ul>
-                        <li>Rerum sit libero possimus amet excepturi</li>
-                        <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                        <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        </app-perfect-scrollbar>
     </div>
 </template>
 
 <script>
+    import ClientsAPI from '../../../../../api/clients'
     import { mapMutations, mapState, mapActions } from 'vuex'
     import _ from 'lodash'
     import Vue from 'vue'
@@ -74,15 +94,29 @@
         },
         data(){
             return {
+                total: 0,
+                historyRequests: []
             }
         },
         computed: {
+            requestHistoryCount(){
+                return `${this.total} PEDIDO(S)`
+            }
         },
         methods: {
         },
         created(){
         },
         mounted(){
+            if(Number.isInteger(this.request.clientId)){
+                ClientsAPI.getRequestHistory(this.request.clientId, {companyId: 1, offset: 0, limit: 10}).then((response) => {
+                    this.historyRequests = response.evData.previousRequests
+                    this.total = response.evData.total
+                    console.log("Request History", response.evData.previousRequests)
+                })
+                return true
+            }
+            this.historyRequests = []
         }
     }
 </script>
@@ -93,17 +127,27 @@
         $border-width: 3px;
         $dot-diameter: 18px;
         position: absolute;
-        overflow-y: auto;
         left: 0;
         right: 0;
         top: 0;
         bottom: 0;
         z-index: 99;
         background-color: var(--bg-color--2);
+        .scrollbar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+        }
+        div.header {
+            padding: 20px 8px;
+        }
         a.back {
+            z-index: 1;
             position: absolute;
             right: 20px;
-            top: 20px;
+            top: 15px;
             i {
                 font-size: 48px;
             }

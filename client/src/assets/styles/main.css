@@ -40,6 +40,13 @@ body {
     text-transform: uppercase;
 }
 
+.input.no-margin-bottom {
+    margin-bottom: 0;
+}
+.input.align-right {
+    text-align: right;
+}
+
 .input:hover, .input:active, .input:focus {
     border-bottom: 1px solid #525662;
 }
@@ -451,6 +458,23 @@ li.router-link-active svg.icon {
 }
 [data-scrollbar].sticky .scrollbar-track .scrollbar-thumb.scrollbar-thumb-y, [scrollbar].sticky .scrollbar-track .scrollbar-thumb.scrollbar-thumb-y {
     width: 12px;
+}
+
+.ps>.ps__scrollbar-y-rail {
+    width: 10px;
+    background: transparent!important;
+}
+
+.ps:hover>.ps__scrollbar-y-rail:hover {
+    background-color: transparent!important;
+}
+
+.ps>.ps__scrollbar-y-rail>.ps__scrollbar-y, .ps>.ps__scrollbar-y-rail>.ps__scrollbar-y {
+    background-color: rgba(255,255,255,.25)!important;
+}
+
+.ps>.ps__scrollbar-y-rail:active>.ps__scrollbar-y, .ps>.ps__scrollbar-y-rail:hover>.ps__scrollbar-y {
+    width: 8px!important;
 }
 
 .highcharts-credits {

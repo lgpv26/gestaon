@@ -1,7 +1,8 @@
 <template>
   <div v-if="_.has(request, 'requestUIState') && _.has(request, 'client')" class="request__window">
     <app-request-history
-      :show="request.requestUIState.showClientOrderTimeline"
+      v-if="request.requestUIState.showClientOrderTimeline"
+      :request="request"
       @close="
         updateValue(
           'entities/requestUIState/update',
@@ -721,7 +722,6 @@ export default {
         default:
           data[field] = value;
       }
-
       this.$store.dispatch(path, {
         where: id,
         data
