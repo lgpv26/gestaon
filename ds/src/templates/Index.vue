@@ -1,6 +1,7 @@
 <template>
   <component :is="type" class="index">
     <NavBar
+      class="NavBar"
       active="Index"
       :navItems="[
         { name: 'Home', component: 'Index', href: '/#/' },
@@ -9,12 +10,6 @@
       ]"
     />
     <TopBanner />
-    <Proccess />
-    <Reviews />
-    <Advantages />
-    <Features />
-    <Plans />
-    <Footer />
   </component>
 </template>
 
@@ -46,9 +41,7 @@ export default {
 
 <style lang="scss" scoped>
 .index {
-  text-align: center;
-  position: relative;
-  width: 100%;
+  background: black;
 }
 </style>
 

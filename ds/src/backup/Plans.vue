@@ -261,7 +261,8 @@ export default {
   }
   .liga-desliga__checkbox {
     position: absolute;
-    left: -9999px;
+    left: 0px;
+    display: none;
   }
   .liga-desliga__botao {
     display: inline-block;
@@ -355,20 +356,6 @@ export default {
       border: 2px solid #276e73;
       color: #276e73;
     }
-  }
-  .I1 {
-    margin-right: -21px;
-    height: 35px;
-    position: relative;
-    float: right;
-    font-family: Montserrat Alternates;
-  }
-  .I2 {
-    margin-left: -21px;
-    padding-right: 0px;
-    height: 35px;
-    float: left;
-    font-family: Montserrat Alternates;
   }
   .bloco {
     padding: 0px 80px 0px 80px;
