@@ -57,7 +57,12 @@ module.exports = server => {
                                 //Check if is "autoPay" (notinha ou que use limite) e identifica o cliente para estorno do Limite
                                 if (!requestPayment.paymentMethod.autoPay) {
                                     _.set(removedRequestPayments[index], "request.client", client)
+                                    _.set(removedRequestPayments[index], "oldAmount", requestPayment.amount)
                                 }
+                                if(requestPayment.paid) {
+                                    _.set(removedRequestPayments[index], "oldPaid", requestPayment.paid)
+                                    _.set(removedRequestPayments[index], "request", oldRequest)
+                                } 
                                 resolve()
                             })
                         )
@@ -194,7 +199,6 @@ module.exports = server => {
                         requestPayment.requestPaymentTransactions.sort((a, b) => {
                             return new Date(b.dateCreated) - new Date(a.dateCreated)
                         })
-                        //console.log('ERRO ASDIUADBASKDA', revertsRequestPayments)
 
                         const requestTransaction = _.first(requestPayment.requestPaymentTransactions)
 
@@ -288,6 +292,7 @@ module.exports = server => {
                 return new Promise((resolve, reject) => {
                     if (reverseLimitRequestPayments.length) {
                         const clientLimitInUse = _.sumBy(reverseLimitRequestPayments, "oldAmount")
+
                         return server.mysql.Client.update({
                             limitInUse: parseFloat(client.limitInUse) - parseFloat(clientLimitInUse)
                         }, {

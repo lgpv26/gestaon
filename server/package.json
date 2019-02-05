@@ -4,9 +4,9 @@
   "description": "Server side API for Blue Agile tracker system.",
   "main": "npm run start",
   "scripts": {
-    "start": "npm run build && node dist/boot/app.js",
+    "start": "nodemon --exec babel-node src/boot/app.js", 
     "build": "babel src -d dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run build && node dist/boot/app.js"
   },
   "keywords": [
     "blue",
@@ -62,6 +62,7 @@
     "babel-preset-stage-0": "^6.16.0",
     "g": "^2.0.1",
     "install": "^0.8.4",
+    "nodemon": "^1.18.9",
     "npm": "^4.1.1",
     "pretty-logger": "^0.1.2",
     "sequelize-cli": "^3.0.0"

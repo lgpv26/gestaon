@@ -297,7 +297,8 @@ module.exports = server => {
                     attributes: ctx.params.attributes || {},
                     order: ctx.params.order || [],
                     limit: ctx.params.limit || 10,
-                    offset: ctx.params.offset || 0
+                    offset: ctx.params.offset || 0,
+                    distinct: true
                 })
                 .then((result) => {
                     return JSON.parse(JSON.stringify(result))
