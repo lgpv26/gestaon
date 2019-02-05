@@ -100,6 +100,7 @@ export default {
     <Icon name="insta"/>
     <Icon name="twitter"/>
     <Icon name="whats"/>
+    <Icon name="card"/>
   </div>
   ```
 </docs>
