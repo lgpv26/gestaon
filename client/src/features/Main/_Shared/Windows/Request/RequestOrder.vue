@@ -131,7 +131,7 @@
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: row; justify-content: center; margin-top: 7px;">
-                                        <app-switch :value="true"></app-switch>
+                                        <app-switch :value="requestPayment.paid" @input="updateValue('entities/requestPayments/update','paid',requestPayment.id,$event)" ></app-switch>
                                     </div>
                                 </td>
                                 <td style="padding-right: 8px;">

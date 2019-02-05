@@ -36,7 +36,6 @@ export default {
   },
   methods: {
     ...mapMutations(["SET_WINDOW_DIMENSIONS", "SET_APP_VERSION"]),
-    ...mapActions("request-queue", ["initializeRequestQueue"]),
     setWindowDimensions() {
       this.SET_WINDOW_DIMENSIONS({
         width: document.documentElement.clientWidth,
@@ -72,8 +71,6 @@ export default {
         );
       }
     });
-
-    this.initializeRequestQueue();
 
     const promises = [];
     _.forOwn(this.modelDefinitions.stateModels, (fields, stateModelName) => {

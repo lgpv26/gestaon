@@ -177,7 +177,7 @@
             ...mapActions("toast", ["showToast", "showError"]),
             ...mapActions("presence", ["setConnectedUsers"]),
             ...mapActions("elasticlunr", ["setLunrIndex"]),
-            ...mapActions("request-queue", ["clearProcessingQueue"]),
+            ...mapActions("request-queue", ["initializeRequestQueue","clearProcessingQueue"]),
             toggleCallerIdFunctionality() {
                 console.log(this.isCallerIdDisabled);
                 if (this.isCallerIdDisabled) {
@@ -320,8 +320,8 @@
                 const vm = this;
                 console.log("System initialized");
                 vm.$socket.on("request-queue:sync", ev => {
+                    console.log("request-queue:sync", ev);
                     if (ev.success) {
-                        console.log("request-queue:sync", ev);
                         ev.evData.processedQueue.forEach(request => {
                             if (request.action === "update-status") {
                                 Request.update({
@@ -340,7 +340,6 @@
                                     }
                                 });
                             } else {
-                                console.log("Request", request);
                                 const requestId = _.get(request, "tmpId", request.id);
                                 const cards = Card.query()
                                     .where("requestId", requestId)
@@ -398,7 +397,6 @@
                                 const requestPayments = this.$store.getters['entities/requestPayments']().where('requestId',(requestId) => {
                                     return requestId === request.id
                                 }).get()
-                                console.log("requestPayments to delete", requestPayments)
                                 requestPayments.forEach((requestPayment) => {
                                     vm.$store.dispatch('entities/requestPayments/delete', requestPayment.id)
                                 })
@@ -440,9 +438,7 @@
                                 })
                                 this.$store.dispatch("entities/clientAddresses/insertOrUpdate", {
                                     data: request.client.clientAddresses
-                                });
-
-                                console.log("RESPOSTA DO REQUEST", request)
+                                })
 
                                 this.$store.dispatch(
                                     "entities/requestClientAddresses/insertOrUpdate",
@@ -456,8 +452,6 @@
                                     .with("client")
                                     .with("requestOrder.requestOrderProducts")
                                     .find(request.id);
-
-                                console.log("Saved request", savedRequest);
 
                                 Card.update({
                                     where: savedRequest.card.id,
@@ -478,7 +472,6 @@
                             }
                         });
                     }
-                    console.log("Processed Queue", ev);
                 });
             }
         },

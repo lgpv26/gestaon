@@ -36,7 +36,7 @@
                                     </tr>
                                     <tr>
                                         <td colspan="5" style="text-align: right; font-weight: bold;">
-                                            {{ utils.formatMoney(_.sumBy(historyRequest.requestOrder.requestOrderProducts, (requestOrderProduct) => (parseFloat(requestOrderProduct.unitPrice) - parseFloat(requestOrderProduct.unitDiscount) * parseFloat(requestOrderProduct.quantity))), 2, 'R$ ', '.', ',') }}
+                                            {{ utils.formatMoney(_.sumBy(historyRequest.requestOrder.requestOrderProducts, (requestOrderProduct) => ((parseFloat(requestOrderProduct.unitPrice) - parseFloat(requestOrderProduct.unitDiscount)) * parseFloat(requestOrderProduct.quantity))), 2, 'R$ ', '.', ',') }}
                                         </td>
                                     </tr>
                                 </tbody>

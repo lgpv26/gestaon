@@ -61,15 +61,15 @@ export default {
           console.log("Reconnected.");
         },
         disconnect(reason) {
-          vm.$socket.removeListener("presence:load", vm.onPresenceLoad);
+          /*vm.$socket.removeListener("presence:load", vm.onPresenceLoad);
           vm.setLoadingText("Desconectado.");
           vm.startLoading();
-          console.log("Disconnected from socket server. Reason: ", reason);
+          console.log("Disconnected from socket server. Reason: ", reason);*/
         },
         reconnectAttempt(attemptNumber) {
-          vm.setLoadingText("Tentando reconectar (" + attemptNumber + ").");
+          /*vm.setLoadingText("Tentando reconectar (" + attemptNumber + ").");
           vm.startLoading();
-          console.log("Trying reconnection.");
+          console.log("Trying reconnection.");*/
         }
       };
     },
@@ -125,10 +125,7 @@ export default {
 
     initializeSystem() {
       const vm = this;
-      /*vm.$db.delete().then(() => {
-                   console.log("Deleted")
-               })*/
-
+      vm.initializeRequestQueue(vm.$socket)
       // set elasticlunr tokenizer
       elasticlunr.tokenizer = function(str) {
         //console.log(`-------- Executando ${arguments.length} ---------`)
@@ -839,8 +836,8 @@ export default {
     /* start socket.io */
     this.initializeSocketIO();
     /* if user disconnected / reconnected from socket server */
-    this.$socket.on("reconnect_attempt", vm.socketMethods.reconnectAttempt);
-    this.$socket.on("disconnect", vm.socketMethods.disconnect);
+    this.$socket.on("reconnect_attempt", vm.socketMethods().reconnectAttempt);
+    this.$socket.on("disconnect", vm.socketMethods().disconnect);
     this.$socket.on("connect", vm.connect);
   },
   beforeDestroy() {
