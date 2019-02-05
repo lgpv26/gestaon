@@ -8,72 +8,61 @@
             <div class="timeline">
                 <div class="entry" v-for="historyRequest in historyRequests" :key="historyRequest.id">
                     <div class="title">
-                        <h3>{{ moment(historyRequest.deliveryDate).format("DD/MM/YYYY HH:mm:ss") }}</h3>
-                        <p>Title, Company</p>
+                        <h3>{{ moment(historyRequest.deliveryDate).format("DD/MM/YYYY HH:mm") }}</h3><br/>
+                        <p>Entregador: {{ $store.getters['entities/users/find'](historyRequest.deliveredBy).name }}</p>
+                        <p>Entregue às: {{ moment(historyRequest.deliveredDate).format("DD/MM/YYYY HH:mm") }}</p><br/>
+                        <p>Finalizado por: {{ $store.getters['entities/users/find'](historyRequest.finishedBy).name }}</p>
                     </div>
                     <div class="body">
-                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                        <ul>
-                            <li>Rerum sit libero possimus amet excepturi</li>
-                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="entry">
-                    <div class="title">
-                        <h3>AA</h3>
-                        <p>Title, Company</p>
-                    </div>
-                    <div class="body">
-                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                        <ul>
-                            <li>Rerum sit libero possimus amet excepturi</li>
-                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="entry">
-                    <div class="title">
-                        <h3>AA</h3>
-                        <p>Title, Company</p>
-                    </div>
-                    <div class="body">
-                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                        <ul>
-                            <li>Rerum sit libero possimus amet excepturi</li>
-                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="entry">
-                    <div class="title">
-                        <h3>AA</h3>
-                        <p>Title, Company</p>
-                    </div>
-                    <div class="body">
-                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                        <ul>
-                            <li>Rerum sit libero possimus amet excepturi</li>
-                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="entry">
-                    <div class="title">
-                        <h3>AA</h3>
-                        <p>Title, Company</p>
-                    </div>
-                    <div class="body">
-                        <p>Voluptatibus veniam ea reprehenderit atque reiciendis non laborum adipisci ipsa pariatur omnis.</p>
-                        <ul>
-                            <li>Rerum sit libero possimus amet excepturi</li>
-                            <li>Exercitationem enim dolores sunt praesentium dolorum praesentium</li>
-                            <li>Modi aut dolores dignissimos sequi sit ut aliquid molestias deserunt illo</li>
-                        </ul>
+                        <div class="table" style="margin-bottom: 10px;">
+                            <table style="width: 100%;">
+                                <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Qnt.</th>
+                                    <th>Preço</th>
+                                    <th>Desconto</th>
+                                    <th style="text-align: right">Subtotal</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="requestOrderProduct in historyRequest.requestOrder.requestOrderProducts">
+                                        <td>{{ $store.getters['entities/products/find'](requestOrderProduct.productId).name }}</td>
+                                        <td style="text-align: center;">{{ requestOrderProduct.quantity }}</td>
+                                        <td>{{ utils.formatMoney(requestOrderProduct.unitPrice, 2, 'R$ ', '.', ',') }}</td>
+                                        <td>{{ utils.formatMoney(requestOrderProduct.unitDiscount, 2, 'R$ ', '.', ',') }}</td>
+                                        <td style="text-align: right">
+                                            {{ utils.formatMoney((requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity, 2, 'R$ ', '.', ',') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5" style="text-align: right; font-weight: bold;">
+                                            {{ utils.formatMoney(_.sumBy(historyRequest.requestOrder.requestOrderProducts, (requestOrderProduct) => (parseFloat(requestOrderProduct.unitPrice) - parseFloat(requestOrderProduct.unitDiscount) * parseFloat(requestOrderProduct.quantity))), 2, 'R$ ', '.', ',') }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table">
+                            <table style="width: 100%;">
+                                <thead>
+                                <tr>
+                                    <th>Forma de Pagamento</th>
+                                    <th style="text-align: right;">Valor</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="requestPayment in historyRequest.requestPayments">
+                                        <td>{{ $store.getters['entities/paymentMethods/find'](requestPayment.paymentMethodId).name }}</td>
+                                        <td style="text-align: right;">{{ utils.formatMoney(requestPayment.amount, 2, 'R$ ', '.', ',') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="text-align: right; font-weight: bold;">
+                                            {{ utils.formatMoney(_.sumBy(historyRequest.requestPayments, (requestPayment) => parseFloat(requestPayment.amount)), 2, 'R$ ', '.', ',') }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -110,13 +99,15 @@
         mounted(){
             if(Number.isInteger(this.request.clientId)){
                 ClientsAPI.getRequestHistory(this.request.clientId, {companyId: 1, offset: 0, limit: 10}).then((response) => {
-                    this.historyRequests = response.evData.previousRequests
-                    this.total = response.evData.total
-                    console.log("Request History", response.evData.previousRequests)
+                    this.historyRequests = response.data.previousRequests
+                    this.total = response.data.total
+                    console.log("Request History", response.data)
                 })
                 return true
             }
             this.historyRequests = []
+
+
         }
     }
 </script>
@@ -154,7 +145,6 @@
         }
         .timeline {
             width:100%;
-            max-width:800px;
             padding: 100px 50px;
             position: relative;
             &:before {
@@ -170,6 +160,12 @@
                 content: "";
                 display: table;
                 clear: both;
+            }
+        }
+
+        .entry:last-child {
+            .body {
+                border-bottom: 0;
             }
         }
 
@@ -209,8 +205,10 @@
                 margin: 0 0 3em;
                 float: right;
                 width: 66%;
-                padding-left: $gutter;
+                padding-left: 30px;
                 padding-top: 2px;
+                padding-bottom: 34px;
+                border-bottom: 2px dashed #6c7077;
                 p {
                     line-height: 1.4em;
                     &:first-child {
