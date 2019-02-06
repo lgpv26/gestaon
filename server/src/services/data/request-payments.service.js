@@ -355,6 +355,8 @@ module.exports = server => {
                     let paymentsPaids = []
 
                     data.forEach((requestPayment) => {
+                        if(!requestPayment.requestId) _.set(requestPayment, "requestId", request.id)
+
                         if (requestPayment.id) {
                             paymentMethodsPromises.push(
                                 server.mysql.RequestPayment.update(_.assign(requestPayment, {

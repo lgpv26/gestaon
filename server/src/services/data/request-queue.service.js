@@ -36,8 +36,8 @@ module.exports = server => {
                                         delete obj.data.id
                                         if (checkId) obj.data.id = checkId
 
-                                        const params = await vm.checkParams(obj, mapIds)
-                                        if (params) obj.params = params
+                                        //const params = await vm.checkParams(obj, mapIds)
+                                        //if (params) obj.params = params
 
                                         obj.data = await vm.cleanTempIds(obj, mapIds)
 
@@ -166,8 +166,9 @@ module.exports = server => {
             checkId(obj, mapIds) {
                 return new Promise((resolve, reject) => {
                     if (_.get(obj, "data.id") && _.isNumber(obj.data.id)) return resolve(obj.data.id)
-                    if (_.includes(["create", "update-user", "update-status"], obj.op)) return resolve(null)
+                    if (_.includes(["update-user", "update-status"], obj.op)) return resolve(null)
                     if (obj.data.id.substring(0, 4) === "tmp/" && mapIds[obj.data.id]) return resolve(_.get(mapIds, obj.data.id))
+                    if (obj.op == "create") return resolve(null)
                     else {
                         return reject("Não foi possível verificar o item!")
                     }

@@ -167,8 +167,7 @@ module.exports = class Events {
                 }
 
                 if(socket.activeCompany) this.server.io.in('company/' + socket.activeCompany.id).emit('presence:remove', new EventResponse(socket.user.id))
-                if(!socket.activeCompany && socket.user.activeCompanyUserId) this.server.io.in('company/' + socket.user.activeCompanyUserId).emit('presence:remove', new EventResponse(socket.user.id))
-                if(!socket.activeCompany && socket.user.companies) this.server.io.in('company/' + socket.user.companies[0].id).emit('presence:remove', new EventResponse(socket.user.id))
+                if(!socket.activeCompany && !socket.user) return true
 
                 this.server.broker.call('socket.remove', {
                     activeSocketId: socket.instance.id
