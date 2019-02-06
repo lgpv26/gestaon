@@ -166,7 +166,7 @@ a:hover {
   font-family: Montserrat;
 }
 .conteiner {
-  max-width: 1920px;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
   padding: 0px 40px 0px 40px;
