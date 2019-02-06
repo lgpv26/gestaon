@@ -1,21 +1,38 @@
 <template>
-  <div class="Banner row col-md-12">
-    <div class="cx-1 col-md-6">
-      <div class="v1 start-md"><Icon name="card" size="" /></div>
-      <div class="cx-2">
-        <h1>sua revenda de GLP em um novo nível!</h1>
-        <p>Sistema de atendimento e logística nos segundos de uma ligação</p>
-      </div>
-      <button>
-        <h1>Acesse grátis</h1>
-        <p>30 dias sem combrança</p>
+  <div class="Banner row ">
+    <div v-html="background" style="position:absolute;"></div>
+    <div v-html="caixa" style="position: absolute;top:775px;"></div>
+    <div v-html="vetor" style="position: absolute;top:835px;"></div>
+    <div v-html="banner" style="position: absolute;top:60px;"></div>
+    <div class="col-md-6">
+      <div v-html="card" style="position: relative;top:150px;left:250px;"></div>
+      <h1 style="position: relative;color:white;top:130px;left:260px;font-size:48px;">
+        SUA REVENDA DE GLP<br />
+        EM UM NOVO NÍVEL!
+      </h1>
+      <p style="position: relative;color:white;top:100px;left:260px;font-size:26px;">
+        Sistema de atendimento e logística nos segundos de uma ligação
+      </p>
+      <button
+        style="position: relative;top:100px;left:260px;width:280px;border:0px;
+        border-radius:10px;height:120px;background: linear-gradient(217.73deg, #49DFEA -10.02%, #0072E4 91.15%);"
+      >
+        <h1 style="color:white;font-size:36px;margin:0px;">Acesse grátis</h1>
+        <p style="color:white;font-size:18px;margin:0px;">30 dias sem combrança</p>
       </button>
     </div>
-    <div class="col-md-6"></div>
+    <div v-html="loja" style="position: relative;top:150px;left:80px;"></div>
+    <div v-html="butijao" style="position: relative;top:520px;left:40px;z-index:1;"></div>
+    <div style="position: relative;top:-100px;left:1400px;">
+      <img src="..\assets\plantel-gas.png" />
+    </div>
+    <div style="position: relative;top:140px;left:80px;"><img src="..\assets\PINS.png" /></div>
+    <div style="position: relative;top:280px;right:0px;"><img src="..\assets\Group.png" /></div>
   </div>
 </template>
 
 <script>
+const req = require.context("@/assets/icons/", true, /^\.\/.*\.svg$/)
 /**
  * Used as main page navigation in templates.
  */
@@ -23,76 +40,41 @@ export default {
   name: "TopBanner",
   status: "ready",
   release: "1.0.0",
+  fill: {
+    type: String,
+    default: "currentColor",
+  },
+  data() {
+    return {
+      loja: req("./" + "loja-full" + ".svg").replace(/^<svg /, `<svg style="fill: ${this.fill}" `),
+      background: req("./" + "particles" + ".svg").replace(
+        /^<svg /,
+        `<svg style="fill: ${this.fill}" `
+      ),
+      card: req("./" + "card" + ".svg").replace(/^<svg /, `<svg style="fill: ${this.fill}" `),
+      vetor: req("./" + "Vector" + ".svg").replace(/^<svg /, `<svg style="fill: ${this.fill}" `),
+      banner: req("./" + "bg-banner" + ".svg").replace(
+        /^<svg /,
+        `<svg style="fill: ${this.fill}" `
+      ),
+      caixa: req("./" + "caixa" + ".svg").replace(/^<svg /, `<svg style="fill: ${this.fill}" `),
+    }
+  },
 }
 </script>
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+
 .Banner {
   margin: 0px auto 0px auto;
   padding: 0px;
-  max-width: 1200px;
-}
-
-.v1 {
-  margin: 0px;
-  padding: 0px 0px 0px 50px;
-}
-.cx-2 {
-  margin: 0px;
-  padding: 0px 50px 0px 50px;
-}
-
-.cx-2 h1 {
-  margin: 0px;
-  padding: 0px;
-  font-family: Dax-Bold;
-  line-height: normal;
-  font-size: 38px;
-  text-transform: uppercase;
-  color: white;
-  text-align: left;
-}
-.cx-2 p {
-  margin: 0px;
-  padding: 0px;
-  font-family: DaxCondensed;
-  font-size: 18px;
-  color: white;
-  text-align: left;
-}
-.cx-1 button {
-  margin: 10px 0px 0px 50px;
-  padding: 0px;
-  border: 0px;
-  border-radius: 10px;
-  width: 200px;
-  height: 80px;
-  float: left;
-  background: linear-gradient(217.73deg, #49dfea -10.02%, #be668d -10.02%, #0072e4 91.15%);
-}
-button h1 {
-  margin: 0px;
-  padding: 0px;
-  color: white;
-  font-family: Dax-BoldItalic;
-  font-size: 26px;
-}
-button p {
-  margin: 0px;
-  padding: 0px;
-  font-family: Dax-LightItalic;
-  font-size: 14px;
-  color: white;
-}
-.cx-3 {
-  margin: 0px;
-  padding: 0px;
+  width: 1920px;
 }
 </style>
 
 <docs>
   ```jsx
-  <TopBanner />
+  <TopBanner/>
   ```
 </docs>
