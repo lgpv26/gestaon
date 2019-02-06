@@ -15,11 +15,18 @@
         </button>
       </div>
     </div>
-    <div class="col-md-6"></div>
+    <div v-html="loja" style="position: relative;top:150px;left:80px;"></div>
+    <div v-html="butijao" style="position: relative;top:520px;left:40px;z-index:1;"></div>
+    <div style="position: relative;top:-100px;left:1400px;">
+      <img src="..\assets\plantel-gas.png" />
+    </div>
+    <div style="position: relative;top:140px;left:80px;"><img src="..\assets\PINS.png" /></div>
+    <div style="position: relative;top:280px;right:0px;"><img src="..\assets\Group.png" /></div>
   </div>
 </template>
 
 <script>
+const req = require.context("@/assets/icons/", true, /^\.\/.*\.svg$/)
 /**
  * Used as main page navigation in templates.
  */
@@ -115,6 +122,6 @@ button p {
 
 <docs>
   ```jsx
-  <TopBanner />
+  <TopBanner/>
   ```
 </docs>
