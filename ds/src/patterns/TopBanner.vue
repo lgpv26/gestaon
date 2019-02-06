@@ -1,5 +1,5 @@
 <template>
-  <div class="Banner row col-md-12">
+  <div class="Banner row col-md-12" :style="'background-image: url(' + img + ')'">
     <div class="cx-1 col-md-6">
       <div class="v1 start-md"><Icon name="card" size="" /></div>
       <div class="cx-2">
@@ -27,6 +27,11 @@ export default {
   name: "TopBanner",
   status: "ready",
   release: "1.0.0",
+  data() {
+    return {
+      img: require("./Top-banner-1.png"),
+    }
+  },
 }
 </script>
 
@@ -36,7 +41,7 @@ export default {
 .Banner {
   margin: 0px auto 0px auto;
   padding: 0px;
-  max-width: 1200px;
+  max-width: 1500px;
 }
 
 .v1 {
