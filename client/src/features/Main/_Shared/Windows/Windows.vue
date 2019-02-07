@@ -1,5 +1,5 @@
 <template>
-    <div class="app-windows">
+    <div class="app-windows" v-if="!isLoading">
         <!--<a class="btn btn--primary" @click="add()">Adicionar</a>
         <a class="btn btn--primary" @click="remove()">Remover</a>
         <a class="btn btn--primary" @click="getAll()">Pegar todos</a>-->
@@ -24,7 +24,7 @@
             'app-window': Window
         },
         computed: {
-
+            ...mapState("request-board", ["isLoading"]),
         },
         methods: {
             ...mapActions('morph-screen', ['createDraft']),

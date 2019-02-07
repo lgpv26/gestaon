@@ -5,7 +5,7 @@
             <div class="header">
                 <h3>Histórico de compras de {{ request.client.name }} - {{ requestHistoryCount }}</h3>
             </div>
-            <div class="timeline">
+            <div class="timeline" v-if="!isRequesting && total">
                 <div class="entry" v-for="historyRequest in historyRequests" :key="historyRequest.id">
                     <div class="title">
                         <h3>{{ moment(historyRequest.deliveryDate).format("DD/MM/YYYY HH:mm") }}</h3><br/>
@@ -66,6 +66,9 @@
                     </div>
                 </div>
             </div>
+            <div v-else-if="isRequesting">
+                Carregando...
+            </div>
         </app-perfect-scrollbar>
     </div>
 </template>
@@ -84,6 +87,7 @@
         data(){
             return {
                 total: 0,
+                isRequesting: false,
                 historyRequests: []
             }
         },
@@ -98,9 +102,11 @@
         },
         mounted(){
             if(Number.isInteger(this.request.clientId)){
+                this.isRequesting = true
                 ClientsAPI.getRequestHistory(this.request.clientId, {companyId: 1, offset: 0, limit: 10}).then((response) => {
                     this.historyRequests = response.data.previousRequests
                     this.total = response.data.total
+                    this.isRequesting = false
                     console.log("Request History", response.data)
                 })
                 return true

@@ -9,11 +9,7 @@
                 <div id="left-column" class="left-column">
                     <header>
                         <div class="header__dropdown-menu">
-                            <app-dropdown-menu
-                                    :menuList="menuList"
-                                    placement="bottom-start"
-                                    :verticalOffset="-10"
-                            >
+                            <app-dropdown-menu :menuList="menuList" placement="bottom-start" :verticalOffset="-10">
                                 <div class="dropdown-menu__company-name">
                                     <h3>{{ utils.getInitialsFromString(company.name) }}</h3>
                                 </div>
@@ -24,10 +20,7 @@
                     <span class="push-both-sides"></span>
                     <app-connected-users></app-connected-users>
                 </div>
-                <div
-                        class="main-column"
-                        :style="{ width: dimensions.window.width - 60 + 'px' }"
-                >
+                <div class="main-column" :style="{ width: dimensions.window.width - 60 + 'px' }">
                     <header class="main-column__header">
                         <div class="header__container" v-if="$route.name === 'dashboard'">
                             <app-request-board-filter></app-request-board-filter>
@@ -43,32 +36,14 @@
                             <li @click="addRequest()">
                                 <i class="mi mi-add-circle-outline"></i>
                             </li>
-                            <li
-                                    v-if="!isCallerIdDisabled"
-                                    @click="
-                  isCallerIdDisabled ? activateCallerId() : disableCallerId()
-                "
+                            <li v-if="!isCallerIdDisabled" @click="isCallerIdDisabled ? activateCallerId() : disableCallerId()"
                             >
                                 <i class="mi mi-phone-in-talk"></i>
                             </li>
-                            <li
-                                    v-else
-                                    @click="
-                  isCallerIdDisabled ? activateCallerId() : disableCallerId()
-                "
-                            >
+                            <li v-else @click="isCallerIdDisabled ? activateCallerId() : disableCallerId()">
                                 <i class="mi mi-call-end"></i>
                             </li>
                         </ul>
-                        <!--
-                                    <app-search></app-search>
-                                    <div class="header__draft-menu" v-if="screens.length > 0" @click="showMorphScreen()">
-                                        <div class="count">
-                                            <span>{{ screens.length }}</span>
-                                        </div>
-                                        <icon-draft-list></icon-draft-list>
-                                    </div>
-                                    -->
                     </header>
                     <main id="main">
                         <keep-alive include="app-dashboard">
@@ -82,25 +57,26 @@
 </template>
 
 <script>
-    import { mapMutations, mapState, mapActions } from "vuex";
-    import { MorphScreen } from "./MorphScreen/index";
-    import RequestBoardFilterComponent from "./Dashboard/RequestBoard/RequestBoardFilter.vue";
-    import SearchComponent from "./_Shared/Search.vue";
-    import CallerIDComponent from "./_Shared/CallerID/CallerID.vue";
-    import MenuComponent from "./_Shared/Menu.vue";
-    import Modals from "./Dashboard/Modals.vue";
-    import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue";
-    import Windows from "./_Shared/Windows/Windows.vue";
-    import ConnectedUsersComponent from "./_Shared/Sidebar/ConnectedUsers.vue";
+    import { mapMutations, mapState, mapActions } from "vuex"
+    import PromiseQueue from 'p-queue'
+    import { MorphScreen } from "./MorphScreen/index"
+    import RequestBoardFilterComponent from "./Dashboard/RequestBoard/RequestBoardFilter.vue"
+    import SearchComponent from "./_Shared/Search.vue"
+    import CallerIDComponent from "./_Shared/CallerID/CallerID.vue"
+    import MenuComponent from "./_Shared/Menu.vue"
+    import Modals from "./Dashboard/Modals.vue"
+    import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue"
+    import Windows from "./_Shared/Windows/Windows.vue"
+    import ConnectedUsersComponent from "./_Shared/Sidebar/ConnectedUsers.vue"
 
-    import Card from "../../vuex/models/Card";
-    import Request from "../../vuex/models/Request";
+    import Card from "../../vuex/models/Card"
+    import Request from "../../vuex/models/Request"
 
-    import _ from "lodash";
-    import shortid from "shortid";
-    import moment from "moment";
+    import _ from "lodash"
+    import shortid from "shortid"
+    import moment from "moment"
 
-    import SessionHandler from "./SessionHandler";
+    import SessionHandler from "./SessionHandler"
 
     export default {
         name: "app-main",
@@ -118,6 +94,7 @@
         mixins: [SessionHandler],
         data() {
             return {
+                isFirstInitialization: true,
                 requestInterval: null,
                 showSettings: false,
                 menuList: [
@@ -315,170 +292,176 @@
                     src: [alarmSound]
                 }).play();
             },
-            runRequestQueue() {},
-            onSystemInitialized() {
-                const vm = this;
-                console.log("System initialized");
-                vm.$socket.on("request-queue:sync", ev => {
-                    console.log("request-queue:sync", ev);
-                    if (ev.success) {
-                        ev.evData.processedQueue.forEach(request => {
-                            if (request.action === "update-status") {
-                                Request.update({
-                                    where: request.requestId,
-                                    data: {
-                                        status: request.status,
-                                        dateUpdated: request.dateUpdated
-                                    }
-                                });
-                            } else if (request.action === "update-user") {
-                                Request.update({
-                                    where: request.requestId,
-                                    data: {
-                                        userId: request.userId,
-                                        dateUpdated: request.dateUpdated
-                                    }
-                                });
-                            } else {
-                                const requestId = _.get(request, "tmpId", request.id);
-                                const cards = Card.query()
-                                    .where("requestId", requestId)
-                                    .with("request.requestUIState")
-                                    .get();
-                                const card = _.first(cards);
-                                let windowTmpId = `tmp/${shortid.generate()}`;
-                                let cardTmpId = `tmp/${shortid.generate()}`;
-                                let requestUIStateTmpId = `tmp/${shortid.generate()}`;
-                                if (!Number.isInteger(requestId) && card) {
-                                    // remove previous card/request/
-                                    this.$store.dispatch("entities/cards/delete", card.id);
-                                    this.$store.dispatch("entities/windows/delete", card.windowId);
-                                    this.$store.dispatch(
-                                        "entities/requests/delete",
-                                        card.requestId
-                                    );
-                                    this.$store.dispatch(
-                                        "entities/requestUIState/delete",
-                                        card.request.requestUIState.id
-                                    );
-                                } else if (card) {
-                                    windowTmpId = card.windowId;
-                                    cardTmpId = card.id;
-                                    requestUIStateTmpId = card.request.requestUIState.id;
+            extractOnlyModelFields(modelName,obj){
+                const returnObj = {}
+                this.modelDefinitions.offlineDBModels[modelName].split(',').forEach((column) => {
+                    column = column.trim()
+                    if(_.has(obj,column)){
+                        returnObj[column] = obj[column]
+                    }
+                })
+                return returnObj
+            },
+            fillOfflineDBWithSyncedData(modelName, action, data, replacementColumn = null){
+                const vm = this
+                if(action === 'put'){
+                    return vm.$db[modelName].put(this.extractOnlyModelFields(modelName,data))
+                }
+                else if(action === 'bulkPut'){
+                    data = _.map(data, (dataItem) => {
+                        return this.extractOnlyModelFields(modelName, dataItem)
+                    })
+                    return vm.$db[modelName].bulkPut(data)
+                }
+                else if(action === 'bulkPutWithReplacement'){
+                    return vm.$db[modelName].where({
+                        [replacementColumn]: _.first(data)[replacementColumn]
+                    }).toArray((itemsToDelete) => {
+                        const ids = _.map(itemsToDelete, (itemToDelete) => itemToDelete.id)
+                        return vm.$db[modelName].bulkDelete(ids).then(() => {
+                            return this.fillOfflineDBWithSyncedData(modelName, 'bulkPut', data)
+                        })
+                    })
+                }
+            },
+            onRequestQueueSync(ev){
+                const vm = this
+                console.log("request-queue:sync", ev)
+                if(ev.success){
+                    ev.evData.processedQueue.forEach(request => {
+                        if (request.action === "update-status") {
+                            Request.update({
+                                where: request.requestId,
+                                data: {
+                                    status: request.status,
+                                    dateUpdated: request.dateUpdated
                                 }
-                                this.$store.dispatch("entities/requests/insertOrUpdate", {
+                            });
+                        } else if (request.action === "update-user") {
+                            Request.update({
+                                where: request.requestId,
+                                data: {
+                                    userId: request.userId,
+                                    dateUpdated: request.dateUpdated
+                                }
+                            });
+                        } else {
+                            // guarantee the order of promises
+                            const requestPromiseQueue = new PromiseQueue({ concurrency: 1})
+
+                            // request
+
+                            console.log("Testando aaaa", request)
+
+                            requestPromiseQueue.add(() => vm.fillOfflineDBWithSyncedData("requests", 'put', request).then((promise) => {
+                                vm.$store.dispatch("entities/insertOrUpdate", {
+                                    entity: 'requests',
+                                    ignoreOfflineDBInsertion: true,
                                     data: request
-                                });
-                                this.$store.dispatch("entities/windows/insert", {
-                                    data: {
-                                        id: windowTmpId,
-                                        zIndex:
-                                        this.$store.getters["entities/windows/query"]().max(
-                                            "zIndex"
-                                        ) + 1,
-                                        show: false
-                                    }
-                                });
-                                this.$store.dispatch("entities/cards/insert", {
-                                    data: {
-                                        id: cardTmpId,
-                                        windowId: windowTmpId,
-                                        requestId: request.id
-                                    }
-                                });
-                                this.$store.dispatch("entities/requestUIState/insert", {
-                                    data: {
-                                        id: requestUIStateTmpId,
-                                        windowId: windowTmpId,
-                                        requestId: request.id
-                                    }
-                                });
-
-                                const requestPayments = this.$store.getters['entities/requestPayments']().where('requestId',(requestId) => {
-                                    return requestId === request.id
-                                }).get()
-                                requestPayments.forEach((requestPayment) => {
-                                    vm.$store.dispatch('entities/requestPayments/delete', requestPayment.id)
                                 })
-                                this.$store.dispatch("entities/requestPayments/insertOrUpdate", {
-                                    data: request.requestPayments
-                                });
+                                return promise
+                            }))
 
-                                this.$store.dispatch("entities/requestPayments/insertOrUpdate", {
-                                    data: request.requestPayments
-                                });
-                                this.$store.dispatch("entities/requestOrders/insertOrUpdate", {
-                                    data: request.requestOrder
-                                });
+                            Request.guaranteeDependencies(
+                                request,
+                                requestPromiseQueue,
+                                vm.fillOfflineDBWithSyncedData,
+                                false
+                            )
 
-                                const requestOrderProducts = this.$store.getters['entities/requestOrderProducts']().where('requestOrderId',(requestOrderId) => {
-                                    return requestOrderId === request.requestOrder.id
-                                }).get()
-                                requestOrderProducts.forEach((requestOrderProduct) => {
-                                    vm.$store.dispatch('entities/requestOrderProducts/delete', requestOrderProduct.id)
-                                })
-                                this.$store.dispatch("entities/requestOrderProducts/insertOrUpdate", {
-                                    data: request.requestOrder.requestOrderProducts
-                                });
+                            return requestPromiseQueue.onIdle().then(() => {
 
-                                this.$store.dispatch("entities/clients/insertOrUpdate", {
-                                    data: request.client
-                                });
-                                request.client.clientAddresses.forEach(clientAddress => {
-                                    vm.$store.dispatch("entities/addresses/insertOrUpdate", {
-                                        data: clientAddress.address
-                                    });
-                                });
+                                // inserting search data
 
-                                const clientAddresses = this.$store.getters['entities/clientAddresses']().where('clientId',(clientId) => {
-                                    return clientId === request.client.id
-                                }).get()
-                                clientAddresses.forEach((clientAddress) => {
-                                    vm.$store.dispatch('entities/clientAddresses/delete', clientAddress.id)
-                                })
-                                this.$store.dispatch("entities/clientAddresses/insertOrUpdate", {
-                                    data: request.client.clientAddresses
+                                const searchClients = _.map(request.client.clientAddresses, (clientAddress) => {
+                                    return {
+                                        id: `${request.client.id}#${clientAddress.id}`,
+                                        name: request.client.name,
+                                        address: _.get(clientAddress, "address.name", null),
+                                        neighborhood: _.get(clientAddress, "address.neighborhood", null),
+                                        number: _.get(clientAddress, "number", false) ? "" + _.get(clientAddress, "number") : null,
+                                        complement: _.get(clientAddress, "complement", null),
+                                        city: _.get(clientAddress, "address.city", null),
+                                        state: _.get(clientAddress, "address.state", null)
+                                    }
                                 })
 
-                                this.$store.dispatch(
-                                    "entities/requestClientAddresses/insertOrUpdate",
-                                    {
-                                        data: request.requestClientAddresses
+                                vm.$db.searchClients.bulkPut(searchClients).then(() => {
+                                    searchClients.forEach((searchClient) => {
+                                        vm.$static.searchClientsIndex.addDoc(searchClient)
+                                    })
+                                })
+
+                                const searchAddresses = _.map(request.client.clientAddresses, (clientAddress) => {
+                                    return {
+                                        id: _.get(clientAddress, "address.id", null),
+                                        name: _.get(clientAddress, "address.name", null),
+                                        address: _.get(clientAddress, "address.name", null),
+                                        neighborhood: _.get(clientAddress, "address.neighborhood", null),
+                                        city: _.get(clientAddress, "address.city", null),
+                                        state: _.get(clientAddress, "address.state", null),
+                                        cep: _.get(clientAddress, "address.cep", null),
+                                        country: _.get(clientAddress, "address.country", null)
                                     }
-                                );
+                                })
+
+                                vm.$db.searchAddresses.bulkPut(searchAddresses).then(() => {
+                                    searchAddresses.forEach((searchAddress) => {
+                                        vm.$static.searchAddressesIndex.addDoc(searchAddress)
+                                    })
+                                })
+
+                                // update card info
 
                                 const savedRequest = Request.query()
                                     .with("card")
                                     .with("client")
+                                    .with("requestClientAddresses.clientAddress.address")
                                     .with("requestOrder.requestOrderProducts")
-                                    .find(request.id);
-
-                                Card.update({
-                                    where: savedRequest.card.id,
-                                    data: {
+                                    .find(request.id)
+                                const getClientAddress = () => {
+                                    if (savedRequest.requestClientAddresses.length) {
+                                        const firstClientAddress = _.first(savedRequest.requestClientAddresses).clientAddress;
+                                        return _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), { length: 24, separator: "", omission: "..."}) +
+                                            ", " +
+                                            (firstClientAddress.number ? firstClientAddress.number : "S/N") +
+                                            (firstClientAddress.complement ? " " + firstClientAddress.complement : "")
+                                    }
+                                    return "SEM ENDEREÇO";
+                                }
+                                vm.$store.dispatch("entities/insertOrUpdate", {
+                                    entity: 'cards',
+                                    data: _.assign(savedRequest.card, {
                                         clientName: savedRequest.client.name,
+                                        clientAddress: getClientAddress(),
                                         orderSubtotal: _.sumBy(
                                             savedRequest.requestOrder.requestOrderProducts,
                                             requestOrderProduct => {
                                                 return (
-                                                    requestOrderProduct.quantity *
-                                                    (requestOrderProduct.unitPrice -
-                                                        requestOrderProduct.unitDiscount)
-                                                );
+                                                    requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
+                                                )
                                             }
                                         )
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
+                                    })
+                                })
+
+                            })
+                        }
+                    });
+                }
+            },
+            onSystemInitialized() {
+                console.log("System initialized");
+                if(this.isFirstInitialization){
+                    this.$socket.on("request-queue:sync", this.onRequestQueueSync)
+                    this.isFirstInitialization = false
+                }
             }
         },
         created() {
-            this.$bus.$on("sound-play", this.registerSoundEventListeners);
-            this.runRequestQueue();
-            this.clearProcessingQueue();
+            this.isFirstInitialization = true
+            this.$bus.$on("sound-play", this.registerSoundEventListeners)
+            this.clearProcessingQueue()
         },
         beforeDestroy() {
             this.$bus.$off("sound-play", this.registerSoundEventListeners);

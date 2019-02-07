@@ -2,6 +2,8 @@ import _ from "lodash";
 import moment from "moment";
 import RequestQueueAPI from "../../api/request-queue";
 
+let isRequesting = false
+
 const state = {
     pendingQueue: [],
     processingQueue: []
@@ -42,22 +44,24 @@ const mutations = {
 const actions = {
     initializeRequestQueue(ctx, socket) {
         const sendRequestQueue = processingQueue => {
-            console.log(
-                `Processando ${processingQueue.length} item(s) na fila!`,
-                processingQueue
-            )
+            if(isRequesting){
+                console.log("A fila já está aguardando por resposta do servidor")
+                return
+            }
+            console.log(`Processando ${processingQueue.length} item(s) na fila!`, processingQueue)
+            isRequesting = true
             RequestQueueAPI.send(processingQueue, {
-                timeout: 3000
+                timeout: 60 * 1000
             }).then(result => {
+                isRequesting = false
                 ctx.commit("REMOVE_PROCESSED_QUEUE_ITEMS")
-                console.log("Sucesso", result)
+                console.log("Fila de requisições processadas", result)
             }).catch(err => {
+                isRequesting = false
                 if(err.status === 0){
-                    console.log("Sem conexão")
+                    console.log("Sem resposta do servidor")
                     ctx.commit("PROCESSING_QUEUE_TO_PENDING_QUEUE", processingQueue)
-                    return
                 }
-                console.log("Erro", err)
             })
         }
         setInterval(() => {
@@ -65,7 +69,7 @@ const actions = {
                 ctx.commit("PROCESS_QUEUE", sendRequestQueue)
             }
             else {
-                console.log("Socket is not connected")
+                console.log("O socket não está comunicando com o servidor")
             }
         }, 1000 * 5)
     },

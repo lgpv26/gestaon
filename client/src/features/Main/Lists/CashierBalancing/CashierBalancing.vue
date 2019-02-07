@@ -70,7 +70,7 @@
                     </div>
                     <div class="group" v-if="form.action === 'received'">
                         <span>No horário:</span>
-                        <app-datetime-selector class="input--borderless" v-model="form.receivedDate" :config="datetimeSelectorConfig" placeholder="HORÁRIO ATUAL"></app-datetime-selector>
+                        <app-datetime-selector class="input--borderless datetime-selector" v-model="form.receivedDate" :config="datetimeSelectorConfig" placeholder="HORÁRIO ATUAL"></app-datetime-selector>
                         <a href="javascript:void(0)" v-if="form.receivedDate" @click="form.receivedDate = null"><icon-remove></icon-remove></a>
                     </div>
                     <a class="btn btn--primary" @click="submit()">Confirmar</a>
@@ -581,5 +581,18 @@
     }
     .page--crud > div > h3 {
         padding-bottom: 30px;
+    }
+
+    .datetime-selector {
+        margin-bottom: 0;
+        border: 0;
+        margin-top: 0;
+        padding: 0;
+        &:hover, &:active, &:focus {
+            margin-bottom: 0;
+            border: 0;
+            margin-top: 0;
+            padding: 0;
+        }
     }
 </style>

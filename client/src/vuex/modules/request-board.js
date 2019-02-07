@@ -7,6 +7,7 @@ import {
 import utils from "../../utils";
 
 const initialState = () => ({
+    isLoading: false,
     sections: {
         requests: {
             size: 1
@@ -31,7 +32,11 @@ const getters = {
 };
 
 const mutations = {
+    SET_IS_LOADING(state, isLoading){
+        state.isLoading = isLoading
+    },
     SET_DELIVERY_DATE(state, date){
+        state.isLoading = true
         state.filters.deliveryDate = date
     },
     SET_FILTER(state, { type, select = true, id }) {
@@ -69,6 +74,9 @@ const mutations = {
 };
 
 const actions = {
+    setIsLoading(context, isLoading){
+        context.commit("SET_IS_LOADING", isLoading);
+    },
     expandSection(context, sectionId) {
         context.commit("EXPAND_SECTION", sectionId);
     },

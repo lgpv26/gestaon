@@ -1,106 +1,68 @@
 <template>
-  <div
-    class="request-board-card"
-    :class="{
-      'request-board-card--in-displacement': form.status === 'in-displacement'
-    }"
-  >
-    <div
-      class="request-board-card__loading"
-      v-if="false && _.get(card, 'request.status', false) === 'processing'"
-    >
-      <span>Processando...</span>
+    <div class="request-board-card"
+         :class="{'request-board-card--in-displacement': form.status === 'in-displacement','request-board-card--draft': !Number.isInteger(request.id)}">
+        <div class="request-board-card__loading" v-if="_.get(request, 'status', false) === 'processing'">
+            <span>Sincronizando...</span>
+        </div>
+        <div class="request-board-card__container" v-if="Number.isInteger(request.id)">
+            <!-- if request is persisted -->
+            <div class="card__header" v-if="Number.isInteger(request.id)">
+                <h3 class="card__client-name">
+                    {{ card.clientName ? card.clientName : "S/N" }}
+                </h3>
+                <span class="push-both-sides"></span>
+                <h3 class="card__order">
+                    {{ utils.formatMoney(card.orderSubtotal, 2, "R$ ", ".", ",") }}
+                </h3>
+            </div>
+            <div class="card__header" v-else>
+                <h3 class="card__client-name">Rascunho {{ card.id }}</h3>
+                <h3 class="card__client-name">ID do pedido {{ request.id }}</h3>
+            </div>
+            <div style="display: flex; flex-direction: row;">
+                <h3 class="card__client-address" v-if="card.clientAddress">
+                    {{ card.clientAddress }}
+                </h3>
+                <h3 class="card__phone-line" v-if="request.phoneLine && false">
+                    {{ request.phoneLine }}
+                </h3>
+            </div>
+            <div class="card__middle"></div>
+            <div class="card__footer">
+                <span class="push-both-sides"></span>
+                <app-popover :placement="'bottom-start'" :verticalOffset="5" :horizontalOffset="18" :contentStyle="dropdownMenuPopoverContentStyle">
+                    <template slot="triggerer">
+                        <a class="footer__status ignore">
+                            <request-board-icon-status></request-board-icon-status>
+                            <span>{{ status }}</span>
+                        </a>
+                    </template>
+                    <template slot="content">
+                        <app-rbc-status :value="request.status" @input="onRequestStatusUpdate($event)" id="rbc-status" :card="card"></app-rbc-status>
+                    </template>
+                </app-popover>
+                <app-popover :placement="'bottom-start'" :verticalOffset="1" :horizontalOffset="19" :useScroll="true">
+                    <template slot="triggerer">
+                        <a class="footer__responsible-user ignore"><request-board-icon-flag></request-board-icon-flag>{{ responsibleUserName }}</a>
+                    </template>
+                    <template slot="content">
+                        <app-rbc-user :value="request.userId" @input="onRequestResponsibleUserUpdate($event)" id="rbc-user" :card="card"></app-rbc-user>
+                    </template>
+                </app-popover>
+            </div>
+        </div>
+        <div class="request-board-card__container" style="opacity: .4" v-else>
+            <div class="card__header">
+                <h3 class="card__client-name">Rascunho</h3>
+            </div>
+            <div class="card__header">
+                <h3 class="card__client-address">Card {{ _.has(card, "id") ? card.id : "Sem card.id" }}</h3>
+            </div>
+            <div class="card__header">
+                <h3 class="card__client-address">Request {{ _.has(request, "id") ? request.id : "Sem request.id" }}</h3>
+            </div>
+        </div>
     </div>
-    <div
-      class="request-board-card__container"
-      v-if="Number.isInteger(request.id)"
-    >
-      <!-- if request is persisted -->
-      <div class="card__header" v-if="Number.isInteger(request.id)">
-        <h3 class="card__client-name">
-          {{ card.clientName ? card.clientName : "S/N" }}
-        </h3>
-        <span class="push-both-sides"></span>
-        <h3 class="card__order">
-          {{ utils.formatMoney(card.orderSubtotal, 2, "R$ ", ".", ",") }}
-        </h3>
-      </div>
-      <div class="card__header" v-else>
-        <h3 class="card__client-name">Rascunho {{ card.id }}</h3>
-        <h3 class="card__client-name">ID do pedido {{ request.id }}</h3>
-      </div>
-      <div style="display: flex; flex-direction: row;">
-        <h3
-          class="card__client-address"
-          :title="fullRequestClientAddress"
-          v-if="requestClientAddress"
-        >
-          {{ requestClientAddress }}
-        </h3>
-        <h3 class="card__phone-line" v-if="request.phoneLine && false">
-          {{ request.phoneLine }}
-        </h3>
-      </div>
-      <div class="card__middle"></div>
-      <div class="card__footer">
-        <span class="push-both-sides"></span>
-        <app-popover
-          :placement="'bottom-start'"
-          :verticalOffset="5"
-          :horizontalOffset="18"
-          :contentStyle="dropdownMenuPopoverContentStyle"
-        >
-          <template slot="triggerer">
-            <a class="footer__status ignore">
-              <request-board-icon-status></request-board-icon-status>
-              <span>{{ status }}</span>
-            </a>
-          </template>
-          <template slot="content">
-            <app-rbc-status
-              :value="request.status"
-              @input="onRequestStatusUpdate($event)"
-              id="rbc-status"
-              :card="card"
-            ></app-rbc-status>
-          </template>
-        </app-popover>
-        <app-popover
-          :placement="'bottom-start'"
-          :verticalOffset="1"
-          :horizontalOffset="19"
-          :useScroll="true"
-        >
-          <template slot="triggerer">
-            <a class="footer__responsible-user ignore"
-              ><request-board-icon-flag></request-board-icon-flag>
-              {{ responsibleUserName }}</a
-            >
-          </template>
-          <template slot="content">
-            <app-rbc-user
-              :value="request.userId"
-              @input="onRequestResponsibleUserUpdate($event)"
-              id="rbc-user"
-              :card="card"
-            ></app-rbc-user>
-          </template>
-        </app-popover>
-      </div>
-    </div>
-    <div class="request-board-card__container" v-else>
-      <div class="card__header">
-        <h3 class="card__client-name">
-          Card {{ _.has(card, "id") ? card.id : "Sem card.id" }}
-        </h3>
-      </div>
-      <div class="card__header">
-        <h3 class="card__client-name">
-          Request {{ _.has(request, "id") ? request.id : "Sem request.id" }}
-        </h3>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script>
@@ -427,6 +389,16 @@ export default {
 
 .request-board-card--in-displacement {
   border: 1px dashed var(--bg-color--secondary);
+  a.footer__status span {
+    color: var(--bg-color--secondary);
+  }
+  a.footer__status .colorizable {
+    fill: var(--bg-color--secondary);
+  }
+}
+
+.request-board-card--draft {
+  border: 1px dashed var(--bg-color--10);
   a.footer__status span {
     color: var(--bg-color--secondary);
   }

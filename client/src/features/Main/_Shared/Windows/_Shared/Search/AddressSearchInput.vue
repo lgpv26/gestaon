@@ -4,6 +4,7 @@
       type="text"
       class="input"
       style="margin-bottom: 0; text-transform: uppercase"
+      autocomplete="off"
       :value="value"
       :disabled="isEditing"
       :class="{ readonly: isEditing }"
@@ -23,6 +24,7 @@
         <input
           type="text"
           class="input"
+          autocomplete="off"
           style="margin-bottom: 0; text-transform: uppercase"
           :value="value"
           @click="isInputFocused = true"
