@@ -48,7 +48,7 @@
         style="display: flex;"
       >
         <div style="width: 100%; display: flex; align-items: center;">
-          <Button variation="accent" size="small" style="width: 100%;">Demonstração</Button>
+          <button style="width: 100%;" class="button1">Demonstração</button>
         </div>
       </div>
     </div>
@@ -109,8 +109,6 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
-@import url("https://fonts.googleapis.com/css?family=Montserrat+Alternates");
-@import url("https://fonts.googleapis.com/css?family=Montserrat");
 // Design Tokens with local scope
 $color-nav-link: $color-primary;
 $color-nav-link-active: $color-primary;
@@ -127,31 +125,17 @@ $color-nav-link-active: $color-primary;
     // This is how you’d use design tokens with media queries
   }
   a {
-    color: $color-nav-link;
-    padding: $space-xs 0;
-    margin: 0 $space-xs;
+    color: #ffffff;
+    padding: $space-m 0;
+    margin: 0 $space-m;
     text-decoration: none;
     display: inline-block;
-    &:hover {
-      color: $color-nav-link-active;
-    }
-    &.active {
-      font-weight: $weight-bold;
-      color: $color-primary;
-    }
-  }
-  .home {
-    color: #58bfc6;
-  }
-  .resource {
-    color: #276e73;
-  }
-  .questions {
-    color: #276e73;
+    font-size: 12px;
   }
 }
 a {
   margin-left: 20px;
+  padding: 0px 0px 0px 0px;
   text-decoration: none;
   color: $color-primary-40;
   font-family: Montserrat Alternates;
@@ -161,15 +145,22 @@ a:hover {
 }
 .button1 {
   width: 150px;
-  height: 45px;
-  font-size: 18px;
-  font-family: Montserrat;
+  height: 50px;
+  font-size: 12px;
+  border: 0px;
+  border-radius: 5px;
+  color: white;
+  background: linear-gradient(214.41deg, #49dfea -10.02%, #0072e4 91.15%);
 }
 .conteiner {
-  max-width: 1920px;
+  max-width: 1245px;
   margin-left: auto;
   margin-right: auto;
-  padding: 0px 40px 0px 40px;
+  padding: 5px 40px 5px 200px;
+  background: black;
+}
+.logo {
+  padding: 10px;
 }
 </style>
 
