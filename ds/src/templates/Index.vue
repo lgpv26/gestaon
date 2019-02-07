@@ -39,11 +39,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-.index {
-  background: black;
-}
-</style>
+<style lang="scss" scoped></style>
 
 <docs>
   ```jsx
