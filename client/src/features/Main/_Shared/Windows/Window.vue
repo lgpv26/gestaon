@@ -4,19 +4,19 @@
         <div class="resizable-edge" style="position: absolute; background-color: transparent; right: -8px; bottom: -5px; height:25px; width: 15px; z-index: 3;"></div>
         <div class="window__header">
             <h3 class="window__title">ATENDIMENTO</h3>
-            <span>#4777</span>
-            <span class="window__spacer">-</span>
+            <span>{{ window.id }}</span>
+            <!--<span class="window__spacer">-</span>
             <span class="window__author">Gisele</span>
             <span class="window__spacer">às</span>
-            <span class="window__time">10:00</span>
+            <span class="window__time">10:00</span>-->
             <span class="push-both-sides"></span>
             <a class="close-button" @click="close()">
                 <i class="mi mi-close"></i>
             </a>
         </div>
-        <div class="window__body">
-            <app-request :request="window.card.request"></app-request>
-        </div>
+            <form class="window__body" v-if="window.show" autocomplete="off">
+                <app-request :request="window.card.request"></app-request>
+            </form>
     </div>
 </template>
 

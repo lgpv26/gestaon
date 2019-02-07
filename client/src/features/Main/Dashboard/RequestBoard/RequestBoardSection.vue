@@ -1,13 +1,6 @@
 <template>
-  <div
-    class="board-section"
-    v-show="sectionRequests.length"
-    :style="{ width: sectionWidth }"
-  >
-    <div
-      class="board-section__header"
-      :style="{ height: options.headerHeight + 'px' }"
-    >
+  <div class="board-section" v-show="sectionRequests.length && !isLoading" :style="{ width: sectionWidth }">
+    <div class="board-section__header" :style="{ height: options.headerHeight + 'px' }">
       <div class="header__section-title">
         <h3>{{ section.name }}</h3>
         <span class="push-both-sides"></span>
@@ -41,13 +34,8 @@
               'margin-top': options.gutterSize + 'px',
               'margin-right': options.gutterSize + 'px'
             }"
-            @click="cardClick(request.card, request, $event)"
-          >
-            <app-request-board-card
-              class="request-card__main"
-              :card="request.card"
-              :request="request"
-            ></app-request-board-card>
+            @click="cardClick(request.card, request, $event)">
+            <app-request-board-card class="request-card__main" :card="request.card" :request="request"></app-request-board-card>
           </div>
         </div>
       </app-perfect-scrollbar>
@@ -109,8 +97,7 @@ export default {
     ...mapState(["mainContentArea"]),
     ...mapState("auth", ["user", "tokens", "company"]),
     ...mapState("morph-screen", { isShowingMorphScreen: "isShowing" }),
-    ...mapState("request-board", ["sections", "filters"]),
-    ...mapGetters("request-board", []),
+    ...mapState("request-board", ["sections", "filters", "isLoading"]),
     sectionWidth() {
       const size = _.get(this.sections, `${this.section.id}.size`, 1);
       return (
@@ -140,6 +127,12 @@ export default {
             .with("requestUIState")
             .with("requestOrder.requestOrderProducts.product")
             .with("requestPayments.paymentMethod")
+            .where(record => {
+                if(this.utils.isTmp(record.id)){
+                    return true
+                }
+                return this.moment(record.deliveryDate).isSame(this.moment(this.filters.deliveryDate), 'day')
+            })
             .get();
           return _.filter(requests, request => {
             const responsibleUsers =

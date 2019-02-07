@@ -85,7 +85,6 @@
                                 <th style="width: 100px; text-align: center;">Recebido</th>
                                 <th style="width: 100px; text-align: right; padding-right: 8px;">Valor</th>
                                 <th style="width: 20px;"></th>
-
                             </tr>
                             </thead>
                             <tbody>
@@ -185,7 +184,7 @@
                                     class="input"
                                     :value="request.deliveryDate"
                                     @input="onDeliveryDateChange($event)"
-                                    :config="datetimeSelectorConfig"
+                                    :config="deliveryDateSelectorConfig"
                                     placeholder="...">
                             </app-datetime-selector>
                         </div>
@@ -236,6 +235,14 @@
                     time_24hr: true,
                     enableTime: true
                 },
+                deliveryDateSelectorConfig: {
+                    altInput: true,
+                    altFormat: 'd/m/Y H:i',
+                    dateFormat: 'Z',
+                    locale: Portuguese,
+                    time_24hr: true,
+                    enableTime: true
+                },
                 moneyMask: {
                     decimal: ',',
                     thousands: '.',
@@ -257,6 +264,16 @@
                 activeTab: 'client',
 
                 price: 0
+            }
+        },
+        watch: {
+            getOrderTotalPrice() {
+                const orderTotalPrice = _.sumBy(this.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                    return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
+                })
+                if(this.request.requestPayments.length === 1){
+                    this.updateValue('entities/requestPayments/update','amount',_.first(this.request.requestPayments).id,orderTotalPrice)
+                }
             }
         },
         computed: {
