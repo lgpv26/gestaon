@@ -26,6 +26,7 @@ export default class Request extends Model {
             requestOrderId: this.attr(null),
             requestOrder: this.belongsTo(RequestOrder, "requestOrderId"),
             card: this.hasOne(Card, "requestId"),
+            obs: this.attr(null),
             requestUIState: this.hasOne(RequestUIState, "requestId"),
             requestPayments: this.hasMany(RequestPayment, "requestId"),
             requestClientAddresses: this.hasMany(RequestClientAddress, "requestId"),
@@ -42,6 +43,7 @@ export default class Request extends Model {
 
     static guaranteeDependencies(request,promiseQueue,fillOfflineDBWithSyncedData,ignoreOfflineDBInsertion = false){
         const requestId = _.get(request, "tmpId", request.id)
+
         const card = Card.query().where("requestId", requestId)
             .with("request.requestUIState")
             .with("window")
