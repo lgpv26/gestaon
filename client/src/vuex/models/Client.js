@@ -15,6 +15,7 @@ export default class Client extends Model {
             clientAddresses: this.hasMany(ClientAddress, 'clientId'),
             clientPhones: this.hasMany(ClientPhone, 'clientId'),
             name: this.attr(null),
+            obs: this.attr(null),
             document: this.attr(null)
         }
     }

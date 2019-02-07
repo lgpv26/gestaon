@@ -61,7 +61,7 @@ Vue.set(Vue.prototype, "config", config)
 Vue.set(Vue.prototype, "utils", utils)
 Vue.set(Vue.prototype, "modelDefinitions", {
     offlineDBModels: {
-        clients: "id, name, document, clientGroupId",
+        clients: "id, name, obs, document, clientGroupId",
         clientPhones: "id, name, number, clientId, dateUpdated, dateCreated, dateRemoved",
         clientAddresses: "id, addressId, clientId, complement, dateCreated, dateUpdated, dateRemoved, name, number, status",
         addresses: "id, name, address, cep, city, dateCreated, dateUpdated, neighborhood, state, status",
@@ -76,7 +76,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
         requestOrders: "id, obs, promotionChannelId, status, dateUpdated, dateCreated, dateRemoved",
         requestClientAddresses: "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
-        requests: "id, clientId, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, status, userId",
+        requests: "id, clientId, obs, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, status, userId",
     },
     searchModels: {
         searchClients: "id, name, address, number, complement, neighborhood, city, state",
@@ -88,12 +88,12 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         STATE_requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
         STATE_requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
         STATE_requestOrders: "id, obs, promotionChannelId, status, dateUpdated, dateCreated, dateRemoved",
-        STATE_clients: "id, name, document, clientGroupId",
+        STATE_clients: "id, name, obs, document, clientGroupId",
         STATE_clientPhones: "id, name, number, clientId, dateUpdated, dateCreated, dateRemoved",
         STATE_addresses: "id, name, address, cep, city, dateCreated, dateUpdated, neighborhood, state, status",
         STATE_clientAddresses: "id, addressId, clientId, complement, dateCreated, dateUpdated, dateRemoved, name, number, status",
         STATE_requestClientAddresses: "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
-        STATE_requests: "id, clientId, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, requestUIState, status, userId",
+        STATE_requests: "id, obs, clientId, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, requestUIState, status, userId",
         STATE_windows: "id, show, zIndex"
     }
 });

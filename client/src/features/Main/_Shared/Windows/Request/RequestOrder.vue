@@ -4,7 +4,6 @@
             <div class="columns">
                 <div class="left-side">
                     <div class="box">
-                        <h3>Produtos</h3>
                         <table style="margin: 3px 0 12px 0;">
                             <thead>
                                 <tr>
@@ -75,7 +74,6 @@
                         </table>
                     </div>
                     <div class="box">
-                        <h3>Pagamentos</h3>
                         <table style="margin: 3px 0 12px 0;">
                             <thead>
                             <tr>
