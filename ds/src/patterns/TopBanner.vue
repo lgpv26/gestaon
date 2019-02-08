@@ -34,7 +34,7 @@
       <img class="Reset" src="..\assets\PINS.png" style="width:65%;" />
     </div>
     <div class="Reset" style="top:-1580px;right:120px;">
-      <img class="Reset" src="..\assets\Group.png" style="width:65%;" />
+      <img class="Reset" src="..\assets\Group.png" style="width:65%;z-index:1;" />
     </div>
   </div>
 </template>
@@ -68,8 +68,8 @@ export default {
   margin: 0px auto 0px auto;
   padding: 0px;
   max-width: 1245px;
+  height: 780px;
   overflow: hidden;
-  height: 760px;
   position: relative;
 }
 .Reset {

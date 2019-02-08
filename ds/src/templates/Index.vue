@@ -10,6 +10,7 @@
       ]"
     />
     <TopBanner />
+    <Process />
   </component>
 </template>
 
