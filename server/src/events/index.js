@@ -3,6 +3,8 @@ import path from 'path'
 import _ from 'lodash'
 import config from '../config'
 import EventResponse from '../models/EventResponse'
+import RSMQWorker from "rsmq-worker"
+import moment from "moment"
 
 
 module.exports = class Events {
@@ -34,6 +36,9 @@ module.exports = class Events {
     _setListeners(){
         const vm = this
         // for each connected user
+
+        let rsmqWorker
+
         this.server.io.on('connection', (socket) => {
             if(!!this._versionInterval){
                 clearInterval(this._versionInterval)
@@ -118,12 +123,30 @@ module.exports = class Events {
                                     })
                                 }
                             }).then(() => {
+
+                                this.server.rsmq.listQueues()
+                                    .then((queues) => { 
+                                        if(!_.includes(queues, "userId-" + socket.user.id)){
+                                            this.server.rsmq.createQueue({ qname: "userId-" + socket.user.id, maxsize: -1 })
+                                                .then(() => {
+                                                    console.log("queue userId:" + socket.user.id + " created")
+                                                })
+                                        }
+                                    
+                                    })
+                                    .catch((err) => console.log(err))
+        
+                              
+                      
                                 socket.instance.to('company/' + socket.activeCompany.id).emit('presence:add', new EventResponse({
                                     id: socket.user.id,
                                     name: socket.user.name,
                                     email: socket.user.email,
                                     userCompanies: socket.user.companies
                                 }))
+
+
+
                                 // for the current user, join him to his tracking devices
                                 socket.user.companies.forEach((company) => {
                                     this.server.mongodb.Device.find({
@@ -153,22 +176,87 @@ module.exports = class Events {
                                         event: 'import',
                                         socketId: socket.instance.id
                                     })
-                                   
+
+                                    rsmqWorker = new RSMQWorker("userId-" + socket.user.id, {
+                                        maxReceiveCount: 1
+                                    })
+
+                                    socket.instance.on('system:ready', () => {
+                                        console.log("O client do usuario " + socket.user.name + " esta pronto!" )
+
+                                        rsmqWorker.start()
+
+                                        rsmqWorker.size((err, size) => {
+                                            console.log("A fila do",  socket.user.name, "está atualmente com", size, "pendentes de ser entregue!")
+                                        })
+
+                                        rsmqWorker.on("message", function (msg, next, id) {
+                                            const message = JSON.parse(msg)
+                                            switch (message.type) {
+                                                case "request":
+                                                    return vm.server.broker.call("socket.processedQueue", _.assign(message, { userId: socket.user.id }))
+                                                        .then(() => {
+                                                            console.log("Enviada para: " + socket.user.name, "em", moment().format('DD/MM/YY HH:mm:ss:SSS'), "mensagem ID:", id)
+                                                            next()
+                                                        })
+                                                    break;
+                                                default:
+
+                                                    break;
+                                            }
+
+                                        })
+/*
+                                        rsmqWorker.size((err, size) => {
+                                            if (!size) return
+
+                                            let i
+                                            for (i = 1; i <= size; i++) {
+                                                console.log("Tamanho: ", size, " esta no ", i)
+                                                this.server.rsmq.receiveMessage({ qname: "userId-" + socket.user.id })
+                                                    .then((data) => {
+                                                        const messages = (!_.isEmpty(data)) ? JSON.parse(data.message) : null
+                                                        if (!messages) return
+
+                                                        switch (messages.type) {
+                                                            case "request":
+                                                                return vm.server.broker.call("socket.processedQueue", _.assign(messages, { userId: socket.user.id }))
+                                                                    .then(() => {
+                                                                        console.log("Messagem id: " + data.id)
+                                                                        console.log("Enviada para: " + socket.user.name, " em ", moment().format('DD/MM/YY HH:mm:ss:SSS'))
+                                                                    })
+                                                                break
+                                                            default:
+
+                                                                break
+                                                        }
+                                                    })
+                                                    .catch(err => console.log(err))
+                                            }
+
+                                        })
+*/
+
+
+                                    })
+
                                 })
                             })
                         })
                     }) 
                 }
             })
+            
 
             socket.instance.on('disconnect', () => {
+                if(rsmqWorker) rsmqWorker.quit()
+                
                 if(!!this._versionInterval){
                     clearInterval(this._versionInterval)
-                }
+                }                
 
                 if(socket.activeCompany) this.server.io.in('company/' + socket.activeCompany.id).emit('presence:remove', new EventResponse(socket.user.id))
-                if(!socket.activeCompany && socket.user.activeCompanyUserId) this.server.io.in('company/' + socket.user.activeCompanyUserId).emit('presence:remove', new EventResponse(socket.user.id))
-                if(!socket.activeCompany && socket.user.companies) this.server.io.in('company/' + socket.user.companies[0].id).emit('presence:remove', new EventResponse(socket.user.id))
+                if(!socket.activeCompany && !socket.user) return true 
 
                 this.server.broker.call('socket.remove', {
                     activeSocketId: socket.instance.id

@@ -1,19 +1,18 @@
 <template>
-  <div class="Banner row col-md-12" :style="'background-image: url(' + img + ')'">
-    <div class="cx-1 col-md-6">
-      <div class="v1 start-md"><Icon name="card" size="" /></div>
-      <div class="cx-2">
-        <h1 class="font">sua revenda de GLP em um novo nível!</h1>
-        <Paragraph class="paragraph"
-          >Sistema de atendimento e logística nos segundos de uma ligação</Paragraph
-        >
-      </div>
-      <div class="cx-3">
-        <button class="acess">
-          <h1>Acesse grátis</h1>
-          <Paragraph class="days" style text-align="center">30 dias, sem compromisso</Paragraph>
-        </button>
-      </div>
+  <div class="Banner row">
+    <div class="Reset"><img src="..\assets\Top-banner.png" style="width:100%;margin:0px;" /></div>
+    <div class="col-md-6 Reset" style="top:-470px;left:200px;">
+      <div v-html="card"></div>
+      <h1 class="Reset" style="color:white;font-size:30px;">
+        SUA REVENDA DE GLP <br />EM UM NOVO NÍVEL!
+      </h1>
+      <p class="Reset" style="color:white;font-size:15px;top:5px;">
+        Sistema de atendimento e logística nos segundos de uma ligação
+      </p>
+      <button class="Button Reset">
+        <h1 class="Reset" style="color:white;font-size:23px;">Acesse grátis</h1>
+        <p class="Reset" style="color:white;font-size:12px;">30 dias sem combrança</p>
+      </button>
     </div>
     <div class="col-md-6"></div>
   </div>
@@ -27,9 +26,14 @@ export default {
   name: "TopBanner",
   status: "ready",
   release: "1.0.0",
+  fill: {
+    type: String,
+    default: "currentColor",
+  },
   data() {
     return {
-      img: require("./Top-banner-1.png"),
+      card: req("./" + "card" + ".svg").replace(/^<svg /, `<svg style="fill: ${this.fill}" `),
+      relogio: req("./" + "relogio" + ".svg").replace(/^<svg /, `<svg style="fill: ${this.fill}" `),
     }
   },
 }
@@ -37,79 +41,28 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
-@import "../../src/assets/fonts/dax.css";
+
 .Banner {
   margin: 0px auto 0px auto;
   padding: 0px;
-  max-width: 1500px;
+  max-width: 1245px;
+  overflow: hidden;
+  height: 760px;
+  position: relative;
 }
-
-.v1 {
-  margin: 0px;
-  padding: 0px 0px 0px 50px;
-}
-.cx-2 {
-  margin: 0px;
-  padding: 0px 50px 0px 50px;
-  .font {
-    font-family: Dax-Bold;
-  }
-  .paragraph {
-    font-family: DaxCondensed;
-  }
-}
-
-.cx-2 h1 {
+.Reset {
+  position: relative;
   margin: 0px;
   padding: 0px;
-  line-height: normal;
-  font-size: 38px;
-  text-transform: uppercase;
-  color: white;
-  text-align: left;
 }
-.cx-2 p {
-  margin: 0px;
-  padding: 0px;
-  font-size: 18px;
-  color: white;
-  text-align: left;
-}
-.cx-1 button {
-  margin: 10px 0px 0px 50px;
-  padding: 0px;
+.Button {
+  width: 182px;
   border: 0px;
   border-radius: 10px;
-  width: 200px;
-  height: 80px;
-  float: left;
-  background: linear-gradient(217.73deg, #49dfea -10.02%, #be668d -10.02%, #0072e4 91.15%);
-}
-button h1 {
-  margin: 0px;
-  padding: 0px;
-  color: white;
-  font-size: 26px;
-}
-button p {
-  margin: 0px;
-  padding: 0px;
-  font-size: 14px;
-  color: white;
-}
-.cx-3 {
-  margin: 0px;
-  padding: 0px;
-  color: white;
-  .acess {
-    font-family: "Dax-Bold-Italic";
-    font-size: 36px;
-  }
-  .days {
-    color: white;
-    font-family: "Dax-Italic";
-    text-align: center;
-  }
+  height: 78px;
+  background: linear-gradient(217.73deg, #49dfea -10.02%, #0072e4 91.15%);
+  position: relative;
+  top: 20px;
 }
 </style>
 

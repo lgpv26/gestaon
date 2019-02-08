@@ -167,26 +167,38 @@ module.exports = server => {
                 })
             },
 
-            processedQueue(ctx) {
+            streamQueue(ctx){
                 let response
 
-                if (ctx.params.error) {
+                const data = ctx.params.data
+
+                if (data.error) {
                     response = new Error({
-                        triggeredBy: ctx.params.userId,
-                        processedQueue: ctx.params.data,
-                        offset: ctx.params.offset,
-                        error: ctx.params.errorMessage
+                        triggeredBy: data.userId,
+                        processedQueue: data.data,
+                        offset: data.offset,
+                        error: data.errorMessage
                     })
                 } 
                 else {
                     response = {
-                        triggeredBy: ctx.params.userId,
-                        processedQueue: ctx.params.data
+                        triggeredBy: data.userId,
+                        processedQueue: data.data
                     }
                 }
-                console.log("Processed Queue")
-                //processedQueue
-                server.io.in('company/' + ctx.params.companyId).emit("request-queue:sync", new EventResponse(response))
+
+                server.broker.call('socket.checkSocketId', {
+                    userId: ctx.params.userId
+                }).then((userSocketId) => {
+                    console.log("Send to Socket:", userSocketId, " userId: ", ctx.params.userId)
+                    //processedQueue
+                    server.io.to(userSocketId).emit("request-queue:sync", new EventResponse(response))
+                })
+                
+            },
+
+            processedQueue(ctx) {
+                ctx.call("socket.streamQueue", ctx.params)  
             },
 
             conected(ctx) {

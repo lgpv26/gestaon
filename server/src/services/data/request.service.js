@@ -61,7 +61,7 @@ module.exports = server => {
 
                                 const requestDetails = await vm.checkRequestDetails(data, request, client, triggeredBy, transaction)
 
-                                await vm.dashboard(request, client, oldRequest, companyId, transaction)
+                                //await vm.dashboard(request, client, oldRequest, companyId, transaction)
 
                                 let pushNotification
                                 if (request.status === "pending" && request.userId) {
@@ -353,6 +353,9 @@ module.exports = server => {
                                 obj.tmpId = obj.id
                                 obj.id = null
                             }
+                            if (_.get(obj, "requestId", false) && !_.isNumber(obj.requestId) && obj.requestId.substring(0, 4) === "tmp/") {
+                                obj.requestId = null
+                            }
                             newValue.push(obj)
                             resolve()
                         })
@@ -621,6 +624,7 @@ module.exports = server => {
             },
 
             dashboard(request, client, oldRequest, companyId, transaction) {
+                /*
                 return new Promise((resolve, reject) => {
                     if (!client.id || (request.status === "finished" || request.status === "canceled")) {
                         if (request.id && (oldRequest && oldRequest.status !== "finished" && oldRequest.status !== "canceled")) {
@@ -813,6 +817,7 @@ module.exports = server => {
                             })
                     }
                 })
+                */
             },
 
             pushNotification(request, dataPush) {

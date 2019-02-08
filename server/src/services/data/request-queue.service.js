@@ -3,7 +3,7 @@ import moment from "moment"
 const Op = require("sequelize").Op
 import EventResponse from "~models/EventResponse"
 
-module.exports = server => {
+module.exports = (server) => {
     return {
         name: "data/request-queue",
         actions: {
@@ -77,19 +77,102 @@ module.exports = server => {
                                         bunch(offset)
                                     } 
                                     else {
-                                        console.log("Sincronização concluida! Total: ", offset)
+                                        async function finish() {
+                                            try {
+                                                console.log("Sincronização concluida! Total: ", offset)
 
+                                                const message = JSON.stringify({
+                                                    type: "request",
+                                                    data: {
+                                                        userId: ctx.params.userId,
+                                                        companyId: ctx.params.companyId,
+                                                        data: objReturn
+                                                    }
+                                                })
+        
+                                                const company = await server.mysql.Company.findOne({
+                                                    where: {
+                                                        id: ctx.params.companyId
+                                                    },
+                                                    include: [{
+                                                        model: server.mysql.CompanyUser,
+                                                        as: 'companyUsers'
+                                                    }]
+                                                })
+
+                                                const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
+        
+                                                const promises =  []
+    
+                                                companyUsers.forEach(async (companyUser) => {
+                                                    await vm.checkUserQueue(companyUser.userId)
+
+                                                    promises.push(await vm.queueToUser(companyUser.userId, message))
+                                                })
+    
+                                                return Promise.all(promises)
+                                                .then(() => {
+                                                    resolve()
+                                                })
+                                            } 
+
+                                            catch (err) {
+                                                console.log(err, "catch try - queue")
+                                                reject(err)
+                                            }
+                                        }
+        
+                                        finish()
+                                        
+/*
                                         return ctx.call("socket.processedQueue", {
                                                 userId: ctx.params.userId,
                                                 companyId: ctx.params.companyId,
                                                 data: objReturn
                                             })
                                             .then(() => {
-                                                resolve(objReturn)
+                                                
                                             })
+*/
                                     }
                                 })
-                                .catch(err => {
+                                .catch((err) => {
+                                    const message = JSON.stringify({
+                                        type: "request",
+                                        data: {
+                                            userId: ctx.params.userId,
+                                            companyId: ctx.params.companyId,
+                                            data: objReturn,
+                                            offset,
+                                            errorMessage: err.message,
+                                            error: true
+                                        }
+                                    }) 
+
+                                    return server.mysql.Company.findOne({
+                                        where: {
+                                            id: ctx.params.companyId
+                                        },
+                                        include: [{
+                                            model: server.mysql.CompanyUser,
+                                            as: 'companyUsers'
+                                        }]
+                                    })
+                                    .then((company) => {
+                                        const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
+
+                                        const promises =  []
+
+                                        companyUsers.forEach((companyUser) => {
+                                            promises.push(vm.queueToUser(companyUser.userId, message))
+                                        })
+
+                                        return Promise.all(promises)
+                                        .then(() => {
+                                            reject()
+                                        })
+                                    })
+                           /*             
                                     return ctx.call("socket.processedQueue", {
                                             userId: ctx.params.userId,
                                             companyId: ctx.params.companyId,
@@ -105,7 +188,9 @@ module.exports = server => {
                                                 offset
                                             })
                                         })
-                                })
+                            */
+                            })
+                        
                         }
 
                         bunch(initialOffset)
@@ -304,6 +389,34 @@ module.exports = server => {
                         resolve(obj.data)
                     })
                 })
+            },
+
+            queueToUser(userId, message) {
+                return server.rsmq.sendMessage({qname: 'userId-' + userId, message })
+                    .then(() => {
+                        console.log("Object of data in queue to send to userId:" + userId + ", pending to delivery")
+                        return Promise.resolve()
+                    })
+                    .catch((err) => { 
+                        console.log(err)
+                    })
+            },
+
+            checkUserQueue(userId){
+                return new Promise((resolve, reject) => {
+                    return server.rsmq.listQueues()
+                        .then((queues) => {
+                            if (_.includes(queues, "userId-" + userId)) return resolve()
+                            return server.rsmq.createQueue({ qname: "userId-" + userId, maxsize: -1 })
+                                .then(() => {
+                                    console.log("queue userId:" + userId + " created")
+                                    return resolve()
+                                })
+
+                        })
+                        .catch((err) => console.log(err))
+                })
+                
             }
         }
     }
