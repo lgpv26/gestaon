@@ -28,3 +28,10 @@
   font-weight: 600;
   font-style: normal;
 }
+
+@font-face {
+  font-family: "Montserrat-Alternates";
+  font-style: normal;
+  font-weight: normal;
+  src: local("Montserrat-Alternates"), url("Montserrat-Alternates.woff") format("woff");
+}

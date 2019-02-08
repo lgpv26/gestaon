@@ -11,7 +11,7 @@
       </p>
       <button class="Button Reset">
         <h1 class="Button-I" style="color:white;font-size:23px;">Acesse grátis</h1>
-        <p class="Button-II" style="color:white;font-size:12px;">30 dias sem combrança</p>
+        <p class="Button-II" style="color:white;font-size:12px;">30 dias, sem compromisso</p>
       </button>
     </div>
     <div class="Reset" style="top:-550px;left:100px;">

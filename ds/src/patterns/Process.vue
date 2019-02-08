@@ -38,7 +38,7 @@
         <img src="../assets/cidade.png" style="width:65%;" />
         <div style="padding:0px 20px 0px 50px;text-align:left;">
           <p class="paragraph" style="font-size:18px;font-style:normal;">
-            <strong>Loística</strong> que engloba estoque e rastreamento
+            <strong>Logística</strong> que engloba estoque e rastreamento
           </p>
           <p class="paragraph2" style="font-size:18px;font-style:normal;">
             O vendedor recebe os pedidos por ordem de prioridade no aplicativo móvel e você
@@ -60,7 +60,7 @@
             novo;
           </p>
           <p class="paragraph2" style="font-size:18px;font-style:normal;">
-            visualize o histórico de compras e encaminhe para a entrega sem anotação em papel e
+            Visualize o histórico de compras e encaminhe para a entrega sem anotação em papel e
             antes de terminar a ligação;
           </p>
         </div>
@@ -85,14 +85,14 @@ export default {
 @import "../../src/assets/fonts/montserrat.css";
 
 .title {
-  font-family: Montserrat;
+  font-family: Montserrat-Alternates;
   font-weight: normal;
 }
 .paragraph {
-  font-family: Montserrat;
+  font-family: Montserrat-Alternates;
 }
 .paragraph2 {
-  font-family: Montserrat;
+  font-family: Montserrat-Alternates;
   color: #73777b;
 }
 .Process {
