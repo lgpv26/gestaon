@@ -109,6 +109,8 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+@import "../../src/assets/fonts/montserrat.css";
+
 // Design Tokens with local scope
 $color-nav-link: $color-primary;
 $color-nav-link-active: $color-primary;
@@ -131,6 +133,7 @@ $color-nav-link-active: $color-primary;
     text-decoration: none;
     display: inline-block;
     font-size: 12px;
+    font-weight: 600;
   }
 }
 a {
@@ -138,7 +141,7 @@ a {
   padding: 0px 0px 0px 0px;
   text-decoration: none;
   color: $color-primary-40;
-  font-family: Montserrat Alternates;
+  font-weight: 600px;
 }
 a:hover {
   color: $color-primary-60;
@@ -151,6 +154,8 @@ a:hover {
   border-radius: 5px;
   color: white;
   background: linear-gradient(214.41deg, #49dfea -10.02%, #0072e4 91.15%);
+  font-weight: 600;
+  font-family: Montserrat;
 }
 .conteiner {
   max-width: 1245px;

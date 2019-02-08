@@ -15,6 +15,13 @@
 }
 
 @font-face {
+  font-family: "Dax-Light-Italic";
+  font-style: normal;
+  font-weight: normal;
+  src: local("Dax-Light-Italic"), url("Dax-Light-Italic.woff") format("woff");
+}
+
+@font-face {
   font-family: "Dax-Medium";
   font-style: normal;
   font-weight: normal;
