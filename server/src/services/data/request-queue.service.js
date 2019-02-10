@@ -36,8 +36,8 @@ module.exports = (server) => {
                                         delete obj.data.id
                                         if (checkId) obj.data.id = checkId
 
-                                        const params = await vm.checkParams(obj, mapIds)
-                                        if (params) obj.params = params
+                                        // const params = await vm.checkParams(obj, mapIds)
+                                        // if (params) obj.params = params
 
                                         obj.data = await vm.cleanTempIds(obj, mapIds)
 
@@ -60,8 +60,8 @@ module.exports = (server) => {
                                         objReturn.push(action)
 
                                         resolve(action)
-                                    } 
-                                    
+                                    }
+
                                     catch (err) {
                                         console.log(err, "catch try - queue")
                                         reject(err)
@@ -70,12 +70,12 @@ module.exports = (server) => {
 
                                 start()
                             })
-                            .then(() => {
+                                .then(() => {
                                     offset++
                                     if (totalItemsLimit && !limitReached) {
                                         if (totalItemsLimit - offset === 0) limitReached = true
                                         bunch(offset)
-                                    } 
+                                    }
                                     else {
                                         async function finish() {
                                             try {
@@ -89,7 +89,7 @@ module.exports = (server) => {
                                                         data: objReturn
                                                     }
                                                 })
-        
+
                                                 const company = await server.mysql.Company.findOne({
                                                     where: {
                                                         id: ctx.params.companyId
@@ -101,39 +101,28 @@ module.exports = (server) => {
                                                 })
 
                                                 const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
-        
-                                                const promises =  []
-    
+
+                                                const promises = []
+
                                                 companyUsers.forEach(async (companyUser) => {
                                                     await vm.checkUserQueue(companyUser.userId)
 
                                                     promises.push(await vm.queueToUser(companyUser.userId, message))
                                                 })
-    
+
                                                 return Promise.all(promises)
-                                                .then(() => {
-                                                    resolve()
-                                                })
-                                            } 
+                                                    .then(() => {
+                                                        resolve()
+                                                    })
+                                            }
 
                                             catch (err) {
                                                 console.log(err, "catch try - queue")
                                                 reject(err)
                                             }
                                         }
-        
+
                                         finish()
-                                        
-/*
-                                        return ctx.call("socket.processedQueue", {
-                                                userId: ctx.params.userId,
-                                                companyId: ctx.params.companyId,
-                                                data: objReturn
-                                            })
-                                            .then(() => {
-                                                
-                                            })
-*/
                                     }
                                 })
                                 .catch((err) => {
@@ -147,7 +136,7 @@ module.exports = (server) => {
                                             errorMessage: err.message,
                                             error: true
                                         }
-                                    }) 
+                                    })
 
                                     return server.mysql.Company.findOne({
                                         where: {
@@ -158,39 +147,22 @@ module.exports = (server) => {
                                             as: 'companyUsers'
                                         }]
                                     })
-                                    .then((company) => {
-                                        const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
+                                        .then((company) => {
+                                            const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
 
-                                        const promises =  []
+                                            const promises = []
 
-                                        companyUsers.forEach((companyUser) => {
-                                            promises.push(vm.queueToUser(companyUser.userId, message))
-                                        })
-
-                                        return Promise.all(promises)
-                                        .then(() => {
-                                            reject()
-                                        })
-                                    })
-                           /*             
-                                    return ctx.call("socket.processedQueue", {
-                                            userId: ctx.params.userId,
-                                            companyId: ctx.params.companyId,
-                                            data: objReturn,
-                                            offset,
-                                            errorMessage: err.message,
-                                            error: true
-                                        })
-                                        .then(() => {
-                                            reject({
-                                                data: objReturn,
-                                                error: err.message,
-                                                offset
+                                            companyUsers.forEach((companyUser) => {
+                                                promises.push(vm.queueToUser(companyUser.userId, message))
                                             })
+
+                                            return Promise.all(promises)
+                                                .then(() => {
+                                                    reject()
+                                                })
                                         })
-                            */
-                            })
-                        
+                                })
+
                         }
 
                         bunch(initialOffset)
@@ -198,7 +170,7 @@ module.exports = (server) => {
                 }
             }
         },
-        
+
         methods: {
             path(obj) {
                 return new Promise((resolve, reject) => {
@@ -251,8 +223,9 @@ module.exports = (server) => {
             checkId(obj, mapIds) {
                 return new Promise((resolve, reject) => {
                     if (_.get(obj, "data.id") && _.isNumber(obj.data.id)) return resolve(obj.data.id)
-                    if (_.includes(["create", "update-user", "update-status"], obj.op)) return resolve(null)
+                    if (_.includes(["update-user", "update-status"], obj.op)) return resolve(null)
                     if (obj.data.id.substring(0, 4) === "tmp/" && mapIds[obj.data.id]) return resolve(_.get(mapIds, obj.data.id))
+                    if (obj.op == "create") return resolve(null)
                     else {
                         return reject("Não foi possível verificar o item!")
                     }
@@ -267,22 +240,22 @@ module.exports = (server) => {
 
                     _.forEach(obj.params, (value, param) => {
                         promises.push(new Promise((resolve, reject) => {
-                                if (_.get(obj, "params." + param) && _.isNumber(value)) return resolve()
-                                if (value.substring(0, 4) === "tmp/" && mapIds[value]) {
-                                    _.set(obj.params, param, _.get(mapIds, value))
-                                    return resolve()
-                                } 
-                                else {
-                                    _.set(obj.params, param, null)
-                                    resolve()
-                                }
-                            })
+                            if (_.get(obj, "params." + param) && _.isNumber(value)) return resolve()
+                            if (value.substring(0, 4) === "tmp/" && mapIds[value]) {
+                                _.set(obj.params, param, _.get(mapIds, value))
+                                return resolve()
+                            }
+                            else {
+                                _.set(obj.params, param, null)
+                                resolve()
+                            }
+                        })
                         )
                     })
                     return Promise.all(promises)
-                    .then(() => {
-                        resolve(obj.params)
-                    })
+                        .then(() => {
+                            resolve(obj.params)
+                        })
                 })
             },
 
@@ -292,35 +265,35 @@ module.exports = (server) => {
 
                     _.forEach(obj.data, (value, key) => {
                         promises.push(new Promise((resolve, reject) => {
-                                if ((_.get(obj, "data." + key) && _.isNumber(value)) || key.substring(0, 1) === "$") return resolve()
+                            if ((_.get(obj, "data." + key) && _.isNumber(value)) || key.substring(0, 1) === "$") return resolve()
 
-                                if (key === "clientAddressId" || key === "clientPhoneId") return resolve()
+                            if (key === "clientAddressId" || key === "clientPhoneId") return resolve()
 
-                                if (typeof _.get(obj, "data." + key) == "object" && _.has(obj.data[key], "id") && !_.isNumber(obj.data[key].id)) {
-                                    if (obj.data[key].id.substring(0, 4) === "tmp/") {
-                                        _.set(obj.data[key], "tmpId", obj.data[key].id)
-                                        _.set(obj.data[key], "id", null)
-                                    }
+                            if (typeof _.get(obj, "data." + key) == "object" && _.has(obj.data[key], "id") && !_.isNumber(obj.data[key].id)) {
+                                if (obj.data[key].id.substring(0, 4) === "tmp/") {
+                                    _.set(obj.data[key], "tmpId", obj.data[key].id)
+                                    _.set(obj.data[key], "id", null)
                                 }
+                            }
 
-                                if (typeof _.get(obj, "data." + key) != "object" && value.substring(0, 4) === "tmp/") {
-                                    if (mapIds[value]) {
-                                        _.set(obj.data, key, _.get(mapIds, value))
-                                        resolve()
-                                    } 
-                                    else {
-                                        _.set(obj.data, key, null)
-                                        resolve()
-                                    }
-                                } 
-                                else resolve()
-                            })
+                            if (typeof _.get(obj, "data." + key) != "object" && value.substring(0, 4) === "tmp/") {
+                                if (mapIds[value]) {
+                                    _.set(obj.data, key, _.get(mapIds, value))
+                                    resolve()
+                                }
+                                else {
+                                    _.set(obj.data, key, null)
+                                    resolve()
+                                }
+                            }
+                            else resolve()
+                        })
                         )
                     })
                     return Promise.all(promises)
-                    .then(() => {
-                        return resolve(obj.data)
-                    })
+                        .then(() => {
+                            return resolve(obj.data)
+                        })
                 })
             },
 
@@ -334,12 +307,12 @@ module.exports = (server) => {
                                 id: parseInt(obj.data.id)
                             }
                         })
-                        .then((card) => {
-                            if (!card) return Promise.reject("Card não encontrado")
+                            .then((card) => {
+                                if (!card) return Promise.reject("Card não encontrado")
 
-                            if (card.dateUpdated > moment(obj.date).toDate()) return Promise.reject("Não é possivel realizar está ação! Card já foi alterado após essa ação offline!")
-                            return Promise.resolve()
-                        })
+                                if (card.dateUpdated > moment(obj.date).toDate()) return Promise.reject("Não é possivel realizar está ação! Card já foi alterado após essa ação offline!")
+                                return Promise.resolve()
+                            })
                         break
                     case "section":
                         return server.mysql.RequestSection.findOne({
@@ -377,14 +350,14 @@ module.exports = (server) => {
 
                     _.forEach(obj.params, (value, key) => {
                         promises.push(new Promise((resolve, reject) => {
-                                if (!value) return resolve()
-                                
-                                _.set(obj.data, key, value)
-                                return resolve()
-                            })
+                            if (!value) return resolve()
+
+                            _.set(obj.data, key, value)
+                            return resolve()
+                        })
                         )
                     })
-                    
+
                     return Promise.all(promises).then(() => {
                         resolve(obj.data)
                     })
@@ -392,17 +365,16 @@ module.exports = (server) => {
             },
 
             queueToUser(userId, message) {
-                return server.rsmq.sendMessage({qname: 'userId-' + userId, message })
+                return server.rsmq.sendMessage({ qname: 'userId-' + userId, message })
                     .then(() => {
-                        console.log("Object of data in queue to send to userId:" + userId + ", pending to delivery")
                         return Promise.resolve()
                     })
-                    .catch((err) => { 
+                    .catch((err) => {
                         console.log(err)
                     })
             },
 
-            checkUserQueue(userId){
+            checkUserQueue(userId) {
                 return new Promise((resolve, reject) => {
                     return server.rsmq.listQueues()
                         .then((queues) => {
@@ -416,7 +388,7 @@ module.exports = (server) => {
                         })
                         .catch((err) => console.log(err))
                 })
-                
+
             }
         }
     }

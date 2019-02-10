@@ -37,7 +37,7 @@ module.exports = class Events {
         const vm = this
         // for each connected user
 
-        let rsmqWorker
+        const rsmqWorker = {} /// MAPEAMENTO DOS USER
 
         this.server.io.on('connection', (socket) => {
             if(!!this._versionInterval){
@@ -177,67 +177,38 @@ module.exports = class Events {
                                         socketId: socket.instance.id
                                     })
 
-                                    rsmqWorker = new RSMQWorker("userId-" + socket.user.id, {
+                                    if(rsmqWorker["userId:" + socket.user.id]) delete rsmqWorker["userId:" + socket.user.id]
+                                    
+                                    rsmqWorker["userId:" + socket.user.id] = new RSMQWorker("userId-" + socket.user.id, {
                                         maxReceiveCount: 1
                                     })
+
+
+                                    rsmqWorker["userId:" + socket.user.id].on("message", function (msg, next, id) {
+                                        const message = JSON.parse(msg)
+                                        switch (message.type) {
+                                            case "request":
+                                                return vm.server.broker.call("socket.processedQueue", _.assign(message, { userId: socket.user.id }))
+                                                    .then(() => {
+                                                        next()
+                                                    })
+                                                break;
+                                            default:
+
+                                                break;
+                                        }
+
+                                    })
+
 
                                     socket.instance.on('system:ready', () => {
                                         console.log("O client do usuario " + socket.user.name + " esta pronto!" )
 
-                                        rsmqWorker.start()
+                                        rsmqWorker["userId:" + socket.user.id].start()
 
-                                        rsmqWorker.size((err, size) => {
+                                        rsmqWorker["userId:" + socket.user.id].size((err, size) => {
                                             console.log("A fila do",  socket.user.name, "está atualmente com", size, "pendentes de ser entregue!")
                                         })
-
-                                        rsmqWorker.on("message", function (msg, next, id) {
-                                            const message = JSON.parse(msg)
-                                            switch (message.type) {
-                                                case "request":
-                                                    return vm.server.broker.call("socket.processedQueue", _.assign(message, { userId: socket.user.id }))
-                                                        .then(() => {
-                                                            console.log("Enviada para: " + socket.user.name, "em", moment().format('DD/MM/YY HH:mm:ss:SSS'), "mensagem ID:", id)
-                                                            next()
-                                                        })
-                                                    break;
-                                                default:
-
-                                                    break;
-                                            }
-
-                                        })
-/*
-                                        rsmqWorker.size((err, size) => {
-                                            if (!size) return
-
-                                            let i
-                                            for (i = 1; i <= size; i++) {
-                                                console.log("Tamanho: ", size, " esta no ", i)
-                                                this.server.rsmq.receiveMessage({ qname: "userId-" + socket.user.id })
-                                                    .then((data) => {
-                                                        const messages = (!_.isEmpty(data)) ? JSON.parse(data.message) : null
-                                                        if (!messages) return
-
-                                                        switch (messages.type) {
-                                                            case "request":
-                                                                return vm.server.broker.call("socket.processedQueue", _.assign(messages, { userId: socket.user.id }))
-                                                                    .then(() => {
-                                                                        console.log("Messagem id: " + data.id)
-                                                                        console.log("Enviada para: " + socket.user.name, " em ", moment().format('DD/MM/YY HH:mm:ss:SSS'))
-                                                                    })
-                                                                break
-                                                            default:
-
-                                                                break
-                                                        }
-                                                    })
-                                                    .catch(err => console.log(err))
-                                            }
-
-                                        })
-*/
-
-
                                     })
 
                                 })
@@ -249,14 +220,16 @@ module.exports = class Events {
             
 
             socket.instance.on('disconnect', () => {
-                if(rsmqWorker) rsmqWorker.quit()
+                if(rsmqWorker["userId:" + socket.user.id]) { 
+                    rsmqWorker["userId:" + socket.user.id].quit()
+                    delete rsmqWorker["userId:" + socket.user.id]
+                }
                 
                 if(!!this._versionInterval){
                     clearInterval(this._versionInterval)
                 }                
 
                 if(socket.activeCompany) this.server.io.in('company/' + socket.activeCompany.id).emit('presence:remove', new EventResponse(socket.user.id))
-                if(!socket.activeCompany && !socket.user) return true 
 
                 this.server.broker.call('socket.remove', {
                     activeSocketId: socket.instance.id

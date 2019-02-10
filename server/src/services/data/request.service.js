@@ -347,7 +347,7 @@ module.exports = server => {
             removeArrayTempIds(data, path) {
                 let newValue = []
                 const promises = []
-                _.map(_.get(data, path), obj => {
+                _.map(_.get(data, path), (obj) => {
                     promises.push(new Promise((resolve, reject) => {
                             if (_.get(obj, "id", false) && !_.isNumber(obj.id) && obj.id.substring(0, 4) === "tmp/") {
                                 obj.tmpId = obj.id
