@@ -1,12 +1,7 @@
 <template>
   <div class="form-component-switch" @click="toggle($event)">
     <div class="onoffswitch">
-      <div
-        ref="switch"
-        :class="{ on: value }"
-        class="onoffswitch-checkbox"
-        id="myonoffswitch"
-      />
+      <div ref="switch" :class="{ on: value }" class="onoffswitch-checkbox" id="myonoffswitch" />
       <label
         class="onoffswitch-label"
         :class="{ disabled: disabled }"
