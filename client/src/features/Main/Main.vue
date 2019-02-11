@@ -164,14 +164,15 @@
                 }
             },
             async addRequest() {
-                const windowTmpId = `tmp/${shortid.generate()}`;
-                const cardTmpId = `tmp/${shortid.generate()}`;
+
                 const requestUIStateTmpId = `tmp/${shortid.generate()}`;
                 const requestPaymentTmpId = `tmp/${shortid.generate()}`;
                 const requestOrderTmpId = `tmp/${shortid.generate()}`;
                 const requestOrderProductTmpId = `tmp/${shortid.generate()}`;
                 const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
                 const requestTmpId = `tmp/${shortid.generate()}`;
+                const windowTmpId = `tmp/${shortid.generate()}`;
+                const cardTmpId = `tmp/${shortid.generate()}`;
                 const clientTmpId = `tmp/${shortid.generate()}`;
                 const addressTmpId = `tmp/${shortid.generate()}`;
                 const clientAddressTmpId = `tmp/${shortid.generate()}`;
@@ -336,7 +337,16 @@
                                     status: request.status,
                                     dateUpdated: request.dateUpdated
                                 }
-                            });
+                            })
+                            /*const card = Card.query().where('requestId', request.requestId).first()
+                            if(card){
+                                vm.$store.dispatch("entities/insertOrUpdate", {
+                                    entity: 'cards',
+                                    data: {
+                                        isEditing
+                                    }
+                                })
+                            }*/
                         } else if (request.action === "update-user") {
                             Request.update({
                                 where: request.requestId,
@@ -351,23 +361,22 @@
 
                             // request
 
-                            console.log("Testando aaaa", request)
-
                             requestPromiseQueue.add(() => vm.fillOfflineDBWithSyncedData("requests", 'put', request).then((promise) => {
                                 vm.$store.dispatch("entities/insertOrUpdate", {
                                     entity: 'requests',
-                                    ignoreOfflineDBInsertion: true,
+                                    ignoreOfflineDBInsertion: false,
                                     data: request
                                 })
                                 return promise
+                            }).then((promise) => {
+                                Request.guaranteeDependencies(
+                                    request,
+                                    requestPromiseQueue,
+                                    vm.fillOfflineDBWithSyncedData,
+                                    false
+                                )
+                                return promise
                             }))
-
-                            Request.guaranteeDependencies(
-                                request,
-                                requestPromiseQueue,
-                                vm.fillOfflineDBWithSyncedData,
-                                false
-                            )
 
                             return requestPromiseQueue.onIdle().then(() => {
 
@@ -429,20 +438,24 @@
                                     }
                                     return "SEM ENDEREÇO";
                                 }
+
+                                const cardData = _.assign(savedRequest.card, {
+                                    clientName: savedRequest.client.name,
+                                    clientAddress: getClientAddress(),
+                                    orderSubtotal: _.sumBy(
+                                        savedRequest.requestOrder.requestOrderProducts,
+                                        requestOrderProduct => {
+                                            return (
+                                                requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
+                                            )
+                                        }
+                                    ),
+                                    isEditing: false
+                                })
+
                                 vm.$store.dispatch("entities/insertOrUpdate", {
                                     entity: 'cards',
-                                    data: _.assign(savedRequest.card, {
-                                        clientName: savedRequest.client.name,
-                                        clientAddress: getClientAddress(),
-                                        orderSubtotal: _.sumBy(
-                                            savedRequest.requestOrder.requestOrderProducts,
-                                            requestOrderProduct => {
-                                                return (
-                                                    requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
-                                                )
-                                            }
-                                        )
-                                    })
+                                    data: cardData
                                 })
 
                             })
@@ -456,6 +469,7 @@
                     this.$socket.on("request-queue:sync", this.onRequestQueueSync)
                     this.isFirstInitialization = false
                 }
+                this.$socket.emit("system:ready")
             }
         },
         created() {

@@ -247,54 +247,79 @@
             },
             onDeliveryDateChange(value){
                 const vm = this
-                console.log("Delivery date changed")
                 vm.SET_DELIVERY_DATE(value)
                 RequestBoardAPI.getRequests({
                     date: vm.moment(value).toISOString()
                 }).then(response => {
-                    console.log("After Request Board API request", response)
-                    const promises = _.map(response.data, (request) => {
-                        // guarantee the order of promises
-                        const requestPromiseQueue = new PromiseQueue({ concurrency: 1})
-
-                        // request
-
-                        requestPromiseQueue.add(() => vm.fillOfflineDBWithSyncedData("requests", 'put', request).then((promise) => {
-                            vm.$store.dispatch("entities/insertOrUpdate", {
-                                entity: 'requests',
-                                ignoreOfflineDBInsertion: true,
-                                data: request
-                            })
-                            return promise
-                        }))
-
-                        Request.guaranteeDependencies(
-                            request,
-                            requestPromiseQueue,
-                            vm.fillOfflineDBWithSyncedData,
-                            true
-                        )
-
-                        return requestPromiseQueue.onIdle().then(() => {
-                            const savedRequest = Request.query()
-                                .with("card")
-                                .with("client")
-                                .with("requestClientAddresses.clientAddress.address")
-                                .with("requestOrder.requestOrderProducts")
-                                .find(request.id)
-                            const getClientAddress = () => {
-                                if (savedRequest.requestClientAddresses.length) {
-                                    const firstClientAddress = _.first(savedRequest.requestClientAddresses).clientAddress;
-                                    return _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), { length: 24, separator: "", omission: "..."}) +
-                                        ", " +
-                                        (firstClientAddress.number ? firstClientAddress.number : "S/N") +
-                                        (firstClientAddress.complement ? " " + firstClientAddress.complement : "")
-                                }
-                                return "SEM ENDEREÇO";
-                            }
+                    Promise.all([
+                        vm.$db.STATE_cards.toArray().then((cards) => {
                             vm.$store.dispatch("entities/insertOrUpdate", {
                                 entity: 'cards',
-                                data: _.assign(savedRequest.card, {
+                                ignoreOfflineDBInsertion: true,
+                                data: cards
+                            })
+                            return cards
+                        }),
+                        vm.$db.STATE_requestUIState.toArray().then((requestUIState) => {
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: 'requestUIState',
+                                ignoreOfflineDBInsertion: true,
+                                data: requestUIState
+                            })
+                            return requestUIState
+                        }),
+                        vm.$db.STATE_windows.toArray().then((windows) => {
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: 'windows',
+                                ignoreOfflineDBInsertion: true,
+                                data: windows
+                            })
+                            return windows
+                        })
+                    ]).then(() => {
+                        const promises = _.map(response.data, (request) => {
+                            // guarantee the order of promises
+                            const requestPromiseQueue = new PromiseQueue({ concurrency: 1})
+
+                            // request
+
+                            requestPromiseQueue.add(() => vm.fillOfflineDBWithSyncedData("requests", 'put', request).then((promise) => {
+                                vm.$store.dispatch("entities/insertOrUpdate", {
+                                    entity: 'requests',
+                                    ignoreOfflineDBInsertion: true,
+                                    data: request
+                                })
+                                return promise
+                            }).then((promise) => {
+                                Request.guaranteeDependencies(
+                                    request,
+                                    requestPromiseQueue,
+                                    vm.fillOfflineDBWithSyncedData,
+                                    true
+                                )
+                                return promise
+                            }))
+
+                            return requestPromiseQueue.onIdle().then(() => {
+                                const savedRequest = Request.query()
+                                    .with("card")
+                                    .with("client")
+                                    .with("requestClientAddresses.clientAddress.address")
+                                    .with("requestOrder.requestOrderProducts")
+                                    .find(request.id)
+
+                                const getClientAddress = () => {
+                                    if (savedRequest.requestClientAddresses.length) {
+                                        const firstClientAddress = _.first(savedRequest.requestClientAddresses).clientAddress;
+                                        return _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), { length: 24, separator: "", omission: "..."}) +
+                                            ", " +
+                                            (firstClientAddress.number ? firstClientAddress.number : "S/N") +
+                                            (firstClientAddress.complement ? " " + firstClientAddress.complement : "")
+                                    }
+                                    return "SEM ENDEREÇO";
+                                }
+
+                                const cardData = _.assign(savedRequest.card, {
                                     clientName: savedRequest.client.name,
                                     clientAddress: getClientAddress(),
                                     orderSubtotal: _.sumBy(
@@ -306,15 +331,23 @@
                                         }
                                     )
                                 })
+
+                                // the card put into offline db should work with promise
+                                vm.$store.dispatch("entities/insertOrUpdate", {
+                                    entity: 'cards',
+                                    ignoreOfflineDBInsertion: true,
+                                    data: cardData
+                                })
+
+                                return vm.$db["STATE_cards"].put(cardData)
+
                             })
-                            return Promise.resolve(request.id)
                         })
-                    })
-                    // Once everything got from server, start to fill Vuex ORM with STATE_ db data
-                    Promise.all(promises).then((responses) => {
-                        _.forOwn(vm.modelDefinitions.stateModels, (fields, stateModelName) => {
-                            const modelName = stateModelName.replace("STATE_", "")
-                            if(modelName !== 'cards' && modelName !== 'windows' && modelName !== 'requestUIState'){
+
+                        // Once everything got from server, start to fill Vuex ORM with STATE_ db data
+                        Promise.all(promises).then((responses) => {
+                            _.forOwn(vm.modelDefinitions.stateModels, (fields, stateModelName) => {
+                                const modelName = stateModelName.replace("STATE_", "")
                                 vm.$db[stateModelName].toArray().then(data => {
                                     if(data.length){
                                         vm.$store.dispatch("entities/insertOrUpdate", {
@@ -322,25 +355,15 @@
                                             data: data
                                         })
                                     }
-                                    return data
                                 })
-                            }
-                            /*else {
-                                vm.$db[stateModelName].toArray().then(data => {
-                                    if(data.length){
-                                        /!*console.log(stateModelName, data)*!/
-                                        vm.$store.dispatch("entities/insertOrUpdate", {
-                                            entity: modelName,
-                                            data: data
-                                        })
-                                    }
-                                    return data
-                                })
-                            }*/
+                            })
+                            setTimeout(() => {
+                                vm.setIsLoading(false)
+                            }, 1000)
                         })
-                        vm.setIsLoading(false)
+
                     })
-                });
+                })
             }
         },
         mounted() {
