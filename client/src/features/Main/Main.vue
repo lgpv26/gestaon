@@ -464,7 +464,7 @@
                 }
             },
             onSystemInitialized() {
-                console.log("System initialized");
+                console.log("System initialized")
                 if(this.isFirstInitialization){
                     this.$socket.on("request-queue:sync", this.onRequestQueueSync)
                     this.isFirstInitialization = false
