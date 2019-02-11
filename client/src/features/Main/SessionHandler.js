@@ -478,118 +478,84 @@ export default {
                             const input = ss.Buffer.concat(arrayOfChunks);
                             let output = pako.ungzip(input, {
                                 to: "string"
-                            });
-                            return JSON.parse(output);
+                            })
+                            return JSON.parse(output)
                         }),
                         async.asyncify(downloadedData => {
-                            vm.$db.users.bulkPut(downloadedData.users);
-                            vm.$db.clients.bulkPut(downloadedData.clients);
-                            vm.$db.addresses.bulkPut(downloadedData.addresses);
-                            vm.$db.clientPhones.bulkPut(downloadedData.clientPhones);
-                            vm.$db.clientAddresses.bulkPut(
-                                downloadedData.clientAddresses
-                            );
-                            vm.$db.products.bulkPut(downloadedData.products);
-                            vm.$db.promotionChannels.bulkPut(
-                                downloadedData.promotionChannels
-                            );
-                            vm.$db.clientGroups.bulkPut(downloadedData.clientGroups);
-                            vm.$db.customFields.bulkPut(downloadedData.customFields);
-                            vm.$db.paymentMethods.bulkPut(downloadedData.paymentMethods);
-                            console.log("New data imported to indexedDB", downloadedData);
-                            return downloadedData;
+                            vm.$db.users.bulkPut(downloadedData.users)
+                            vm.$db.clients.bulkPut(downloadedData.clients)
+                            vm.$db.addresses.bulkPut(downloadedData.addresses)
+                            vm.$db.clientPhones.bulkPut(downloadedData.clientPhones)
+                            vm.$db.clientAddresses.bulkPut(downloadedData.clientAddresses)
+                            vm.$db.products.bulkPut(downloadedData.products)
+                            vm.$db.promotionChannels.bulkPut(downloadedData.promotionChannels)
+                            vm.$db.clientGroups.bulkPut(downloadedData.clientGroups)
+                            vm.$db.customFields.bulkPut(downloadedData.customFields)
+                            vm.$db.paymentMethods.bulkPut(downloadedData.paymentMethods)
+                            console.log("New data imported to indexedDB", downloadedData)
+                            return downloadedData
                         })
                     ],
                     (err, downloadedData) => {
-                        const clientsWithChanges = [];
+                        const clientsWithChanges = []
                         _.forEach(downloadedData.clients, client => {
-                            clientsWithChanges.push(client.id);
-                        });
+                            clientsWithChanges.push(client.id)
+                        })
                         _.forEach(downloadedData.clientPhones, clientPhone => {
-                            clientsWithChanges.push(clientPhone.clientId);
-                        });
+                            clientsWithChanges.push(clientPhone.clientId)
+                        })
                         _.forEach(downloadedData.clientAddresses, clientAddress => {
-                            clientsWithChanges.push(clientAddress.clientId);
-                        });
-                        console.log("Clients with changes", clientsWithChanges);
-
-                        const addressesWithChanges = [];
+                            clientsWithChanges.push(clientAddress.clientId)
+                        })
+                        if(clientsWithChanges.length) console.log("Clients with changes", clientsWithChanges)
+                        const addressesWithChanges = []
                         _.forEach(downloadedData.addresses, addresses => {
-                            addressesWithChanges.push(addresses.id);
-                        });
-                        console.log("Addresses with changes", addressesWithChanges);
-
+                            addressesWithChanges.push(addresses.id)
+                        })
+                        if(addressesWithChanges.length) console.log("Addresses with changes", addressesWithChanges)
                         const processChunkOfClients = function(chunkOfClients) {
                             return new Promise((resolve, reject) => {
                                 const arrayToIndex = [];
-                                async.each(
-                                    chunkOfClients,
-                                    (client, cb) => {
-                                        vm.$db.clientAddresses
-                                            .where("clientId")
-                                            .equals(client.id)
-                                            .toArray()
-                                            .then(clientAddresses => {
-                                                if (clientAddresses.length) {
-                                                    Promise.all(
-                                                        clientAddresses.map(clientAddress => {
-                                                            return vm.$db.addresses
-                                                                .get(clientAddress.addressId)
-                                                                .then(address => {
-                                                                    arrayToIndex.push({
-                                                                        id:
-                                                                        client.id +
-                                                                        "#" +
-                                                                        _.get(clientAddress, "id", 0),
-                                                                        name: client.name,
-                                                                        address: _.get(address, "name", null),
-                                                                        neighborhood: _.get(
-                                                                            address,
-                                                                            "neighborhood",
-                                                                            null
-                                                                        ),
-                                                                        number: _.get(
-                                                                            clientAddress,
-                                                                            "number",
-                                                                            false
-                                                                        )
-                                                                            ? "" + _.get(clientAddress, "number")
-                                                                            : null,
-                                                                        complement: _.get(
-                                                                            clientAddress,
-                                                                            "complement",
-                                                                            null
-                                                                        ),
-                                                                        city: _.get(address, "city", null),
-                                                                        state: _.get(address, "state", null)
-                                                                    });
-                                                                    return address;
-                                                                });
-                                                        })
-                                                    ).then(() => {
-                                                        cb(null, client);
-                                                    });
-                                                } else {
+                                async.each(chunkOfClients, (client, cb) => {
+                                    vm.$db.clientAddresses.where("clientId").equals(client.id).toArray().then(clientAddresses => {
+                                        if (clientAddresses.length) {
+                                            Promise.all(clientAddresses.map(clientAddress => {
+                                                return vm.$db.addresses.get(clientAddress.addressId).then(address => {
                                                     arrayToIndex.push({
-                                                        id: client.id + "#" + 0,
+                                                        id: client.id + "#" + _.get(clientAddress, "id", 0),
                                                         name: client.name,
-                                                        address: null,
-                                                        neighborhood: null,
-                                                        number: null,
-                                                        complement: null,
-                                                        city: null,
-                                                        state: null
-                                                    });
-                                                    cb(null, client);
-                                                }
-                                            });
-                                    },
-                                    (err, clients) => {
-                                        resolve(arrayToIndex);
-                                    }
-                                );
-                            });
-                        };
+                                                        address: _.get(address, "name", null),
+                                                        neighborhood: _.get(address, "neighborhood", null),
+                                                        number: _.get(clientAddress, "number", false) ? "" + _.get(clientAddress, "number") : null,
+                                                        complement: _.get(clientAddress, "complement", null),
+                                                        city: _.get(address, "city", null),
+                                                        state: _.get(address, "state", null)
+                                                    })
+                                                    return address
+                                                })
+                                            })).then(() => {
+                                                cb(null, client)
+                                            })
+                                        }
+                                        else {
+                                            arrayToIndex.push({
+                                                id: client.id + "#" + 0,
+                                                name: client.name,
+                                                address: null,
+                                                neighborhood: null,
+                                                number: null,
+                                                complement: null,
+                                                city: null,
+                                                state: null
+                                            })
+                                            cb(null, client)
+                                        }
+                                    })
+                                }, (err, clients) => {
+                                    resolve(arrayToIndex)
+                                })
+                            })
+                        }
                         const processChunkOfAddresses = function(chunkOfAddresses) {
                             return new Promise((resolve, reject) => {
                                 const arrayToIndex = [];
@@ -630,25 +596,19 @@ export default {
                                         (offset / clientsWithChanges.length) * 100
                                     )}%`
                                 );
-                                vm.$db.clients
-                                    .where("id")
-                                    .anyOf(clientsWithChanges)
-                                    .offset(offset)
-                                    .limit(limit)
-                                    .toArray()
-                                    .then(clients => {
-                                        processChunkOfClients(clients).then(
-                                            processedChunkOfClients => {
-                                                resultArray = _.concat(
-                                                    resultArray,
-                                                    processedChunkOfClients
-                                                );
-                                                offset += limit;
-                                                processInChunks();
-                                            }
-                                        );
-                                    });
-                            };
+                                vm.$db.clients.where("id").anyOf(clientsWithChanges).offset(offset).limit(limit).toArray().then(clients => {
+                                    processChunkOfClients(clients).then(
+                                        processedChunkOfClients => {
+                                            resultArray = _.concat(
+                                                resultArray,
+                                                processedChunkOfClients
+                                            );
+                                            offset += limit;
+                                            processInChunks();
+                                        }
+                                    )
+                                })
+                            }
                             processInChunks();
                         }).then(clientDocuments => {
                             // begin addresses import
@@ -664,47 +624,41 @@ export default {
                                             `Carregando endereços: ${Math.round(
                                                 (offset / addressesWithChanges.length) * 100
                                             )}%`
-                                        );
-                                        vm.$db.addresses
-                                            .where("id")
-                                            .anyOf(addressesWithChanges)
-                                            .offset(offset)
-                                            .limit(limit)
-                                            .toArray()
-                                            .then(addresses => {
-                                                processChunkOfAddresses(addresses).then(
-                                                    processedChunkOfAddresses => {
-                                                        resultArray = _.concat(
-                                                            resultArray,
-                                                            processedChunkOfAddresses
-                                                        );
-                                                        offset += limit;
-                                                        processInChunks();
-                                                    }
-                                                );
-                                            });
+                                        )
+                                        vm.$db.addresses.where("id").anyOf(addressesWithChanges).offset(offset).limit(limit).toArray().then(addresses => {
+                                            processChunkOfAddresses(addresses).then(
+                                                processedChunkOfAddresses => {
+                                                    resultArray = _.concat(
+                                                        resultArray,
+                                                        processedChunkOfAddresses
+                                                    );
+                                                    offset += limit
+                                                    processInChunks()
+                                                }
+                                            )
+                                        })
                                     }
-                                };
-                                processInChunks();
+                                }
+                                processInChunks()
                             }).then(addressDocuments => {
-                                window.setAppLoadingText(`Preparando dados...`);
-                                vm.$db.searchClients.bulkPut(clientDocuments);
-                                vm.$db.searchAddresses.bulkPut(addressDocuments);
+                                window.setAppLoadingText(`Preparando dados...`)
+                                vm.$db.searchClients.bulkPut(clientDocuments)
+                                vm.$db.searchAddresses.bulkPut(addressDocuments)
                                 vm.beforeSystemInitialization().then(() => {
                                     // initialize
                                     if (window.isAppLoading()) {
-                                        window.removeAppLoading();
+                                        window.removeAppLoading()
                                     }
-                                    vm.stopLoading();
-                                    vm.setLastDataSyncedDate(moment().valueOf());
-                                    vm.setSystemInitialized(true);
-                                    vm.onSystemInitialized();
-                                });
-                            });
-                        });
+                                    vm.stopLoading()
+                                    vm.setLastDataSyncedDate(moment().valueOf())
+                                    vm.setSystemInitialized(true)
+                                    vm.onSystemInitialized()
+                                })
+                            })
+                        })
                     }
-                );
-            });
+                )
+            })
         },
 
         beforeSystemInitialization(){

@@ -83,7 +83,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         searchAddresses: "id, name, address, neighborhood, city, state, cep, country"
     },
     stateModels: {
-        STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, clientAddress",
+        STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, clientAddress, isEditing",
         STATE_requestUIState: "id, activeTab, isAddingClientAddress, requestClientAddressForm, requestId, showClientOrderTimeline",
         STATE_requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
         STATE_requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",

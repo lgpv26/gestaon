@@ -58,6 +58,8 @@
                 vm.stateDBQueue = new PromiseQueue({ concurrency: 1})
             }
 
+            // Every VuexORM changes should be copied to STATE DB
+
             vm.$store.subscribe((mutation, state) => {
                 if (
                     mutation.type.includes("entities") &&
