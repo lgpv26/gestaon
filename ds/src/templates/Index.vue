@@ -10,6 +10,9 @@
       ]"
     />
     <TopBanner />
+    <Process />
+    <Advantages />
+    <Features />
   </component>
 </template>
 
@@ -41,7 +44,8 @@ export default {
 
 <style lang="scss" scoped>
 .index {
-  background: black;
+  margin: 0px;
+  padding: 0px;
 }
 </style>
 
