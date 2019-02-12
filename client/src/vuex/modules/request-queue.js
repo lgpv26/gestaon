@@ -34,12 +34,12 @@ const mutations = {
         console.log(
             "Removendo " + state.processingQueue.length + " itens da fila."
         );
-        state.processingQueue = [];
+        state.processingQueue = []
     },
     ADD(state, queueItem) {
-        state.pendingQueue.push(queueItem);
+        state.pendingQueue.push(queueItem)
     }
-};
+}
 
 const actions = {
     initializeRequestQueue(ctx, socket) {
@@ -71,7 +71,7 @@ const actions = {
             else {
                 console.log("O socket não está comunicando com o servidor")
             }
-        }, 1000 * 5)
+        }, 1000)
     },
     addToQueue(ctx, { type, op, data }) {
         const queueItem = {
@@ -79,12 +79,12 @@ const actions = {
             op,
             data,
             date: moment()
-        };
-        console.log("Item adicionado para fila", queueItem);
-        ctx.commit("ADD", queueItem);
+        }
+        console.log("Item adicionado para fila", queueItem)
+        ctx.commit("ADD", queueItem)
     },
     clearProcessingQueue(ctx) {
-        ctx.commit("REMOVE_PROCESSED_QUEUE_ITEMS");
+        ctx.commit("REMOVE_PROCESSED_QUEUE_ITEMS")
     }
 };
 
@@ -94,4 +94,4 @@ export default {
     getters,
     mutations,
     actions
-};
+}

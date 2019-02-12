@@ -115,8 +115,8 @@ module.exports = class DependencyInjection {
     }
 
     setRSMQ(){
-        const RedisSMQ = require("rsmq")
-        this.server.rsmq = new RedisSMQ( {client: this.server.redisClient} );
+        const RedisSMQ = require("rsmq-promise")
+        this.server.rsmq = new RedisSMQ( {client: this.server.redisClient} )
     }
 
     setOAuth2(){

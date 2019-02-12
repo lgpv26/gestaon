@@ -95,12 +95,12 @@ export default {
     <Icon name="deprecated" fill="rgb(235,59,36)" />
     <Icon name="prototype" fill="rgb(37,138,239)" />
     <Icon name="ic-dashboard" fill="rgb(37,138,239)" />
+    <Icon name="Vector"  />
     <Icon name="face"/>
     <Icon name="insta"/>
     <Icon name="twitter"/>
     <Icon name="whats"/>
     <Icon name="card"/>
-    <Icon name="loja-full" />
   </div>
   ```
 </docs>

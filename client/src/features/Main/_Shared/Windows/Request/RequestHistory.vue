@@ -3,14 +3,22 @@
         <a href="javascript:void(0)" class="back" @click="$emit('close',true)"><i class="mi mi-undo"></i></a>
         <app-perfect-scrollbar class="scrollbar">
             <div class="header">
-                <h3>Histórico de compras de {{ request.client.name }} - {{ requestHistoryCount }}</h3>
+                <h3 style="display: flex; align-items: center;">
+                    <a href="javascript:void(0)"
+                       @click="getRequestHistory()"
+                       style="margin-right: 8px; position: relative; top: 1px">
+                        <i style="font-size: 24px" class="mi mi-refresh"></i>
+                    </a>
+                    Histórico de compras de {{ request.client.name }} - {{ requestHistoryCount }}
+                </h3>
             </div>
             <div class="timeline" v-if="!isRequesting && total">
                 <div class="entry" v-for="historyRequest in historyRequests" :key="historyRequest.id">
                     <div class="title">
                         <h3>{{ moment(historyRequest.deliveryDate).format("DD/MM/YYYY HH:mm") }}</h3><br/>
+                        <p>Criado às: {{ moment(historyRequest.dateCreated).format("DD/MM/YYYY HH:mm") }}</p><br/>
                         <p>Entregador: {{ $store.getters['entities/users/find'](historyRequest.deliveredBy).name }}</p>
-                        <p>Entregue às: {{ moment(historyRequest.deliveredDate).format("DD/MM/YYYY HH:mm") }}</p><br/>
+                        <p>Finalizado às: {{ moment(historyRequest.deliveredDate).format("DD/MM/YYYY HH:mm") }}</p>
                         <p>Finalizado por: {{ $store.getters['entities/users/find'](historyRequest.finishedBy).name }}</p>
                     </div>
                     <div class="body">
@@ -20,25 +28,25 @@
                                 <tr>
                                     <th>Produto</th>
                                     <th>Qnt.</th>
-                                    <th>Preço</th>
-                                    <th>Desconto</th>
+                                    <th style="text-align: center;">Preço</th>
+                                    <th style="text-align: center;">Desconto</th>
                                     <th style="text-align: right">Subtotal</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="requestOrderProduct in historyRequest.requestOrder.requestOrderProducts">
-                                        <td>{{ $store.getters['entities/products/find'](requestOrderProduct.productId).name }}</td>
-                                        <td style="text-align: center;">{{ requestOrderProduct.quantity }}</td>
-                                        <td>{{ utils.formatMoney(requestOrderProduct.unitPrice, 2, 'R$ ', '.', ',') }}</td>
-                                        <td>{{ utils.formatMoney(requestOrderProduct.unitDiscount, 2, 'R$ ', '.', ',') }}</td>
-                                        <td style="text-align: right">
-                                            {{ utils.formatMoney((requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity, 2, 'R$ ', '.', ',') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="5" style="text-align: right; font-weight: bold;">
-                                            {{ utils.formatMoney(_.sumBy(historyRequest.requestOrder.requestOrderProducts, (requestOrderProduct) => ((parseFloat(requestOrderProduct.unitPrice) - parseFloat(requestOrderProduct.unitDiscount)) * parseFloat(requestOrderProduct.quantity))), 2, 'R$ ', '.', ',') }}
-                                        </td>
-                                    </tr>
+                                <tr v-for="requestOrderProduct in historyRequest.requestOrder.requestOrderProducts">
+                                    <td>{{ $store.getters['entities/products/find'](requestOrderProduct.productId).name }}</td>
+                                    <td style="text-align: center;">{{ requestOrderProduct.quantity }}</td>
+                                    <td style="text-align: center;">{{ utils.formatMoney(requestOrderProduct.unitPrice, 2, 'R$ ', '.', ',') }}</td>
+                                    <td style="text-align: center;">{{ utils.formatMoney(requestOrderProduct.unitDiscount, 2, 'R$ ', '.', ',') }}</td>
+                                    <td style="text-align: right">
+                                        {{ utils.formatMoney((requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity, 2, 'R$ ', '.', ',') }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" style="text-align: right; font-weight: bold;">
+                                        {{ utils.formatMoney(_.sumBy(historyRequest.requestOrder.requestOrderProducts, (requestOrderProduct) => ((parseFloat(requestOrderProduct.unitPrice) - parseFloat(requestOrderProduct.unitDiscount)) * parseFloat(requestOrderProduct.quantity))), 2, 'R$ ', '.', ',') }}
+                                    </td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -46,20 +54,30 @@
                             <table style="width: 100%;">
                                 <thead>
                                 <tr>
-                                    <th>Forma de Pagamento</th>
+                                    <th>Meio de Pag.</th>
+                                    <th style="text-align: center;">Código</th>
+                                    <th style="text-align: center;">Vencimento</th>
                                     <th style="text-align: right;">Valor</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="requestPayment in historyRequest.requestPayments">
-                                        <td>{{ $store.getters['entities/paymentMethods/find'](requestPayment.paymentMethodId).name }}</td>
-                                        <td style="text-align: right;">{{ utils.formatMoney(requestPayment.amount, 2, 'R$ ', '.', ',') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="2" style="text-align: right; font-weight: bold;">
-                                            {{ utils.formatMoney(_.sumBy(historyRequest.requestPayments, (requestPayment) => parseFloat(requestPayment.amount)), 2, 'R$ ', '.', ',') }}
-                                        </td>
-                                    </tr>
+                                <tr v-for="requestPayment in historyRequest.requestPayments">
+                                    <td>{{ $store.getters['entities/paymentMethods/find'](requestPayment.paymentMethodId).name }}</td>
+                                    <td style="text-align: center;" v-if="requestPayment.paymentMethod.hasDeadline">
+                                        {{ requestPayment.code }}
+                                    </td>
+                                    <td style="text-align: center;" v-else>---</td>
+                                    <td style="text-align: center;" v-if="requestPayment.paymentMethod.hasDeadline">
+                                        {{ moment(requestPayment.deadlineDatetime).format("DD/MM/YYYY") }}
+                                    </td>
+                                    <td style="text-align: center;" v-else>---</td>
+                                    <td style="text-align: right;">{{ utils.formatMoney(requestPayment.amount, 2, 'R$ ', '.', ',') }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" style="text-align: right; font-weight: bold;">
+                                        {{ utils.formatMoney(_.sumBy(historyRequest.requestPayments, (requestPayment) => parseFloat(requestPayment.amount)), 2, 'R$ ', '.', ',') }}
+                                    </td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -97,23 +115,24 @@
             }
         },
         methods: {
+            getRequestHistory(){
+                if(Number.isInteger(this.request.clientId)){
+                    this.isRequesting = true
+                    ClientsAPI.getRequestHistory(this.request.clientId, {companyId: 1, offset: 0, limit: 10}).then((response) => {
+                        this.historyRequests = response.data.previousRequests
+                        this.total = response.data.total
+                        this.isRequesting = false
+                        console.log("Request History", response.data)
+                    })
+                    return true
+                }
+                this.historyRequests = []
+            }
         },
         created(){
         },
         mounted(){
-            if(Number.isInteger(this.request.clientId)){
-                this.isRequesting = true
-                ClientsAPI.getRequestHistory(this.request.clientId, {companyId: 1, offset: 0, limit: 10}).then((response) => {
-                    this.historyRequests = response.data.previousRequests
-                    this.total = response.data.total
-                    this.isRequesting = false
-                    console.log("Request History", response.data)
-                })
-                return true
-            }
-            this.historyRequests = []
-
-
+            this.getRequestHistory()
         }
     }
 </script>

@@ -42,11 +42,11 @@ export default class Request extends Model {
     }
 
     static guaranteeDependencies(request,promiseQueue,fillOfflineDBWithSyncedData,ignoreOfflineDBInsertion = false){
+
         const requestId = _.get(request, "tmpId", request.id)
 
         const card = Card.query().where("requestId", requestId)
             .with("request.requestUIState")
-            .with("window")
             .first()
 
         let windowId = `tmp/${shortid.generate()}`
@@ -54,21 +54,29 @@ export default class Request extends Model {
         let requestUIStateId = `tmp/${shortid.generate()}`
 
         // map request card/window/requestUIState
-        if(utils.isTmp(request.id) && card){ // is tmp && card exists - it means that the request was created by this user
+        if(utils.isTmp(requestId) && card){ // is tmp && card exists - it means that the request was created by this user
+            cardId = card.id
+            requestUIStateId = card.request.requestUIState.id
             store.dispatch("entities/delete", {
                 entity: 'requests',
-                where: card.requestId
+                where: requestId
             })
-            windowId = card.window.id
-            cardId = card.id
-            requestUIStateId = card.request.requestUIState.id
+            store.dispatch("entities/update", {
+                entity: 'cards',
+                where: cardId,
+                data: {
+                    requestId: request.id
+                }
+            })
+            store.dispatch("entities/update", {
+                entity: 'requestUIState',
+                where: requestUIStateId,
+                data: {
+                    requestId: request.id
+                }
+            })
         }
-        else if(card) { // card exists - it means the request is not tmp and the request already existed before
-            windowId = card.window.id
-            cardId = card.id
-            requestUIStateId = card.request.requestUIState.id
-        }
-        else { // card don't exist
+        else if(!card) { // card don't exist
             store.dispatch("entities/insert", {
                 entity: 'windows',
                 data: {

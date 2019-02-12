@@ -27,6 +27,8 @@ import VueTippy from "vue-tippy";
 import VueStatic from "vue-static";
 import VueWorker from "vue-worker";
 import VuePerfectScrollbar from "vue-perfect-scrollbar";
+import VueTextareaAutosize from 'vue-textarea-autosize'
+import VueHighlight from 'vue-highlight-text/public/directive.min'
 
 import DexieRelationships from "dexie-relationships";
 
@@ -83,7 +85,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         searchAddresses: "id, name, address, neighborhood, city, state, cep, country"
     },
     stateModels: {
-        STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, clientAddress",
+        STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, clientAddress, isEditing",
         STATE_requestUIState: "id, activeTab, isAddingClientAddress, requestClientAddressForm, requestId, showClientOrderTimeline",
         STATE_requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
         STATE_requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
@@ -116,6 +118,10 @@ Vue.use(VueTimeago, {
         "pt-BR": require("vue-timeago/locales/pt-BR.json")
     }
 });
+
+Vue.directive('highlight', VueHighlight)
+
+Vue.use(VueTextareaAutosize)
 
 Vue.use(VueTheMask);
 

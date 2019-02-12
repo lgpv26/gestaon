@@ -4,7 +4,7 @@
   "description": "Server side API for Blue Agile tracker system.",
   "main": "npm run start",
   "scripts": {
-    "start": "nodemon --exec babel-node src/boot/app.js", 
+    "start": "nodemon --exec babel-node src/boot/app.js",
     "build": "babel src -d dist",
     "test": "npm run build && node dist/boot/app.js"
   },
@@ -45,7 +45,8 @@
     "restify": "^7.1.1",
     "restify-cors-middleware": "^1.1.1",
     "restify-errors": "^6.0.0",
-    "rsmq": "^0.9.3",
+    "rsmq-promise": "^1.0.3",
+    "rsmq-worker": "^0.5.2",
     "sequelize": "^5.0.0-beta.7",
     "sequelize-mysql-timestamp": "^1.3.0",
     "shortid": "^2.2.8",

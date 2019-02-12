@@ -23,7 +23,7 @@
                 <div class="main-column" :style="{ width: dimensions.window.width - 60 + 'px' }">
                     <header class="main-column__header">
                         <div class="header__container" v-if="$route.name === 'dashboard'">
-                            <app-request-board-filter></app-request-board-filter>
+                            <app-request-board-filter ref="requestBoardFilter"></app-request-board-filter>
                         </div>
                         <div class="header__container" v-else>
                             <div class="container__title">
@@ -164,14 +164,15 @@
                 }
             },
             async addRequest() {
-                const windowTmpId = `tmp/${shortid.generate()}`;
-                const cardTmpId = `tmp/${shortid.generate()}`;
+
                 const requestUIStateTmpId = `tmp/${shortid.generate()}`;
                 const requestPaymentTmpId = `tmp/${shortid.generate()}`;
                 const requestOrderTmpId = `tmp/${shortid.generate()}`;
                 const requestOrderProductTmpId = `tmp/${shortid.generate()}`;
                 const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
                 const requestTmpId = `tmp/${shortid.generate()}`;
+                const windowTmpId = `tmp/${shortid.generate()}`;
+                const cardTmpId = `tmp/${shortid.generate()}`;
                 const clientTmpId = `tmp/${shortid.generate()}`;
                 const addressTmpId = `tmp/${shortid.generate()}`;
                 const clientAddressTmpId = `tmp/${shortid.generate()}`;
@@ -328,7 +329,14 @@
                 const vm = this
                 console.log("request-queue:sync", ev)
                 if(ev.success){
-                    ev.evData.processedQueue.forEach(request => {
+                    ev.evData.processedQueue.forEach(function(processedItem){
+                        // did the processedItem pass the validation?
+                        if(!processedItem.success){
+                            processedItem.stop = true
+                        }
+                        if(processedItem.stop) return
+
+                        const request = processedItem.data
                         if (request.action === "update-status") {
                             Request.update({
                                 where: request.requestId,
@@ -336,7 +344,7 @@
                                     status: request.status,
                                     dateUpdated: request.dateUpdated
                                 }
-                            });
+                            })
                         } else if (request.action === "update-user") {
                             Request.update({
                                 where: request.requestId,
@@ -351,23 +359,22 @@
 
                             // request
 
-                            console.log("Testando aaaa", request)
-
                             requestPromiseQueue.add(() => vm.fillOfflineDBWithSyncedData("requests", 'put', request).then((promise) => {
                                 vm.$store.dispatch("entities/insertOrUpdate", {
                                     entity: 'requests',
-                                    ignoreOfflineDBInsertion: true,
+                                    ignoreOfflineDBInsertion: false,
                                     data: request
                                 })
                                 return promise
+                            }).then((promise) => {
+                                Request.guaranteeDependencies(
+                                    request,
+                                    requestPromiseQueue,
+                                    vm.fillOfflineDBWithSyncedData,
+                                    false
+                                )
+                                return promise
                             }))
-
-                            Request.guaranteeDependencies(
-                                request,
-                                requestPromiseQueue,
-                                vm.fillOfflineDBWithSyncedData,
-                                false
-                            )
 
                             return requestPromiseQueue.onIdle().then(() => {
 
@@ -429,20 +436,24 @@
                                     }
                                     return "SEM ENDEREÇO";
                                 }
+
+                                const cardData = _.assign(savedRequest.card, {
+                                    clientName: savedRequest.client.name,
+                                    clientAddress: getClientAddress(),
+                                    orderSubtotal: _.sumBy(
+                                        savedRequest.requestOrder.requestOrderProducts,
+                                        requestOrderProduct => {
+                                            return (
+                                                requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
+                                            )
+                                        }
+                                    ),
+                                    isEditing: false
+                                })
+
                                 vm.$store.dispatch("entities/insertOrUpdate", {
                                     entity: 'cards',
-                                    data: _.assign(savedRequest.card, {
-                                        clientName: savedRequest.client.name,
-                                        clientAddress: getClientAddress(),
-                                        orderSubtotal: _.sumBy(
-                                            savedRequest.requestOrder.requestOrderProducts,
-                                            requestOrderProduct => {
-                                                return (
-                                                    requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
-                                                )
-                                            }
-                                        )
-                                    })
+                                    data: cardData
                                 })
 
                             })
@@ -451,10 +462,13 @@
                 }
             },
             onSystemInitialized() {
-                console.log("System initialized");
+                console.log("System initialized")
                 if(this.isFirstInitialization){
                     this.$socket.on("request-queue:sync", this.onRequestQueueSync)
                     this.isFirstInitialization = false
+                }
+                else {
+                    this.$refs.requestBoardFilter.loadRequests()
                 }
             }
         },

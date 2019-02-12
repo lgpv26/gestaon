@@ -18,10 +18,7 @@
                             <tbody>
                                 <tr v-for="requestOrderProduct in request.requestOrder.requestOrderProducts" :key="requestOrderProduct.id">
                                     <td style="padding-right: 8px;">
-                                        <app-select :items="getSelectProducts"
-                                                    :value="requestOrderProduct.id"
-                                                    @input="selectOrderProduct(requestOrderProduct,$event)"
-                                                    :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                        <app-select :items="getSelectProducts" :value="requestOrderProduct.id" @input="selectOrderProduct(requestOrderProduct,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
                                             <input type="text" class="select readonly" style="margin-bottom: 0;" readonly
                                                    :value="(_.has(requestOrderProduct,'product.name')) ? requestOrderProduct.product.name : '-- SELECIONE --'"/>
                                             <template slot="item" slot-scope="slotProps">
@@ -36,7 +33,6 @@
                                                style="width: 50px; margin-bottom: 0; text-align: center;" />
                                     </td>
                                     <td style="padding-right: 8px;">
-
                                         <money class="input"
                                                @input.native="updateMoneyValue('entities/requestOrderProducts/update','unitPrice',requestOrderProduct.id,$event)"
                                                :value="requestOrderProduct.unitPrice"
@@ -88,52 +84,29 @@
                             <tbody>
                             <tr v-for="requestPayment in request.requestPayments" :key="requestPayment.id">
                                 <td style="padding-right: 8px;">
-                                    <app-select :items="getSelectPaymentMethods"
-                                                :value="requestPayment.id"
-                                                @input="updateValue(
-                                                'entities/requestPayments/update',
-                                                'paymentMethodId',
-                                                requestPayment.id,
-                                                $event)"
-                                                :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                        <input type="text" class="select readonly" style="margin-bottom: 0;" readonly
-                                               :value="(_.has(requestPayment,'paymentMethod.name')) ? requestPayment.paymentMethod.name : '-- SELECIONE --'"/>
+                                    <app-select :items="getSelectPaymentMethods" :value="requestPayment.id" @input="updateValue('entities/requestPayments/update','paymentMethodId',requestPayment.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                        <input type="text" class="select readonly" style="margin-bottom: 0;" readonly :value="(_.has(requestPayment,'paymentMethod.name')) ? requestPayment.paymentMethod.name : '-- SELECIONE --'" />
                                         <template slot="item" slot-scope="slotProps">
                                             <span>{{ slotProps.text }}</span>
                                         </template>
                                     </app-select>
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)"
-                                           :value="requestPayment.code"
-                                           @input="updateValue(
-                                           'entities/requestPayments/update',
-                                           'code',
-                                           requestPayment.id,
-                                           $event.target.value,
-                                           'uppercase')"
-                                           type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
-                                    <input v-else type="text" class="input readonly" style="margin-bottom: 0; text-align: center;" disabled value="---" />
+                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)" :value="requestPayment.code" @input="updateValue('entities/requestPayments/update', 'code', requestPayment.id, $event.target.value, 'uppercase')" type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
+                                    <input v-else type="text" class="input readonly" style="margin-bottom: 0; text-align: center;" disabled value="---" placeholder="---" />
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <app-datetime-selector
-                                            v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)"
-                                            class="input no-margin-bottom align-right"
-                                            :value="requestPayment.deadlineDatetime"
-                                            @input="updateValue('entities/requestPayments/update','deadlineDatetime',requestPayment.id,$event)"
-                                            :config="datetimeSelectorConfig"
-                                            placeholder="##/##/####">
+                                    <app-datetime-selector v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)" class="input no-margin-bottom align-right" :value="requestPayment.deadlineDatetime" @input="updateValue('entities/requestPayments/update','deadlineDatetime',requestPayment.id,$event)" :config="datetimeSelectorConfig" placeholder="##/##/####">
                                     </app-datetime-selector>
                                     <input v-else type="text" class="input readonly" disabled style="margin-bottom: 0; text-align: right;" value="---" />
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: row; justify-content: center; margin-top: 7px;">
-                                        <app-switch :value="requestPayment.paid" @input="updateValue('entities/requestPayments/update','paid',requestPayment.id,$event)" ></app-switch>
+                                        <app-switch :value="requestPayment.paid" @input="updateValue('entities/requestPayments/update','paid',requestPayment.id,$event)"></app-switch>
                                     </div>
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <money class="input" style="margin-bottom: 0; text-align: right;" :value="requestPayment.amount"
-                                           @input.native="updateMoneyValue('entities/requestPayments/update','amount',requestPayment.id,$event)"></money>
+                                    <money class="input" style="margin-bottom: 0; text-align: right;" :value="requestPayment.amount" @input.native="updateMoneyValue('entities/requestPayments/update','amount',requestPayment.id,$event)"></money>
                                 </td>
                                 <td>
                                     <div style="display: flex; flex-direction: row;">
@@ -146,7 +119,6 @@
                             </tr>
                             <tr>
                                 <td style="padding-top: 15px; padding-right: 8px;">
-                                    
                                     <a class="button" @click="addRequestPayment()">INCLUIR PAGAMENTO</a>
                                 </td>
                                 <td colspan="4" style="padding-top: 15px; padding-right: 8px; text-align: right;">
@@ -163,12 +135,8 @@
                     <div class="box" style="padding: 10px 12px;">
                         <div class="box__item" style="display: flex; flex-direction: column;">
                             <h3>Responsável</h3>
-                            <app-select :items="getSelectUsers"
-                                        :value="request.userId"
-                                        @input="updateValue('entities/requests/update','userId',request.id,$event)"
-                                        :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                <input type="text" class="select readonly" readonly
-                                       :value="(_.has(request,'user.name')) ? request.user.name : '-- SELECIONE --'"/>
+                            <app-select :items="getSelectUsers" :value="request.userId" @input="updateValue('entities/requests/update','userId',request.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                <input type="text" class="readonly select" :value="(_.has(request,'user.name')) ? request.user.name : '-- SELECIONE --'"/>
                                 <template slot="item" slot-scope="slotProps">
                                     <span>{{ slotProps.text }}</span>
                                 </template>
@@ -178,25 +146,14 @@
                     <div class="box" style="padding: 10px 12px;">
                         <div class="box__item" style="display: flex; flex-direction: column;">
                             <h3>Data da entrega</h3>
-                            <app-datetime-selector
-                                    class="input"
-                                    :value="request.deliveryDate"
-                                    @input="onDeliveryDateChange($event)"
-                                    :config="deliveryDateSelectorConfig"
-                                    placeholder="...">
-                            </app-datetime-selector>
+                            <app-datetime-selector class="input" :value="request.deliveryDate" @input="onDeliveryDateChange($event)" :config="deliveryDateSelectorConfig" placeholder="..."></app-datetime-selector>
                         </div>
                     </div>
                     <div class="box" style="padding: 10px 12px;">
                         <div class="box__item" style="display: flex; flex-direction: column;">
                             <h3>Canal de divulgação</h3>
-
-                            <app-select :items="getSelectPromotionChannels"
-                                        :value="request.requestOrder.promotionChannelId"
-                                        @input="updateValue('entities/requestOrders/update','promotionChannelId',request.requestOrder.id,$event)"
-                                        :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                <input type="text" class="select readonly" readonly
-                                       :value="(_.has(request,'requestOrder.promotionChannel.name')) ? request.requestOrder.promotionChannel.name : '-- SELECIONE --'"/>
+                            <app-select :items="getSelectPromotionChannels" :value="request.requestOrder.promotionChannelId" @input="updateValue('entities/requestOrders/update','promotionChannelId',request.requestOrder.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                <input type="text" class="readonly select" :value="(_.has(request,'requestOrder.promotionChannel.name')) ? request.requestOrder.promotionChannel.name : '-- SELECIONE --'"/>
                                 <template slot="item" slot-scope="slotProps">
                                     <span>{{ slotProps.text }}</span>
                                 </template>
