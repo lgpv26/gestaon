@@ -10,13 +10,13 @@ const getters = {
 }
 
 const mutations = {
-    REMOVE(state, userId){
+    REMOVE(state, { userId, socketId }){
         state.connectedUsers = _.filter(state.connectedUsers, (connectedUser) => {
-            return userId !== connectedUser.id
+            return socketId !== connectedUser.socketId
         })
     },
     ADD(state, connectedUser){
-        if(connectedUser){
+        if(_.has(connectedUser,'socketId') && !_.find(state.connectedUsers, { socketId: connectedUser.socketId})){
             state.connectedUsers.push(connectedUser)
         }
     },
@@ -26,14 +26,13 @@ const mutations = {
 }
 
 const actions = {
-    removeConnectedUser(context, userId){
-        context.commit('REMOVE', userId)
+    removeConnectedUser(context, { userId, socketId }){
+        context.commit('REMOVE', { userId, socketId })
     },
     addConnectedUser(context, connectedUser){
         context.commit('ADD', connectedUser)
     },
     setConnectedUsers(context, connectedUsers){
-
         context.commit('SET', connectedUsers)
     }
 }

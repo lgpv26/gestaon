@@ -77,7 +77,7 @@ export default new Vuex.Store({
   plugins: [
     VuexORM.install(database),
     createPersistedState({
-      paths: ["request-board","lastDataSyncedDate"]
+      paths: ["request-board","lastDataSyncedDate","request-queue"]
     })
   ],
   state: {
