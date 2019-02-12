@@ -23,7 +23,7 @@
                 <div class="main-column" :style="{ width: dimensions.window.width - 60 + 'px' }">
                     <header class="main-column__header">
                         <div class="header__container" v-if="$route.name === 'dashboard'">
-                            <app-request-board-filter></app-request-board-filter>
+                            <app-request-board-filter ref="requestBoardFilter"></app-request-board-filter>
                         </div>
                         <div class="header__container" v-else>
                             <div class="container__title">
@@ -469,7 +469,9 @@
                     this.$socket.on("request-queue:sync", this.onRequestQueueSync)
                     this.isFirstInitialization = false
                 }
-                this.$socket.emit("system:ready")
+                else {
+                    this.$refs.requestBoardFilter.loadRequests()
+                }
             }
         },
         created() {

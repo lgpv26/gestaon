@@ -245,12 +245,12 @@
             onDeliveryDateFilterClick(){
                 this.$refs.deliveryDate.fp.open()
             },
-            onDeliveryDateChange(value){
+            loadRequests(){
                 const vm = this
-                vm.SET_DELIVERY_DATE(value)
                 RequestBoardAPI.getRequests({
-                    date: vm.moment(value).toISOString()
+                    date: vm.moment(vm.filters.deliveryDate).toISOString()
                 }).then(response => {
+                    console.log("Getting requests from requestBoardAPI")
                     Promise.all([
                         vm.$db.STATE_cards.toArray().then((cards) => {
                             vm.$store.dispatch("entities/insertOrUpdate", {
@@ -357,13 +357,17 @@
                                     }
                                 })
                             })
-                            setTimeout(() => {
-                                vm.setIsLoading(false)
-                            }, 1000)
+                            console.log("system:ready event emitted")
+                            vm.$socket.emit("system:ready")
+                            vm.setIsLoading(false)
                         })
-
                     })
                 })
+            },
+            onDeliveryDateChange(value){
+                const vm = this
+                vm.SET_DELIVERY_DATE(value)
+                vm.loadRequests()
             }
         },
         mounted() {
