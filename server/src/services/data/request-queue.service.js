@@ -86,7 +86,12 @@ module.exports = (server) => {
                                                     data: {
                                                         userId: ctx.params.userId,
                                                         companyId: ctx.params.companyId,
-                                                        data: objReturn
+                                                        data: _.map(objReturn, (item) => {
+                                                            return {
+                                                                success: true,
+                                                                data: item
+                                                            }
+                                                        })
                                                     }
                                                 })
 
@@ -126,41 +131,76 @@ module.exports = (server) => {
                                     }
                                 })
                                 .catch((err) => {
-                                    const message = JSON.stringify({
-                                        type: "request",
-                                        data: {
-                                            userId: ctx.params.userId,
-                                            companyId: ctx.params.companyId,
-                                            data: objReturn,
-                                            offset,
-                                            errorMessage: err.message,
-                                            error: true
-                                        }
-                                    })
+                                    async function finishWithError() {
+                                        try {
+                                            const response = await new Promise((resolve, reject) => {
+                                                let dataResponse = _.map(ctx.params.data, (item, index) => {
+                                                    if(index < offset){
+                                                        return {
+                                                            success: true,
+                                                            data: item
+                                                        }
+                                                    }
+                                                    else if(index == offset) {
+                                                        return{
+                                                            success: false,
+                                                            message: err.message,
+                                                            data: item
+                                                        }
+                                                    }
+                                                    else {
+                                                        return{
+                                                            success: false,
+                                                            data: item
+                                                        }
+                                                    }
+                                                })
 
-                                    return server.mysql.Company.findOne({
-                                        where: {
-                                            id: ctx.params.companyId
-                                        },
-                                        include: [{
-                                            model: server.mysql.CompanyUser,
-                                            as: 'companyUsers'
-                                        }]
-                                    })
-                                        .then((company) => {
+                                                resolve(dataResponse)
+                                            })
+
+                                            const message = JSON.stringify({
+                                                type: "request",
+                                                data: {
+                                                    userId: ctx.params.userId,
+                                                    companyId: ctx.params.companyId,
+                                                    data: response
+                                                }
+                                            })
+
+                                            const company = await server.mysql.Company.findOne({
+                                                where: {
+                                                    id: ctx.params.companyId
+                                                },
+                                                include: [{
+                                                    model: server.mysql.CompanyUser,
+                                                    as: 'companyUsers'
+                                                }]
+                                            })
+
                                             const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
 
                                             const promises = []
 
-                                            companyUsers.forEach((companyUser) => {
-                                                promises.push(vm.queueToUser(companyUser.userId, message))
+                                            companyUsers.forEach(async (companyUser) => {
+                                                await vm.checkUserQueue(companyUser.userId)
+
+                                                promises.push(await vm.queueToUser(companyUser.userId, message))
                                             })
 
                                             return Promise.all(promises)
                                                 .then(() => {
-                                                    reject()
+                                                    resolve()
                                                 })
-                                        })
+                                        }
+
+                                        catch (err) {
+                                            console.log(err, "catch try - queue")
+                                            reject(err)
+                                        }
+                                    }
+
+                                    finishWithError()
                                 })
 
                         }
