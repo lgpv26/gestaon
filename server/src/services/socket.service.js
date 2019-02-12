@@ -63,25 +63,6 @@ module.exports = server => {
                     })
             },
 
-            checkSocketId(ctx) {
-                return new Promise((resolve, reject) => {
-                    var stream = server.redisClient.scanStream({
-                        match: "socket:*"
-                    })
-
-                    stream.on("data", resultKeys => {
-                        if (resultKeys.length) {
-                            resultKeys.forEach((key, index) => {
-                                server.redisClient.get(_.toString(key), (err, res) => {
-                                    if (_.parseInt(res) === ctx.params.userId) return resolve(key.replace("socket:", ""))
-                                    if (resultKeys.length === index + 1) return resolve()
-                                })
-                            })
-                        }
-                    })
-                })
-            },
-
             stream(ctx) {
                 const socket = server.io.sockets.sockets[ctx.params.socketId]
 
@@ -167,34 +148,95 @@ module.exports = server => {
                 })
             },
 
-            streamQueue(ctx){
-                let response
+            checkSocketId(ctx){      
+                return new Promise((resolve, reject) => {              
+                    const checkSocketConfirm = function () {
+                        return new Promise((resolve, reject) => {
+                            async function start() {
+                                try {
+                                    var stream = server.redisClient.scanStream({
+                                        match: "socket:*"
+                                    })
+                    
+                                    stream.on("data", resultKeys => {
+                                        if (resultKeys.length) {
+                                            resultKeys.forEach((key, index) => {
+                                                server.redisClient.get(_.toString(key), (err, res) => {
+                                                    if (_.parseInt(res) === ctx.params.userId) return resolve(key.replace("socket:", ""))
+                                                    if (resultKeys.length === index + 1) return resolve()
+                                                })
+                                            })
+                                        }
+                                    })
+                                }
 
-                const data = ctx.params.data
+                                catch (err) {
+                                    console.log(err)
+                                    reject()
+                                }
+                            }
 
-                if (data.error) {
-                    response = new Error({
-                        triggeredBy: data.userId,
-                        processedQueue: data.data,
-                        offset: data.offset,
-                        error: data.errorMessage
-                    })
-                } 
-                else {
-                    response = {
-                        triggeredBy: data.userId,
-                        processedQueue: data.data
+                            start()
+                        })
+                        .then((userSocketId) => {
+                            console.log(userSocketId)
+                            if(!userSocketId) {
+                                setTimeout(() => { 
+                                    console.log("não confirmou o socket, tentando denovo...")
+                                    checkSocketConfirm()
+                                                    
+                                }, 1000)
+                            }
+                            else {
+                                return resolve(userSocketId)
+                            }
+                        })
                     }
-                }
 
-                server.broker.call('socket.checkSocketId', {
-                    userId: ctx.params.userId
-                }).then((userSocketId) => {
-                    console.log("Send to Socket:", userSocketId, " userId: ", ctx.params.userId)
-                    //processedQueue
-                    server.io.to(userSocketId).emit("request-queue:sync", new EventResponse(response))
+                    checkSocketConfirm()
                 })
+            },
+
+            streamQueue(ctx){
+                return new Promise((resolve, reject) => {
                 
+                    async function streamQueueStart() {
+                        try {
+                            let response
+
+                            const data = ctx.params.data
+
+                            if (data.error) {
+                                response = new Error(JSON.stringify({
+                                    triggeredBy: ctx.params.userId,
+                                    processedQueue: data.data,
+                                    offset: data.offset,
+                                    error: data.errorMessage
+                                }))
+                            }
+                            else {
+                                response = {
+                                    triggeredBy: data.userId,
+                                    processedQueue: data.data
+                                }
+                            }
+
+                            let userSocketId = await server.broker.call('socket.checkSocketId', {userId: ctx.params.userId})
+
+                            console.log("Send to Socket:", userSocketId, " userId: ", ctx.params.userId, moment().toISOString(), ctx.params.messageID)
+                            server.io.to(userSocketId).emit("request-queue:sync", new EventResponse(response))
+                            
+                            return resolve()
+                        }
+                        catch(err) {
+                            console.log(err)
+                            return reject()
+                        }    
+                   
+                    }
+
+                    streamQueueStart()
+                })                
             },
 
             processedQueue(ctx) {
@@ -252,7 +294,7 @@ module.exports = server => {
 
                 if (presenceRoom) {
                     let promises = []
-                    _.forEach(_.keys(presenceRoom.sockets), socketId => {
+                    _.forEach(_.keys(presenceRoom.sockets), (socketId) => {
                         promises.push(new Promise((resolve, reject) => {
                                 server.redisClient.get("socket:" + socketId)
                                 .then((userId) => {
@@ -275,6 +317,8 @@ module.exports = server => {
                                             ]
                                         })
                                         .then((user) => {
+                                            user = JSON.parse(JSON.stringify(user))
+                                            _.set(user, "socketId", socketId)
                                             online.push(user)
                                             resolve()
                                         })
@@ -285,7 +329,7 @@ module.exports = server => {
 
                     return Promise.all(promises)
                     .then(() => {
-                        server.io.sockets.sockets[ctx.params.activeSocketId].emit("presence:load", new EventResponse(online))
+                        server.io.to(ctx.params.activeSocketId).emit("presence:load", new EventResponse(online))
                         return Promise.resolve(online)
                     })
                 } 

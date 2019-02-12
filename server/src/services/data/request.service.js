@@ -118,6 +118,8 @@ module.exports = server => {
                                 if (companies !== -1) {
                                     const status = await vm.consultStatus(ctx.params.data, companyId, transaction)
 
+                                    if(status == "finished") return reject('Não é possivel alterar o entregador de um pedido com status "Finalizado".')
+
                                     const dataUpdate = await new Promise((resolve, reject) => {
                                         _.set(ctx.params.data, "id", ctx.params.data.requestId)
                                         _.set(ctx.params.data, "triggeredBy", triggeredBy.id)
@@ -204,6 +206,11 @@ module.exports = server => {
                                             _.set(ctx.params.data, "deliveredBy", userId) // quem entregou
                                             _.set(ctx.params.data, "finishedBy", triggeredBy.id) // quem finalizou
                                             _.set(ctx.params.data, "deliveredDate", ctx.params.date) // Horário que foi feito a entrega
+                                        }
+                                        else {
+                                            _.set(ctx.params.data, "deliveredBy", null) // quem entregou
+                                            _.set(ctx.params.data, "finishedBy", null) // quem finalizou
+                                            _.set(ctx.params.data, "deliveredDate", null) // Horário que foi feito a entrega
                                         }
                                         resolve(ctx.params.data)
                                     })
