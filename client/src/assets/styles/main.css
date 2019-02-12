@@ -548,3 +548,8 @@ li.router-link-active svg.icon {
 .tippy-popper[x-placement^=bottom] .tippy-tooltip.erp-dark-theme .tippy-arrow {
     border-bottom-color: var(--bg-color--2)
 }
+
+.highlighted {
+    color: var(--font-color--primary)!important;
+    background-color: var(--bg-color--5)!important;
+}

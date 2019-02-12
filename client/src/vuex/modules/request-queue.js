@@ -71,7 +71,7 @@ const actions = {
             else {
                 console.log("O socket não está comunicando com o servidor")
             }
-        }, 1000 * 5)
+        }, 1000)
     },
     addToQueue(ctx, { type, op, data }) {
         const queueItem = {

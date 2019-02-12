@@ -63,17 +63,17 @@ module.exports = class Events {
                     accessToken: token
                 },
                 include: [{
-                        model: this.server.mysql.User,
-                        as: 'user',
-                        attributes: { exclude: ['password']},
-                        include: [{
-                                model: this.server.mysql.Company,
-                                as: 'companies'
-                            }, {
-                                model: this.server.mysql.CompanyUser,
-                                as: 'userCompanies'
-                            }]
+                    model: this.server.mysql.User,
+                    as: 'user',
+                    attributes: { exclude: ['password']},
+                    include: [{
+                        model: this.server.mysql.Company,
+                        as: 'companies'
+                    }, {
+                        model: this.server.mysql.CompanyUser,
+                        as: 'userCompanies'
                     }]
+                }]
             }).then((userAccessToken) => {
                 if (userAccessToken && typeof userAccessToken.user !== 'undefined') {
                     // initial setting when user connects, or reconnects
@@ -86,7 +86,7 @@ module.exports = class Events {
                         id: socket.activeUserCompany.companyId
                     })
                     if(!socket.activeCompany) socket.activeCompany = _.first(socket.user.companies)
-                    
+
                     return this.server.broker.call('socket.active', {
                         userId: socket.user.id,
                         activeSocketId: socket.instance.id
@@ -98,7 +98,7 @@ module.exports = class Events {
                             socket.instance.join('company/' + socket.activeCompany.id)
 
                             return new Promise((resolve, reject) => {
-                               
+
                                 // join the user to its company events
                                 if(roomsConsult) {
                                     const promises = []
@@ -112,31 +112,31 @@ module.exports = class Events {
 
                                     return Promise.all(promises).then(() => {
                                         resolve()
-                                    })                                    
+                                    })
                                 }
-                                else{        
+                                else{
                                     return this.server.broker.call('socket.control', {
                                         userId: socket.user.id,
                                         socketId: socket.instance.id,
                                         companyId: socket.activeCompany.id
                                     }).then(() => {
-                                        resolve() 
+                                        resolve()
                                     })
                                 }
                             }).then(() => {
 
                                 this.server.rsmq.listQueues()
-                                    .then((queues) => { 
+                                    .then((queues) => {
                                         if(!_.includes(queues, "userId-" + socket.user.id)){
                                             this.server.rsmq.createQueue({ qname: "userId-" + socket.user.id, maxsize: -1 })
                                                 .then(() => {
                                                     console.log("queue userId:" + socket.user.id + " created")
                                                 })
                                         }
-                                    
+
                                     })
                                     .catch((err) => console.log(err))
-                              
+
                                 socket.instance.to('company/' + socket.activeCompany.id).emit('presence:add', new EventResponse({
                                     id: socket.user.id,
                                     name: socket.user.name,
@@ -178,7 +178,7 @@ module.exports = class Events {
                                     })
 
                                     if(rsmqWorkers["userId:" + socket.user.id]) delete rsmqWorkers["userId:" + socket.user.id]
-                                    
+
                                     rsmqWorkers["userId:" + socket.user.id] = new RSMQWorker("userId-" + socket.user.id, {
                                         maxReceiveCount: 1
                                     })
@@ -222,26 +222,24 @@ module.exports = class Events {
                                 })
                             })
                         })
-                    }) 
+                    })
                 }
             })
-            
+
 
             socket.instance.on('disconnect', () => {
-                console.log("O usuario", socket.user.name, "SAIU")
-
-                if(socket.user && rsmqWorkers["userId:" + socket.user.id]) { 
+                if(socket.user && rsmqWorkers["userId:" + socket.user.id]) {
                     rsmqWorkers["userId:" + socket.user.id].quit()
                     delete rsmqWorkers["userId:" + socket.user.id]
                 }
-                
+
                 const usersSystemArray = _.map(_.keys(usersSystemReady))
                 if(_.includes(usersSystemArray, "userId:" + socket.user.id)) delete usersSystemReady["userId:" + socket.user.id]
-                
+
 
                 if(!!this._versionInterval){
                     clearInterval(this._versionInterval)
-                }                
+                }
 
                 if(socket.activeCompany) this.server.io.in('company/' + socket.activeCompany.id).emit('presence:remove', new EventResponse({userId: socket.user.id, socketId: socket.instance.id}))
 

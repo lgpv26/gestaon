@@ -329,7 +329,14 @@
                 const vm = this
                 console.log("request-queue:sync", ev)
                 if(ev.success){
-                    ev.evData.processedQueue.forEach(request => {
+                    ev.evData.processedQueue.forEach(function(processedItem){
+                        // did the processedItem pass the validation?
+                        if(!processedItem.success){
+                            processedItem.stop = true
+                        }
+                        if(processedItem.stop) return
+
+                        const request = processedItem.data
                         if (request.action === "update-status") {
                             Request.update({
                                 where: request.requestId,
@@ -338,15 +345,6 @@
                                     dateUpdated: request.dateUpdated
                                 }
                             })
-                            /*const card = Card.query().where('requestId', request.requestId).first()
-                            if(card){
-                                vm.$store.dispatch("entities/insertOrUpdate", {
-                                    entity: 'cards',
-                                    data: {
-                                        isEditing
-                                    }
-                                })
-                            }*/
                         } else if (request.action === "update-user") {
                             Request.update({
                                 where: request.requestId,

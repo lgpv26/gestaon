@@ -27,6 +27,8 @@ import VueTippy from "vue-tippy";
 import VueStatic from "vue-static";
 import VueWorker from "vue-worker";
 import VuePerfectScrollbar from "vue-perfect-scrollbar";
+import VueTextareaAutosize from 'vue-textarea-autosize'
+import VueHighlight from 'vue-highlight-text/public/directive.min'
 
 import DexieRelationships from "dexie-relationships";
 
@@ -116,6 +118,10 @@ Vue.use(VueTimeago, {
         "pt-BR": require("vue-timeago/locales/pt-BR.json")
     }
 });
+
+Vue.directive('highlight', VueHighlight)
+
+Vue.use(VueTextareaAutosize)
 
 Vue.use(VueTheMask);
 

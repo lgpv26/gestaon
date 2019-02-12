@@ -196,13 +196,15 @@
             <app-perfect-scrollbar v-if="searchValue && searchItems.length && searchShow" class="request__search-result">
                 <div class="search-result__item" v-for="searchItem in searchItems" @click="selectSearchItem(searchItem)">
                     <div style="display: flex; flex-direction: column;">
-                        <span class="name">{{ searchItem.name }}</span>
-                        <span class="address">
+                        <span class="name" v-highlight="{keyword: searchValueStrings, sensitive: false}">
+                            {{ searchItem.name }}
+                        </span>
+                        <span class="address" v-highlight="{keyword: searchValueStrings, sensitive: false}">
                             {{ searchItem.address ? searchItem.address : "S/ENDEREÇO" }},
                             {{ searchItem.number ? searchItem.number : "S/NÚMERO" }}
                             {{ searchItem.complement ? " " + searchItem.complement : "" }}
                         </span>
-                        <span class="address-details">
+                        <span class="address-details" v-highlight="{keyword: searchValueStrings, sensitive: false}">
                             {{
                               searchItem.neighborhood ? searchItem.neighborhood : "S/BAIRRO"
                             }}, {{ searchItem.city ? searchItem.city : "S/CIDADE" }} -
@@ -272,6 +274,7 @@
                 searchShow: false,
                 searchTimeout: null,
                 searchValue: null,
+                searchValueStrings: [],
                 searchItems: []
             };
         },
@@ -446,30 +449,35 @@
                 })
             },
             search() {
-                if (this.searchTimeout) clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => {
-                    if (this.$static.searchClientsIndex) {
-                        let resultData = this.$static.searchClientsIndex.search(this.searchValue, {
+                const vm = this
+                vm.searchValueStrings = _.filter(_.map(vm.searchValue.split(" "), searchValue => searchValue.trim(), searchValue => searchValue !== ''))
+                if (vm.searchTimeout) clearTimeout(vm.searchTimeout);
+                vm.searchTimeout = setTimeout(() => {
+
+                    if (vm.$static.searchClientsIndex) {
+
+                        let resultData = vm.$static.searchClientsIndex.search(vm.searchValue, {
                             fields: {
                                 name: { boost: 1 },
                                 address: { boost: 1 },
                                 number: { boost: 2 },
                                 complement: { boost: 1 }
                             },
-                            bool: "OR",
-                            expand: false
-                        }).slice(0, 30)
-                        this.$db.searchClients.where("id").anyOf(
+                            bool: "OR"
+                        })
+                        resultData = resultData.slice(0, 30)
+
+                        vm.$db.searchClients.where("id").anyOf(
                             _.map(resultData, resultDataItem => {
                                 return resultDataItem.ref;
                             })
                         ).toArray().then(foundClients => {
-                            this.items = _.map(resultData, resultDataItem => {
+                            vm.items = _.map(resultData, resultDataItem => {
                                 return _.assign(_.find(foundClients, { id: resultDataItem.ref }), {
                                     score: resultDataItem.score.toFixed(1)
                                 })
                             })
-                            this.searchItems = this.items
+                            vm.searchItems = vm.items
                         })
                     }
                 }, 500)
@@ -823,7 +831,6 @@
                     cursor: pointer;
                     transition: 0.5s all;
                     .name {
-                        color: var(--font-color--primary);
                         margin-bottom: 5px;
                     }
                     &:hover {

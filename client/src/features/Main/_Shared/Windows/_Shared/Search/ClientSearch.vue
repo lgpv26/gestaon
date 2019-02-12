@@ -5,8 +5,10 @@
             <div class="result-item__container">
                 <span class="name">{{ props.item.name }}</span>
                 <span class="address">
-                    {{(props.item.address) ? props.item.address : 'S/ENDEREÇO' }}, {{(props.item.number) ? props.item.number : 'S/NÚMERO' }}
-                    {{(props.item.complement) ? ' ' + props.item.complement : '' }}
+                    <app-text-highlight :queries="['RUA']" :highlightClass="'highlight'">
+                        {{(props.item.address) ? props.item.address : 'S/ENDEREÇO' }}, {{(props.item.number) ? props.item.number : 'S/NÚMERO' }}
+                        {{(props.item.complement) ? ' ' + props.item.complement : '' }}
+                    </app-text-highlight>
                 </span>
                 <span class="address-details">
                     {{(props.item.neighborhood) ? props.item.neighborhood : 'S/BAIRRO' }}, {{(props.item.city) ? props.item.city : 'S/CIDADE' }} - {{(props.item.state) ? props.item.state : 'S/ESTADO' }}
