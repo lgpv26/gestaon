@@ -21,9 +21,9 @@
       <div class="col-md-6">
         <div>
           <div style="">
-            <img src="../assets/icon.png" style="position:relative;top:45px;" />
-            <p class="p" style="position:relative;left:40px;">Controle em uma tela</p>
-            <paragraph class="c" style="position:relative;left:40px;"
+            <img src="../assets/icon.png" style="position:relative;top-60px:px;left:230px;"/>
+            <p class="p" style="position:relative;top:-45px;left:270px;">Controle em uma tela</p>
+            <paragraph class="c" style="position:relative;top:-45px;left:270px;"
               >Os pedidos no painel de <br />atendimento são rapidamente <br />
               editáveis sem precisar mudar de <br />
               tela, tudo é sincronizado e salvo <br />
@@ -39,9 +39,9 @@
       <div class="col-md-6">
         <div>
           <div style="">
-            <img src="../assets/icon.png" style="position:relative;top:45px;left:110px;" />
-            <p class="p" style="position:relative;left:150px;">Destino identificado</p>
-            <paragraph class="c" style="position:relative;left:150px;"
+            <img src="../assets/icon.png" style="position:relative;top:0px;left:110px;" />
+            <p class="p" style="position:relative;top:-45px;left:150px;">Destino identificado</p>
+            <paragraph class="c" style="position:relative;top:-45px;left:150px;"
               >Quando o cliente liga, a busca<br />
               pelo endereço e histórico de<br />
               compras é automática. A linha de<br />
@@ -53,12 +53,32 @@
           </div>
           <p></p>
         </div>
-        
+      </div>
+      <div class="row col-md-12">
+      <div class="col-md-6">
         <div>
           <div style="">
-            <img src="../assets/icon.png" style="position:relative;top:45px;" />
-            <p class="p" style="position:relative;left:40px;">Destino identificado</p>
-            <paragraph class="c" style="position:relative;left:40px;"
+            <img src="../assets/icon.png" style="position:relative;top-60px:px;left:230px;"/>
+            <p class="p" style="position:relative;top:-45px;left:270px;">Controle em uma tela</p>
+            <paragraph class="c" style="position:relative;top:-45px;left:270px;"
+              >Os pedidos no painel de <br />atendimento são rapidamente <br />
+              editáveis sem precisar mudar de <br />
+              tela, tudo é sincronizado e salvo <br />
+              em tempo real. Cadastre clientes <br />
+              e realize as vendas mesmo sem <br />
+              internet.
+            </paragraph>
+          </div>
+          <p></p>
+        </div>
+        <div></div>
+      </div>
+      <div class="col-md-6">
+        <div>
+          <div style="">
+            <img src="../assets/icon.png" style="position:relative;top:0px;left:110px;" />
+            <p class="p" style="position:relative;top:-45px;left:150px;">Destino identificado</p>
+            <paragraph class="c" style="position:relative;top:-45px;left:150px;"
               >Quando o cliente liga, a busca<br />
               pelo endereço e histórico de<br />
               compras é automática. A linha de<br />
@@ -68,20 +88,7 @@
               vendas por telefone divulgado</paragraph
             >
           </div>
-          <div>
-            <div style="">
-              <img src="../assets/icon.png" style="position:relative;top:45px;left:110px;" />
-              <p class="p" style="position:relative;left:150px;">Destino identificado</p>
-              <paragraph class="c" style="position:relative;left:150px;"
-                >Quando o cliente liga, a busca<br />
-                pelo endereço e histórico de<br />
-                compras é automática. A linha de<br />
-                destino pode ser nomeada,<br />
-                permitindo um atendimento<br />
-                personalizado e medição das<br />
-                vendas por telefone divulgado</paragraph
-              >
-            </div>
+          <p></p>
           </div>
         </div>
       </div>
