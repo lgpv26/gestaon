@@ -12,84 +12,62 @@
         </ul>
       </div>
     </div>
-    <div style="position:relative;top:-40px;left:240px;">
+    <div style="position:relative;top:-20px;left:240px;">
       <h2 class="p" style="font-size:28px;color: #276E73;">
         Recursos que fazem a<br />diferença nos detalhes
       </h2>
     </div>
-    <div class="row col-md-12">
-      <div class="col-md-6">
-        <div>
-          <div style="">
-            <img src="../assets/icon.png" style="position:relative;top-60px:px;left:230px;"/>
-            <p class="p" style="position:relative;top:-45px;left:270px;">Controle em uma tela</p>
-            <paragraph class="c" style="position:relative;top:-45px;left:270px;"
-              >Os pedidos no painel de <br />atendimento são rapidamente <br />
-              editáveis sem precisar mudar de <br />
-              tela, tudo é sincronizado e salvo <br />
-              em tempo real. Cadastre clientes <br />
-              e realize as vendas mesmo sem <br />
-              internet.
-            </paragraph>
-          </div>
-          <p></p>
+    <div class="row col-md-12" style="padding:0px 260px 0px 210px;">
+      <div class="col-md-6 c" style="position:relative;">
+        <div style="position:absolute;top:20px;left:35px;">
+          <img src="../assets/adv-icon.png" />
         </div>
-        <div></div>
-      </div>
-      <div class="col-md-6">
-        <div>
-          <div style="">
-            <img src="../assets/icon.png" style="position:relative;top:0px;left:110px;" />
-            <p class="p" style="position:relative;top:-45px;left:150px;">Destino identificado</p>
-            <paragraph class="c" style="position:relative;top:-45px;left:150px;"
-              >Quando o cliente liga, a busca<br />
-              pelo endereço e histórico de<br />
-              compras é automática. A linha de<br />
-              destino pode ser nomeada,<br />
-              permitindo um atendimento<br />
-              personalizado e medição das<br />
-              vendas por telefone divulgado</paragraph
-            >
-          </div>
-          <p></p>
+        <div style="padding-left:60px;"><h2>Controle em uma tela</h2></div>
+        <div style="padding:0px 30px 0px 30px;">
+          <p>
+            Os pedidos no painel de atendimento são rapidamente editáveis sem precisar mudar de
+            tela, tudo é sincronizado e salvo em tempo real. Cadastre clientes e realize as vendas
+            mesmo sem internet
+          </p>
         </div>
       </div>
-      <div class="row col-md-12">
-      <div class="col-md-6">
-        <div>
-          <div style="">
-            <img src="../assets/icon.png" style="position:relative;top-60px:px;left:230px;"/>
-            <p class="p" style="position:relative;top:-45px;left:270px;">Controle em uma tela</p>
-            <paragraph class="c" style="position:relative;top:-45px;left:270px;"
-              >Os pedidos no painel de <br />atendimento são rapidamente <br />
-              editáveis sem precisar mudar de <br />
-              tela, tudo é sincronizado e salvo <br />
-              em tempo real. Cadastre clientes <br />
-              e realize as vendas mesmo sem <br />
-              internet.
-            </paragraph>
-          </div>
-          <p></p>
+      <div class="col-md-6 c" style="position:relative;left:50px;">
+        <div style="position:absolute;top:20px;left:35px;">
+          <img src="../assets/adv-icon.png" />
         </div>
-        <div></div>
+        <div style="padding-left:60px;"><h2>Destino identificado</h2></div>
+        <div style="padding:0px 30px 0px 30px;">
+          <p>
+            Quando o cliente liga, a busca pelo endereço e histórico de compras é automática. A
+            linha de destino pode ser nomeada, permitindo um atendimento personalizado e medição das
+            vendas por telefone divulgado
+          </p>
+        </div>
       </div>
-      <div class="col-md-6">
-        <div>
-          <div style="">
-            <img src="../assets/icon.png" style="position:relative;top:0px;left:110px;" />
-            <p class="p" style="position:relative;top:-45px;left:150px;">Destino identificado</p>
-            <paragraph class="c" style="position:relative;top:-45px;left:150px;"
-              >Quando o cliente liga, a busca<br />
-              pelo endereço e histórico de<br />
-              compras é automática. A linha de<br />
-              destino pode ser nomeada,<br />
-              permitindo um atendimento<br />
-              personalizado e medição das<br />
-              vendas por telefone divulgado</paragraph
-            >
-          </div>
-          <p></p>
-          </div>
+      <div class="col-md-6 c" style="position:relative;">
+        <div style="position:absolute;top:20px;left:35px;">
+          <img src="../assets/adv-icon.png" />
+        </div>
+        <div style="padding-left:60px;"><h2>Pesquisa inteligente</h2></div>
+        <div style="padding:0px 30px 0px 30px;">
+          <p>
+            Pesquisa de clientes com campo único, o que você digita é analisado na hora; como no
+            Google, a parte complicada fica com a gente, não precisa um monte de campos para
+            encontrar o cliente cadastrado ou incluir um novo
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 c" style="position:relative;left:50px;">
+        <div style="position:absolute;top:20px;left:35px;">
+          <img src="../assets/adv-icon.png" />
+        </div>
+        <div style="padding-left:60px;"><h2>Tudo sincronizado</h2></div>
+        <div style="padding:0px 30px 0px 30px;">
+          <p>
+            Trabalhe com atendimento múltiplos atendimentos, múltiplos endereços, múltiplos
+            recebimentos e muitos outros múltiplos funcionando na nuvem e fora dela quando não há
+            conexão com a internet. A sua empresa precisa ser única
+          </p>
         </div>
       </div>
     </div>
@@ -110,6 +88,7 @@ export default {
 .Features {
   max-width: 1245px;
   margin: 0px auto 0px auto;
+  position: relative;
 }
 ul {
   background: #31363c;
@@ -139,6 +118,7 @@ li a:hover {
   font-family: Montserrat-Alternates;
   color: #276e73;
   font-weight: 300;
+  font-size: 15px;
 }
 
 .t {
