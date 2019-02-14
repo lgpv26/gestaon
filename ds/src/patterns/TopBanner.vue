@@ -1,40 +1,30 @@
 <template>
-  <div class="Banner row">
-    <div class="Reset"><img src="..\assets\Top-banner.png" style="width:100%;margin:0px;" /></div>
-    <div class="col-md-6 Reset" style="top:-470px;left:200px;">
-      <div v-html="card"></div>
-      <h1 class="Reset" style="color:white;font-size:30px;">
-        SUA REVENDA DE GLP <br />EM UM NOVO NÍVEL!
-      </h1>
-      <p class="Paragraph" style="color:white;font-size:15px;top:5px;">
-        Sistema de atendimento e logística nos segundos de uma ligação
-      </p>
-      <button class="Button Reset">
-        <h1 class="Button-I" style="color:white;font-size:23px;">Acesse grátis</h1>
-        <p class="Button-II" style="color:white;font-size:12px;">30 dias, sem compromisso</p>
+  <div class="top-banner">
+    <div class="banner"><img src="../assets/Top-banner.png" /></div>
+    <div v-html="card" class="card"></div>
+    <div class="t1">
+      <h2>SUA REVENDA DE GLP<br />EM UM NOVO NÍVEL!</h2>
+      <p>Sistema de atendimento e logística nos segundos de uma ligação</p>
+    </div>
+    <div class="b1">
+      <button>
+        <h2>Acesse grátis</h2>
+        <p>30 dias, sem compromisso</p>
       </button>
     </div>
-    <div class="Reset" style="top:-550px;left:100px;">
-      <div class="Reset" v-html="relogio" style="top: 230px;left:-45px;z-index:1;"></div>
-      <img class="Reset" src="..\assets\Loja.png" style="width:65%;" />
+    <div class="rec"><img src="../assets/Rectangle.png" /></div>
+    <div class="loja">
+      <img src="../assets/Loja.png" />
+      <div class="loja2"><img src="../assets/plantel-gas.png" /></div>
     </div>
-    <div class="Reset" style="top:-670px;left:920px;z-index:1;">
-      <img class="Reset" src="..\assets\plantel-gas.png" style="width:65%;" />
+    <div class="bg">
+      <img src="../assets/bg-banner.png" />
+      <div class="bg2" v-html="relogio"></div>
     </div>
-    <div class="Reset" style="top:-645px;">
-      <img class="Reset" src="..\assets\Rectangle.png" style="width:100%;" />
-    </div>
-    <div class="Reset" style="top:-742px;">
-      <img class="Reset" src="..\assets\Vector.png" style="width:100%;" />
-    </div>
-    <div class="Reset" style="top:-1342px;">
-      <img class="Reset" src="..\assets\bg-banner.png" style="width:100%;" />
-    </div>
-    <div class="Reset" style="top:-1670px;left:300px;">
-      <img class="Reset" src="..\assets\PINS.png" style="width:65%;" />
-    </div>
-    <div class="Reset" style="top:-1580px;right:120px;">
-      <img class="Reset" src="..\assets\Group.png" style="width:65%;z-index:1;" />
+    <div class="vec"><img src="../assets/Vector.png" /></div>
+    <div class="map">
+      <img src="../assets/PINS.png" />
+      <div class="map2"><img src="../assets/Caminhao.png" /></div>
     </div>
   </div>
 </template>
@@ -64,40 +54,118 @@ export default {
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 @import "../../src/assets/fonts/dax.css";
-
-.Banner {
-  margin: 0px auto 0px auto;
-  padding: 0px;
+.top-banner {
   max-width: 1245px;
+  margin: 0px auto 0px auto;
+  position: relative;
   height: 780px;
-  overflow: hidden;
-  position: relative;
 }
-.Button-I {
-  font-family: Dax-Bold-Italic;
-  margin-top: 10px;
+.banner {
+  position: absolute;
 }
-.Button-II {
-  font-family: Dax-Light-Italic;
-  margin-top: -15px;
+.banner img {
+  width: 100%;
 }
-.Paragraph {
-  font-family: DaxCondensed;
+.card {
+  position: absolute;
+  top: 30px;
+  left: 200px;
 }
-.Reset {
-  position: relative;
+.t1 {
+  position: absolute;
+  top: 220px;
+  left: 205px;
+}
+.t1 h2 {
   margin: 0px;
-  padding: 0px;
   font-family: Dax-Bold;
+  font-size: 31px;
+  color: white;
 }
-.Button {
+.t1 p {
+  margin: 0px;
+  font-family: DaxCondensed;
+  font-size: 15px;
+  color: white;
+}
+.b1 {
+  position: absolute;
+  top: 330px;
+  left: 200px;
+}
+.b1 button {
   width: 182px;
-  border: 0px;
-  border-radius: 10px;
   height: 78px;
   background: linear-gradient(217.73deg, #49dfea -10.02%, #0072e4 91.15%);
-  position: relative;
-  top: 20px;
+  border: 0px;
+  border-radius: 10px;
+}
+button h2 {
+  margin: 0px;
+  font-family: Dax-BoldItalic;
+  font-size: 23px;
+  color: white;
+}
+button p {
+  margin: 0px;
+  font-family: Dax-LightItalic;
+  font-size: 12px;
+  color: white;
+}
+.rec {
+  position: absolute;
+  top: 480px;
+}
+.rec img {
+  width: 100%;
+}
+.loja {
+  position: absolute;
+  top: 120px;
+  left: 700px;
+}
+.loja2 {
+  position: absolute;
+  top: 180px;
+  left: 170px;
+}
+.loja img {
+  width: 65%;
+}
+.bg {
+  position: absolute;
+  top: 16px;
+}
+.bg2 {
+  position: absolute;
+  top: 175px;
+  left: 660px;
+}
+.bg img {
+  width: 100%;
+}
+.map {
+  position: absolute;
+  top: 458px;
+  left: 290px;
+}
+.map img {
+  width: 65%;
+}
+.map2 {
+  position: absolute;
+  top: 80px;
+  left: 560px;
+}
+.map2 img {
+  width: 65%;
+}
+.vec {
+  position: absolute;
+  top: 519px;
+}
+.vec img {
+  width: 100%;
 }
 </style>
 

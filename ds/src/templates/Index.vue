@@ -11,7 +11,10 @@
     />
     <TopBanner />
     <Process />
+    <Advantages />
     <Features />
+    <Plans />
+    <Footer />
   </component>
 </template>
 

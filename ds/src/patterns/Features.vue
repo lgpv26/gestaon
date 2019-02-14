@@ -1,8 +1,9 @@
 <template>
   <div class="Features row">
-    <div class="col-md-12" style="position:relative;top:-118px;">
+<<<<<<< HEAD
+    <div class="col-md-12" style="position:relative;top:-119px;">
       <img src="../assets/Rectangle 2.png" style="width:100%" />
-      <div class="col-md-12" style="position:relative;top:-50px;">
+      <div class="col-md-12" style="position:relative;top:-50px;left:-60px;">
         <ul>
           <li><a class="t" href="#">Atendimento</a></li>
           <li><a class="t" href="#">Vendas</a></li>
@@ -12,80 +13,165 @@
         </ul>
       </div>
     </div>
-    <div style="position:relative;top:-40px;left:240px;">
-      <h2 class="p" style="font-size:28px;color: #276E73;">
+    <div style="position:absolute;top:0px;left:180px;">
+      <h2 class="p" style="font-size:24px;color: #276E73;">
         Recursos que fazem a<br />diferença nos detalhes
       </h2>
     </div>
-    <div class="row col-md-12">
-      <div class="col-md-6">
-        <div>
-          <div style="">
-            <img src="../assets/icon.png" style="position:relative;top:45px;" />
-            <p class="p" style="position:relative;left:40px;">Controle em uma tela</p>
-            <paragraph class="c" style="position:relative;left:40px;"
-              >Os pedidos no painel de <br />atendimento são rapidamente <br />
-              editáveis sem precisar mudar de <br />
-              tela, tudo é sincronizado e salvo <br />
-              em tempo real. Cadastre clientes <br />
-              e realize as vendas mesmo sem <br />
-              internet.
-            </paragraph>
-          </div>
-          <p></p>
+    <div class="row col-md-12" style="padding:0px 350px 0px 150px;position:absolute;top:150px;">
+      <div class="col-md-6 c" style="position:relative;">
+        <div style="position:absolute;top:15px;left:35px;">
+          <img src="../assets/adv-icon.png" />
         </div>
-        <div></div>
+        <div style="padding-left:60px;"><h2>Controle em uma tela</h2></div>
+        <div style="padding:0px 45px 0px 30px;">
+          <p>
+            Os pedidos no painel de atendimento são rapidamente editáveis sem precisar mudar de
+            tela, tudo é sincronizado e salvo em tempo real. Cadastre clientes e realize as vendas
+            mesmo sem internet
+          </p>
+        </div>
       </div>
-      <div class="col-md-6">
-        <div>
-          <div style="">
-            <img src="../assets/icon.png" style="position:relative;top:45px;left:110px;" />
-            <p class="p" style="position:relative;left:150px;">Destino identificado</p>
-            <paragraph class="c" style="position:relative;left:150px;"
-              >Quando o cliente liga, a busca<br />
-              pelo endereço e histórico de<br />
-              compras é automática. A linha de<br />
-              destino pode ser nomeada,<br />
-              permitindo um atendimento<br />
-              personalizado e medição das<br />
-              vendas por telefone divulgado</paragraph
-            >
-          </div>
-          <p></p>
+      <div class="col-md-6 c" style="position:relative;left:-25px;">
+        <div style="position:absolute;top:15px;left:35px;">
+          <img src="../assets/adv-icon.png" />
+=======
+    <div class="Features-container">
+      <div class="col-md-12" style="position:relative;top:-118px;">
+        <img src="../assets/Rectangle 2.png" style="width:100%" />
+        <div class="col-md-12" style="position:relative;top:-50px;">
+          <ul>
+            <li><a class="t" href="#">Atendimento</a></li>
+            <li><a class="t" href="#">Vendas</a></li>
+            <li><a class="t" href="#">Logística</a></li>
+            <li><a class="t" href="#">Financeiro</a></li>
+            <li><a class="t" href="#">Fiscal</a></li>
+          </ul>
         </div>
-        
-        <div>
-          <div style="">
-            <img src="../assets/icon.png" style="position:relative;top:45px;" />
-            <p class="p" style="position:relative;left:40px;">Destino identificado</p>
-            <paragraph class="c" style="position:relative;left:40px;"
-              >Quando o cliente liga, a busca<br />
-              pelo endereço e histórico de<br />
-              compras é automática. A linha de<br />
-              destino pode ser nomeada,<br />
-              permitindo um atendimento<br />
-              personalizado e medição das<br />
-              vendas por telefone divulgado</paragraph
-            >
+      </div>
+      <div style="position:relative;top:-20px;left:240px;">
+        <h2 class="p">
+          <br />Recursos que fazem a<br> diferença nos detalhes
+        </h2>
+      </div>
+      <div class="row col-md-12" style="padding:0px 260px 0px 210px;">
+        <div class="col-md-6 c" style="position:relative;">
+          <div style="position:absolute;top:20px;left:35px;">
+            <img src="../assets/adv-icon.png" />
           </div>
-          <div>
-            <div style="">
-              <img src="../assets/icon.png" style="position:relative;top:45px;left:110px;" />
-              <p class="p" style="position:relative;left:150px;">Destino identificado</p>
-              <paragraph class="c" style="position:relative;left:150px;"
-                >Quando o cliente liga, a busca<br />
-                pelo endereço e histórico de<br />
-                compras é automática. A linha de<br />
-                destino pode ser nomeada,<br />
-                permitindo um atendimento<br />
-                personalizado e medição das<br />
-                vendas por telefone divulgado</paragraph
-              >
-            </div>
+          <div style="padding-left:60px;"><h2>Controle em uma tela</h2></div>
+          <div style="padding:0px 30px 0px 30px;">
+            <p>
+              Os pedidos no painel de atendimento são rapidamente editáveis sem precisar mudar de
+              tela, tudo é sincronizado e salvo em tempo real. Cadastre clientes e realize as vendas
+              mesmo sem internet
+            </p>
           </div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;left:50px;">
+          <div style="position:absolute;top:20px;left:35px;">
+            <img src="../assets/adv-icon.png" />
+          </div>
+          <div style="padding-left:60px;"><h2>Destino identificado</h2></div>
+          <div style="padding:0px 30px 0px 30px;">
+            <p>
+              Quando o cliente liga, a busca pelo endereço e histórico de compras é automática. A
+              linha de destino pode ser nomeada, permitindo um atendimento personalizado e medição das
+              vendas por telefone divulgado
+            </p>
+          </div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;">
+          <div style="position:absolute;top:20px;left:35px;">
+            <img src="../assets/adv-icon.png" />
+          </div>
+          <div style="padding-left:60px;"><h2>Pesquisa inteligente</h2></div>
+          <div style="padding:0px 30px 0px 30px;">
+            <p>
+              Pesquisa de clientes com campo único, o que você digita é analisado na hora; como no
+              Google, a parte complicada fica com a gente, não precisa um monte de campos para
+              encontrar o cliente cadastrado ou incluir um novo
+            </p>
+          </div>
+>>>>>>> feb374aef1af97324b60eb7d18fd791cdda51994
+        </div>
+        <div class="col-md-6 c" style="position:relative;left:50px;">
+          <div style="position:absolute;top:20px;left:35px;">
+            <img src="../assets/adv-icon.png" />
+          </div>
+          <div style="padding-left:60px;"><h2>Tudo sincronizado</h2></div>
+          <div style="padding:0px 30px 0px 30px;">
+            <p>
+              Trabalhe com atendimento múltiplos atendimentos, múltiplos endereços, múltiplos
+              recebimentos e muitos outros múltiplos funcionando na nuvem e fora dela quando não há
+              conexão com a internet. A sua empresa precisa ser única.
+            </p>
+          </div>
+        </div>
+<<<<<<< HEAD
+      </div>
+      <div class="col-md-6 c" style="position:relative;">
+        <div style="position:absolute;top:15px;left:35px;">
+          <img src="../assets/adv-icon.png" />
+        </div>
+        <div style="padding-left:60px;"><h2>Pesquisa inteligente</h2></div>
+        <div style="padding:0px 45px 0px 30px;">
+          <p>
+            Pesquisa de clientes com campo único, o que você digita é analisado na hora; como no
+            Google, a parte complicada fica com a gente, não precisa um monte de campos para
+            encontrar o cliente cadastrado ou incluir um novo
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 c" style="position:relative;left:-25px;">
+        <div style="position:absolute;top:15px;left:35px;">
+          <img src="../assets/adv-icon.png" />
+        </div>
+        <div style="padding-left:60px;"><h2>Tudo sincronizado</h2></div>
+        <div style="padding:0px 45px 0px 30px;">
+          <p>
+            Trabalhe com atendimento múltiplos atendimentos, múltiplos endereços, múltiplos
+            recebimentos e muitos outros múltiplos funcionando na nuvem e fora dela quando não há
+            conexão com a internet. A sua empresa precisa ser única
+          </p>
+=======
+        <div class="col-md-6 c" style="position:relative;">
+          <div class="d">
+            <img src="../assets/map-mobile.png" />
+        </div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;">
+          <div class="g">
+            <img src="../assets/bg-expenses-graphic.png" />
+        </div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;">
+          <div class="gray">
+            <img src="../assets/VectorGray.png" />
+        </div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;">
+          <div class="Vector1302">
+            <img src="../assets/Vector1302.png" />
+        </div>
+>>>>>>> feb374aef1af97324b60eb7d18fd791cdda51994
         </div>
       </div>
     </div>
+    <div class="vec"><img src="../assets/Vector6.png" /></div>
+    <div style="text-align:center;position:absolute;top:660px;left:420px;">
+      <h2 style="font-size:28px;margin:0px;color: #276E73;font-family: Montserrat Alternates;">
+        O que estão dizendo sobre o GestaON?
+      </h2>
+      <p style="font-size:20px;margin:0px;color: #276E73;font-family: Montserrat Alternates;">
+        Duis aute irure dolor in reprehenderit
+      </p>
+    </div>
+    <div class="v2"><img src="../assets/v2banner.png" /></div>
+    <div class="vector"><img src="../assets/Feature-vector.png" /></div>
+    <div class="caminhao"><img src="../assets/map-mobile.png" /></div>
+    <div class="nave"><img src="../assets/nave.png" /></div>
+    <div class="map"><img src="../assets/Search.png" /></div>
   </div>
 </template>
 
@@ -101,8 +187,20 @@ export default {
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 @import "../../src/assets/fonts/montserrat.css";
 .Features {
+<<<<<<< HEAD
   max-width: 1245px;
   margin: 0px auto 0px auto;
+  position: relative;
+  height: 1200px;
+=======
+  width: 100%;
+  background-color: #F4F4F4;
+  .Features-container {
+    max-width: 1245px;
+    margin: 0px auto 0px auto;
+    position: relative;
+  }
+>>>>>>> feb374aef1af97324b60eb7d18fd791cdda51994
 }
 ul {
   background: #31363c;
@@ -114,7 +212,7 @@ li {
   margin-left: 20px;
 }
 a {
-  padding: 22px 40px 22px 40px;
+  padding: 22px 50px 22px 50px;
   color: white;
   border-radius: 5px;
   text-decoration: none;
@@ -126,18 +224,97 @@ li a:hover {
   font-family: Montserrat-Alternates;
   color: #276e73;
   font-weight: 300;
+  top: 100px;
+  margin-left: 0px;
 }
 
 .c {
   font-family: Montserrat-Alternates;
   color: #276e73;
-  font-weight: 300;
+  font-size: 12px;
 }
 
 .t {
   font-family: Montserrat;
   font-weight: bold;
   font-size: 12px;
+}
+<<<<<<< HEAD
+.vector {
+  position: absolute;
+  top: 525px;
+}
+.vector img {
+  width: 100%;
+}
+.map {
+  position: absolute;
+  top: 28px;
+  left: 880px;
+}
+.map img {
+  width: 100%;
+}
+.nave {
+  position: absolute;
+  top: 75px;
+  left: 740px;
+  z-index: 1;
+}
+.nave img {
+  width: 50%;
+}
+.caminhao {
+  position: absolute;
+  top: 440px;
+  left: 50px;
+  margin-left: 55%;
+  z-index: 1;
+}
+.caminhao img {
+  width: 68%;
+}
+.v2 {
+  position: absolute;
+  top: 20px;
+}
+.v2 img {
+  width: 100%;
+}
+.vec {
+  position: absolute;
+  top: 618px;
+}
+.vec img {
+  width: 100%;
+=======
+
+.d {
+ position: absolute;
+ width: 55px;
+ height: 50px;
+ left: 750px;
+ top: 0px;
+ size: 20px;
+ z-index: 1;
+}
+
+.g {
+  position: absolute;
+  left: 285px;
+  top: -537px;
+}
+
+.gray {
+  position: absolute;
+  left:-300px;
+  top:-350px;
+}
+
+.Vector1302 {
+  position: absolute;
+  left:-700px;
+>>>>>>> feb374aef1af97324b60eb7d18fd791cdda51994
 }
 </style>
 
