@@ -11,7 +11,6 @@
     />
     <TopBanner />
     <Process />
-    <Advantages />
     <Features />
   </component>
 </template>

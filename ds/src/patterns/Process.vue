@@ -98,7 +98,6 @@ export default {
 .Process {
   max-width: 1245px;
   margin: 0px auto 0px auto;
-  height: 752px;
 }
 </style>
 
