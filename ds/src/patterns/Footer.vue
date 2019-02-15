@@ -10,9 +10,9 @@
     <div class="row" style="position:relative;top:-40px;">
       <div class="col-md-4 cx-1">
         <div class="col-md-12">
-          <h3>PROPOSTA ÚNICA</h3>
+          <h3 class= "proposal">PROPOSTA ÚNICA</h3>
           <p>
-            Controle o atendimento, vendas e logística em uma tela, nos segundos de uma ligação.
+            Controle o atendimento, vendas e logística <br> em uma tela, nos segundos de uma <br> ligação.
             Anotação em papel nunca mais!
           </p>
         </div>
@@ -24,7 +24,7 @@
 
       <div class="col-md-4 pc">
         <img src="../assets/pc.png" />
-        <div class="b1"><button>Acessar Demostração</button></div>
+        <div class="b1"><button>Acessar Demonstração</button></div>
       </div>
       <div class="cx-3 row col-md">
         <div class="col-md-5">
@@ -49,7 +49,7 @@
         </div>
         <div class="cx-4 col-md-7">
           <div class="col-md-12">
-            <h3>GestaON nas redes sociais</h3>
+            <h3>GESTAON NAS REDES SOCIAIS</h3>
             <p>Comente e compartilhe, ajude a fazer mais pessoas felizes!</p>
           </div>
           <div class="col-md-12" style="padding-right:60px;">
@@ -92,8 +92,7 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
-@import url("https://fonts.googleapis.com/css?family=Montserrat+Alternates");
-@import url("https://fonts.googleapis.com/css?family=Montserrat");
+@import "../../src/assets/fonts/montserrat.css";
 .Footer {
   max-width: 1245px;
   margin: 0px auto 0px auto;
@@ -111,6 +110,8 @@ export default {
   border-radius: 5px;
   background: #dc4c30;
   color: #ffffff;
+  font-family: Montserrat-Alternates;
+  font-size: 12px;
 }
 .cx-1 {
   position: relative;
@@ -118,13 +119,14 @@ export default {
 }
 .cx-1 h3 {
   color: #ffffff;
-  font-size: 16px;
+  font-size: 12px;
   margin: 40px 0px 5px 0px;
 }
 .cx-1 p {
   color: rgb(218, 214, 214);
-  font-size: 14px;
+  font-size: 12px;
   margin: 0px;
+  font-family: Montserrat-Alternates;
 }
 .cx-1 img {
   width: 25%;
@@ -146,9 +148,10 @@ export default {
   margin: 20px 120px 0px -200px;
 }
 .cx-3 h3 {
-  font-size: 16px;
+  font-size: 12px;
   margin: 40px 0px 0px 0px;
   color: #ffffff;
+  font-family: Montserrat;
 }
 .cx-3 ul {
   margin: 0px;
@@ -159,7 +162,7 @@ export default {
   margin: 2px 0px 2px 0px;
 }
 .cx-3 a {
-  font-family: Montserrat Alternates;
+  font-family: Montserrat-Alternates;
   font-size: 11px;
   color: #ffffff;
   cursor: pointer;
@@ -167,6 +170,12 @@ export default {
 .cx-4 p {
   font-size: 14px;
   color: rgb(218, 214, 214);
+  font-family: Montserrat-Alternates;
+}
+.proposal {
+  font-family: Montserrat;
+  font-size: 10px;
+  z-index: 1;
 }
 </style>
 

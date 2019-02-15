@@ -8,8 +8,8 @@
     </div>
     <div class="b1">
       <button>
-        <h2>Acesse grátis</h2>
-        <p>30 dias, sem compromisso</p>
+        <div class="button h2"><h2>Acesse grátis</h2></div>
+        <div class="button p"><p>30 dias, sem compromisso</p></div>
       </button>
     </div>
     <div class="rec"><img src="../assets/Rectangle.png" /></div>
@@ -106,9 +106,9 @@ button h2 {
   font-size: 23px;
   color: white;
 }
-button p {
+.button p {
   margin: 0px;
-  font-family: Dax-LightItalic;
+  font-family: Dax-Light-Italic;
   font-size: 12px;
   color: white;
 }

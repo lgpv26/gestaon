@@ -30,7 +30,7 @@
       </div>
       <div class="col-md-3 cx-2">
         <div class="center-md th2"><h2>PROFESSIONAL</h2></div>
-        <div class="center-md"><img src="#" /></div>
+        <div class="center-md"><img src="#"/></div>
         <Icon size="small" name="Vector" class="icon" style="top:82px;" />
         <h3 class="Paragraph2">SaaS landing page</h3>
         <Icon size="small" name="Vector" class="icon" />
@@ -92,6 +92,7 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+@import "../../src/assets/fonts/montserrat.css";
 
 .Plans {
   margin: 0px auto -20px auto;
@@ -129,7 +130,7 @@ strike {
 }
 .tx h3 {
   color: #e7e8e8;
-  font-family: Montserrat Alternates;
+  font-family: Montserrat-Alternates;
   font-style: normal;
   font-weight: bold;
   line-height: normal;
@@ -137,7 +138,7 @@ strike {
 }
 .tx p {
   color: #e7e8e8;
-  font-family: Montserrat Alternates;
+  font-family: Montserrat-Alternates;
   font-style: normal;
   line-height: normal;
   font-weight: 300;
@@ -160,7 +161,7 @@ strike {
   color: #276e73;
   font-size: 16px;
   text-align: center;
-  font-family: Montserrat Alternates;
+  font-family: Montserrat-Alternates;
 }
 .th2 {
   font-family: Montserrat;
@@ -182,6 +183,7 @@ strike {
   background: #ffffff;
   margin: 0px 0px 20px 0px;
   cursor: pointer;
+  font-family: Montserrat-Alternates;
 }
 .cx-2:hover {
   background: linear-gradient(250.86deg, #49dfea -10.02%, #0072e4 91.15%);
@@ -222,7 +224,7 @@ strike {
 .liga-desliga__botao::before,
 .liga-desliga__botao::after {
   content: "";
-  font-family: Montserrat Alternates;
+  font-family: Montserrat-Alternates;
   font-size: 18px;
   color: rgb(162, 165, 167);
   padding: 0px 0px 0px 0px;

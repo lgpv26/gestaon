@@ -10,7 +10,7 @@
       </div>
     </div>
     <div class="col-md-6" style="position:relative;top:-140px;z-index:1;">
-      <h2 style="position:relative;font-size:28px;top:-30px;left:40px;color: #55595E;">
+      <h2 class="f" style="position:relative;font-size:28px;top:-30px;left:40px;color: #55595E;">
         Pense fora da caixa <strike style="color:grey;">porta</strike> <b>porta</b>
       </h2>
       <img src="../assets/escrita.png" style="width:70%;" />
@@ -27,8 +27,8 @@
     <div class="row col-md-12" style="position:relative;top:-1400px;left:320px;z-index:1;">
       <div class="col-md-6" style="position:relative;left:0px;">
         <div>
-          <p style="font-size:16px;color: #E7E8E8;margin:0px;">Pesquise seus clientes e encontre</p>
-          <p style="font-size:16px;color: rgb(143, 143, 143);margin:0px;">
+          <p class= "f">Pesquise seus clientes e encontre</p>
+          <p class= "f2">
             Não precisa de internet para fazer as buscas
           </p>
           <div style="position:relative;left:300px;top:-60px;">
@@ -36,10 +36,10 @@
           </div>
         </div>
         <div style="position:relative;top:-20px;">
-          <p style="font-size:16px;color: #E7E8E8;margin:0px;">
+          <p class="f" >
             Visualize vendedor e entrega no mapa
           </p>
-          <p style="font-size:16px;color: rgb(143, 143, 143);margin:0px;">
+          <p class= "f2">
             Rastreamento totalmente integrado
           </p>
           <div style="position:relative;left:300px;top:-60px;">
@@ -49,8 +49,8 @@
       </div>
       <div class="col-md-6" style="position:relative;left:-180px;">
         <div>
-          <p style="font-size:16px;color: #E7E8E8;margin:0px;">O caixa funciona sem burocracia</p>
-          <p style="font-size:16px;color: rgb(143, 143, 143);margin:0px;">
+          <p class="f">O caixa funciona sem burocracia</p>
+          <p class= "f2">
             No acerto de contas é fácil acertar
           </p>
           <div style="position:relative;left:250px;top:-60px;">
@@ -58,8 +58,8 @@
           </div>
         </div>
         <div style="position:relative;top:-20px;">
-          <p style="font-size:16px;color: #E7E8E8;margin:0px;">O financeiro manda muito bem!</p>
-          <p style="font-size:16px;color: rgb(143, 143, 143);margin:0px;">
+          <p class="f">O financeiro manda muito bem!</p>
+          <p class= "f2">
             Só mostra os relatórios importantes
           </p>
           <div style="position:relative;left:250px;top:-60px;">
@@ -81,11 +81,26 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
+@import "../../src/assets/fonts/montserrat.css";
 .Advantages {
   max-width: 1245px;
   margin: 0px auto 0px auto;
   overflow: hidden;
   height: 740px;
+}
+
+.f{
+  font-family: Montserrat-Alternates;
+  font-size:13px;
+  color: #E7E8E8;
+  margin:0px;
+}
+
+.f2{
+  font-family: Montserrat-Alternates;
+  color:rgb(143, 143, 143);
+  font-size:13px;
+  margin:0px;
 }
 </style>
 

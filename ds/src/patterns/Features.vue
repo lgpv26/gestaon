@@ -73,10 +73,10 @@
     </div>
     <div class="vec"><img src="../assets/Vector6.png" /></div>
     <div style="text-align:center;position:absolute;top:660px;left:350px;">
-      <h2 style="font-size:28px;margin:0px;color: #276E73;font-family: Montserrat Alternates;">
+      <h2 style="font-size:28px;margin:0px;color: #276E73;font-family: Montserrat-Alternates;">
         O que estão dizendo sobre o GestaON?
       </h2>
-      <p style="font-size:20px;margin:0px;color: #276E73;font-family: Montserrat Alternates;">
+      <p style="font-size:20px;margin:0px;color: #276E73;font-family: Montserrat-Alternates;">
         Duis aute irure dolor in reprehenderit
       </p>
     </div>
