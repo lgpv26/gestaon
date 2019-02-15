@@ -447,8 +447,7 @@
                                                 requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
                                             )
                                         }
-                                    ),
-                                    isEditing: false
+                                    )
                                 })
 
                                 vm.$store.dispatch("entities/insertOrUpdate", {

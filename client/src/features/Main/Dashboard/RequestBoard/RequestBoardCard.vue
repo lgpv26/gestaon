@@ -2,7 +2,7 @@
     <div class="request-board-card"
          :class="{
             'request-board-card--in-displacement': _.get(request, 'status', false) === 'in-displacement',
-            'request-board-card--draft': !Number.isInteger(request.id) || card.isEditing
+            'request-board-card--draft': !Number.isInteger(request.id) || request.requestUIState.hasRequestChanges
             }">
         <div class="request-board-card__loading" v-if="_.get(request, 'status', false) === 'processing'">
             <span>Sincronizando...</span>
@@ -11,7 +11,7 @@
             <span>...</span>
         </div>
         <div class="request-board-card__container" v-if="card && Number.isInteger(request.id)">
-            <div class="draft-badge" v-if="!Number.isInteger(request.id) || card.isEditing">
+            <div class="draft-badge" v-if="!Number.isInteger(request.id) || request.requestUIState.hasRequestChanges">
                 <i class="mi mi-edit"></i>
             </div>
             <!-- if request is persisted -->

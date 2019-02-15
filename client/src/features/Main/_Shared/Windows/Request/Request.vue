@@ -172,7 +172,7 @@
                     </div>
                 </div>
                 <div class="request__section" :class="{ active: request.requestUIState.activeTab === 'order' }">
-                    <app-request-order :request="request"></app-request-order>
+                    <app-request-order :request="request" @change="onRequestOrderChange()" @change-to-original="onRequestOrderChangeToOriginal()"></app-request-order>
                     <div class="section__summary" @click="activateTab('order')">
                         <div class="summary-radio" style="margin-right: 5px;">
                             <app-switch :readonly="true" :value="request.requestUIState.activeTab === 'order'"></app-switch>
@@ -612,7 +612,40 @@
                         addressId: addressTmpId
                     }
                 });
+            },
+
+            /* Change Detection */
+
+            onRequestOrderChange(){
+                this.updateValue(
+                    "entities/requestUIState/update",
+                    "hasRequestChanges",
+                    this.request.requestUIState.id,
+                    true
+                )
+                this.updateValue(
+                    "entities/requestUIState/update",
+                    "hasRequestOrderChanges",
+                    this.request.requestUIState.id,
+                    true
+                )
+            },
+
+            onRequestOrderChangeToOriginal(){
+                this.updateValue(
+                    "entities/requestUIState/update",
+                    "hasRequestChanges",
+                    this.request.requestUIState.id,
+                    false
+                )
+                this.updateValue(
+                    "entities/requestUIState/update",
+                    "hasRequestOrderChanges",
+                    this.request.requestUIState.id,
+                    false
+                )
             }
+
         }
     };
 </script>

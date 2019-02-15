@@ -15,7 +15,11 @@ export default class RequestUIState extends Model {
             activeTab: this.attr('client'),
             showClientOrderTimeline: this.attr(false),
             requestClientAddressForm: this.attr(true),
-            isAddingClientAddress: this.attr(true)
+            isAddingClientAddress: this.attr(true),
+
+            requestOrderString: this.attr(null),
+            hasRequestOrderChanges: this.attr(false),
+            hasRequestChanges: this.attr(false),
         }
     }
 }

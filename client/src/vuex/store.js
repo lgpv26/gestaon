@@ -74,35 +74,36 @@ database.register(Card, cards);
 import localforage from "localforage";
 
 export default new Vuex.Store({
-  plugins: [
-    VuexORM.install(database),
-    createPersistedState({
-      paths: ["request-board","lastDataSyncedDate","request-queue"]
-    })
-  ],
-  state: {
-    app: {
-      title: "ERP",
-      header: "request-board",
-      version: null
+    plugins: [
+        VuexORM.install(database),
+        createPersistedState({
+            paths: ["request-board","lastDataSyncedDate","request-queue"]
+        })
+    ],
+    state: {
+        app: {
+            title: "ERP",
+            header: "request-board",
+            version: null
+        },
+        system: {
+            initialized: false,
+            requestsLoaded: false
+        },
+        mainContentArea: {
+            height: 0,
+            width: 0
+        },
+        dimensions: {
+            window: {
+                width: 0,
+                height: 0
+            }
+        },
+        lastDataSyncedDate: null
     },
-    system: {
-      initialized: false
-    },
-    mainContentArea: {
-      height: 0,
-      width: 0
-    },
-    dimensions: {
-      window: {
-        width: 0,
-        height: 0
-      }
-    },
-    lastDataSyncedDate: null
-  },
-  mutations,
-  actions,
-  modules,
-  strict: true
+    mutations,
+    actions,
+    modules,
+    strict: true
 });

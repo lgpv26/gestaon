@@ -8,6 +8,10 @@ export const setAppTitle = (state, appTitle) => {
   state.app.title = appTitle;
 };
 
+export const SET_SYSTEM_REQUESTS_LOADED = (state, requestsLoaded) => {
+    state.system.requestsLoaded = requestsLoaded;
+};
+
 export const setSystemInitialized = (state, initialized) => {
     state.system.initialized = initialized;
 };

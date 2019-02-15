@@ -1,6 +1,7 @@
 import { Model } from '@vuex-orm/core'
 import shortid from 'shortid'
 import _ from 'lodash'
+import validate from 'validate.js'
 import ClientGroup from './ClientGroup'
 import ClientAddress from "./ClientAddress"
 import ClientPhone from "./ClientPhone"
@@ -19,4 +20,15 @@ export default class Client extends Model {
             document: this.attr(null)
         }
     }
+
+    /*validate(){
+        validate(
+            {
+                length:
+            },
+            {
+
+            }
+        )
+    }*/
 }

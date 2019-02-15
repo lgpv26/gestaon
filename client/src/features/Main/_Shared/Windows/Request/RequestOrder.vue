@@ -218,7 +218,11 @@
 
                 activeTab: 'client',
 
-                price: 0
+                price: 0,
+
+                originalRequestOrder: null,
+                lastRequestOrder: null,
+                changeCheckInterval: null
             }
         },
         watch: {
@@ -229,9 +233,17 @@
                 if(this.request.requestPayments.length === 1){
                     this.updateValue('entities/requestPayments/update','amount',_.first(this.request.requestPayments).id,orderTotalPrice)
                 }
+            },
+            ['system.requestsLoaded']: {
+                handler(value){
+                    if(!value) return
+                    this.checkRequestOrderChanges()
+                },
+                immediate: true
             }
         },
         computed: {
+            ...mapState(['system']),
             getOrderTotalPrice(){
                 return this.utils.formatMoney(_.sumBy(this.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
                     return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
@@ -355,6 +367,47 @@
                 }
                 this.$store.dispatch('entities/requestPayments/delete', requestPaymentId)
             },
+            getRequestOrderEditComparationObj(){
+                const requestOrder = JSON.parse(JSON.stringify(this.request.requestOrder))
+                delete requestOrder.request
+                delete requestOrder.promotionChannel
+                requestOrder.requestOrderProducts = _.map(requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                    delete requestOrderProduct.requestOrder
+                    delete requestOrderProduct.product
+                    return requestOrderProduct
+                })
+                return requestOrder
+            },
+            onRequestOrderChange(){
+            },
+            onRequestOrderChangeToOriginal(){
+            },
+            checkRequestOrderChanges(){
+                const vm = this
+                if(vm.changeCheckInterval){
+                    clearInterval(vm.changeCheckInterval)
+                }
+                vm.originalRequestOrder = vm.getRequestOrderEditComparationObj()
+                vm.lastRequestOrder = vm.originalRequestOrder
+                vm.changeCheckInterval = setInterval(() => {
+                    const currentRequestOrder = vm.getRequestOrderEditComparationObj()
+                    if(!_.isEqual(currentRequestOrder, vm.lastRequestOrder)){
+                        vm.lastRequestOrder = currentRequestOrder
+                        if(_.isEqual(currentRequestOrder, vm.originalRequestOrder)){
+                            vm.onRequestOrderChangeToOriginal()
+                            vm.$emit("change-to-original")
+                        }
+                        else {
+
+                            vm.onRequestOrderChange()
+                            vm.$emit("change")
+                        }
+                    }
+                }, 1000)
+            }
+        },
+        mounted(){
+
         }
     }
 </script>

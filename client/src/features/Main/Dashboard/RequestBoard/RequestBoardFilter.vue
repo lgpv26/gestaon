@@ -208,8 +208,10 @@
             }
         },
         methods: {
+            ...mapMutations(["SET_SYSTEM_REQUESTS_LOADED"]),
             ...mapMutations("request-board", ["SET_FILTER","SET_DELIVERY_DATE"]),
             ...mapActions("request-board", ["setIsLoading"]),
+            ...mapActions(["setSystemRequestsLoaded"]),
             extractOnlyModelFields(modelName,obj){
                 const returnObj = {}
                 this.modelDefinitions.offlineDBModels[modelName].split(',').forEach((column) => {
@@ -247,6 +249,7 @@
             },
             loadRequests(){
                 const vm = this
+                vm.SET_SYSTEM_REQUESTS_LOADED(false)
                 RequestBoardAPI.getRequests({
                     date: vm.moment(vm.filters.deliveryDate).toISOString()
                 }).then(response => {
@@ -346,20 +349,26 @@
 
                         // Once everything got from server, start to fill Vuex ORM with STATE_ db data
                         Promise.all(promises).then((responses) => {
+                            const retrievingDraftPromises = []
                             _.forOwn(vm.modelDefinitions.stateModels, (fields, stateModelName) => {
                                 const modelName = stateModelName.replace("STATE_", "")
-                                vm.$db[stateModelName].toArray().then(data => {
+                                retrievingDraftPromises.push(vm.$db[stateModelName].toArray().then(data => {
                                     if(data.length){
                                         vm.$store.dispatch("entities/insertOrUpdate", {
                                             entity: modelName,
                                             data: data
                                         })
                                     }
-                                })
+                                    return Promise.resolve()
+                                }))
+
                             })
-                            console.log("system:ready event emitted")
-                            vm.$socket.emit("system:ready")
-                            vm.setIsLoading(false)
+                            Promise.all(retrievingDraftPromises).then(() => {
+                                console.log("system:ready event emitted")
+                                vm.$socket.emit("system:ready")
+                                vm.SET_SYSTEM_REQUESTS_LOADED(true)
+                                vm.setIsLoading(false)
+                            })
                         })
                     })
                 })

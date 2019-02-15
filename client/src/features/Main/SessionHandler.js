@@ -33,27 +33,10 @@ export default {
          * Socket.IO
          */
         initializeSocketIO() {
-            if (this.$socket) {
-                this.$socket.destroy();
-                delete this.$socket;
-                this.$socket = io(
-                    config.socketServer + "?token=" + this.tokens.accessToken
-                );
-                return;
-            }
             const socket = io(
                 config.socketServer + "?token=" + this.tokens.accessToken
             );
             Vue.use(VueSocketio, socket);
-        },
-        disconnectSocketIO() {
-            if (this.$socket) {
-                this.$socket.removeListener("presence:load", this.onPresenceLoad);
-                this.$socket.removeListener("connect", this.connect);
-                this.$socket.destroy();
-                delete this.$socket;
-                this.$socket = null;
-            }
         },
         socketMethods() {
             const vm = this;
@@ -791,7 +774,7 @@ export default {
                         vm.$store.dispatch("entities/deleteAll");
                         vm.setSystemInitialized(false);
                         vm.setLastDataSyncedDate(null);
-                        vm.$router.replace("/login");
+                        location.reload()
                     });
                 }
             });
@@ -806,8 +789,5 @@ export default {
         this.$socket.on("reconnect_attempt", vm.socketMethods().reconnectAttempt);
         this.$socket.on("disconnect", vm.socketMethods().disconnect);
         this.$socket.on("connect", vm.connect);
-    },
-    beforeDestroy() {
-        this.disconnectSocketIO();
     }
 };
