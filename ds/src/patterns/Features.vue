@@ -43,6 +43,31 @@
             conexão com a internet. A sua empresa precisa ser única.
           </p>
         </div>
+        <div class="col-md-6 c" style="position:relative;left:50px;">
+          <div style="position:absolute;top:20px;left:35px;">
+            <img src="../assets/adv-icon.png" />
+          </div>
+          <div style="padding-left:60px;"><h2>Tudo sincronizado</h2></div>
+          <div style="padding:0px 30px 0px 30px;">
+            <p>
+              Trabalhe com atendimento múltiplos atendimentos, múltiplos endereços, múltiplos
+              recebimentos e muitos outros múltiplos funcionando na nuvem e fora dela quando não há
+              conexão com a internet. A sua empresa precisa ser única.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;">
+          <div class="d"><img src="../assets/map-mobile.png" /></div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;">
+          <div class="g"><img src="../assets/bg-expenses-graphic.png" /></div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;">
+          <div class="gray"><img src="../assets/VectorGray.png" /></div>
+        </div>
+        <div class="col-md-6 c" style="position:relative;">
+          <div class="Vector1302"><img src="../assets/Vector1302.png" /></div>
+        </div>
       </div>
       <div class="col-md-6 c" style="position:relative;">
         <div style="position:absolute;top:15px;left:35px;">
