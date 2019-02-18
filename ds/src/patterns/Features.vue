@@ -12,61 +12,60 @@
         </ul>
       </div>
     </div>
-    <div style="position:absolute;top:0px;left:180px;">
+    <div style="position:absolute;top:0px;left:200px;">
       <h2 class="p" style="font-size:24px;color: #276E73;">
-        Recursos que fazem a<br />diferença nos detalhes
+        Recursos definitivos que te ajudam a<br />gerenciar a venda e distribuição
       </h2>
     </div>
-    <div class="row col-md-12" style="padding:0px 350px 0px 150px;position:absolute;top:150px;">
+    <div style="padding:0px 0px 0px 150px;position:absolute;top:90px;">
       <div class="col-md-6 c" style="position:relative;">
-        <div style="position:absolute;top:15px;left:35px;">
+        <div style="position:absolute;top:-2px;left:80px;">
           <img src="../assets/adv-icon.png" />
         </div>
-        <div style="padding-left:60px;"><h2>Controle em uma tela</h2></div>
-        <div style="padding:0px 45px 0px 30px;">
-          <p>
-            Os pedidos no painel de atendimento são rapidamente editáveis sem precisar mudar de
-            tela, tudo é sincronizado e salvo em tempo real. Cadastre clientes e realize as vendas
-            mesmo sem internet
-          </p>
-        </div>
-      </div>
-      <div class="col-md-6 c" style="position:relative;left:-25px;">
-        <div style="position:absolute;top:15px;left:35px;">
-          <img src="../assets/adv-icon.png" />
-        </div>
-        <div style="padding-left:60px;"><h2>Tudo sincronizado</h2></div>
-        <div style="padding:0px 30px 0px 30px;">
-          <p>
-            Trabalhe com atendimento múltiplos atendimentos, múltiplos endereços, múltiplos
-            recebimentos e muitos outros múltiplos funcionando na nuvem e fora dela quando não há
-            conexão com a internet. A sua empresa precisa ser única.
+        <div class="g1">Pesquisa inteligente, rápida e offline</div>
+        <div style="padding-left:0px 25px 0px 30px;">
+          <p class="text">
+            Pesquisa de clientes com campo único, o que você digita é analisado na hora; como
+            no Google, a parte complicada fica com a gente, não precisa um monte de campos para
+            encontrar o cliente cadastrado ou incluir um novo.
           </p>
         </div>
       </div>
       <div class="col-md-6 c" style="position:relative;">
-        <div style="position:absolute;top:15px;left:35px;">
+        <div style="position:absolute;top:-2px;left:80px;">
           <img src="../assets/adv-icon.png" />
         </div>
-        <div style="padding-left:60px;"><h2>Pesquisa inteligente</h2></div>
-        <div style="padding:0px 45px 0px 30px;">
-          <p>
-            Pesquisa de clientes com campo único, o que você digita é analisado na hora; como no
-            Google, a parte complicada fica com a gente, não precisa um monte de campos para
-            encontrar o cliente cadastrado ou incluir um novo
+        <div class="g1">Tudo sincronizado em uma tela</div>
+        <div>
+          <p class="text">
+            Múltiplos atendimentos, múltiplos endereços, múltiplos recebimentos e muitos outros múltiplos funcionando na nuvem e fora dela quando não há
+            conexão com a internet.
           </p>
         </div>
       </div>
-      <div class="col-md-6 c" style="position:relative;left:-25px;">
-        <div style="position:absolute;top:15px;left:35px;">
+      <div class="col-md-6 c" style="position:relative;">
+        <div style="position:absolute;top:-2px;left:80px;">
           <img src="../assets/adv-icon.png" />
         </div>
-        <div style="padding-left:60px;"><h2>Tudo sincronizado</h2></div>
-        <div style="padding:0px 45px 0px 30px;">
-          <p>
-            Trabalhe com atendimento múltiplos atendimentos, múltiplos endereços, múltiplos
-            recebimentos e muitos outros múltiplos funcionando na nuvem e fora dela quando não há
-            conexão com a internet. A sua empresa precisa ser única
+        <div class="g1">Destino identificado</div>
+        <div>
+          <p class="text">
+            Quando o cliente liga, a busca pelo endereço e histórico de compras é automática.
+            A linha de destino pode ser nomeada, permitindo um atendimento personalizado e
+            medição das vendas por telefone divulgado.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 c" style="position:relative">
+        <div style="position:absolute;top:-2px;left:80px;">
+          <img src="../assets/adv-icon.png" />
+        </div>
+        <div class="g1">Controle em uma tela</div>
+        <div>
+          <p class="text">
+            Os pedidos no painel de atendimento são rapidamente editáveis sem precisar 
+            mudar de tela, tudo é sincronizado e salvo em tempo real. Cadastre clientes e 
+            realize as vendas mesmo sem internet. 
           </p>
         </div>
       </div>
@@ -129,13 +128,22 @@ li a:hover {
   color: #276e73;
   font-weight: 300;
   top: 100px;
-  margin-left: 0px;
+  margin-left:30px;
+  margin-top:0px;
 }
 
 .c {
   font-family: Montserrat-Alternates;
   color: #276e73;
   font-size: 12px;
+}
+
+.g1 {
+  font-family: Montserrat;
+  font-size: 17px;
+  color: #276e73;
+  font-style: normal;
+  margin-left: 110px;
 }
 
 .t {
@@ -177,6 +185,10 @@ li a:hover {
 .caminhao img {
   width: 68%;
 }
+.text {
+  text-align: justify;
+  margin-left: 75px;
+}
 .v2 {
   position: absolute;
   top: 20px;
@@ -191,6 +203,7 @@ li a:hover {
 .vec img {
   width: 100%;
 }
+
 </style>
 
 <docs>
