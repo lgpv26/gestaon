@@ -186,8 +186,10 @@ li a:hover {
   width: 68%;
 }
 .text {
+  margin-top: 5px;
   text-align: justify;
   margin-left: 75px;
+  margin-bottom: 20px;
 }
 .v2 {
   position: absolute;
