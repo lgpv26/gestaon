@@ -167,6 +167,9 @@ a:hover {
 .logo {
   padding: 10px;
 }
+.header {
+  background: black;
+}
 </style>
 
 <docs>

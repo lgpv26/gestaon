@@ -1,62 +1,65 @@
 <template>
   <div class="Footer">
-    <div style="position:absolute;top:-120px;">
-      <img src="../assets/rodape-Vector.png" style="width:100%;" />
-    </div>
-    <div style="position:absolute;top:-160px;">
-      <img src="../assets/rodape-Vector2.png" style="width:100%;" />
-    </div>
-
-    <div class="row" style="position:relative;top:-40px;">
-      <div class="col-md-4 cx-1">
-        <div class="col-md-12">
-          <h3 class= "proposal">PROPOSTA ÚNICA</h3>
-          <p>
-            Controle o atendimento, vendas e logística <br> em uma tela, nos segundos de uma <br> ligação.
-            Anotação em papel nunca mais!
-          </p>
-        </div>
-        <div class="col-md-12">
-          <img src="../assets/logo2.png" style="padding-left:150px;" />
-          <p>Copyright 2019. Todos os direitos reservados</p>
-        </div>
+    <div class="n1">
+      <div style="position:absolute;top:-120px;">
+        <img src="../assets/rodape-Vector.png" style="width:100%;" />
+      </div>
+      <div style="position:absolute;top:-160px;">
+        <img src="../assets/rodape-Vector2.png" style="width:100%;" />
       </div>
 
-      <div class="col-md-4 pc">
-        <img src="../assets/pc.png" />
-        <div class="b1"><button>Acessar Demonstração</button></div>
-      </div>
-      <div class="cx-3 row col-md">
-        <div class="col-md-5">
-          <h3>LINKS RÁPIDOS</h3>
-          <ul>
-            <li>
-              <a><b>Home</b></a>
-            </li>
-            <li>
-              <a><b>Processos</b></a>
-            </li>
-            <li>
-              <a><b>Vantagens</b></a>
-            </li>
-            <li>
-              <a><b>O que estão dizendo?</b></a>
-            </li>
-            <li>
-              <a><b>Dúvidas</b></a>
-            </li>
-          </ul>
-        </div>
-        <div class="cx-4 col-md-7">
+      <div class="row" style="position:relative;top:-40px;">
+        <div class="col-md-4 cx-1">
           <div class="col-md-12">
-            <h3>GESTAON NAS REDES SOCIAIS</h3>
-            <p>Comente e compartilhe, ajude a fazer mais pessoas felizes!</p>
+            <h3 class="proposal">PROPOSTA ÚNICA</h3>
+            <p>
+              Controle o atendimento, vendas e logística <br />
+              em uma tela, nos segundos de uma <br />
+              ligação. Anotação em papel nunca mais!
+            </p>
           </div>
-          <div class="col-md-12" style="padding-right:60px;">
-            <Icon name="face" size="medium" style="cursor:pointer;" />
-            <Icon name="insta" size="medium" style="cursor:pointer;" />
-            <Icon name="twitter" size="medium" style="cursor:pointer;" />
-            <Icon name="whats" size="medium" style="cursor:pointer;" />
+          <div class="col-md-12">
+            <img src="../assets/logo2.png" style="padding-left:150px;" />
+            <p>Copyright 2019. Todos os direitos reservados</p>
+          </div>
+        </div>
+
+        <div class="col-md-4 pc">
+          <img src="../assets/pc.png" />
+          <div class="b1"><button>Acessar Demonstração</button></div>
+        </div>
+        <div class="cx-3 row col-md">
+          <div class="col-md-5">
+            <h3>LINKS RÁPIDOS</h3>
+            <ul>
+              <li>
+                <a><b>Home</b></a>
+              </li>
+              <li>
+                <a><b>Processos</b></a>
+              </li>
+              <li>
+                <a><b>Vantagens</b></a>
+              </li>
+              <li>
+                <a><b>O que estão dizendo?</b></a>
+              </li>
+              <li>
+                <a><b>Dúvidas</b></a>
+              </li>
+            </ul>
+          </div>
+          <div class="cx-4 col-md-7">
+            <div class="col-md-12">
+              <h3>GESTAON NAS REDES SOCIAIS</h3>
+              <p>Comente e compartilhe, ajude a fazer mais pessoas felizes!</p>
+            </div>
+            <div class="col-md-12" style="padding-right:60px;">
+              <Icon name="face" size="medium" style="cursor:pointer;" />
+              <Icon name="insta" size="medium" style="cursor:pointer;" />
+              <Icon name="twitter" size="medium" style="cursor:pointer;" />
+              <Icon name="whats" size="medium" style="cursor:pointer;" />
+            </div>
           </div>
         </div>
       </div>
@@ -94,10 +97,12 @@ export default {
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 @import "../../src/assets/fonts/montserrat.css";
 .Footer {
+  background: #23272b;
+}
+.n1 {
   max-width: 1245px;
   margin: 0px auto 0px auto;
   position: relative;
-  background: #23272b;
 }
 .pc img {
   width: 50%;

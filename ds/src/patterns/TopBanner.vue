@@ -1,30 +1,31 @@
 <template>
   <div class="top-banner">
-    <div class="banner"><img src="../assets/Top-banner.png" /></div>
-    <div v-html="card" class="card"></div>
-    <div class="t1">
-      <h2>SUA REVENDA DE GLP<br />EM UM NOVO NÍVEL!</h2>
-      <p>Sistema de atendimento e logística nos segundos de uma ligação</p>
-    </div>
-    <div class="b1">
-      <button>
-        <div class="button h2"><h2>Acesse grátis</h2></div>
-        <div class="button p"><p>30 dias, sem compromisso</p></div>
-      </button>
-    </div>
-    <div class="rec"><img src="../assets/Rectangle.png" /></div>
-    <div class="loja">
-      <img src="../assets/Loja.png" />
-      <div class="loja2"><img src="../assets/plantel-gas.png" /></div>
-    </div>
-    <div class="bg">
-      <img src="../assets/bg-banner.png" />
-      <div class="bg2" v-html="relogio"></div>
-    </div>
-    <div class="vec"><img src="../assets/Vector.png" /></div>
-    <div class="map">
-      <img src="../assets/PINS.png" />
-      <div class="map2"><img src="../assets/Caminhao.png" /></div>
+    <div class="n1">
+      <div v-html="card" class="card"></div>
+      <div class="t1">
+        <h2>SUA REVENDA DE GLP<br />EM UM NOVO NÍVEL!</h2>
+        <p>Sistema de atendimento e logística nos segundos de uma ligação</p>
+      </div>
+      <div class="b1">
+        <button>
+          <div class="button h2"><h2>Acesse grátis</h2></div>
+          <div class="button p"><p>30 dias, sem compromisso</p></div>
+        </button>
+      </div>
+      <div class="rec"><img src="../assets/Rectangle.png" /></div>
+      <div class="loja">
+        <img src="../assets/Loja.png" />
+        <div class="loja2"><img src="../assets/plantel-gas.png" /></div>
+      </div>
+      <div class="bg">
+        <img src="../assets/bg-banner.png" />
+        <div class="bg2" v-html="relogio"></div>
+      </div>
+      <div class="vec"><img src="../assets/Vector.png" /></div>
+      <div class="map">
+        <img src="../assets/PINS.png" />
+        <div class="map2"><img src="../assets/Caminhao.png" /></div>
+      </div>
     </div>
   </div>
 </template>
@@ -55,17 +56,18 @@ export default {
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 @import "../../src/assets/fonts/dax.css";
 .top-banner {
+  background: black;
+}
+.n1 {
   max-width: 1245px;
   margin: 0px auto 0px auto;
   position: relative;
   height: 780px;
+  background-image: url(../assets/Top-banner.png);
+  background-size: 100%;
+  background-repeat: no-repeat;
 }
-.banner {
-  position: absolute;
-}
-.banner img {
-  width: 100%;
-}
+
 .card {
   position: absolute;
   top: 30px;

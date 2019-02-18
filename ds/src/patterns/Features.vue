@@ -104,6 +104,7 @@ export default {
   margin: 0px auto 0px auto;
   position: relative;
   height: 1200px;
+  background: #ffffff;
 }
 ul {
   background: #31363c;

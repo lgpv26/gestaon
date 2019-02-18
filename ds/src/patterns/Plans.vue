@@ -1,65 +1,67 @@
 <template>
   <div class="Plans">
-    <div class="v7"><img src="../assets/Vector7.png" /></div>
-    <div class="v8"><img src="../assets/Vector8.png" /></div>
-    <div class="tx">
-      <h3>Nossos Planos</h3>
-      <p>
-        We believe we have created the most efficient SaaS landing page for your users<br />
-        Landing page with features that will convince you to use it for your SaaS business
-      </p>
-    </div>
-    <div class="liga-desliga row center-md col-md-12 center-sm col-sm-12 col-xs-12">
-      <input type="checkbox" class="liga-desliga__checkbox" id="liga-desliga" />
-      <label for="liga-desliga" class="liga-desliga__botao"></label>
-    </div>
-    <div class="row col-md-12 cx-1">
-      <div class="col-md-3 cx-2">
-        <div class="center-md th2"><h2>ESSENCIAL</h2></div>
-        <div class="center-md"><img src="#" /></div>
-        <Icon size="small" name="Vector" class="icon" style="top:82px;" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <strike><h3 class="Paragraph2">SaaS landing page</h3></strike>
-        <strike><h3 class="Paragraph2">SaaS landing page</h3></strike>
-        <strike><h3 class="Paragraph2">SaaS landing page</h3></strike>
-        <div class="center-md"><button>Assinar</button></div>
+    <div class="n1">
+      <div class="v7"><img src="../assets/Vector7.png" /></div>
+      <div class="v8"><img src="../assets/Vector8.png" /></div>
+      <div class="tx">
+        <h3>Nossos Planos</h3>
+        <p>
+          We believe we have created the most efficient SaaS landing page for your users<br />
+          Landing page with features that will convince you to use it for your SaaS business
+        </p>
       </div>
-      <div class="col-md-3 cx-2">
-        <div class="center-md th2"><h2>PROFESSIONAL</h2></div>
-        <div class="center-md"><img src="#"/></div>
-        <Icon size="small" name="Vector" class="icon" style="top:82px;" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <strike><h3 class="Paragraph2">SaaS landing page</h3></strike>
-        <div class="center-md"><button>Assinar</button></div>
+      <div class="liga-desliga row center-md col-md-12 center-sm col-sm-12 col-xs-12">
+        <input type="checkbox" class="liga-desliga__checkbox" id="liga-desliga" />
+        <label for="liga-desliga" class="liga-desliga__botao"></label>
       </div>
-      <div class="col-md-3 cx-2">
-        <div class="center-md th2"><h2>ENTERPRISE</h2></div>
-        <div class="center-md"><img src="#" /></div>
-        <Icon size="small" name="Vector" class="icon" style="top:82px;" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <Icon size="small" name="Vector" class="icon" />
-        <h3 class="Paragraph2">SaaS landing page</h3>
-        <div class="center-md"><button>Assinar</button></div>
+      <div class="row col-md-12 cx-1">
+        <div class="col-md-3 cx-2">
+          <div class="center-md th2"><h2>ESSENCIAL</h2></div>
+          <div class="center-md"><img src="#" /></div>
+          <Icon size="small" name="Vector" class="icon" style="top:82px;" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <strike><h3 class="Paragraph2">SaaS landing page</h3></strike>
+          <strike><h3 class="Paragraph2">SaaS landing page</h3></strike>
+          <strike><h3 class="Paragraph2">SaaS landing page</h3></strike>
+          <div class="center-md"><button>Assinar</button></div>
+        </div>
+        <div class="col-md-3 cx-2">
+          <div class="center-md th2"><h2>PROFESSIONAL</h2></div>
+          <div class="center-md"><img src="#" /></div>
+          <Icon size="small" name="Vector" class="icon" style="top:82px;" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <strike><h3 class="Paragraph2">SaaS landing page</h3></strike>
+          <div class="center-md"><button>Assinar</button></div>
+        </div>
+        <div class="col-md-3 cx-2">
+          <div class="center-md th2"><h2>ENTERPRISE</h2></div>
+          <div class="center-md"><img src="#" /></div>
+          <Icon size="small" name="Vector" class="icon" style="top:82px;" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <Icon size="small" name="Vector" class="icon" />
+          <h3 class="Paragraph2">SaaS landing page</h3>
+          <div class="center-md"><button>Assinar</button></div>
+        </div>
       </div>
     </div>
   </div>
@@ -95,10 +97,12 @@ export default {
 @import "../../src/assets/fonts/montserrat.css";
 
 .Plans {
+  background: #23272b;
+}
+.n1 {
   margin: 0px auto -20px auto;
   max-width: 1245px;
   position: relative;
-  background: #23272b;
   height: 920px;
 }
 .icon {
