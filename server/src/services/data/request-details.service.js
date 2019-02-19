@@ -72,7 +72,7 @@ module.exports = (server) => {
 
                 
                 return Promise.all(promises).then(() => {
-                    return server.mysql.RequestClientAddress.destroy({
+                        return server.mysql.RequestClientAddress.destroy({
                         where: {
                             requestId: requestId
                         },
@@ -131,6 +131,7 @@ module.exports = (server) => {
                         transaction
                     })
                     .then((clientAddress) => {
+                        if(!clientAddress) return resolve({})
                         const name = (clientAddress.address.name) ? clientAddress.address.name : ''
                         const number = (clientAddress.number) ? ', ' + clientAddress.number : ''
                         const complement = (clientAddress.complement) ? ' ' + clientAddress.complement : ''
@@ -141,13 +142,13 @@ module.exports = (server) => {
                         return server.googleMaps.geocode({ address: name + number + complement + city + state + ' - ' + cep })
                             .asPromise()
                             .then((response) => {
-                                if (response.length) return {}
+                                if (response.length) return resolve({})
                                 const geo = _.first(response.json.results)
                                 return resolve ({ lat: geo.geometry.location.lat, lng: geo.geometry.location.lng })
                             })
                             .catch((error) => {
                                 console.log("Erro: no geo code, Erro ao salvar o endereço do cliente no pedido, service request.getGeo" + new Date())
-                                return Promise.resolve()
+                                return resolve()
                             })
                     })
                 })
