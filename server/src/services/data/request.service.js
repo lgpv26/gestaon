@@ -58,7 +58,7 @@ module.exports = server => {
                                     transaction)
 
                                 const requestPayments = await vm.checkRequestPayments(data, request, client, oldRequest, triggeredBy, transaction)
-
+                                
                                 const requestDetails = await vm.checkRequestDetails(data, request, client, triggeredBy, transaction)
 
                                 //await vm.dashboard(request, client, oldRequest, companyId, transaction)
@@ -192,7 +192,7 @@ module.exports = server => {
                                 let companies = _.findIndex(triggeredBy.userCompanies, (userCompany) => {
                                     return userCompany.company.id === companyId
                                 })
-
+         
                                 if (companies !== -1) {
                                     const userId = await vm.consultUser(ctx.params.data, companyId, transaction)
 
@@ -215,6 +215,8 @@ module.exports = server => {
                                         resolve(ctx.params.data)
                                     })
 
+                                    const oldRequest = await vm.consultRequest(dataUpdate, companyId)
+
                                     const update = await vm.saveRequest(dataUpdate, transaction)
 
                                     const dataTimeline = await new Promise((resolve, reject) => {
@@ -223,6 +225,15 @@ module.exports = server => {
                                         resolve(ctx.params.data)
                                     })
 
+                                    await server.broker.call("data/request-payments.start", {
+                                        data: oldRequest.requestPayments,
+                                        request: update,
+                                        client: oldRequest.client,
+                                        oldRequest,
+                                        triggeredBy: triggeredBy.id,
+                                        transaction
+                                    })
+                                    
                                     const createData = await vm.createTimeline(dataTimeline, transaction)
 
                                     let data = {
@@ -475,8 +486,7 @@ module.exports = server => {
 
             checkClient(data, dataRequest, transaction, companyId) {
                 if (!data) return Promise.resolve(null)
-                if ((data.name === "" || data.name === null) && !data.id)
-                    return Promise.resolve(null)
+      
                 const request = dataRequest.request
                 return server.broker.call("data/client.start", {
                     data,
@@ -567,7 +577,8 @@ module.exports = server => {
                         client,
                         oldRequest,
                         triggeredBy,
-                        transaction
+                        transaction,
+                        editingRequest: true
                     })
                     .catch((err) => {
                         console.log("Erro: checkRequestPayments")

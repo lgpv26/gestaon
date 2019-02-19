@@ -149,22 +149,22 @@ di.server.broker.start().then(() => {
                         return resolve()
                     }).then(() => {
 
-                        mongoose.Promise = bluebird
-                        let mongoDbCredentials = {}
-                        if(process.env.NODE_ENV === 'production'){
-                            mongoDbCredentials = {
-                                auth: {
-                                    user: config.mongoDb.user,
-                                    password: config.mongoDb.password
-                                }
-                            }
-                        }
+                        // mongoose.Promise = bluebird
+                        // let mongoDbCredentials = {}
+                        // if(process.env.NODE_ENV === 'production'){
+                        //     mongoDbCredentials = {
+                        //         auth: {
+                        //             user: config.mongoDb.user,
+                        //             password: config.mongoDb.password
+                        //         }
+                        //     }
+                        // }
                         return connectToRedis.then(() => { 
-                            return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
-                                promiseLibrary: bluebird,
-                                ...mongoDbCredentials
-                            }).then(() => {
-                                log(chalk.green("Successfully connected to MongoDB server"))
+                            // return mongoose.connect('mongodb://' + config.mongoDb.host + '/'+ config.mongoDb.dbName, {
+                            //     promiseLibrary: bluebird,
+                            //     ...mongoDbCredentials
+                            // }).then(() => {
+                                //log(chalk.green("Successfully connected to MongoDB server"))
                                 // finally, initialize di.server
                                 di.server.listen(config.mainServer.port, () => {
                                     log(
@@ -176,7 +176,7 @@ di.server.broker.start().then(() => {
                                         )
                                     )
                                 })
-                            })
+                           // })
                         }) 
                     })
                 }).catch((err) => {

@@ -10,7 +10,7 @@ module.exports = server => {
                 const vm = this
 
                 const request = ctx.params.request
-                const client = ctx.params.client
+                const client = (ctx.params.client) ? ctx.params.client : null
                 const oldRequest = (ctx.params.oldRequest) ? ctx.params.oldRequest : null
                 const triggeredBy = ctx.params.triggeredBy
                 const transaction = ctx.params.transaction
@@ -19,15 +19,20 @@ module.exports = server => {
                     async function start() {
                         try {
                             //ctx.params.data = await vm.changeTempIdDEV(ctx.params.data) // DEPOIS DE FALAR COM O YOSHI REMOVER
+
+                            //request.status
+
+                            if(ctx.params.editingRequest && request.status === "canceled") return resolve(ctx.params.data)
+
                             const removedRequestPayments = await vm.checkRemovedRequestPayments(ctx.params.data, oldRequest, (client) ? client : null)
-                            const dataRequestPayments = await vm.checkChanges(ctx.params.data, request, oldRequest)
+                            
+                            const dataRequestPayments = await vm.checkChanges(ctx.params.data, request, client, oldRequest)
 
                             await vm.revertPayments(removedRequestPayments, dataRequestPayments, triggeredBy, transaction)
-
-                            await vm.clientLimit(client, removedRequestPayments, dataRequestPayments, transaction)
-
+                            await vm.clientLimit(client, removedRequestPayments, dataRequestPayments, oldRequest, transaction)
+                      
                             const requestPayments = await vm.requestPayments(dataRequestPayments, removedRequestPayments, request, triggeredBy, transaction)
-
+         
                             // await vm.fakeConsult(ctx.params.oldRequest, transaction)  // APENAS PARA DEV - REMOVER DEPOIS
 
                             return resolve(requestPayments)
@@ -78,7 +83,7 @@ module.exports = server => {
                 return Promise.resolve(null)
             },
 
-            checkChanges(data, request, oldRequest) {
+            checkChanges(data, request, client, oldRequest) {
                 const oldRequestPayments = (oldRequest && _.has(oldRequest, "requestPayments")) ? oldRequest.requestPayments : null
                 if (!oldRequestPayments) {
                     const promises = _.map(data, (requestPayment, index) => {
@@ -93,12 +98,41 @@ module.exports = server => {
                     })
                 }
 
+                let checkChanges = {}
+
+                if (request.status !== oldRequest.status) checkChanges.requestStatus = true
+                if (client.id !== oldRequest.client.id) checkChanges.client = true
+
                 const promises = []
                 data.forEach((payment, index) => {
                     promises.push(new Promise((resolve, reject) => {
                             const indexOldPayment = _.findIndex(oldRequestPayments, (oldPayment) => {
                                     return oldPayment.id === payment.id
                                 })
+
+                            if(!payment.request) _.set(payment, "request", request)
+
+                            if(checkChanges.requestStatus) {
+                                _.set(payment, "changeStatus", request.status)
+                                _.set(payment, "oldStatus", oldRequest.status)
+                                _.set(payment, "oldAmount", parseFloat(oldRequestPayments[indexOldPayment].amount))
+                                _.set(payment, "oldPaid", oldRequestPayments[indexOldPayment].paid)
+                                _.set(payment, "oldDeadlineDatetime", oldRequestPayments[indexOldPayment].deadlineDatetime)
+                                _.set(payment, "oldPaymentMethod", oldRequestPayments[indexOldPayment].paymentMethod)
+                                _.set(payment, "oldResponsibleUser", oldRequest.responsibleUser)
+                                _.set(payment, "requestPaymentTransactions", oldRequestPayments[indexOldPayment].requestPaymentTransactions)
+                            } 
+
+                            if(checkChanges.client) {
+                                _.set(payment, "changeUser", true)
+                                _.set(payment, "oldStatus", oldRequest.status)
+                                _.set(payment, "oldAmount", parseFloat(oldRequestPayments[indexOldPayment].amount))
+                                _.set(payment, "oldPaid", oldRequestPayments[indexOldPayment].paid)
+                                _.set(payment, "oldDeadlineDatetime", oldRequestPayments[indexOldPayment].deadlineDatetime)
+                                _.set(payment, "oldPaymentMethod", oldRequestPayments[indexOldPayment].paymentMethod)
+                                _.set(payment, "oldResponsibleUser", oldRequest.responsibleUser)
+                                _.set(payment, "requestPaymentTransactions", oldRequestPayments[indexOldPayment].requestPaymentTransactions)
+                            }
 
                             if (indexOldPayment !== -1 && parseFloat(payment.amount) !== parseFloat(oldRequestPayments[indexOldPayment].amount)) {
                                 //console.log('OLD-AMOUNT', index, parseFloat(payment.amount), parseFloat(oldRequestPayments[indexOldPayment].amount), (parseFloat(payment.amount) !== parseFloat(oldRequestPayments[indexOldPayment].amount)))
@@ -173,11 +207,16 @@ module.exports = server => {
             },
 
             revertPayments(removedRequestPayments, requestPaymentsChange, triggeredBy, transaction) {
+                if(requestPaymentsChange.length && requestPaymentsChange[0].oldStatus == 'canceled') {
+                    return Promise.resolve() 
+                } 
+
                 const revertRemovedRequestPayments = _.filter(removedRequestPayments, (removedRequestPayment) => {
                         return removedRequestPayment.paid
                     })
 
                 const requestPaymentsChanges = _.filter(requestPaymentsChange, (requestPayment) => {
+                        if (requestPayment.changeStatus == "canceled") return requestPayment
                         if (requestPayment.changedPaid && requestPayment.oldPaid) {
                             return requestPayment
                         }
@@ -197,7 +236,7 @@ module.exports = server => {
                 revertsRequestPayments.forEach((requestPayment) => {
                     if (requestPayment.oldPaid) {
                         requestPayment.requestPaymentTransactions.sort((a, b) => {
-                            return new Date(b.dateCreated) - new Date(a.dateCreated)
+                            return new Date(b.dateCreated && b.id) - new Date(a.dateCreated && a.id)
                         })
 
                         const requestTransaction = _.first(requestPayment.requestPaymentTransactions)
@@ -267,7 +306,7 @@ module.exports = server => {
                 })
             },
 
-            clientLimit(client, removedRequestPayments, requestPayments, transaction) {
+            clientLimit(client, removedRequestPayments, requestPayments, oldRequest, transaction) {
                 const creditLimitRequired = _.filter(requestPayments, (requestPayment) => {
                         if (!requestPayment.paid && !requestPayment.paymentMethod.autoPay && requestPayment.deadlineDatetime) return requestPayment
                     })
@@ -275,33 +314,37 @@ module.exports = server => {
                 if (!client && creditLimitRequired.length) return Promise.reject('Não é possivel realizar uma venda com a forma de pagamento "NOTINHA" sem cliente selecionado!')
                 if (!client) return Promise.resolve()
 
-                const reverseRemovedRequestPayments = _.filter(removedRequestPayments, (removedRequestPayment) => {
+                
+
+                const reverseRemovedRequestPayments = _.filter((removedRequestPayments), (removedRequestPayment) => {
                         if (!removedRequestPayment.paid && !removedRequestPayment.paymentMethod.autoPay && removedRequestPayment.deadlineDatetime) return removedRequestPayment
                     })
 
                 const reversePaymentsChanges = _.filter(requestPayments, (requestPayment) => {
-                    if ((requestPayment.changedPaid || requestPayment.changedAmount || requestPayment.changedMethod) &&
+                    if ((requestPayment.changedPaid || requestPayment.changedAmount || requestPayment.changedMethod || requestPayment.changeStatus || requestPayment.changeUser) &&
                         ((requestPayment.changedMethod && !requestPayment.oldPaymentMethod.autoPay) || !requestPayment.oldPaymentMethod.autoPay) &&
-                        ((requestPayment.changedPaid && requestPayment.oldPaid) || !requestPayment.oldPaid)) {
-                        return requestPayment
+                        ((requestPayment.changedPaid && requestPayment.oldPaid) || !requestPayment.oldPaid) && 
+                        ((requestPayment.changeStatus && requestPayment.changeStatus == "canceled") || requestPayment.oldStatus !== "canceled")) {
+
+                            return requestPayment
                     }
                 })
-
+                
                 const reverseLimitRequestPayments = _.concat(reverseRemovedRequestPayments, reversePaymentsChanges)
 
                 return new Promise((resolve, reject) => {
-                    if (reverseLimitRequestPayments.length) {
+                    if (reverseLimitRequestPayments.length && (reverseLimitRequestPayments[0].oldStatus == 'canceled' || (reverseLimitRequestPayments[0].changeUser || reverseLimitRequestPayments[0].changedPaid || reverseLimitRequestPayments[0].changedAmount || reverseLimitRequestPayments[0].changedMethod || reverseLimitRequestPayments[0].changeStatus))) {
                         const clientLimitInUse = _.sumBy(reverseLimitRequestPayments, "oldAmount")
-
+                        
                         return server.mysql.Client.update({
-                            limitInUse: parseFloat(client.limitInUse) - parseFloat(clientLimitInUse)
+                            limitInUse: (parseFloat(oldRequest.client.limitInUse) - parseFloat(clientLimitInUse))
                         }, {
                             where: {
-                                id: client.id
+                                id: oldRequest.client.id
                             },
                             transaction
                         })
-                        .then(limiteUpdated => {
+                        .then((limiteUpdated) => {
                             if (!parseInt(_.toString(limiteUpdated))) return reject("Não foi possível alterar o limite de credito em uso do cliente!")
                             return resolve()
                         })
@@ -309,10 +352,12 @@ module.exports = server => {
 
                     return resolve()
                 }).then(() => {
-                    if (creditLimitRequired.length) {
+                    if (creditLimitRequired.length && (requestPayments[0].changeStatus !== 'canceled' || (requestPayments[0].changeUser || requestPayments[0].changedPaid || requestPayments[0].changedAmount || requestPayments[0].changedMethod))) {
+                                             
                         return server.mysql.Client.findById(client.id, {
                             transaction
                         }).then((clientConsult) => {
+
                             const newLimitInUse = parseFloat(clientConsult.limitInUse) + parseFloat(_.sumBy(creditLimitRequired, "amount"))
                             const checkLimit = _.gte(parseFloat(clientConsult.creditLimit), newLimitInUse)
 
@@ -337,6 +382,21 @@ module.exports = server => {
             },
 
             requestPayments(data, removedRequestPayments, request, triggeredBy, transaction) {
+                if(data.length && (data[0].changeStatus == 'canceled' || data[0].changeUser)) {
+                    _.map(data, (requestPayment) => {
+                        delete requestPayment.request
+                        delete requestPayment.changeStatus
+                        delete requestPayment.oldStatus
+                        delete requestPayment.changedAmount
+                        delete requestPayment.oldAmount
+                        delete requestPayment.oldPaid
+                        delete requestPayment.oldDeadlineDatetime
+                        delete requestPayment.oldPaymentMethod
+                        delete requestPayment.oldResponsibleUser
+                        delete requestPayment.requestPaymentTransactions
+                    })
+                    return Promise.resolve(data) 
+                } 
                 /*
                  * Delete removeds
                  */
@@ -361,7 +421,7 @@ module.exports = server => {
                             paymentMethodsPromises.push(
                                 server.mysql.RequestPayment.update(_.assign(requestPayment, {
                                         deadlineDatetime: (requestPayment.deadlineDatetime) ? requestPayment.deadlineDatetime : null,
-                                        paidDatetime: (requestPayment.paidDatetime) ? requestPayment.paidDatetime : moment(),
+                                        paidDatetime: (requestPayment.paidDatetime) ? requestPayment.paidDatetime : (requestPayment.paid) ? moment() : null,
                                         dateRemoved: null
                                     }), {
                                         where: {
@@ -384,7 +444,7 @@ module.exports = server => {
                             paymentMethodsPromises.push(
                                 server.mysql.RequestPayment.create(_.assign(requestPayment, {
                                         deadlineDatetime: (requestPayment.deadlineDatetime) ? requestPayment.deadlineDatetime : null,
-                                        paidDatetime: (requestPayment.paidDatetime) ? requestPayment.paidDatetime : moment()
+                                        paidDatetime: (requestPayment.paidDatetime) ? requestPayment.paidDatetime : (requestPayment.paid) ? moment() : null
                                     }),
                                     { transaction })
                                 .then((paymentMethod) => {
@@ -466,6 +526,7 @@ module.exports = server => {
                     })
                 })
             }
+
         }
     }
 }

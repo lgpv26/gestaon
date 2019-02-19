@@ -25,24 +25,24 @@ module.exports = server => {
                             const client = await vm.saveClient(ctx.params.data, transaction)
 
                             if (_.has(ctx.params.data, "clientAddresses")) {
-                                _.set(client, "clientAddresses", await vm.setClientAddresses(ctx.params.data.clientAddresses, client.id, companyId, transaction) )
+                                _.set(client, "clientAddresses", await vm.setClientAddresses(ctx.params.data.clientAddresses, (client) ? client.id : null, companyId, transaction) )
                             }
 
                             if (_.has(ctx.params.data, "clientPhones")) {
                                 const clientPhones = _.map(ctx.params.data.clientPhones, (clientPhone) => {
-                                        return _.assign(clientPhone, {clientId: client.id})
+                                        return _.assign(clientPhone, {clientId: (client) ? client.id : null})
                                     })
-                                _.set(client, "clientPhones", await vm.saveClientPhones(clientPhones, client.id, transaction))
+                                _.set(client, "clientPhones", await vm.saveClientPhones(clientPhones, (client) ? client.id : null, transaction))
                             }
 
                             if (_.has(ctx.params.data, "clientCustomFields")) {
                                 const clientCustomFields = _.map(ctx.params.data.clientCustomFields, (clientCustomField) => {
                                         return _.assign(clientCustomField, {
-                                            clientId: client.id,
+                                            clientId: (client) ? client.id : null,
                                             customFieldId: clientCustomField.customField.id
                                         })
                                     })
-                                _.set(client, "clientCustomFields", await vm.saveClientCustomFields(clientCustomFields, client.id, transaction))
+                                _.set(client, "clientCustomFields", await vm.saveClientCustomFields(clientCustomFields, (client) ? client.id : null, transaction))
                             }
 
                             return resolve(client)
@@ -193,6 +193,8 @@ module.exports = server => {
              * @returns {Promise.<object>} client
              */
             saveClient(data, transaction) {
+                if ((data.name === "" || data.name === null) && !data.id) return Promise.resolve(data)
+
                 if (data.id) {
                     return server.mysql.Client.update(data, {
                         where: {
@@ -267,12 +269,13 @@ module.exports = server => {
                             .then(clientAddresses => {
                                 return Promise.resolve(clientAddresses)
                             })
-                            .catch(err => {
+                            .catch((err) => {
                                 console.log("Nenhum registro encontrado. ClientAddress")
                                 return Promise.reject("Erro ao salvar endereços do cliente.")
                             })
                     })
-                    .catch(err => {
+                    .catch((err) => {
+                        console.log(err)
                         console.log("Nenhum registro encontrado. Address")
                         return Promise.reject("Erro ao salvar os endereços.")
                     })
