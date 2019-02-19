@@ -23,7 +23,12 @@ module.exports = class Connection {
         this._setListeners()
     }
 
+    /**
+     * private
+     * set connection on socket
+     */
     _connection(){
+        const vm = this
         this.server.rsmq.listQueues()
             .then((queues) => {
                 if(!_.includes(queues, "userId-" + this.socket.user.id)){
@@ -52,14 +57,16 @@ module.exports = class Connection {
             if(this._rsmqWorkers["userId:" + this.socket.user.id]) delete this._rsmqWorkers["userId:" + this.socket.user.id]
 
             this._rsmqWorkers["userId:" + this.socket.user.id] = new RSMQWorker("userId-" + this.socket.user.id, {
-                maxReceiveCount: 1
+                maxReceiveCount: 1,
+                interval: [ .2, 1, 1.5, 2]
             })
 
             this._rsmqWorkers["userId:" + this.socket.user.id].on("message", function (msg, next, id) {
+
                 const message = JSON.parse(msg)
                 switch (message.type) {
                     case "request":
-                        return vm.server.broker.call("socket.processedQueue", _.assign(message, { userId: this.socket.user.id, messageID: id }))
+                        return vm.server.broker.call("socket.processedQueue", _.assign(message, { userId: vm.socket.user.id, messageID: id }))
                             .then(() => {
                                 next()
                             })
@@ -102,11 +109,10 @@ module.exports = class Connection {
                 delete this._rsmqWorkers["userId:" + this.socket.user.id]
             }
 
-            console.log("O usuario", this.socket.user.name, "saiu")
-
             const usersSystemArray = _.map(_.keys(this._usersSystemReady))
-            if(_.includes(usersSystemArray, "userId:" + this.socket.user.id)) delete this._usersSystemReady["userId:" + this.socket.user.id]
+            if(this.socket.user && _.includes(usersSystemArray, "userId:" + this.socket.user.id)) delete this._usersSystemReady["userId:" + this.socket.user.id]
 
+            if(this.socket.user) console.log("O usuario", this.socket.user.name, "saiu")
 
             if(!!this._versionInterval){
                 clearInterval(this._versionInterval)
