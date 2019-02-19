@@ -14,11 +14,6 @@ body {
     color: #FFFFFF;
 }
 
-.button:hover {
-    background: #2C2F36;
-    color: #FFFFFF;
-}
-
 .button.small {
 
 }

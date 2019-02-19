@@ -477,6 +477,7 @@ module.exports = (server) => { return {
                         })
                         .catch((error) => {
                             console.log("Erro: no geo code, Erro ao salvar o endereço do cliente no pedido, service request.getGeo" + new Date())
+                            console.log(error)
                             return Promise.resolve()
                         })
                 })

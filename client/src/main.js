@@ -86,7 +86,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
     },
     stateModels: {
         STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, clientAddress",
-        STATE_requestUIState: "id, activeTab, isAddingClientAddress, requestClientAddressForm, requestId, showClientOrderTimeline, hasRequestOrderChanges, hasRequestChanges",
+        STATE_requestUIState: "id, activeTab, isAddingClientAddress, requestClientAddressForm, requestId, showClientOrderTimeline, requestString, requestOrderString, hasRequestOrderChanges, hasRequestChanges, isLoading",
         STATE_requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
         STATE_requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
         STATE_requestOrders: "id, obs, promotionChannelId, status, dateUpdated, dateCreated, dateRemoved",
@@ -131,7 +131,9 @@ Vue.use(VueModal);
 
 Vue.use(VueTippy);
 
-Vue.component("v-icon", Icon);
+Vue.use(VueTextareaAutosize)
+
+Vue.component("v-icon", Icon)
 
 Vue.use(VueStatic, {
     namespaced: true

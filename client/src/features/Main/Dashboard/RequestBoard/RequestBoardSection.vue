@@ -111,7 +111,7 @@
                 switch (this.section.id) {
                     case "requests":
                         const requests = Request.query()
-                            .with("card")
+                            .with("card.window")
                             .with("client|client.clientAddresses.address")
                             .with(
                                 "requestClientAddresses|requestClientAddresses.clientAddress.address"

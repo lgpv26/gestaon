@@ -11,6 +11,12 @@
             <span>...</span>
         </div>
         <div class="request-board-card__container" v-if="card && Number.isInteger(request.id)">
+            <div class="request-board-card__overlay" v-if="card.window.show">
+                <span>Visualizando pedido</span>
+            </div>
+            <div class="request-board-card__overlay" v-else-if="request.requestUIState.hasRequestChanges">
+                <span>Editando atendimento</span>
+            </div>
             <div class="draft-badge" v-if="!Number.isInteger(request.id) || request.requestUIState.hasRequestChanges">
                 <i class="mi mi-edit"></i>
             </div>
@@ -429,6 +435,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 10;
             i {
                 top: -1px;
                 color: var(--font-color--5);
@@ -444,6 +451,20 @@
         background-color: var(--bg-color--2);
         position: absolute;
         z-index: 5;
+        top: 0;
+        left: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .request-board-card__overlay {
+        transition: 1s all;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(23,24,28,.9);
+        position: absolute;
+        z-index: 3;
         top: 0;
         left: 0;
         display: flex;

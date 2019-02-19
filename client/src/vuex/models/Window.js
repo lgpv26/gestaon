@@ -10,7 +10,9 @@ export default class Window extends Model {
             id: this.attr(shortid.generate()),
             show: this.attr(true),
             card: this.hasOne(Card,'windowId'),
-            zIndex: this.attr(0)
+            zIndex: this.attr(0),
+            x: this.attr(20),
+            y: this.attr(20)
         }
     }
 }

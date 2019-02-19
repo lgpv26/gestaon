@@ -229,4 +229,46 @@ export default class Request extends Model {
         }))
 
     }
+
+    static getRequestComparationObj(request){
+        let requestChangeString = JSON.parse(JSON.stringify(request))
+        requestChangeString = _.omit(requestChangeString, ['user','card','requestUIState','dateUpdated','dateCreated'])
+
+        if(requestChangeString.client){
+            requestChangeString.client = _.omit(requestChangeString.client, ['clientGroup','dateUpdated','dateCreated'])
+            requestChangeString.client.clientAddresses = _.map(requestChangeString.client.clientAddresses, (clientAddress) => {
+                clientAddress = _.omit(clientAddress, ['client','dateUpdated','dateCreated'])
+                return clientAddress
+            })
+            requestChangeString.client.clientPhones = _.map(requestChangeString.client.clientPhones, (clientPhone) => {
+                clientPhone = _.omit(clientPhone, ['client','dateUpdated','dateCreated'])
+                return clientPhone
+            })
+        }
+        requestChangeString.requestClientAddresses = _.map(requestChangeString.requestClientAddresses, (requestClientAddress) => {
+            requestClientAddress = _.omit(requestClientAddress, ['clientAddress','request','dateUpdated','dateCreated'])
+            return requestClientAddress
+        })
+        if(requestChangeString.requestOrder){
+            requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['promotionChannel','request','dateUpdated','dateCreated'])
+            requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
+                return requestOrderProduct
+            })
+        }
+        requestChangeString.requestPayments = _.map(requestChangeString.requestPayments, (requestPayment) => {
+            requestPayment = _.omit(requestPayment, ['paymentMethod','request','dateUpdated','dateCreated'])
+            return requestPayment
+        })
+
+        requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['request','promotionChannel','dateUpdated','dateCreated'])
+
+        requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+            requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
+            delete requestOrderProduct.requestOrder
+            return requestOrderProduct
+        })
+
+        return JSON.stringify(requestChangeString)
+    }
 }

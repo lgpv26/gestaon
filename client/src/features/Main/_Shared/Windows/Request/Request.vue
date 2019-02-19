@@ -1,8 +1,8 @@
 <template>
-    <div v-if="_.has(request, 'requestUIState') && _.has(request, 'client')" class="request__window">
+    <div v-if="_.has(request, 'requestUIState') && _.has(request, 'client') && !request.requestUIState.isLoading" class="request__window">
         <app-request-history v-if="request.requestUIState.showClientOrderTimeline" :request="request" @close="updateValue('entities/requestUIState/update','showClientOrderTimeline',request.requestUIState.id,false)"></app-request-history>
         <div class="request__search">
-            <input type="text" autocomplete="off" class="input--borderless" placeholder="..." v-model="searchValue" @focus="searchShow = true" @input="search()" />
+            <input type="text" autocomplete="off" class="input&#45;&#45;borderless" placeholder="DIGITE AQUI PARA PESQUISAR ..." v-model="searchValue" @focus="searchShow = true" @input="search()" />
             <a href="javascript:void(0)" v-if="searchValue && searchItems.length && searchShow" @click="searchShow = false">
                 <i class="mi mi-arrow-back"></i>
             </a>
@@ -17,7 +17,7 @@
                                     <div class="form" style="display: flex; flex-direction: column; flex-grow: 1;">
                                         <label style="margin-bottom: 5px;">Nome</label>
                                         <div style="display: flex; flex-direction: row; flex-wrap: nowrap;">
-                                            <input type="text" class="input" :value="request.client.name" @input="updateValue('entities/clients/update','name',request.client.id,$event.target.value.toUpperCase(),'uppercase')" />
+                                            <input type="text" class="input" :value="request.client.name" @input="updateValue('entities/clients/update','name',request.client.id,$event.target.value,'uppercase',$event)" />
                                             <div v-if="!isNewClient" style="margin-left: 8px; display: flex; align-items: flex-end;">
                                                 <a class="button" style="white-space: nowrap; margin-bottom: 15px;" @click="addClient()">NOVO CLIENTE</a>
                                             </div>
@@ -26,7 +26,7 @@
                                 </div>
                                 <div v-if="!request.requestUIState.requestClientAddressForm" class="box">
                                     <h3 style="margin-bottom: 5px;">Endereços</h3>
-                                    <table class="client-addresses" style="margin: 3px 0 12px 0;" v-if="request.client.clientAddresses.length > 0">
+                                    <table class="client-addresses" style="margin: 3px 0 12px 0;" v-if="request.requestClientAddresses.length > 0 && request.client.clientAddresses.length > 0">
                                         <tbody>
                                         <tr v-for="clientAddress in request.client.clientAddresses"
                                             :class="{ selected: request.requestClientAddresses[0].clientAddressId === clientAddress.id }"
@@ -80,13 +80,13 @@
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 170px;">
                                             <label>Complemento</label>
-                                            <input type="text"class="input" :value="request.requestClientAddresses[0].clientAddress.complement" @input="updateValue('entities/clientAddresses/update','complement',request.requestClientAddresses[0].clientAddress.id,$event.target.value,'uppercase')" />
+                                            <input type="text"class="input" :value="request.requestClientAddresses[0].clientAddress.complement" @input="updateValue('entities/clientAddresses/update','complement',request.requestClientAddresses[0].clientAddress.id,$event.target.value,'uppercase',$event)" />
                                         </div>
                                     </div>
                                     <div style="display: flex; flex-direction: row;">
                                         <div style="display: flex; flex-direction: column; flex-grow: 1; margin-right: 8px">
                                             <label>Bairro</label>
-                                            <input type="text" class="input" :disabled="isEditingAddress" :class="{ readonly: isEditingAddress }" :value="request.requestClientAddresses[0].clientAddress.address.neighborhood" @input="updateValue('entities/addresses/update','neighborhood',request.requestClientAddresses[0].clientAddress.address.id,$event.target.value,'uppercase')" />
+                                            <input type="text" class="input" :disabled="isEditingAddress" :class="{ readonly: isEditingAddress }" :value="request.requestClientAddresses[0].clientAddress.address.neighborhood" @input="updateValue('entities/addresses/update','neighborhood',request.requestClientAddresses[0].clientAddress.address.id,$event.target.value,'uppercase',$event)" />
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 100px; margin-right: 8px">
                                             <label>CEP</label>
@@ -94,11 +94,11 @@
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 170px; margin-right: 8px">
                                             <label>Cidade</label>
-                                            <input type="text" class="input" :disabled="isEditingAddress" :class="{ readonly: isEditingAddress }" :value="request.requestClientAddresses[0].clientAddress.address.city" @input="updateValue('entities/addresses/update','city',request.requestClientAddresses[0].clientAddress.address.id,$event.target.value,'uppercase')" />
+                                            <input type="text" class="input" :disabled="isEditingAddress" :class="{ readonly: isEditingAddress }" :value="request.requestClientAddresses[0].clientAddress.address.city" @input="updateValue('entities/addresses/update','city',request.requestClientAddresses[0].clientAddress.address.id,$event.target.value,'uppercase',$event)" />
                                         </div>
                                         <div style="display: flex; flex-direction: column; width: 50px;">
                                             <label>Estado</label>
-                                            <input type="text" class="input" autocomplete="off" :disabled="isEditingAddress" :class="{ readonly: isEditingAddress }" :value="request.requestClientAddresses[0].clientAddress.address.state" @input="updateValue('entities/addresses/update','state',request.requestClientAddresses[0].clientAddress.address.id,$event.target.value,'uppercase')" />
+                                            <input type="text" class="input" autocomplete="off" :disabled="isEditingAddress" :class="{ readonly: isEditingAddress }" :value="request.requestClientAddresses[0].clientAddress.address.state" @input="updateValue('entities/addresses/update','state',request.requestClientAddresses[0].clientAddress.address.id,$event.target.value,'uppercase',$event)" />
                                         </div>
                                     </div>
                                     <div style="display: flex;">
@@ -136,6 +136,17 @@
                                         </app-select>
                                     </div>
                                 </div>
+                                <div class="box">
+                                    <h3>Obs. do cliente</h3>
+                                    <textarea-autosize
+                                            class="input"
+                                            style="flex-shrink: 0;"
+                                            :min-height="30"
+                                            :max-height="350"
+                                            :value="request.client.obs"
+                                            @input.native="updateValue('entities/clients/update','obs',request.client.id,$event.target.value.toUpperCase(),'uppercase',$event)"
+                                    ></textarea-autosize>
+                                </div>
                             </div>
                         </div>
                     </app-perfect-scrollbar>
@@ -172,7 +183,7 @@
                     </div>
                 </div>
                 <div class="request__section" :class="{ active: request.requestUIState.activeTab === 'order' }">
-                    <app-request-order :request="request" @change="onRequestOrderChange()" @change-to-original="onRequestOrderChangeToOriginal()"></app-request-order>
+                    <app-request-order :request="request"></app-request-order>
                     <div class="section__summary" @click="activateTab('order')">
                         <div class="summary-radio" style="margin-right: 5px;">
                             <app-switch :readonly="true" :value="request.requestUIState.activeTab === 'order'"></app-switch>
@@ -183,9 +194,16 @@
                 </div>
             </div>
             <div class="request__footer">
+                <a class="button" v-if="Number.isInteger(request.id) && request.requestUIState.hasRequestChanges" @click="discardChanges()" style="display: flex; align-items: center; align-self: center; margin-left: 8px; text-transform: uppercase;">Descartar alterações</a>
                 <span class="push-both-sides"></span>
+                <app-select :items="getSelectUsers" :value="request.userId" @input="updateValue('entities/requests/update','userId',request.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                    <input type="text" class="readonly select" style="text-align: center; padding-top: 0; margin-bottom: 0; margin-right: 8px; width: 180px;" readonly :value="(_.has(request,'user.name')) ? request.user.name : 'RESPONSÁVEL'"/>
+                    <template slot="item" slot-scope="slotProps">
+                        <span>{{ slotProps.text }}</span>
+                    </template>
+                </app-select>
                 <app-select :items="selectStatusItems" :value="request.status" @input="updateValue('entities/requests/update','status',request.id,$event)" :popoverProps="{ verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start' }">
-                    <input type="text" class="select readonly" style="margin-bottom: 0;" readonly :value="getStatusText" />
+                    <input type="text" class="select readonly" style="text-align: center; padding-top: 0; margin-bottom: 0; margin-right: 8px; width: 130px;" readonly :value="getStatusText" />
                     <template slot="item" slot-scope="slotProps">
                         <span>{{ slotProps.text }}</span>
                     </template>
@@ -205,9 +223,7 @@
                             {{ searchItem.complement ? " " + searchItem.complement : "" }}
                         </span>
                         <span class="address-details" v-highlight="{keyword: searchValueStrings, sensitive: false}">
-                            {{
-                              searchItem.neighborhood ? searchItem.neighborhood : "S/BAIRRO"
-                            }}, {{ searchItem.city ? searchItem.city : "S/CIDADE" }} -
+                            {{ searchItem.neighborhood ? searchItem.neighborhood : "S/BAIRRO" }}, {{ searchItem.city ? searchItem.city : "S/CIDADE" }} -
                             {{ searchItem.state ? searchItem.state : "S/ESTADO" }}
                         </span>
                     </div>
@@ -219,7 +235,9 @@
             </app-perfect-scrollbar>
         </div>
     </div>
-    <div v-else class="request__window"><span>Aguarde...</span></div>
+    <div v-else class="request__window">
+        <app-panel-loading :loading="true" :loadingText="'Aguarde...'"></app-panel-loading>
+    </div>
 </template>
 
 <script>
@@ -231,6 +249,8 @@
     import AddressSearchInputComponent from "../_Shared/Search/AddressSearchInput";
     import RequestOrder from "./RequestOrder";
     import RequestHistory from "./RequestHistory";
+
+    import Request from '../../../../../vuex/models/Request'
 
     export default {
         props: ["request"],
@@ -275,10 +295,23 @@
                 searchTimeout: null,
                 searchValue: null,
                 searchValueStrings: [],
-                searchItems: []
-            };
+                searchItems: [],
+
+                lastRequest: null,
+                changeCheckInterval: null
+            }
+        },
+        watch: {
+            ['system.requestsLoaded']: {
+                handler(value){
+                    if(!value) return
+                    this.checkRequestChanges()
+                },
+                immediate: true
+            }
         },
         computed: {
+            ...mapState(['system']),
             isEditingAddress() {
                 return Number.isInteger(
                     this.request.requestClientAddresses[0].clientAddress.addressId
@@ -293,6 +326,14 @@
             },
             isNewClient() {
                 return this.utils.isTmp(this.request.clientId);
+            },
+            getSelectUsers(){
+                return _.map(this.$store.getters['entities/users/all'](), (user) => {
+                    return {
+                        value: user.id,
+                        text: user.name
+                    }
+                })
             },
             getSelectClientGroups() {
                 return _.map(
@@ -312,15 +353,20 @@
                 if (selectStatusItem) {
                     return selectStatusItem.text;
                 } else {
-                    return "-- SELECIONE --";
+                    return "STATUS";
                 }
             }
         },
         methods: {
             ...mapActions("request-queue", ["addToQueue"]),
             ...mapActions("toast", ["showToast", "showError"]),
-            updateValue(path, field, id, value, modifier = false) {
+            updateValue(path, field, id, value, modifier = false, ev = false) {
                 const data = {};
+                let start, end
+                if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
+                    start = ev.target.selectionStart
+                    end = ev.target.selectionEnd
+                }
                 switch (modifier) {
                     case "uppercase":
                         data[field] = value.toUpperCase();
@@ -329,6 +375,11 @@
                         data[field] = value;
                 }
                 this.$store.dispatch(path, {where: id, data})
+                if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
+                    Vue.nextTick(() => {
+                        ev.target.setSelectionRange(start,end);
+                    })
+                }
             },
             activateTab(tab) {
                 if (tab === "order") {
@@ -613,37 +664,168 @@
                     }
                 });
             },
-
-            /* Change Detection */
-
-            onRequestOrderChange(){
-                this.updateValue(
-                    "entities/requestUIState/update",
-                    "hasRequestChanges",
-                    this.request.requestUIState.id,
-                    true
-                )
-                this.updateValue(
-                    "entities/requestUIState/update",
-                    "hasRequestOrderChanges",
-                    this.request.requestUIState.id,
-                    true
-                )
+            checkRequestChanges(){
+                const vm = this
+                if(vm.changeCheckInterval){
+                    clearInterval(vm.changeCheckInterval)
+                }
+                vm.lastRequest = Request.getRequestComparationObj(this.request)
+                vm.changeCheckInterval = setInterval(() => {
+                    const currentRequest = Request.getRequestComparationObj(this.request)
+                    if(!_.isEqual(currentRequest, vm.lastRequest)){
+                        vm.lastRequest = currentRequest
+                        if(_.isEqual(currentRequest, vm.request.requestUIState.requestString)){
+                            /* console.log("Original") */
+                            this.updateValue(
+                                "entities/requestUIState/update",
+                                "hasRequestChanges",
+                                this.request.requestUIState.id,
+                                false
+                            )
+                        }
+                        else {
+                            /*console.log("--- --- ---")
+                            console.log("Different, from string", vm.request.requestUIState.requestString)
+                            console.log("Different, from now", currentRequest)*/
+                            this.updateValue(
+                                "entities/requestUIState/update",
+                                "hasRequestChanges",
+                                this.request.requestUIState.id,
+                                true
+                            )
+                        }
+                    }
+                }, 0)
             },
 
-            onRequestOrderChangeToOriginal(){
-                this.updateValue(
-                    "entities/requestUIState/update",
-                    "hasRequestChanges",
-                    this.request.requestUIState.id,
-                    false
-                )
-                this.updateValue(
-                    "entities/requestUIState/update",
-                    "hasRequestOrderChanges",
-                    this.request.requestUIState.id,
-                    false
-                )
+            /* Discard changes */
+
+            discardChanges(){
+                console.log("Discard changes", this.request.id)
+
+                const vm = this
+
+                this.$db.requests.where({ id: this.request.id }).first((request) => {
+                    if(!request){
+                        return Promise.reject("Request not found")
+                    }
+                    return request
+                }).then((request) => {
+                    // _.assign(originalRequest, request)
+
+                    vm.$store.dispatch("entities/insertOrUpdate", {
+                        entity: "requests",
+                        data: request
+                    })
+
+                    vm.$store.dispatch("entities/update", {
+                        entity: "requestUIState",
+                        where: vm.request.requestUIState.id,
+                        data: {
+                            isLoading: true
+                        }
+                    })
+
+                    const asyncOperations = []
+
+                    if(request.requestOrderId){
+                        asyncOperations.push(this.$db.requestOrders.where({ id: request.requestOrderId }).first((requestOrder) => {
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: "requestOrders",
+                                data: requestOrder
+                            })
+                            return true
+                        }))
+                        const requestOrderProducts = vm.$store.getters['entities/requestOrderProducts']().where('requestOrderId',(requestOrderId) => {
+                            return requestOrderId === request.requestOrderId
+                        }).get()
+                        requestOrderProducts.forEach((requestOrderProduct) => {
+                            vm.$store.dispatch("entities/requestOrderProducts/delete", requestOrderProduct.id)
+                        })
+                        asyncOperations.push(this.$db.requestOrderProducts.where({ requestOrderId: request.requestOrderId }).toArray((requestOrderProducts) => {
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: "requestOrderProducts",
+                                data: requestOrderProducts
+                            })
+                            return true
+                        }))
+                    }
+
+                    if(request.clientId){
+                        asyncOperations.push(this.$db.clients.where({ id: request.clientId }).first((client) => {
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: "clients",
+                                data: client
+                            })
+                            return true
+                        }))
+                        const clientAddresses = vm.$store.getters['entities/clientAddresses']().where('clientId',(clientId) => {
+                            return clientId === request.clientId
+                        }).get()
+                        clientAddresses.forEach((clientAddress) => {
+                            vm.$store.dispatch("entities/clientAddresses/delete", clientAddress.id)
+                        })
+                        asyncOperations.push(this.$db.clientAddresses.where({ clientId: request.clientId }).toArray((clientAddresses) => {
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: "clientAddresses",
+                                data: clientAddresses
+                            })
+                            const addressAsyncOperations = []
+                            clientAddresses.forEach((clientAddress) => {
+                                addressAsyncOperations.push(this.$db.addresses.where({ id: clientAddress.addressId }).first((address) => {
+                                    vm.$store.dispatch("entities/insertOrUpdate", {
+                                        entity: "addresses",
+                                        data: address
+                                    })
+                                    return true
+                                }))
+                            })
+                            return Promise.all(addressAsyncOperations)
+                        }))
+                    }
+
+                    const requestPayments = vm.$store.getters['entities/requestPayments']().where('requestId',(requestId) => {
+                        return requestId === request.id
+                    }).get()
+                    requestPayments.forEach((requestPayment) => {
+                        vm.$store.dispatch("entities/requestPayments/delete", requestPayment.id)
+                    })
+                    asyncOperations.push(this.$db.requestPayments.where({ requestId: request.id }).toArray((requestPayments) => {
+                        vm.$store.dispatch("entities/insertOrUpdate", {
+                            entity: "requestPayments",
+                            data: requestPayments
+                        })
+                        return true
+                    }))
+
+                    const requestClientAddresses = vm.$store.getters['entities/requestClientAddresses']().where('requestId',(requestId) => {
+                        return requestId === request.id
+                    }).get()
+                    requestClientAddresses.forEach((requestClientAddress) => {
+                        vm.$store.dispatch("entities/requestClientAddresses/delete", requestClientAddress.id)
+                    })
+                    asyncOperations.push(this.$db.requestClientAddresses.where({ requestId: request.id }).toArray((requestClientAddresses) => {
+                        vm.$store.dispatch("entities/insertOrUpdate", {
+                            entity: "requestClientAddresses",
+                            data: requestClientAddresses
+                        })
+                        return true
+                    }))
+
+                    Promise.all(asyncOperations).then(() => {
+                        setTimeout(() => {
+                            vm.$store.dispatch("entities/update", {
+                                entity: "requestUIState",
+                                where: vm.request.requestUIState.id,
+                                data: {
+                                    isLoading: false
+                                }
+                            })
+                        }, 1000)
+                    })
+
+                })
+
             }
 
         }

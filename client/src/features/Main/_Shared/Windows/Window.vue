@@ -14,9 +14,9 @@
                 <i class="mi mi-close"></i>
             </a>
         </div>
-            <form class="window__body" v-if="window.show" autocomplete="off">
-                <app-request :request="window.card.request"></app-request>
-            </form>
+        <form class="window__body" v-if="window.show" autocomplete="off">
+            <app-request :request="window.card.request"></app-request>
+        </form>
     </div>
 </template>
 
@@ -69,6 +69,15 @@
                         // update the posiion attributes
                         target.setAttribute('data-x', x);
                         target.setAttribute('data-y', y);
+                    },
+                    onend  : function (event) {
+                        vm.$store.dispatch('entities/windows/update', {
+                            where: vm.window.id,
+                            data: {
+                                x: (parseFloat(event.target.getAttribute('data-x')) || 20) + event.dx,
+                                y: (parseFloat(event.target.getAttribute('data-y')) || 20) + event.dy
+                            }
+                        })
                     }
                 }).resizable({
                     edges: { left: false, right: '.resizable-edge', bottom: '.resizable-edge', top: false },
@@ -93,6 +102,16 @@
                     target.setAttribute('data-x', x)
                     target.setAttribute('data-y', y)
                 })
+
+                let target = this.$refs.window
+
+                // translate the element
+                target.style.left = this.window.x + 'px'
+                target.style.top = this.window.y + 'px'
+
+                // update the posiion attributes
+                target.setAttribute('data-x', this.window.x);
+                target.setAttribute('data-y', this.window.y);
             }
         },
         beforeDestroy(){
@@ -132,9 +151,9 @@
             flex-direction: row;
             height: 30px;
             align-items: center;
-            background-color: var(--bg-color--6);
+            background-color: var(--bg-color--5);
             &:hover {
-                background-color: var(--bg-color--5);
+                background-color: var(--bg-color--8);
             }
             h3, span {
                 position: relative;
@@ -163,7 +182,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                background-color: var(--bg-color--10);
+                background-color: var(--bg-color--9);
                 color: var(--font-color--7);
                 i {
                     font-weight: 900;
@@ -172,7 +191,7 @@
                     top: -1px;
                 }
                 &:hover {
-                    background-color: var(--bg-color--9);
+                    background-color: var(--bg-color--10);
                 }
             }
         }

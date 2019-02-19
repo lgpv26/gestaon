@@ -88,7 +88,7 @@ ul li {
     line-height: 100%;
     border: 0;
     font-weight: normal;
-    background: var(--bg-color--10);
+    background: #3a3d46;
     color: var(--font-color--9);
     outline: 0;
     box-shadow: none;
@@ -97,6 +97,10 @@ ul li {
     height: 24px;
     display: flex;
     align-items: center;
+}
+
+.btn i {
+    font-size: 16px;
 }
 
 .btn--disabled {
@@ -122,7 +126,20 @@ ul li {
     align-items: center;
 }
 
-.button:hover, .button:active, .button:focus {
+.btn.btn--square {
+    padding: 0;
+    width: 32px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+}
+
+
+.button:hover, .button:active, .button:focus,
+.btn:hover, .btn:active, .btn:focus{
+    background: #494d56;
     color: #FFF;
     outline: 0;
     box-shadow: 0 0 0;

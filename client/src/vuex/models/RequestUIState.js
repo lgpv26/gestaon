@@ -17,9 +17,12 @@ export default class RequestUIState extends Model {
             requestClientAddressForm: this.attr(true),
             isAddingClientAddress: this.attr(true),
 
+            requestString: this.attr(null),
             requestOrderString: this.attr(null),
             hasRequestOrderChanges: this.attr(false),
             hasRequestChanges: this.attr(false),
+
+            isLoading: this.attr(false)
         }
     }
 }

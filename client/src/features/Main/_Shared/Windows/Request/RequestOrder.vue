@@ -28,19 +28,19 @@
                                     </td>
                                     <td style="padding-right: 8px;">
                                         <input class="input" type="text"
-                                               @input="updateValue('entities/requestOrderProducts/update','quantity',requestOrderProduct.id,$event.target.value)"
+                                               @input.number="updateValue('entities/requestOrderProducts/update','quantity',requestOrderProduct.id,parseInt($event.target.value))"
                                                :value="requestOrderProduct.quantity"
                                                style="width: 50px; margin-bottom: 0; text-align: center;" />
                                     </td>
                                     <td style="padding-right: 8px;">
                                         <money class="input"
-                                               @input.native="updateMoneyValue('entities/requestOrderProducts/update','unitPrice',requestOrderProduct.id,$event)"
+                                               @input.number.native="updateMoneyValue('entities/requestOrderProducts/update','unitPrice',requestOrderProduct.id,$event)"
                                                :value="requestOrderProduct.unitPrice"
                                                style="margin-bottom: 0; text-align: right;"></money>
                                     </td>
                                     <td style="padding-right: 8px;">
                                         <money class="input"
-                                               @input.native="updateMoneyValue('entities/requestOrderProducts/update','unitDiscount',requestOrderProduct.id,$event)"
+                                               @input.number.native="updateMoneyValue('entities/requestOrderProducts/update','unitDiscount',requestOrderProduct.id,$event)"
                                                :value="requestOrderProduct.unitDiscount"
                                                style="margin-bottom: 0; text-align: right;"></money>
                                     </td>
@@ -92,7 +92,7 @@
                                     </app-select>
                                 </td>
                                 <td style="padding-right: 8px;">
-                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)" :value="requestPayment.code" @input="updateValue('entities/requestPayments/update', 'code', requestPayment.id, $event.target.value, 'uppercase')" type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
+                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)" :value="requestPayment.code" @input="updateValue('entities/requestPayments/update', 'code', requestPayment.id, $event.target.value, 'uppercase', $event)" type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
                                     <input v-else type="text" class="input readonly" style="margin-bottom: 0; text-align: center;" disabled value="---" placeholder="---" />
                                 </td>
                                 <td style="padding-right: 8px;">
@@ -134,19 +134,11 @@
                     <div><span></span></div>
                     <div class="box" style="padding: 10px 12px;">
                         <div class="box__item" style="display: flex; flex-direction: column;">
-                            <h3>Responsável</h3>
-                            <app-select :items="getSelectUsers" :value="request.userId" @input="updateValue('entities/requests/update','userId',request.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                <input type="text" class="readonly select" :value="(_.has(request,'user.name')) ? request.user.name : '-- SELECIONE --'"/>
-                                <template slot="item" slot-scope="slotProps">
-                                    <span>{{ slotProps.text }}</span>
-                                </template>
-                            </app-select>
-                        </div>
-                    </div>
-                    <div class="box" style="padding: 10px 12px;">
-                        <div class="box__item" style="display: flex; flex-direction: column;">
                             <h3>Data da entrega</h3>
-                            <app-datetime-selector class="input" :value="request.deliveryDate" @input="onDeliveryDateChange($event)" :config="deliveryDateSelectorConfig" placeholder="..."></app-datetime-selector>
+                            <div style="display: flex; flex-direction: row; align-items: center;">
+                                <app-datetime-selector class="input" :value="request.deliveryDate" @input="onDeliveryDateChange($event)" :config="deliveryDateSelectorConfig" placeholder="EM 20 MINUTOS"></app-datetime-selector>
+                                <a class="btn btn--square" v-if="request.deliveryDate" @click="onDeliveryDateChange(null)" href="javascript:void(0)" style="margin-top: 5px; margin-left: 8px;"><i class="mi mi-clear"></i></a>
+                            </div>
                         </div>
                     </div>
                     <div class="box" style="padding: 10px 12px;">
@@ -160,6 +152,17 @@
                             </app-select>
 
                         </div>
+                    </div>
+                    <div class="box">
+                        <h3>Obs. do pedido</h3>
+                        <textarea-autosize
+                                class="input"
+                                style="flex-shrink: 0;"
+                                :min-height="30"
+                                :max-height="350"
+                                :value="request.obs"
+                                @input.native="updateValue('entities/requests/update','obs',request.id,$event.target.value.toUpperCase(),'uppercase',$event)"
+                        ></textarea-autosize>
                     </div>
                 </div>
             </div>
@@ -231,15 +234,8 @@
                     return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
                 })
                 if(this.request.requestPayments.length === 1){
-                    this.updateValue('entities/requestPayments/update','amount',_.first(this.request.requestPayments).id,orderTotalPrice)
+                    this.updateValue('entities/requestPayments/update','amount',_.first(this.request.requestPayments).id,this.utils.getMoneyAsDecimal(orderTotalPrice))
                 }
-            },
-            ['system.requestsLoaded']: {
-                handler(value){
-                    if(!value) return
-                    this.checkRequestOrderChanges()
-                },
-                immediate: true
             }
         },
         computed: {
@@ -262,14 +258,6 @@
                     return parseFloat(requestPayment.amount)
                 })
                 return this.utils.formatMoney(parseFloat(orderTotalPrice) - parseFloat(orderPaymentsTotalPrice), 2, 'R$ ', '.', ',')
-            },
-            getSelectUsers(){
-                return _.map(this.$store.getters['entities/users/all'](), (user) => {
-                    return {
-                        value: user.id,
-                        text: user.name
-                    }
-                })
             },
             getSelectProducts(){
                 return _.map(this.$store.getters['entities/products/all'](), (product) => {
@@ -297,8 +285,13 @@
             }
         },
         methods: {
-            updateValue(path, field, id, value, modifier = false){
-                const data = {}
+            updateValue(path, field, id, value, modifier = false, ev = false) {
+                const data = {};
+                let start, end
+                if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
+                    start = ev.target.selectionStart
+                    end = ev.target.selectionEnd
+                }
                 switch (modifier) {
                     case "uppercase":
                         data[field] = value.toUpperCase();
@@ -306,10 +299,12 @@
                     default:
                         data[field] = value;
                 }
-                this.$store.dispatch(path, {
-                    where: id,
-                    data
-                })
+                this.$store.dispatch(path, {where: id, data})
+                if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
+                    Vue.nextTick(() => {
+                        ev.target.setSelectionRange(start,end);
+                    })
+                }
             },
             updateMoneyValue(path, field, id, event){
                 if(event.isTrusted){
@@ -366,48 +361,7 @@
                     return;
                 }
                 this.$store.dispatch('entities/requestPayments/delete', requestPaymentId)
-            },
-            getRequestOrderEditComparationObj(){
-                const requestOrder = JSON.parse(JSON.stringify(this.request.requestOrder))
-                delete requestOrder.request
-                delete requestOrder.promotionChannel
-                requestOrder.requestOrderProducts = _.map(requestOrder.requestOrderProducts, (requestOrderProduct) => {
-                    delete requestOrderProduct.requestOrder
-                    delete requestOrderProduct.product
-                    return requestOrderProduct
-                })
-                return requestOrder
-            },
-            onRequestOrderChange(){
-            },
-            onRequestOrderChangeToOriginal(){
-            },
-            checkRequestOrderChanges(){
-                const vm = this
-                if(vm.changeCheckInterval){
-                    clearInterval(vm.changeCheckInterval)
-                }
-                vm.originalRequestOrder = vm.getRequestOrderEditComparationObj()
-                vm.lastRequestOrder = vm.originalRequestOrder
-                vm.changeCheckInterval = setInterval(() => {
-                    const currentRequestOrder = vm.getRequestOrderEditComparationObj()
-                    if(!_.isEqual(currentRequestOrder, vm.lastRequestOrder)){
-                        vm.lastRequestOrder = currentRequestOrder
-                        if(_.isEqual(currentRequestOrder, vm.originalRequestOrder)){
-                            vm.onRequestOrderChangeToOriginal()
-                            vm.$emit("change-to-original")
-                        }
-                        else {
-
-                            vm.onRequestOrderChange()
-                            vm.$emit("change")
-                        }
-                    }
-                }, 1000)
             }
-        },
-        mounted(){
-
         }
     }
 </script>

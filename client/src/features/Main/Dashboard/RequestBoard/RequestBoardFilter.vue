@@ -306,10 +306,64 @@
                             return requestPromiseQueue.onIdle().then(() => {
                                 const savedRequest = Request.query()
                                     .with("card")
-                                    .with("client")
+                                    .with("client.clientAddresses.address")
+                                    .with("client.clientPhones")
                                     .with("requestClientAddresses.clientAddress.address")
                                     .with("requestOrder.requestOrderProducts")
+                                    .with("requestPayments")
+                                    .with("requestClientAddresses")
+                                    .with("requestUIState")
                                     .find(request.id)
+
+                                // verify requestUIState changes
+
+                                /*let requestChangeString = JSON.parse(JSON.stringify(savedRequest))*/
+                                /*requestChangeString = _.omit(requestChangeString, ['user','card','requestUIState','dateUpdated','dateCreated'])
+
+                                if(requestChangeString.client){
+                                    requestChangeString.client = _.omit(requestChangeString.client, ['clientGroup','dateUpdated','dateCreated'])
+                                    requestChangeString.client.clientAddresses = _.map(requestChangeString.client.clientAddresses, (clientAddress) => {
+                                        clientAddress = _.omit(clientAddress, ['client','dateUpdated','dateCreated'])
+                                        return clientAddress
+                                    })
+                                    requestChangeString.client.clientPhones = _.map(requestChangeString.client.clientPhones, (clientPhone) => {
+                                        clientPhone = _.omit(clientPhone, ['client','dateUpdated','dateCreated'])
+                                        return clientPhone
+                                    })
+                                }
+                                requestChangeString.requestClientAddresses = _.map(requestChangeString.requestClientAddresses, (requestClientAddress) => {
+                                    requestClientAddress = _.omit(requestClientAddress, ['clientAddress','request','dateUpdated','dateCreated'])
+                                    return requestClientAddress
+                                })
+                                if(requestChangeString.requestOrder){
+                                    requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['promotionChannel','request','dateUpdated','dateCreated'])
+                                    requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                                        requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
+                                        return requestOrderProduct
+                                    })
+                                }
+                                requestChangeString.requestPayments = _.map(requestChangeString.requestPayments, (requestPayment) => {
+                                    requestPayment = _.omit(requestPayment, ['paymentMethod','request','dateUpdated','dateCreated'])
+                                    return requestPayment
+                                })
+
+                                requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['request','promotionChannel','dateUpdated','dateCreated'])
+
+                                requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                                    requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
+                                    delete requestOrderProduct.requestOrder
+                                    return requestOrderProduct
+                                })*/
+
+                                vm.$store.dispatch("entities/update", {
+                                    entity: 'requestUIState',
+                                    where: savedRequest.requestUIState.id,
+                                    data: {
+                                        requestString: Request.getRequestComparationObj(savedRequest),
+                                        hasRequestChanges: false,
+                                        hasRequestOrderChanges: false
+                                    }
+                                })
 
                                 const getClientAddress = () => {
                                     if (savedRequest.requestClientAddresses.length) {
@@ -342,13 +396,15 @@
                                     data: cardData
                                 })
 
-                                return vm.$db["STATE_cards"].put(cardData)
+                                return vm.$db["STATE_cards"].put(cardData).then(() => {
+                                    return request.id
+                                })
 
                             })
                         })
 
                         // Once everything got from server, start to fill Vuex ORM with STATE_ db data
-                        Promise.all(promises).then((responses) => {
+                        Promise.all(promises).then((requests) => {
                             const retrievingDraftPromises = []
                             _.forOwn(vm.modelDefinitions.stateModels, (fields, stateModelName) => {
                                 const modelName = stateModelName.replace("STATE_", "")
@@ -364,7 +420,37 @@
 
                             })
                             Promise.all(retrievingDraftPromises).then(() => {
-                                console.log("system:ready event emitted")
+                                // verify changes
+                                requests.forEach((requestId) => {
+                                    const processedRequest = Request.query()
+                                        .with("card")
+                                        .with("client.clientAddresses.address")
+                                        .with("client.clientPhones")
+                                        .with("requestClientAddresses.clientAddress.address")
+                                        .with("requestOrder.requestOrderProducts")
+                                        .with("requestPayments")
+                                        .with("requestClientAddresses")
+                                        .with("requestUIState")
+                                        .find(requestId)
+                                    if(_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString)){
+                                        vm.$store.dispatch("entities/requestUIState/update",{
+                                            where: processedRequest.requestUIState.id,
+                                            data: {
+                                                hasRequestChanges: false
+                                            }
+                                        })
+                                    }
+                                    else {
+                                        vm.$store.dispatch("entities/requestUIState/update",{
+                                            where: processedRequest.requestUIState.id,
+                                            data: {
+                                                hasRequestChanges: true
+                                            }
+                                        })
+                                    }
+                                })
+
+                                console.log("system:ready event emitted", )
                                 vm.$socket.emit("system:ready")
                                 vm.SET_SYSTEM_REQUESTS_LOADED(true)
                                 vm.setIsLoading(false)
