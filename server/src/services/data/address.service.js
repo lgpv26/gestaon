@@ -94,6 +94,7 @@ module.exports = (server) => { return {
          * @returns {Promise.<Array>} addresseses 
          */
         saveAddresses(ctx) {
+
             let addressCantChange = []
             return new Promise((resolve, reject) => {
                 /*
@@ -136,7 +137,6 @@ module.exports = (server) => { return {
                         },
                         transaction: ctx.params.transaction
                     }).then((addressesConsult) => {
-                        
                         addressesConsult.forEach((result) => {
                             const index = _.findIndex(data, (addressesFind) => {
                                 return addressesFind.address.id === result.id
@@ -155,6 +155,7 @@ module.exports = (server) => { return {
                
                     let addressChangePromises = []
                     data.forEach((clientAddress) => {
+                        if(!clientAddress.address.name && !clientAddress.address.neighborhood) return addressChangePromises.push(Promise.resolve(clientAddress))
                         if (clientAddress.address.id) {
                             addressChangePromises.push(ctx.call("data/address.update", {
                                 data: clientAddress.address,

@@ -247,14 +247,15 @@ module.exports = server => {
                         companyId,
                         transaction
                     })
-                    .then(clientAddressWithAddress => {
+                    .then((clientAddressWithAddress) => {
                         let clientAddressesArray = []
-                        clientAddressWithAddress.forEach(result => {
+                        clientAddressWithAddress.forEach((result) => {
+                        if(!result.name && !result.number && !result.address.id) return
                             clientAddressesArray.push({
                                 id: (result.id) ? result.id : null,
                                 status: "activated",
                                 clientId: (clientId) ? parseInt(clientId) : null,
-                                addressId: parseInt(result.address.id),
+                                addressId: (result.address.id) ? parseInt(result.address.id) : null,
                                 address: (result.address) ? result.address : null,
                                 name: (result.name) ? result.name : null,
                                 number: (result.number) ? result.number : null,
@@ -266,7 +267,7 @@ module.exports = server => {
                         })
 
                         return this.saveClientAddresses(clientAddressesArray, clientId, transaction)
-                            .then(clientAddresses => {
+                            .then((clientAddresses) => {
                                 return Promise.resolve(clientAddresses)
                             })
                             .catch((err) => {
@@ -287,10 +288,11 @@ module.exports = server => {
              */
 
             saveClientAddresses(data, clientId, transaction) {
+                if(!data.length) return Promise.resolve(null)
+                
                 /*
                  * Delete all client's clientAddress
                  */
-
                 return server.mysql.ClientAddress.destroy({
                     where: {
                         clientId: clientId

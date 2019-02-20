@@ -24,10 +24,12 @@ module.exports = server => {
 
                             if(ctx.params.editingRequest && request.status === "canceled") return resolve(ctx.params.data)
 
-                            const removedRequestPayments = await vm.checkRemovedRequestPayments(ctx.params.data, oldRequest, (client) ? client : null)
-                            
-                            const dataRequestPayments = await vm.checkChanges(ctx.params.data, request, client, oldRequest)
+                            ctx.params.data = await vm.consultPaymentMethod(ctx.params.data)
 
+                            const removedRequestPayments = await vm.checkRemovedRequestPayments(ctx.params.data, oldRequest, (client) ? client : null)
+                                 
+                            const dataRequestPayments = await vm.checkChanges(ctx.params.data, request, client, oldRequest)
+          
                             await vm.revertPayments(removedRequestPayments, dataRequestPayments, triggeredBy, transaction)
                             await vm.clientLimit(client, removedRequestPayments, dataRequestPayments, oldRequest, transaction)
                       
@@ -47,6 +49,26 @@ module.exports = server => {
             }
         },
         methods: {
+            consultPaymentMethod(data){
+                return new Promise((resolve, reject) => {
+                    let promises = []
+                     
+                    data.forEach((requestPayment, index) => {
+                        promises.push(new Promise((resolve, reject) => {
+                            server.mysql.PaymentMethod.findById(requestPayment.paymentMethodId)
+                            .then((paymentMethod) => {
+                                _.set(data[index], "paymentMethod", paymentMethod)
+                                resolve()
+                            })
+                        }))
+                    })
+                    return Promise.all(promises)
+                    .then(() => {
+                        resolve(data)
+                    })
+                })
+            },
+
             checkRemovedRequestPayments(data, oldRequest, client) {
                 const oldRequestPayments = (oldRequest && _.has(oldRequest, "requestPayments")) ? oldRequest.requestPayments : null
 
@@ -101,7 +123,7 @@ module.exports = server => {
                 let checkChanges = {}
 
                 if (request.status !== oldRequest.status) checkChanges.requestStatus = true
-                if (client.id !== oldRequest.client.id) checkChanges.client = true
+                if (client && oldRequest.client && client.id !== oldRequest.client.id) checkChanges.client = true
 
                 const promises = []
                 data.forEach((payment, index) => {

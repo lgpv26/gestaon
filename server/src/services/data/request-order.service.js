@@ -22,7 +22,7 @@ module.exports = (server) => {
                                 const requestOrderProducts = _.map(ctx.params.data.requestOrderProducts, requestOrderProduct => {
                                     return _.assign(requestOrderProduct, {
                                         requestOrderId: order.id,
-                                        productId: (requestOrderProduct.product) ? requestOrderProduct.product.id : null
+                                        productId: (requestOrderProduct.productId) ? requestOrderProduct.productId : null
                                     })
                                 })
                                 _.set(order, 'requestOrderProducts', await vm.saveRequestOrderProducts(requestOrderProducts, order.id, transaction))

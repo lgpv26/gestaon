@@ -22,7 +22,6 @@ module.exports = (server) => {
                                 const requestClient = {}
 
                                 if(_.has(ctx.params.data, "requestClientAddresses")) {
-                                                                        
                                     await vm.setRequestClientAddresses(ctx.params.data.requestClientAddresses, request.id, transaction)
                                     .then((clientAddresses) => {
                                         _.set(requestClient, 'requestClientAddresses', clientAddresses)
@@ -148,8 +147,7 @@ module.exports = (server) => {
                             })
                             .catch((error) => {
                                 console.log("Erro: no geo code, Erro ao salvar o endereço do cliente no pedido, service request.getGeo" + new Date())
-                                console.log(error)
-                                return resolve({ lat: null, lng: null })
+                                return resolve({})
                             })
                     })
                 })

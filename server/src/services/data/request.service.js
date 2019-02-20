@@ -591,7 +591,7 @@ module.exports = server => {
 
                 const data = {}
 
-                if (_.has(detailsData, "requestClientAddresses")) {
+                if (_.has(detailsData, "requestClientAddresses") && client && client.clientAddresses) {
                     data.requestClientAddresses = []
 
                     detailsData.requestClientAddresses.forEach((requestClientAddress, index) => {
