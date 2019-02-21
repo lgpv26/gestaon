@@ -322,7 +322,7 @@ export default {
   max-width: 1245px;
   margin: 0px auto 0px auto;
   position: relative;
-  height: 1200px;
+  height: 850px;
   background: #ffffff;
 }
 ul {
