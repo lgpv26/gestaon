@@ -1,17 +1,20 @@
 <template>
-    <div class="request-board-card"
+    <div class="request-board-card" tabindex="0"
          :class="{
-            'request-board-card--in-displacement': _.get(request, 'status', false) === 'in-displacement',
-            'request-board-card--draft': !Number.isInteger(request.id) || request.requestUIState.hasRequestChanges
+            'request-board-card--in-displacement': _.get(card, 'status', false) === 'in-displacement',
+            'request-board-card--draft': !Number.isInteger(request.id) || _.get(request,'requestUIState.hasRequestChanges',false)
             }">
-        <div class="request-board-card__loading" v-if="_.get(request, 'status', false) === 'processing'">
+        <div class="request-board-card__loading" v-if="_.get(card, 'status', false) === 'processing'">
             <span>Sincronizando...</span>
         </div>
         <div class="request-board-card__loading" v-if="!card">
             <span>...</span>
         </div>
-        <div class="request-board-card__container" v-if="card && Number.isInteger(request.id)">
-            <div class="request-board-card__overlay" v-if="card.window.show">
+        <div class="request-board-card__container" v-if="card && request.requestUIState && Number.isInteger(request.id)">
+            <div class="request-board-card__overlay" v-if="isSaving">
+                <span>Salvando...</span>
+            </div>
+            <div class="request-board-card__overlay" v-else-if="card.window.show">
                 <span>Visualizando pedido</span>
             </div>
             <div class="request-board-card__overlay" v-else-if="request.requestUIState.hasRequestChanges">
@@ -26,7 +29,7 @@
                     {{ card.clientName ? card.clientName : "S/N" }}
                 </h3>
                 <span class="push-both-sides"></span>
-                <h3 class="card__order">
+                <h3 class="card__order" v-if="card.orderSubtotal">
                     {{ utils.formatMoney(card.orderSubtotal, 2, "R$ ", ".", ",") }}
                 </h3>
             </div>
@@ -53,7 +56,7 @@
                         </a>
                     </template>
                     <template slot="content">
-                        <app-rbc-status :value="request.status" @input="onRequestStatusUpdate($event)" id="rbc-status" :card="card"></app-rbc-status>
+                        <app-rbc-status :value="card.status" @input="onRequestStatusUpdate($event)" id="rbc-status" :card="card"></app-rbc-status>
                     </template>
                 </app-popover>
                 <app-popover :placement="'bottom-start'" :verticalOffset="1" :horizontalOffset="19" :useScroll="true">
@@ -61,20 +64,23 @@
                         <a class="footer__responsible-user ignore"><request-board-icon-flag></request-board-icon-flag>{{ responsibleUserName }}</a>
                     </template>
                     <template slot="content">
-                        <app-rbc-user :value="request.userId" @input="onRequestResponsibleUserUpdate($event)" id="rbc-user" :card="card"></app-rbc-user>
+                        <app-rbc-user :value="card.responsibleUserId" @input="onRequestResponsibleUserUpdate($event)" id="rbc-user" :card="card"></app-rbc-user>
                     </template>
                 </app-popover>
             </div>
         </div>
-        <div class="request-board-card__container" style="opacity: .4" v-if="card && !Number.isInteger(request.id)">
-            <div class="card__header">
-                <h3 class="card__client-name">Rascunho</h3>
+        <div class="request-board-card__container draft" v-if="card && request.requestUIState && !Number.isInteger(request.id)">
+            <div class="request-board-card__overlay" v-if="isSaving">
+                <span>Salvando...</span>
             </div>
-            <div class="card__header">
-                <h3 class="card__client-address">Card {{ _.has(card, "id") ? card.id : "Sem card.id" }}</h3>
+            <div class="request-board-card__overlay" v-else-if="card.window.show">
+                <span>Editando rascunho</span>
             </div>
-            <div class="card__header">
-                <h3 class="card__client-address">Request {{ _.has(request, "id") ? request.id : "Sem request.id" }}</h3>
+            <div class="request-board-card__overlay" v-else>
+                <span>Rascunho</span>
+            </div>
+            <div class="draft-badge" v-if="!Number.isInteger(request.id) || _.get(request,'requestUIState.hasRequestChanges',false)">
+                <i class="mi mi-edit"></i>
             </div>
         </div>
     </div>
@@ -96,6 +102,7 @@
 
     import Request from "../../../../vuex/models/Request";
     import User from "../../../../vuex/models/User";
+    import Card from "../../../../vuex/models/Card";
 
     export default {
         props: ["card", "request", "isDragging"],
@@ -120,44 +127,6 @@
                 },
                 immediate: true,
                 deep: true
-            }
-        },
-        sockets: {
-            requestBoardRequestTimelineChangeUser(ev) {
-                if (ev.success && ev.evData.cardId === this.card.id) {
-                    console.log(
-                        "Received requestBoardRequestTimelineChangeUser",
-                        ev.evData
-                    );
-                    const card = utils.removeReactivity(this.card);
-                    card.request.requestTimeline.push(ev.evData.requestTimelineItem);
-                    _.assign(card.request, {
-                        userId: ev.evData.requestTimelineItem.userId,
-                        status: ev.evData.requestTimelineItem.status
-                    });
-                    this.updateCard({
-                        cardId: this.card.id,
-                        card
-                    });
-                }
-            },
-            requestBoardRequestTimelineChangeStatus(ev) {
-                if (ev.success && ev.evData.cardId === this.card.id) {
-                    console.log(
-                        "Received requestBoardRequestTimelineChangeStatus",
-                        ev.evData
-                    );
-                    const card = utils.removeReactivity(this.card);
-                    card.request.requestTimeline.push(ev.evData.requestTimelineItem);
-                    _.assign(card.request, {
-                        userId: ev.evData.requestTimelineItem.userId,
-                        status: ev.evData.requestTimelineItem.status
-                    });
-                    this.updateCard({
-                        cardId: this.card.id,
-                        card
-                    });
-                }
             }
         },
         data() {
@@ -200,6 +169,34 @@
             };
         },
         computed: {
+            ...mapState('request-queue',['pendingQueue','processingQueue','processedQueue']),
+            isSaving(){
+                const hasRequestInPendingQueue = _.some(this.pendingQueue, (queueItem) => {
+                    if(queueItem.type === "request"){
+                        if(queueItem.data.id === this.request.id || queueItem.data.requestId === this.request.id){
+                            return true
+                        }
+                    }
+                    return false
+                })
+                const hasRequestInProcessingQueue = _.some(this.processingQueue, (queueItem) => {
+                    if(queueItem.type === "request"){
+                        if(queueItem.data.id === this.request.id || queueItem.data.requestId === this.request.id){
+                            return true
+                        }
+                    }
+                    return false
+                })
+                const hasRequestInProcessedQueue = _.some(this.processedQueue, (queueItem) => {
+                    if(queueItem.type === "request"){
+                        if(queueItem.data.id === this.request.id || queueItem.data.requestId === this.request.id){
+                            return true
+                        }
+                    }
+                    return false
+                })
+                return hasRequestInPendingQueue || hasRequestInProcessingQueue || hasRequestInProcessedQueue
+            },
             requestClientAddress() {
                 if (this.request.requestClientAddresses.length) {
                     const firstClientAddress = _.first(this.request.requestClientAddresses)
@@ -210,21 +207,6 @@
                             separator: "",
                             omission: "..."
                         }) +
-                        ", " +
-                        (firstClientAddress.number ? firstClientAddress.number : "S/N") +
-                        (firstClientAddress.complement
-                            ? " " + firstClientAddress.complement
-                            : "");
-                    return address;
-                }
-                return false;
-            },
-            fullRequestClientAddress() {
-                if (this.request.requestClientAddresses.length) {
-                    const firstClientAddress = _.first(this.request.requestClientAddresses)
-                        .clientAddress;
-                    const address =
-                        _.startCase(_.toLower(firstClientAddress.address.name)) +
                         ", " +
                         (firstClientAddress.number ? firstClientAddress.number : "S/N") +
                         (firstClientAddress.complement
@@ -251,7 +233,7 @@
                 };
             },
             status() {
-                switch (this.request.status) {
+                switch (this.card.status) {
                     case "pending":
                         return "Pendente";
                     case "in-displacement":
@@ -265,7 +247,7 @@
                 }
             },
             responsibleUserName() {
-                const user = User.find(this.request.userId);
+                const user = User.find(this.card.responsibleUserId);
                 if (user) {
                     return user.name;
                 }
@@ -275,16 +257,16 @@
         methods: {
             ...mapActions("request-board", ["updateCard"]),
             onRequestStatusUpdate(ev) {
-                Request.update({
-                    where: this.card.requestId,
+                Card.update({
+                    where: this.card.id,
                     data: {
                         status: ev
                     }
                 });
             },
             onRequestResponsibleUserUpdate(ev) {
-                Request.update({
-                    where: this.card.requestId,
+                Card.update({
+                    where: this.card.id,
                     data: {
                         userId: ev
                     }
@@ -400,6 +382,13 @@
         background: var(--bg-color--2);
         box-shadow: var(--card-shadow);
         position: relative;
+        &:hover, &:active, &:focus {
+            background: var(--bg-color--3);
+            outline: 0;
+            .request-board-card__overlay {
+                background: var(--bg-color--3);
+            }
+        }
     }
 
     .request-board-card--in-displacement {
@@ -459,7 +448,6 @@
     }
 
     .request-board-card__overlay {
-        transition: 1s all;
         width: 100%;
         height: 100%;
         background-color: rgba(23,24,28,.9);
@@ -470,6 +458,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .request-board-card__container.draft .request-board-card__overlay {
+        background-color: transparent
     }
 
     .request-board-card .card__header {

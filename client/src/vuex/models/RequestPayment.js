@@ -15,7 +15,7 @@ export default class RequestPayment extends Model {
             request: this.belongsTo(Request, "requestId"),
             paymentMethodId: this.attr(null),
             paymentMethod: this.belongsTo(PaymentMethod, "paymentMethodId"),
-            amount: this.attr(0),
+            amount: this.attr("0.00"),
             code: this.attr(null),
             paid: this.attr(false),
             deadlineDatetime: this.attr(null),

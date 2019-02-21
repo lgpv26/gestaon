@@ -122,6 +122,7 @@
         },
         methods: {
             ...mapMutations(["setApp", "setSystemInitialized"]),
+            ...mapMutations('request-queue',["REMOVE_PROCESSED_QUEUE_ITEMS"]),
             ...mapActions(["setLastDataSyncedDate"]),
             ...mapActions("auth", {
                 logoutAction: "logout",
@@ -164,106 +165,36 @@
                 }
             },
             async addRequest() {
-
                 const requestUIStateTmpId = `tmp/${shortid.generate()}`;
-                const requestPaymentTmpId = `tmp/${shortid.generate()}`;
-                const requestOrderTmpId = `tmp/${shortid.generate()}`;
-                const requestOrderProductTmpId = `tmp/${shortid.generate()}`;
-                const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
                 const requestTmpId = `tmp/${shortid.generate()}`;
                 const windowTmpId = `tmp/${shortid.generate()}`;
                 const cardTmpId = `tmp/${shortid.generate()}`;
-                const clientTmpId = `tmp/${shortid.generate()}`;
-                const addressTmpId = `tmp/${shortid.generate()}`;
-                const clientAddressTmpId = `tmp/${shortid.generate()}`;
-                const clientPhoneTmpId = `tmp/${shortid.generate()}`;
                 this.$store.dispatch("entities/windows/insert", {
                     data: {
                         id: windowTmpId,
                         zIndex:
                         this.$store.getters["entities/windows/query"]().max("zIndex") + 1
                     }
-                });
+                })
                 this.$store.dispatch("entities/cards/insert", {
                     data: {
                         id: cardTmpId,
                         windowId: windowTmpId,
                         requestId: requestTmpId
                     }
-                });
+                })
                 this.$store.dispatch("entities/requestUIState/insert", {
                     data: {
                         id: requestUIStateTmpId,
                         windowId: windowTmpId,
                         requestId: requestTmpId
                     }
-                });
-                this.$store.dispatch("entities/requestPayments/insert", {
-                    data: {
-                        id: requestPaymentTmpId,
-                        requestId: requestTmpId,
-                        paymentMethodId: 1,
-                        amount: _.get(
-                            this.$store.getters["entities/products/find"](6),
-                            "price",
-                            false
-                        )
-                            ? this.$store.getters["entities/products/find"](6).price
-                            : 0
-                    }
-                });
-                this.$store.dispatch("entities/requestOrderProducts/insert", {
-                    data: {
-                        id: requestOrderProductTmpId,
-                        requestOrderId: requestOrderTmpId,
-                        productId: 1,
-                        unitPrice: _.get(
-                            this.$store.getters["entities/products/find"](6),
-                            "price",
-                            0
-                        )
-                    }
-                });
-                this.$store.dispatch("entities/requestOrders/insert", {
-                    data: {
-                        id: requestOrderTmpId
-                    }
-                });
-                this.$store.dispatch("entities/clients/insert", {
-                    data: {
-                        id: clientTmpId
-                    }
-                });
-                this.$store.dispatch("entities/clientPhones/insert", {
-                    data: {
-                        id: clientPhoneTmpId,
-                        clientId: clientTmpId
-                    }
-                });
-                this.$store.dispatch("entities/addresses/insert", {
-                    data: {
-                        id: addressTmpId
-                    }
-                });
-                this.$store.dispatch("entities/clientAddresses/insert", {
-                    data: {
-                        id: clientAddressTmpId,
-                        clientId: clientTmpId,
-                        addressId: addressTmpId
-                    }
-                });
-                this.$store.dispatch("entities/requestClientAddresses/insert", {
-                    data: {
-                        id: requestClientAddressTmpId,
-                        requestId: requestTmpId,
-                        clientAddressId: clientAddressTmpId
-                    }
-                });
+                })
                 this.$store.dispatch("entities/requests/insert", {
                     data: {
                         id: requestTmpId,
-                        clientId: clientTmpId,
-                        requestOrderId: requestOrderTmpId,
+                        clientId: null,
+                        requestOrderId: null,
                         status: "draft"
                     }
                 });
@@ -308,6 +239,9 @@
                 if(action === 'put'){
                     return vm.$db[modelName].put(this.extractOnlyModelFields(modelName,data))
                 }
+                else if(action === 'patch'){
+                    return vm.$db[modelName].update(data.id, data)
+                }
                 else if(action === 'bulkPut'){
                     data = _.map(data, (dataItem) => {
                         return this.extractOnlyModelFields(modelName, dataItem)
@@ -345,15 +279,37 @@
                                     dateUpdated: request.dateUpdated
                                 }
                             })
-                        } else if (request.action === "update-user") {
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: 'cards',
+                                where: (record) => {
+                                    return record.requestId === request.requestId
+                                },
+                                data: {
+                                    status: request.status
+                                }
+                            })
+                            vm.REMOVE_PROCESSED_QUEUE_ITEMS(request.requestId)
+                        }
+                        else if (request.action === "update-user") {
                             Request.update({
                                 where: request.requestId,
                                 data: {
                                     userId: request.userId,
                                     dateUpdated: request.dateUpdated
                                 }
-                            });
-                        } else {
+                            })
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: 'cards',
+                                where: (record) => {
+                                    return record.requestId === request.requestId
+                                },
+                                data: {
+                                    responsibleUserId: request.userId
+                                }
+                            })
+                            vm.REMOVE_PROCESSED_QUEUE_ITEMS(request.requestId)
+                        }
+                        else {
                             // guarantee the order of promises
                             const requestPromiseQueue = new PromiseQueue({ concurrency: 1})
 
@@ -377,46 +333,44 @@
                             }))
 
                             return requestPromiseQueue.onIdle().then(() => {
-
-                                // inserting search data
-
-                                const searchClients = _.map(request.client.clientAddresses, (clientAddress) => {
-                                    return {
-                                        id: `${request.client.id}#${clientAddress.id}`,
-                                        name: request.client.name,
-                                        address: _.get(clientAddress, "address.name", null),
-                                        neighborhood: _.get(clientAddress, "address.neighborhood", null),
-                                        number: _.get(clientAddress, "number", false) ? "" + _.get(clientAddress, "number") : null,
-                                        complement: _.get(clientAddress, "complement", null),
-                                        city: _.get(clientAddress, "address.city", null),
-                                        state: _.get(clientAddress, "address.state", null)
-                                    }
-                                })
-
-                                vm.$db.searchClients.bulkPut(searchClients).then(() => {
-                                    searchClients.forEach((searchClient) => {
-                                        vm.$static.searchClientsIndex.addDoc(searchClient)
+                                // check if request has client
+                                if(request.clientId){
+                                    // inserting search data
+                                    const searchClients = _.map(request.client.clientAddresses, (clientAddress) => {
+                                        return {
+                                            id: `${request.client.id}#${clientAddress.id}`,
+                                            name: request.client.name,
+                                            address: _.get(clientAddress, "address.name", null),
+                                            neighborhood: _.get(clientAddress, "address.neighborhood", null),
+                                            number: _.get(clientAddress, "number", false) ? "" + _.get(clientAddress, "number") : null,
+                                            complement: _.get(clientAddress, "complement", null),
+                                            city: _.get(clientAddress, "address.city", null),
+                                            state: _.get(clientAddress, "address.state", null)
+                                        }
                                     })
-                                })
-
-                                const searchAddresses = _.map(request.client.clientAddresses, (clientAddress) => {
-                                    return {
-                                        id: _.get(clientAddress, "address.id", null),
-                                        name: _.get(clientAddress, "address.name", null),
-                                        address: _.get(clientAddress, "address.name", null),
-                                        neighborhood: _.get(clientAddress, "address.neighborhood", null),
-                                        city: _.get(clientAddress, "address.city", null),
-                                        state: _.get(clientAddress, "address.state", null),
-                                        cep: _.get(clientAddress, "address.cep", null),
-                                        country: _.get(clientAddress, "address.country", null)
-                                    }
-                                })
-
-                                vm.$db.searchAddresses.bulkPut(searchAddresses).then(() => {
-                                    searchAddresses.forEach((searchAddress) => {
-                                        vm.$static.searchAddressesIndex.addDoc(searchAddress)
+                                    vm.$db.searchClients.bulkPut(searchClients).then(() => {
+                                        searchClients.forEach((searchClient) => {
+                                            vm.$static.searchClientsIndex.addDoc(searchClient)
+                                        })
                                     })
-                                })
+                                    const searchAddresses = _.map(request.client.clientAddresses, (clientAddress) => {
+                                        return {
+                                            id: _.get(clientAddress, "address.id", null),
+                                            name: _.get(clientAddress, "address.name", null),
+                                            address: _.get(clientAddress, "address.name", null),
+                                            neighborhood: _.get(clientAddress, "address.neighborhood", null),
+                                            city: _.get(clientAddress, "address.city", null),
+                                            state: _.get(clientAddress, "address.state", null),
+                                            cep: _.get(clientAddress, "address.cep", null),
+                                            country: _.get(clientAddress, "address.country", null)
+                                        }
+                                    })
+                                    vm.$db.searchAddresses.bulkPut(searchAddresses).then(() => {
+                                        searchAddresses.forEach((searchAddress) => {
+                                            vm.$static.searchAddressesIndex.addDoc(searchAddress)
+                                        })
+                                    })
+                                }
 
                                 // update card info
 
@@ -431,50 +385,11 @@
                                     .with("requestUIState")
                                     .find(request.id)
 
-                                // verify requestUIState changes
-
-                                let requestChangeString = JSON.parse(JSON.stringify(savedRequest))
-                                requestChangeString = _.omit(requestChangeString, ['user','card','requestUIState','dateUpdated','dateCreated'])
-
-                                if(requestChangeString.client){
-                                    requestChangeString.client = _.omit(requestChangeString.client, ['clientGroup','dateUpdated','dateCreated'])
-                                    requestChangeString.client.clientAddresses = _.map(requestChangeString.client.clientAddresses, (clientAddress) => {
-                                        clientAddress = _.omit(clientAddress, ['client','dateUpdated','dateCreated'])
-                                        return clientAddress
-                                    })
-                                    requestChangeString.client.clientPhones = _.map(requestChangeString.client.clientPhones, (clientPhone) => {
-                                        clientPhone = _.omit(clientPhone, ['client','dateUpdated','dateCreated'])
-                                        return clientPhone
-                                    })
-                                }
-                                requestChangeString.requestClientAddresses = _.map(requestChangeString.requestClientAddresses, (requestClientAddress) => {
-                                    requestClientAddress = _.omit(requestClientAddress, ['clientAddress','request','dateUpdated','dateCreated'])
-                                    return requestClientAddress
-                                })
-                                if(requestChangeString.requestOrder){
-                                    requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['promotionChannel','request','dateUpdated','dateCreated'])
-                                    requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
-                                        requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
-                                        return requestOrderProduct
-                                    })
-                                }
-                                requestChangeString.requestPayments = _.map(requestChangeString.requestPayments, (requestPayment) => {
-                                    requestPayment = _.omit(requestPayment, ['paymentMethod','request','dateUpdated','dateCreated'])
-                                    return requestPayment
-                                })
-
-                                requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['request','promotionChannel','dateUpdated','dateCreated'])
-
-                                requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
-                                    requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
-                                    delete requestOrderProduct.requestOrder
-                                    return requestOrderProduct
-                                })
                                 vm.$store.dispatch("entities/update", {
                                     entity: 'requestUIState',
                                     where: savedRequest.requestUIState.id,
                                     data: {
-                                        requestString: JSON.stringify(requestChangeString),
+                                        requestString: Request.getRequestComparationObj(savedRequest),
                                         hasRequestChanges: false,
                                         hasRequestOrderChanges: false
                                     }
@@ -491,10 +406,11 @@
                                     return "SEM ENDEREÇO";
                                 }
 
-                                const cardData = _.assign(savedRequest.card, {
-                                    clientName: savedRequest.client.name,
-                                    clientAddress: getClientAddress(),
-                                    orderSubtotal: _.sumBy(
+                                const getOrderSubtotal = () => {
+                                    if(!savedRequest.requestOrderId){
+                                        return null
+                                    }
+                                    return _.sumBy(
                                         savedRequest.requestOrder.requestOrderProducts,
                                         requestOrderProduct => {
                                             return (
@@ -502,12 +418,22 @@
                                             )
                                         }
                                     )
+                                }
+
+                                const cardData = _.assign(savedRequest.card, {
+                                    clientName: (savedRequest.clientId) ? ((_.isEmpty(savedRequest.client.name)) ? "SEM NOME" : savedRequest.client.name) : "SEM CLIENTE",
+                                    clientAddress: (savedRequest.clientId) ? getClientAddress() : "SEM ENDEREÇO",
+                                    orderSubtotal: getOrderSubtotal(),
+                                    status: savedRequest.status,
+                                    responsibleUserId: savedRequest.userId
                                 })
 
                                 vm.$store.dispatch("entities/insertOrUpdate", {
                                     entity: 'cards',
                                     data: cardData
                                 })
+
+                                vm.REMOVE_PROCESSED_QUEUE_ITEMS(savedRequest.id)
 
                             })
                         }

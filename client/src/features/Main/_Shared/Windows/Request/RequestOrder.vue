@@ -7,7 +7,7 @@
                         <table style="margin: 3px 0 12px 0;">
                             <thead>
                                 <tr>
-                                    <th style="width: 300px;">Nome</th>
+                                    <th style="width: 300px;">Produto</th>
                                     <th style="text-align: center; padding-right: 8px;">Qnt.</th>
                                     <th style="text-align: right; padding-right: 8px;">Valor Un.</th>
                                     <th style="text-align: right; padding-right: 8px;">Desc.</th>
@@ -134,7 +134,7 @@
                     <div><span></span></div>
                     <div class="box" style="padding: 10px 12px;">
                         <div class="box__item" style="display: flex; flex-direction: column;">
-                            <h3>Data da entrega</h3>
+                            <h3>Entrega</h3>
                             <div style="display: flex; flex-direction: row; align-items: center;">
                                 <app-datetime-selector class="input" :value="request.deliveryDate" @input="onDeliveryDateChange($event)" :config="deliveryDateSelectorConfig" placeholder="EM 20 MINUTOS"></app-datetime-selector>
                                 <a class="btn btn--square" v-if="request.deliveryDate" @click="onDeliveryDateChange(null)" href="javascript:void(0)" style="margin-top: 5px; margin-left: 8px;"><i class="mi mi-clear"></i></a>

@@ -177,13 +177,15 @@
                             zIndex:
                             this.$store.getters["entities/windows/query"]().max("zIndex") + 1
                         }
-                    });
-                    this.$store.dispatch("entities/requestUIState/update", {
-                        where: request.requestUIState.id,
-                        data: {
-                            activeTab: "order"
-                        }
-                    });
+                    })
+                    if(request.requestOrderId){
+                        this.$store.dispatch("entities/requestUIState/update", {
+                            where: request.requestUIState.id,
+                            data: {
+                                activeTab: "order"
+                            }
+                        })
+                    }
                 }
             },
 

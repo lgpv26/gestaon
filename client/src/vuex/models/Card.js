@@ -17,7 +17,9 @@ export default class Card extends Model {
             request: this.belongsTo(Request, "requestId"),
             clientName: this.attr(null),
             clientAddress: this.attr(null),
-            orderSubtotal: this.attr(0)
+            orderSubtotal: this.attr(0),
+            responsibleUserId: this.attr(null),
+            status: this.attr("draft"),
         }
     }
 }

@@ -9,8 +9,11 @@
         </div>
         <div class="request__main">
             <div class="request__body">
+                <div class="request__section instruction" v-if="!request.requestUIState.activeTab" :class="{ active: !request.requestUIState.activeTab }">
+                    <img :src="require('../../../../../assets/imgs/form-instructions/request.png')" style="width: 314px; height: 191px;" />
+                </div>
                 <div class="request__section" :class="{ active: request.requestUIState.activeTab === 'client' }">
-                    <app-perfect-scrollbar class="section__content">
+                    <app-perfect-scrollbar v-if="request.requestUIState.activeTab === 'client'" class="section__content">
                         <div class="columns">
                             <div class="left-side">
                                 <div class="box">
@@ -150,12 +153,12 @@
                             </div>
                         </div>
                     </app-perfect-scrollbar>
-                    <div class="section__summary" @click="updateValue('entities/requestUIState/update','activeTab',request.requestUIState.id,'client')">
+                    <div class="section__summary" @click="activateTab('client')">
                         <div class="summary-radio" style="margin-right: 5px;">
                             <app-switch :readonly="true" :value="request.requestUIState.activeTab === 'client'"></app-switch>
                         </div>
                         <h3>Cliente</h3>
-                        <div v-if="request.requestUIState.activeTab !== 'client'" style="margin-left: 12px; display: flex; flex-direction: row; align-items: center;">
+                        <div v-if="request.requestUIState.activeTab !== 'client' && request.clientId" style="margin-left: 12px; display: flex; flex-direction: row; align-items: center;">
                             <div class="dot-separator"></div>
                             <div v-if="hasClientSelected" style="display: flex; flex-direction: row; align-items: center;">
                                 <h3 style="margin-left: 8px; margin-right: 8px;">
@@ -177,13 +180,13 @@
                             </div>
                         </div>
                         <span class="push-both-sides"></span>
-                        <a class="button" v-if="!isNewClient"
+                        <a class="button" v-if="request.clientId && !isNewClient"
                            @click.stop="updateValue('entities/requestUIState/update','showClientOrderTimeline',request.requestUIState.id,true)"
                            style="display: flex; align-items: center; align-self: center; text-transform: uppercase;">últimas compras</a>
                     </div>
                 </div>
                 <div class="request__section" :class="{ active: request.requestUIState.activeTab === 'order' }">
-                    <app-request-order :request="request"></app-request-order>
+                    <app-request-order v-if="request.requestUIState.activeTab === 'order'" :request="request"></app-request-order>
                     <div class="section__summary" @click="activateTab('order')">
                         <div class="summary-radio" style="margin-right: 5px;">
                             <app-switch :readonly="true" :value="request.requestUIState.activeTab === 'order'"></app-switch>
@@ -382,17 +385,107 @@
                 }
             },
             activateTab(tab) {
-                if (tab === "order") {
-                    if (typeof this.request.client.name === "string" &&
-                        this.request.client.name.trim().length &&
-                        !_.get(this.request, "requestClientAddresses[0].clientAddress.address.name", false)){
-                        this.showError("");
-                        return;
-                    }
-                    this.updateValue("entities/requestUIState/update", "activeTab", this.request.requestUIState.id, tab)
+                // if already active tab clicked
+                if(this.request.requestUIState.activeTab === tab){
+                    this.updateValue("entities/requestUIState/update", "activeTab", this.request.requestUIState.id, null)
                     return
                 }
-                this.updateValue("entities/requestUIState/update", "activeTab", this.request.requestUIState.id, tab);
+                // if going to order tab
+                if (tab === "order") {
+                    // create requestOrder if not existent
+                    if(!this.request.requestOrderId){
+                        console.log("Creating requestOrder")
+                        const requestPaymentTmpId = `tmp/${shortid.generate()}`
+                        const requestOrderTmpId = `tmp/${shortid.generate()}`
+                        const requestOrderProductTmpId = `tmp/${shortid.generate()}`
+                        this.$store.dispatch("entities/requestPayments/insert", {
+                            data: {
+                                id: requestPaymentTmpId,
+                                requestId: this.request.id,
+                                paymentMethodId: 1,
+                                amount: _.get(
+                                    this.$store.getters["entities/products/find"](6),
+                                    "price",
+                                    false
+                                )
+                                    ? this.$store.getters["entities/products/find"](6).price
+                                    : 0
+                            }
+                        })
+                        this.$store.dispatch("entities/requestOrderProducts/insert", {
+                            data: {
+                                id: requestOrderProductTmpId,
+                                requestOrderId: requestOrderTmpId,
+                                productId: 1,
+                                unitPrice: _.get(
+                                    this.$store.getters["entities/products/find"](6),
+                                    "price",
+                                    0
+                                )
+                            }
+                        })
+                        this.$store.dispatch("entities/requestOrders/insert", {
+                            data: {
+                                id: requestOrderTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/requests/update", {
+                            where: this.request.id,
+                            data: {
+                                requestOrderId: requestOrderTmpId
+                            }
+                        })
+                    }
+                }
+                // if going to client tab
+                if(tab === "client"){
+                    // create client if not existent
+                    if(!this.request.clientId){
+                        console.log("Creating client")
+                        const clientTmpId = `tmp/${shortid.generate()}`;
+                        const addressTmpId = `tmp/${shortid.generate()}`;
+                        const clientAddressTmpId = `tmp/${shortid.generate()}`;
+                        const clientPhoneTmpId = `tmp/${shortid.generate()}`;
+                        const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
+                        this.$store.dispatch("entities/clients/insert", {
+                            data: {
+                                id: clientTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/clientPhones/insert", {
+                            data: {
+                                id: clientPhoneTmpId,
+                                clientId: clientTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/addresses/insert", {
+                            data: {
+                                id: addressTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/clientAddresses/insert", {
+                            data: {
+                                id: clientAddressTmpId,
+                                clientId: clientTmpId,
+                                addressId: addressTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/requestClientAddresses/insert", {
+                            data: {
+                                id: requestClientAddressTmpId,
+                                requestId: this.request.id,
+                                clientAddressId: clientAddressTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/requests/update", {
+                            where: this.request.id,
+                            data: {
+                                clientId: clientTmpId
+                            }
+                        })
+                    }
+                }
+                this.updateValue("entities/requestUIState/update", "activeTab", this.request.requestUIState.id, tab)
             },
             cancel() {
                 if (this.request.requestUIState.isAddingClientAddress) {
@@ -416,11 +509,19 @@
                 );
             },
             createRequest() {
-                const request = this.$store.getters["entities/requests/query"]().where("id", this.request.id).withAllRecursive(5).first();
+                const request = this.$store.getters["entities/requests/query"]()
+                    .where("id", this.request.id)
+                    .with('client.clientPhones')
+                    .with('client.clientAddresses.address')
+                    .with('requestOrder.requestOrderProducts')
+                    .with('requestPayments')
+                    .with('requestClientAddresses')
+                    .first();
+                console.log(request)
                 this.addToQueue({
                     type: "request",
                     op: "create",
-                    data: this.utils.removeReactivity(request)
+                    data: JSON.parse(JSON.stringify(request))
                 });
                 this.$store.dispatch("entities/windows/update", {
                     where: this.request.card.windowId,
@@ -449,6 +550,8 @@
             },
             selectSearchItem(searchItem) {
                 const vm = this;
+                // create client if not existent
+                vm.activateTab("client")
                 const clientId = parseInt(searchItem.id.split("#")[0]);
                 const clientAddressId = parseInt(searchItem.id.split("#")[1]);
                 this.$db.clients.where({ id: clientId }).first().then(client => {
@@ -862,6 +965,7 @@
                 &:hover,
                 &:focus,
                 &:active {
+                    background-color: var(--bg-color--3)
                 }
             }
             a {
@@ -927,8 +1031,10 @@
                             background-color: var(--bg-color--3);
                         }
                     }
-                    &:last-child {
-                        margin-bottom: 0;
+                    &.instruction {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
                     }
                     &.active {
                         display: flex;
@@ -939,6 +1045,9 @@
                             background-color: var(--bg-color--2);
                             flex-grow: 1;
                         }
+                    }
+                    &:last-child {
+                        margin-bottom: 0;
                     }
                 }
                 table {

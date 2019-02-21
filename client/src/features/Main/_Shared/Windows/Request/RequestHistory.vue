@@ -35,7 +35,7 @@
                                 </thead>
                                 <tbody>
                                 <tr v-for="requestOrderProduct in historyRequest.requestOrder.requestOrderProducts">
-                                    <td>{{ $store.getters['entities/products/find'](requestOrderProduct.productId).name }}</td>
+                                    <td>{{ (requestOrderProduct.productId) ? $store.getters['entities/products/find'](requestOrderProduct.productId).name : "S/ PRODUTO" }}</td>
                                     <td style="text-align: center;">{{ requestOrderProduct.quantity }}</td>
                                     <td style="text-align: center;">{{ utils.formatMoney(requestOrderProduct.unitPrice, 2, 'R$ ', '.', ',') }}</td>
                                     <td style="text-align: center;">{{ utils.formatMoney(requestOrderProduct.unitDiscount, 2, 'R$ ', '.', ',') }}</td>

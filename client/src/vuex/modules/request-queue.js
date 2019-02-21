@@ -6,7 +6,8 @@ let isRequesting = false
 
 const state = {
     pendingQueue: [],
-    processingQueue: []
+    processingQueue: [],
+    processedQueue: []
 };
 
 const getters = {};
@@ -30,11 +31,17 @@ const mutations = {
         })
         state.processingQueue = []
     },
-    REMOVE_PROCESSED_QUEUE_ITEMS(state, processedQueueItems) {
+    REMOVE_PROCESSING_QUEUE_ITEMS(state, processedQueueItems) {
         console.log(
             "Removendo " + state.processingQueue.length + " itens da fila."
         );
+        state.processedQueue = _.concat(state.processedQueue, state.processingQueue)
         state.processingQueue = []
+    },
+    REMOVE_PROCESSED_QUEUE_ITEMS(state, id) {
+        state.processedQueue = _.filter(state.processedQueue, (queueItem) => {
+            return !((queueItem.data.requestId && queueItem.data.requestId === id) || (queueItem.data.id && queueItem.data.id === id))
+        })
     },
     ADD(state, queueItem) {
         state.pendingQueue.push(queueItem)
@@ -54,7 +61,7 @@ const actions = {
                 timeout: 60 * 1000
             }).then(result => {
                 isRequesting = false
-                ctx.commit("REMOVE_PROCESSED_QUEUE_ITEMS")
+                ctx.commit("REMOVE_PROCESSING_QUEUE_ITEMS")
                 console.log("Fila de requisições processadas", result)
             }).catch(err => {
                 isRequesting = false
@@ -84,7 +91,7 @@ const actions = {
         ctx.commit("ADD", queueItem)
     },
     clearProcessingQueue(ctx) {
-        ctx.commit("REMOVE_PROCESSED_QUEUE_ITEMS")
+        ctx.commit("REMOVE_PROCESSING_QUEUE_ITEMS")
     }
 };
 

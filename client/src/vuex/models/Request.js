@@ -8,6 +8,7 @@ import PromiseQueue from 'p-queue'
 import User from "./User"
 import Client from "./Client"
 import Card from "./Card"
+import Window from "./Window"
 import RequestOrder from "./RequestOrder"
 import moment from "moment/moment"
 import RequestPayment from "./RequestPayment"
@@ -63,22 +64,35 @@ export default class Request extends Model {
             })
             store.dispatch("entities/update", {
                 entity: 'cards',
+                ignoreOfflineDBInsertion: true,
                 where: cardId,
                 data: {
                     requestId: request.id
                 }
             })
+            promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                "STATE_cards",
+                "patch",
+                Card.query().where("id", cardId).first()
+            ))
             store.dispatch("entities/update", {
                 entity: 'requestUIState',
+                ignoreOfflineDBInsertion: true,
                 where: requestUIStateId,
                 data: {
                     requestId: request.id
                 }
             })
+            promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                "STATE_requestUIState",
+                "patch",
+                RequestUIState.query().where("id", requestUIStateId).first()
+            ))
         }
         else if(!card) { // card don't exist
             store.dispatch("entities/insert", {
                 entity: 'windows',
+                ignoreOfflineDBInsertion: true,
                 data: {
                     id: windowId,
                     zIndex:
@@ -86,147 +100,184 @@ export default class Request extends Model {
                     show: false
                 }
             })
+            promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                "STATE_windows",
+                "put",
+                Window.query().where("id", windowId).first()
+            ))
             store.dispatch("entities/insert", {
                 entity: 'cards',
+                ignoreOfflineDBInsertion: true,
                 data: {
                     id: cardId,
                     windowId: windowId,
                     requestId: request.id
                 }
             })
+            promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                "STATE_cards",
+                "put",
+                Card.query().where("id", cardId).first()
+            ))
             store.dispatch("entities/insert", {
                 entity: 'requestUIState',
+                ignoreOfflineDBInsertion: true,
                 data: {
                     id: requestUIStateId,
                     windowId: windowId,
                     requestId: request.id
                 }
             })
+            promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                "STATE_requestUIState",
+                "put",
+                RequestUIState.query().where("id", requestUIStateId).first()
+            ))
         }
 
         // request.requestPayments
 
-        promiseQueue.add(() => fillOfflineDBWithSyncedData(
-            "requestPayments",
-            "bulkPutWithReplacement",
-            request.requestPayments,
-            "requestId"
-        ).then((promise) => {
-            const requestPayments = store.getters['entities/requestPayments']().where('requestId',(requestId) => {
-                return requestId === request.id
-            }).get()
-            requestPayments.forEach((requestPayment) => {
-                store.dispatch('entities/delete', {
+        if(_.isArray(request.requestPayments) && request.requestPayments.length){
+            promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                "requestPayments",
+                "bulkPutWithReplacement",
+                request.requestPayments,
+                "requestId"
+            ).then((promise) => {
+                const requestPayments = store.getters['entities/requestPayments']().where('requestId',(requestId) => {
+                    return requestId === request.id
+                }).get()
+                requestPayments.forEach((requestPayment) => {
+                    store.dispatch('entities/delete', {
+                        entity: 'requestPayments',
+                        ignoreOfflineDBInsertion,
+                        where: requestPayment.id
+                    })
+                })
+                store.dispatch("entities/insertOrUpdate", {
                     entity: 'requestPayments',
                     ignoreOfflineDBInsertion,
-                    where: requestPayment.id
+                    data: request.requestPayments
                 })
-            })
-            store.dispatch("entities/insertOrUpdate", {
-                entity: 'requestPayments',
-                ignoreOfflineDBInsertion,
-                data: request.requestPayments
-            })
-            return promise
-        }))
+                return promise
+            }))
+        }
 
-        // request.requestOrder
+        // check if requestOrder exists
 
-        promiseQueue.add(() => fillOfflineDBWithSyncedData("requestOrders", 'put', request.requestOrder).then((promise) => {
-            store.dispatch("entities/insertOrUpdate", {
-                entity: 'requestOrders',
-                ignoreOfflineDBInsertion,
-                data: request.requestOrder
-            });
-            return promise
-        }))
+        if(request.requestOrderId){
 
-        // request.requestOrder.requestOrderProducts
+            // request.requestOrder
 
-        promiseQueue.add(() => fillOfflineDBWithSyncedData(
-            "requestOrderProducts",
-            "bulkPutWithReplacement",
-            request.requestOrder.requestOrderProducts,
-            "requestOrderId"
-        ).then((promise) => {
-            const requestOrderProducts = store.getters['entities/requestOrderProducts']().where('requestOrderId',(requestOrderId) => {
-                return requestOrderId === request.requestOrder.id
-            }).get()
-            requestOrderProducts.forEach((requestOrderProduct) => {
-                store.dispatch('entities/delete', {
-                    entity: 'requestOrderProducts',
-                    ignoreOfflineDBInsertion,
-                    where: requestOrderProduct.id
-                })
-            })
-            store.dispatch("entities/insertOrUpdate", {
-                entity: 'requestOrderProducts',
-                ignoreOfflineDBInsertion,
-                data: request.requestOrder.requestOrderProducts
-            });
-            return promise
-        }))
-
-        // request.client
-
-        promiseQueue.add(() => fillOfflineDBWithSyncedData("clients", 'put', request.client).then((promise) => {
-            store.dispatch("entities/insertOrUpdate", {
-                entity: 'clients',
-                ignoreOfflineDBInsertion,
-                data: request.client
-            });
-            request.client.clientAddresses.forEach(clientAddress => {
-                fillOfflineDBWithSyncedData("addresses", 'put', clientAddress.address)
+            promiseQueue.add(() => fillOfflineDBWithSyncedData("requestOrders", 'put', request.requestOrder).then((promise) => {
                 store.dispatch("entities/insertOrUpdate", {
-                    entity: 'addresses',
+                    entity: 'requestOrders',
                     ignoreOfflineDBInsertion,
-                    data: clientAddress.address
+                    data: request.requestOrder
                 });
-            });
-            return promise
-        }))
+                return promise
+            }))
 
-        // request.client.clientAddresses
+            // request.requestOrder.requestOrderProducts
 
-        promiseQueue.add(() => fillOfflineDBWithSyncedData(
-            "clientAddresses",
-            "bulkPutWithReplacement",
-            request.client.clientAddresses,
-            "clientId"
-        ).then((promise) => {
-            const clientAddresses = store.getters['entities/clientAddresses']().where('clientId',(clientId) => {
-                return clientId === request.client.id
-            }).get()
-            clientAddresses.forEach((clientAddress) => {
-                store.dispatch('entities/delete', {
-                    where: clientAddress.id,
+            if(_.isArray(request.requestOrder.requestOrderProducts) && request.requestOrder.requestOrderProducts.length){
+                promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                    "requestOrderProducts",
+                    "bulkPutWithReplacement",
+                    request.requestOrder.requestOrderProducts,
+                    "requestOrderId"
+                ).then((promise) => {
+                    const requestOrderProducts = store.getters['entities/requestOrderProducts']().where('requestOrderId',(requestOrderId) => {
+                        return requestOrderId === request.requestOrder.id
+                    }).get()
+                    requestOrderProducts.forEach((requestOrderProduct) => {
+                        store.dispatch('entities/delete', {
+                            entity: 'requestOrderProducts',
+                            ignoreOfflineDBInsertion,
+                            where: requestOrderProduct.id
+                        })
+                    })
+                    store.dispatch("entities/insertOrUpdate", {
+                        entity: 'requestOrderProducts',
+                        ignoreOfflineDBInsertion,
+                        data: request.requestOrder.requestOrderProducts
+                    });
+                    return promise
+                }))
+            }
+
+        }
+
+        // check if client exists
+
+        if(request.clientId){
+            // request.client
+
+            promiseQueue.add(() => fillOfflineDBWithSyncedData("clients", 'put', request.client).then((promise) => {
+                store.dispatch("entities/insertOrUpdate", {
+                    entity: 'clients',
                     ignoreOfflineDBInsertion,
-                    entity: 'clientAddresses'
-                })
-            })
-            store.dispatch("entities/insertOrUpdate", {
-                entity: 'clientAddresses',
-                data: request.client.clientAddresses,
-                ignoreOfflineDBInsertion
-            })
-            return promise
-        }))
+                    data: request.client
+                });
+                if(_.isArray(request.client.clientAddresses) && request.client.clientAddresses.length){
+                    request.client.clientAddresses.forEach(clientAddress => {
+                        fillOfflineDBWithSyncedData("addresses", 'put', clientAddress.address)
+                        store.dispatch("entities/insertOrUpdate", {
+                            entity: 'addresses',
+                            ignoreOfflineDBInsertion,
+                            data: clientAddress.address
+                        })
+                    })
+                }
+                return promise
+            }))
 
-        // request.requestClientAddresses
+            // request.client.clientAddresses
 
-        promiseQueue.add(() => fillOfflineDBWithSyncedData(
-            "requestClientAddresses",
-            "bulkPutWithReplacement",
-            request.requestClientAddresses,
-            "requestId"
-        ).then((promise) => {
-            store.dispatch("entities/insertOrUpdate", {
-                entity: 'requestClientAddresses',
-                ignoreOfflineDBInsertion,
-                data: request.requestClientAddresses
-            })
-            return promise
-        }))
+            if(_.isArray(request.client.clientAddresses) && request.client.clientAddresses.length) {
+                promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                    "clientAddresses",
+                    "bulkPutWithReplacement",
+                    request.client.clientAddresses,
+                    "clientId"
+                ).then((promise) => {
+                    const clientAddresses = store.getters['entities/clientAddresses']().where('clientId', (clientId) => {
+                        return clientId === request.client.id
+                    }).get()
+                    clientAddresses.forEach((clientAddress) => {
+                        store.dispatch('entities/delete', {
+                            where: clientAddress.id,
+                            ignoreOfflineDBInsertion,
+                            entity: 'clientAddresses'
+                        })
+                    })
+                    store.dispatch("entities/insertOrUpdate", {
+                        entity: 'clientAddresses',
+                        data: request.client.clientAddresses,
+                        ignoreOfflineDBInsertion
+                    })
+                    return promise
+                }))
+            }
+
+            // request.requestClientAddresses
+
+            if(_.isArray(request.requestClientAddresses) && request.requestClientAddresses.length){
+                promiseQueue.add(() => fillOfflineDBWithSyncedData(
+                    "requestClientAddresses",
+                    "bulkPutWithReplacement",
+                    request.requestClientAddresses,
+                    "requestId"
+                ).then((promise) => {
+                    store.dispatch("entities/insertOrUpdate", {
+                        entity: 'requestClientAddresses',
+                        ignoreOfflineDBInsertion,
+                        data: request.requestClientAddresses
+                    })
+                    return promise
+                }))
+            }
+        }
 
     }
 
@@ -259,14 +310,6 @@ export default class Request extends Model {
         requestChangeString.requestPayments = _.map(requestChangeString.requestPayments, (requestPayment) => {
             requestPayment = _.omit(requestPayment, ['paymentMethod','request','dateUpdated','dateCreated'])
             return requestPayment
-        })
-
-        requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['request','promotionChannel','dateUpdated','dateCreated'])
-
-        requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
-            requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
-            delete requestOrderProduct.requestOrder
-            return requestOrderProduct
         })
 
         return JSON.stringify(requestChangeString)

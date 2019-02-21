@@ -117,6 +117,7 @@
 
 <script>
     import { mapActions, mapMutations, mapState, mapGetters } from "vuex"
+    import Vue from 'vue'
 
     import shortid from 'shortid'
     import PromiseQueue from 'p-queue'
@@ -214,7 +215,7 @@
             ...mapActions(["setSystemRequestsLoaded"]),
             extractOnlyModelFields(modelName,obj){
                 const returnObj = {}
-                this.modelDefinitions.offlineDBModels[modelName].split(',').forEach((column) => {
+                this.modelDefinitions[(modelName.includes('STATE_')) ? "stateModels" : "offlineDBModels"][modelName].split(',').forEach((column) => {
                     column = column.trim()
                     if(_.has(obj,column)){
                         returnObj[column] = obj[column]
@@ -222,10 +223,13 @@
                 })
                 return returnObj
             },
-            fillOfflineDBWithSyncedData(modelName, action, data, replacementColumn = null){
+            async fillOfflineDBWithSyncedData(modelName, action, data, replacementColumn = null){
                 const vm = this
                 if(action === 'put'){
                     return vm.$db[modelName].put(this.extractOnlyModelFields(modelName,data))
+                }
+                else if(action === 'patch'){
+                    return vm.$db[modelName].update(data.id, data)
                 }
                 else if(action === 'bulkPut'){
                     data = _.map(data, (dataItem) => {
@@ -317,47 +321,10 @@
 
                                 // verify requestUIState changes
 
-                                /*let requestChangeString = JSON.parse(JSON.stringify(savedRequest))*/
-                                /*requestChangeString = _.omit(requestChangeString, ['user','card','requestUIState','dateUpdated','dateCreated'])
-
-                                if(requestChangeString.client){
-                                    requestChangeString.client = _.omit(requestChangeString.client, ['clientGroup','dateUpdated','dateCreated'])
-                                    requestChangeString.client.clientAddresses = _.map(requestChangeString.client.clientAddresses, (clientAddress) => {
-                                        clientAddress = _.omit(clientAddress, ['client','dateUpdated','dateCreated'])
-                                        return clientAddress
-                                    })
-                                    requestChangeString.client.clientPhones = _.map(requestChangeString.client.clientPhones, (clientPhone) => {
-                                        clientPhone = _.omit(clientPhone, ['client','dateUpdated','dateCreated'])
-                                        return clientPhone
-                                    })
-                                }
-                                requestChangeString.requestClientAddresses = _.map(requestChangeString.requestClientAddresses, (requestClientAddress) => {
-                                    requestClientAddress = _.omit(requestClientAddress, ['clientAddress','request','dateUpdated','dateCreated'])
-                                    return requestClientAddress
-                                })
-                                if(requestChangeString.requestOrder){
-                                    requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['promotionChannel','request','dateUpdated','dateCreated'])
-                                    requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
-                                        requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
-                                        return requestOrderProduct
-                                    })
-                                }
-                                requestChangeString.requestPayments = _.map(requestChangeString.requestPayments, (requestPayment) => {
-                                    requestPayment = _.omit(requestPayment, ['paymentMethod','request','dateUpdated','dateCreated'])
-                                    return requestPayment
-                                })
-
-                                requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['request','promotionChannel','dateUpdated','dateCreated'])
-
-                                requestChangeString.requestOrder.requestOrderProducts = _.map(requestChangeString.requestOrder.requestOrderProducts, (requestOrderProduct) => {
-                                    requestOrderProduct = _.omit(requestOrderProduct, ['requestOrder','product','dateUpdated','dateCreated'])
-                                    delete requestOrderProduct.requestOrder
-                                    return requestOrderProduct
-                                })*/
-
                                 vm.$store.dispatch("entities/update", {
                                     entity: 'requestUIState',
                                     where: savedRequest.requestUIState.id,
+                                    ignoreOfflineDBInsertion: true,
                                     data: {
                                         requestString: Request.getRequestComparationObj(savedRequest),
                                         hasRequestChanges: false,
@@ -365,41 +332,61 @@
                                     }
                                 })
 
-                                const getClientAddress = () => {
-                                    if (savedRequest.requestClientAddresses.length) {
-                                        const firstClientAddress = _.first(savedRequest.requestClientAddresses).clientAddress;
-                                        return _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), { length: 24, separator: "", omission: "..."}) +
-                                            ", " +
-                                            (firstClientAddress.number ? firstClientAddress.number : "S/N") +
-                                            (firstClientAddress.complement ? " " + firstClientAddress.complement : "")
+                                return vm.fillOfflineDBWithSyncedData(
+                                    "STATE_requestUIState",
+                                    "patch",
+                                    {
+                                        id: savedRequest.requestUIState.id,
+                                        requestString: Request.getRequestComparationObj(savedRequest),
+                                        hasRequestChanges: false,
+                                        hasRequestOrderChanges: false
                                     }
-                                    return "SEM ENDEREÇO";
-                                }
-
-                                const cardData = _.assign(savedRequest.card, {
-                                    clientName: savedRequest.client.name,
-                                    clientAddress: getClientAddress(),
-                                    orderSubtotal: _.sumBy(
-                                        savedRequest.requestOrder.requestOrderProducts,
-                                        requestOrderProduct => {
-                                            return (
-                                                requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
-                                            )
+                                ).then(() => {
+                                    const getClientAddress = () => {
+                                        if (savedRequest.requestClientAddresses.length) {
+                                            const firstClientAddress = _.first(savedRequest.requestClientAddresses).clientAddress;
+                                            return _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), { length: 24, separator: "", omission: "..."}) +
+                                                ", " +
+                                                (firstClientAddress.number ? firstClientAddress.number : "S/N") +
+                                                (firstClientAddress.complement ? " " + firstClientAddress.complement : "")
                                         }
-                                    )
-                                })
+                                        return "SEM ENDEREÇO";
+                                    }
 
-                                // the card put into offline db should work with promise
-                                vm.$store.dispatch("entities/insertOrUpdate", {
-                                    entity: 'cards',
-                                    ignoreOfflineDBInsertion: true,
-                                    data: cardData
-                                })
+                                    const getOrderSubtotal = () => {
+                                        if(!savedRequest.requestOrderId){
+                                            return null
+                                        }
+                                        return _.sumBy(
+                                            savedRequest.requestOrder.requestOrderProducts,
+                                            requestOrderProduct => {
+                                                return (
+                                                    requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
+                                                )
+                                            }
+                                        )
+                                    }
 
-                                return vm.$db["STATE_cards"].put(cardData).then(() => {
-                                    return request.id
-                                })
+                                    const cardData = _.assign(savedRequest.card, {
+                                        clientName: (savedRequest.clientId) ? ((_.isEmpty(savedRequest.client.name)) ? "SEM NOME" : savedRequest.client.name) : "SEM CLIENTE",
+                                        clientAddress: (savedRequest.clientId) ? getClientAddress() : "SEM ENDEREÇO",
+                                        orderSubtotal: getOrderSubtotal(),
+                                        status: savedRequest.status,
+                                        responsibleUserId: savedRequest.userId,
+                                    })
 
+                                    // the card put into offline db should work with promise
+                                    vm.$store.dispatch("entities/insertOrUpdate", {
+                                        entity: 'cards',
+                                        ignoreOfflineDBInsertion: true,
+                                        data: cardData
+                                    })
+
+                                    return vm.$db["STATE_cards"].put(cardData).then(() => {
+                                        return request.id
+                                    })
+
+                                })
                             })
                         })
 
@@ -417,7 +404,6 @@
                                     }
                                     return Promise.resolve()
                                 }))
-
                             })
                             Promise.all(retrievingDraftPromises).then(() => {
                                 // verify changes

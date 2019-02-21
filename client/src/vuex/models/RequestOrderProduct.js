@@ -15,8 +15,8 @@ export default class RequestOrderProduct extends Model {
       productId: this.attr(null),
       product: this.belongsTo(Product, "productId"),
       quantity: this.attr(1),
-      unitPrice: this.attr(0),
-      unitDiscount: this.attr(0),
+      unitPrice: this.attr("0.00"),
+      unitDiscount: this.attr("0.00"),
       dateUpdated: this.attr(null),
       dateCreated: this.attr(null),
       dateRemoved: this.attr(null)
