@@ -13,7 +13,7 @@
     <Process />
     <Advantages />
     <Features />
-    <Reviews />
+    <SlideReviews />
     <Plans />
     <Footer />
   </component>
