@@ -28,6 +28,7 @@ module.exports = function (server) {
     })
 
     this.server.io.on('connection', (socket) => {
+        
         if(!!this._versionInterval){
             clearInterval(this._versionInterval)
         }
@@ -125,7 +126,5 @@ module.exports = function (server) {
         })
 
     })
-
-
 
 }

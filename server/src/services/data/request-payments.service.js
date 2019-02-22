@@ -23,7 +23,6 @@ module.exports = server => {
                             //request.status
 
                             if(ctx.params.editingRequest && request.status === "canceled") return resolve(ctx.params.data)
-
                             ctx.params.data = await vm.consultPaymentMethod(ctx.params.data)
 
                             const removedRequestPayments = await vm.checkRemovedRequestPayments(ctx.params.data, oldRequest, (client) ? client : null)
@@ -132,6 +131,8 @@ module.exports = server => {
                                     return oldPayment.id === payment.id
                                 })
 
+                            if(indexOldPayment == -1) return resolve(payment)
+                            
                             if(!payment.request) _.set(payment, "request", request)
 
                             if(checkChanges.requestStatus) {

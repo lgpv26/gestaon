@@ -85,7 +85,7 @@ module.exports = class Connection {
      */
     _setListeners(){
         const vm = this
-        
+
         this.socket.instance.on('system:ready', () => {
             const usersSystemArray = _.map(_.keys(this._usersSystemReady))
             if(_.includes(usersSystemArray, "userId:" + this.socket.user.id)) return console.log("Já deu system ready")
