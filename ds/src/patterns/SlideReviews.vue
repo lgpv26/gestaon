@@ -1,11 +1,13 @@
 <template>
-  <div class="SlideReviews"><carousel class="index" :data="data"> </carousel></div>
+  <div class="SlideReviews">
+    <carousel class="index" :data="data" :autoplay="false" :interval="60000"> </carousel>
+    </div>
 </template>
 
 <script>
-import Vue from "vue"
-import VueCarousel from "@chenfengyuan/vue-carousel"
-Vue.component(VueCarousel.name, VueCarousel)
+import Vue from "vue";
+import VueCarousel from 'vue-carousel';
+Vue.use(VueCarousel);
 
 export default {
   name: "SlideReviews",
@@ -13,7 +15,7 @@ export default {
   release: "1.0.0",
   data() {
     return {
-      data: [`<Reviews/><Reviews/><Reviews/>`, `<Reviews/>`],
+      data: [`<Reviews/>`, '<Reviews/>', '<Reviews/>', `<Reviews/>`, `<Reviews/>`],
     }
   },
 }
