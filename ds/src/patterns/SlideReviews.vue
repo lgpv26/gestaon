@@ -1,5 +1,5 @@
 <template>
-  <div class="SlideReviews"><carousel class="index" :data="data"></carousel></div>
+  <div class="SlideReviews"><carousel class="index" :data="data"> </carousel></div>
 </template>
 
 <script>
@@ -13,7 +13,7 @@ export default {
   release: "1.0.0",
   data() {
     return {
-      data: ["<div><Reviews /></div>", "<div><Reviews /></div>", "<div><Reviews /></div>"],
+      data: [`<Reviews/><Reviews/><Reviews/>`, `<Reviews/>`],
     }
   },
 }
