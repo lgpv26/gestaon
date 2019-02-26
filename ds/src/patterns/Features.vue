@@ -270,7 +270,7 @@
             </p>
           </div>
         </div>
-        <div class="col-md-6 c" style="position:relative;">
+        <div class="col-md-6" style="position:relative;">
           <div style="position:absolute;top:-2px;left:80px;">
             <img src="../assets/adv-icon.png" />
           </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="Footer">
+  <div class="Footer col-md-12">
     <div class="n1">
       <div style="position:absolute;top:-120px;">
         <img src="../assets/rodape-Vector.png" style="width:100%;" />

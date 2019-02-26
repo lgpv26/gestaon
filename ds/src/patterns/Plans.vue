@@ -1,5 +1,5 @@
 <template>
-  <div class="Plans">
+  <div class="Plans col-md-12">
     <div class="n1">
       <div class="v7"><img src="../assets/Vector7.png" /></div>
       <div class="v8"><img src="../assets/Vector8.png" /></div>
