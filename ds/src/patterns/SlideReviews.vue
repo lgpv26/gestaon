@@ -27,6 +27,9 @@ import VueCarousel from 'vue-carousel';
 Vue.use(VueCarousel);
 
 export default {
+  name: "SlideReviews",
+  status: "ready",
+  release: "1.0.0",
 }
 </script>
 

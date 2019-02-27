@@ -410,6 +410,9 @@ li a:hover {
   text-align: justify;
   margin-left: 75px;
   margin-bottom: 20px;
+  font-family: Montserrat-Alternates;
+  color: #276E73;
+  font-size: 12px;
 }
 .v2 {
   position: absolute;
