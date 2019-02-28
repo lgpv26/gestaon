@@ -14,13 +14,31 @@ export default class RequestClientAddress extends Model {
       request: this.belongsTo(Request, "requestId"),
       clientAddressId: this.attr(null),
       clientAddress: this.belongsTo(ClientAddress, "clientAddressId"),
-      lat: this.attr(null),
-      lng: this.attr(null),
+      lat: this.string(null).nullable(),
+      lng: this.string(null).nullable(),
       type: this.attr(null),
       dateUpdated: this.attr(null),
       dateCreated: this.attr(null),
       dateRemoved: this.attr(null),
       status: this.attr(null)
-    };
+    }
   }
+
+    static beforeCreate (model) {
+        if(!_.isNull(model.lat)){
+            model.lat = parseFloat(model.lat).toFixed(8)
+        }
+        if(!_.isNull(model.lng)){
+            model.lng = parseFloat(model.lng).toFixed(8)
+        }
+    }
+
+    static beforeUpdate(model) {
+        if(!_.isNull(model.lat)){
+            model.lat = parseFloat(model.lat).toFixed(8)
+        }
+        if(!_.isNull(model.lng)){
+            model.lng = parseFloat(model.lng).toFixed(8)
+        }
+    }
 }

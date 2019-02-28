@@ -397,6 +397,9 @@
                                 const modelName = stateModelName.replace("STATE_", "")
                                 retrievingDraftPromises.push(vm.$db[stateModelName].toArray().then(data => {
                                     if(data.length){
+                                        if(modelName === "requestClientAddresses"){
+                                            console.log("Recovering", data)
+                                        }
                                         vm.$store.dispatch("entities/insertOrUpdate", {
                                             entity: modelName,
                                             data: data
@@ -418,6 +421,10 @@
                                         .with("requestClientAddresses")
                                         .with("requestUIState")
                                         .find(requestId)
+
+                                    console.log("Diff", !_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString))
+                                    console.log("Recovered one", JSON.parse(processedRequest.requestUIState.requestString))
+                                    console.log("Current one", JSON.parse(Request.getRequestComparationObj(processedRequest)))
                                     if(_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString)){
                                         vm.$store.dispatch("entities/requestUIState/update",{
                                             where: processedRequest.requestUIState.id,

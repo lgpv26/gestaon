@@ -10,12 +10,15 @@
             <span class="window__spacer">às</span>
             <span class="window__time">10:00</span>-->
             <span class="push-both-sides"></span>
+            <a class="chat-button" @click="chat()">
+                <i class="mi mi-chat"></i>
+            </a>
             <a class="close-button" @click="close()">
                 <i class="mi mi-close"></i>
             </a>
         </div>
         <form class="window__body" v-if="window.show" autocomplete="off">
-            <app-request :request="window.card.request"></app-request>
+            <app-request ref="request" :request="window.card.request"></app-request>
         </form>
     </div>
 </template>
@@ -43,6 +46,9 @@
                     zIndex: this.$store.getters['entities/windows/query']().max('zIndex') + 1
                 })
             },
+            chat(){
+                this.$refs.request.toggleChat()
+            },
             close(){
                 this.$store.dispatch('entities/windows/update', {
                     id: this.window.id,
@@ -55,7 +61,7 @@
             if(!vm.windowInteractInstance){
                 vm.windowInteractInstance = interact(vm.$refs.window).draggable({
                     allowFrom: '.window__header',
-                    ignoreFrom: '.close-button',
+                    ignoreFrom: '.close-button, .chat-button',
                     onmove(event){
                         let target = event.target,
                             // keep the dragged position in the data-x/data-y attributes
@@ -176,7 +182,7 @@
                 margin-right: 5px;
                 font-size: 12px;
             }
-            .close-button {
+            .close-button, .chat-button {
                 height: 30px;
                 width: 30px;
                 display: flex;
@@ -184,6 +190,7 @@
                 justify-content: center;
                 background-color: var(--bg-color--9);
                 color: var(--font-color--7);
+                margin-left: 1px;
                 i {
                     font-weight: 900;
                     font-size: 18px;
@@ -193,6 +200,9 @@
                 &:hover {
                     background-color: var(--bg-color--10);
                 }
+            }
+            .chat-button i {
+                font-size: 16px;
             }
         }
         .window__body {

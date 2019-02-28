@@ -18,6 +18,7 @@ import PaymentMethod from "./models/PaymentMethod";
 import Product from "./models/Product";
 import Request from "./models/Request";
 import RequestPayment from "./models/RequestPayment";
+import RequestChat from "./models/RequestChat";
 import RequestOrder from "./models/RequestOrder";
 import RequestOrderProduct from "./models/RequestOrderProduct";
 import RequestClientAddress from "./models/RequestClientAddress";
@@ -37,6 +38,7 @@ import requests from "./orm-modules/requests";
 import promotionChannels from "./orm-modules/promotion-channels";
 import paymentMethods from "./orm-modules/payment-methods";
 import products from "./orm-modules/products";
+import requestChats from "./orm-modules/request-chats";
 import requestPayments from "./orm-modules/request-payments";
 import requestOrders from "./orm-modules/request-orders";
 import requestOrderProducts from "./orm-modules/request-order-products";
@@ -64,6 +66,7 @@ database.register(PaymentMethod, paymentMethods);
 database.register(Product, products);
 database.register(RequestUIState, requestUIState);
 database.register(Request, requests);
+database.register(RequestChat, requestChats);
 database.register(RequestPayment, requestPayments);
 database.register(RequestOrder, requestOrders);
 database.register(RequestOrderProduct, requestOrderProducts);
@@ -77,7 +80,7 @@ export default new Vuex.Store({
     plugins: [
         VuexORM.install(database),
         createPersistedState({
-            paths: ["request-board","lastDataSyncedDate","request-queue"]
+            paths: ["request-board","lastDataSyncedDate","request-queue","chat-queue"]
         })
     ],
     state: {

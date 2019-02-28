@@ -11,7 +11,8 @@
                         <div class="header__dropdown-menu">
                             <app-dropdown-menu :menuList="menuList" placement="bottom-start" :verticalOffset="-10">
                                 <div class="dropdown-menu__company-name">
-                                    <h3>{{ utils.getInitialsFromString(company.name) }}</h3>
+                                    <app-gravatar style="width: 32px; height: 32px; border-radius: 32px;" :email="user.email"></app-gravatar>
+
                                 </div>
                             </app-dropdown-menu>
                         </div>
@@ -122,7 +123,7 @@
         },
         methods: {
             ...mapMutations(["setApp", "setSystemInitialized"]),
-            ...mapMutations('request-queue',["REMOVE_PROCESSED_QUEUE_ITEMS"]),
+            //...mapMutations('request-queue',["REMOVE_PROCESSED_QUEUE_ITEMS"]),
             ...mapActions(["setLastDataSyncedDate"]),
             ...mapActions("auth", {
                 logoutAction: "logout",
@@ -155,7 +156,16 @@
             ...mapActions("toast", ["showToast", "showError"]),
             ...mapActions("presence", ["setConnectedUsers"]),
             ...mapActions("elasticlunr", ["setLunrIndex"]),
-            ...mapActions("request-queue", ["initializeRequestQueue","clearProcessingQueue"]),
+            ...mapActions('request-queue',{
+                'initializeRequestQueue': 'initializeRequestQueue',
+                'clearRequestProcessingQueue': 'clearRequestProcessingQueue',
+                'resetRequestQueueState': 'resetState'
+            }),
+            ...mapActions('chat-queue',{
+                'initializeChatQueue': 'initializeChatQueue',
+                'clearChatProcessingQueue': 'clearChatProcessingQueue',
+                'resetChatQueueState': 'resetState'
+            }),
             toggleCallerIdFunctionality() {
                 console.log(this.isCallerIdDisabled);
                 if (this.isCallerIdDisabled) {
@@ -172,8 +182,7 @@
                 this.$store.dispatch("entities/windows/insert", {
                     data: {
                         id: windowTmpId,
-                        zIndex:
-                        this.$store.getters["entities/windows/query"]().max("zIndex") + 1
+                        zIndex: this.$store.getters["entities/windows/query"]().max("zIndex") + 1
                     }
                 })
                 this.$store.dispatch("entities/cards/insert", {
@@ -272,6 +281,22 @@
 
                         const request = processedItem.data
                         if (request.action === "update-status") {
+                            const originalRequest = Request.query()
+                                .with("card")
+                                .with("client.clientAddresses.address")
+                                .with("client.clientPhones")
+                                .with("requestClientAddresses.clientAddress.address")
+                                .with("requestOrder.requestOrderProducts")
+                                .with("requestPayments")
+                                .with("requestClientAddresses")
+                                .with("requestUIState")
+                                .find(request.requestId)
+
+                            const changedRequest = _.assign(JSON.parse(JSON.stringify(originalRequest)), {
+                                status: request.status,
+                                dateUpdated: request.dateUpdated
+                            })
+
                             Request.update({
                                 where: request.requestId,
                                 data: {
@@ -288,9 +313,33 @@
                                     status: request.status
                                 }
                             })
-                            vm.REMOVE_PROCESSED_QUEUE_ITEMS(request.requestId)
+                            //vm.REMOVE_PROCESSED_QUEUE_ITEMS(request.requestId)
+                            vm.$store.dispatch("entities/update", {
+                                entity: 'requestUIState',
+                                where: originalRequest.requestUIState.id,
+                                data: {
+                                    requestString: Request.getRequestComparationObj(changedRequest),
+                                    hasRequestChanges: _.isEqual(Request.getRequestComparationObj(originalRequest),Request.getRequestComparationObj(changedRequest))
+                                }
+                            })
                         }
                         else if (request.action === "update-user") {
+                            const originalRequest = Request.query()
+                                .with("card")
+                                .with("client.clientAddresses.address")
+                                .with("client.clientPhones")
+                                .with("requestClientAddresses.clientAddress.address")
+                                .with("requestOrder.requestOrderProducts")
+                                .with("requestPayments")
+                                .with("requestClientAddresses")
+                                .with("requestUIState")
+                                .find(request.requestId)
+
+                            const changedRequest = _.assign(JSON.parse(JSON.stringify(originalRequest)), {
+                                userId: request.userId,
+                                dateUpdated: request.dateUpdated
+                            })
+
                             Request.update({
                                 where: request.requestId,
                                 data: {
@@ -307,7 +356,15 @@
                                     responsibleUserId: request.userId
                                 }
                             })
-                            vm.REMOVE_PROCESSED_QUEUE_ITEMS(request.requestId)
+                            //vm.REMOVE_PROCESSED_QUEUE_ITEMS(request.requestId)
+                            vm.$store.dispatch("entities/update", {
+                                entity: 'requestUIState',
+                                where: originalRequest.requestUIState.id,
+                                data: {
+                                    requestString: Request.getRequestComparationObj(changedRequest),
+                                    hasRequestChanges: _.isEqual(Request.getRequestComparationObj(originalRequest),Request.getRequestComparationObj(changedRequest))
+                                }
+                            })
                         }
                         else {
                             // guarantee the order of promises
@@ -433,7 +490,7 @@
                                     data: cardData
                                 })
 
-                                vm.REMOVE_PROCESSED_QUEUE_ITEMS(savedRequest.id)
+                                //vm.REMOVE_PROCESSED_QUEUE_ITEMS(savedRequest.id)
 
                             })
                         }
@@ -454,7 +511,6 @@
         created() {
             this.isFirstInitialization = true
             this.$bus.$on("sound-play", this.registerSoundEventListeners)
-            this.clearProcessingQueue()
         },
         beforeDestroy() {
             this.$bus.$off("sound-play", this.registerSoundEventListeners);

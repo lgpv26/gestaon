@@ -34,7 +34,7 @@ const mutations = {
     },
     REMOVE_PROCESSING_QUEUE_ITEMS(state, processedQueueItems) {
         console.log(
-            "Removendo " + state.processingQueue.length + " itens da fila geral."
+            "Removendo " + state.processingQueue.length + " itens da fila de chats."
         );
         /*state.processedQueue = _.concat(state.processedQueue, state.processingQueue)*/
         state.processingQueue = []
@@ -56,15 +56,15 @@ const mutations = {
 }
 
 const actions = {
-    initializeRequestQueue(ctx, socket) {
-        const sendRequestQueue = processingQueue => {
+    initializeChatQueue(ctx, socket) {
+        const sendChatQueue = processingQueue => {
             if(isRequesting){
                 console.log("A fila já está aguardando por resposta do servidor")
                 return
             }
-            console.log(`Processando ${processingQueue.length} item(s) na fila geral!`, processingQueue)
+            console.log(`Processando ${processingQueue.length} item(s) na fila de chats!`, processingQueue)
             isRequesting = true
-            QueueAPI.sendRequestQueue(processingQueue, {
+            QueueAPI.sendChatQueue(processingQueue, {
                 timeout: 60 * 1000
             }).then(result => {
                 isRequesting = false
@@ -80,7 +80,7 @@ const actions = {
         }
         setInterval(() => {
             if(socket.connected){
-                ctx.commit("PROCESS_QUEUE", sendRequestQueue)
+                ctx.commit("PROCESS_QUEUE", sendChatQueue)
             }
         }, 1000)
     },
@@ -91,10 +91,10 @@ const actions = {
             data,
             date: moment()
         }
-        console.log("Item adicionado para a fila geral", queueItem)
+        console.log("Item adicionado para a fila de chats", queueItem)
         ctx.commit("ADD", queueItem)
     },
-    clearRequestProcessingQueue(ctx) {
+    clearChatProcessingQueue(ctx) {
         ctx.commit("REMOVE_PROCESSING_QUEUE_ITEMS")
     },
     resetState(context) {

@@ -48,6 +48,15 @@
             <div class="card__middle"></div>
             <div class="card__footer">
                 <span class="push-both-sides"></span>
+                <a class="footer__status">
+                    <request-board-icon-status></request-board-icon-status>
+                    <span>{{ status }}</span>
+                </a>
+                <a class="footer__responsible-user">
+                    <request-board-icon-flag></request-board-icon-flag>
+                    {{ responsibleUserName }}
+                </a>
+                <!--
                 <app-popover :placement="'bottom-start'" :verticalOffset="5" :horizontalOffset="18" :contentStyle="dropdownMenuPopoverContentStyle">
                     <template slot="triggerer">
                         <a class="footer__status ignore">
@@ -67,6 +76,7 @@
                         <app-rbc-user :value="card.responsibleUserId" @input="onRequestResponsibleUserUpdate($event)" id="rbc-user" :card="card"></app-rbc-user>
                     </template>
                 </app-popover>
+                -->
             </div>
         </div>
         <div class="request-board-card__container draft" v-if="card && request.requestUIState && !Number.isInteger(request.id)">
@@ -169,7 +179,7 @@
             };
         },
         computed: {
-            ...mapState('request-queue',['pendingQueue','processingQueue','processedQueue']),
+            ...mapState('request-queue',['pendingQueue','processingQueue']),
             isSaving(){
                 const hasRequestInPendingQueue = _.some(this.pendingQueue, (queueItem) => {
                     if(queueItem.type === "request"){
@@ -187,15 +197,15 @@
                     }
                     return false
                 })
-                const hasRequestInProcessedQueue = _.some(this.processedQueue, (queueItem) => {
+                /*const hasRequestInProcessedQueue = _.some(this.processedQueue, (queueItem) => {
                     if(queueItem.type === "request"){
                         if(queueItem.data.id === this.request.id || queueItem.data.requestId === this.request.id){
                             return true
                         }
                     }
                     return false
-                })
-                return hasRequestInPendingQueue || hasRequestInProcessingQueue || hasRequestInProcessedQueue
+                })*/
+                return hasRequestInPendingQueue || hasRequestInProcessingQueue
             },
             requestClientAddress() {
                 if (this.request.requestClientAddresses.length) {
@@ -262,15 +272,15 @@
                     data: {
                         status: ev
                     }
-                });
+                })
             },
             onRequestResponsibleUserUpdate(ev) {
                 Card.update({
                     where: this.card.id,
                     data: {
-                        userId: ev
+                        responsibleUserId: ev
                     }
-                });
+                })
             }
         },
         mounted() {
@@ -382,9 +392,9 @@
         background: var(--bg-color--2);
         box-shadow: var(--card-shadow);
         position: relative;
-        &:hover, &:active, &:focus {
+        outline: 0;
+        &:hover {
             background: var(--bg-color--3);
-            outline: 0;
             .request-board-card__overlay {
                 background: var(--bg-color--3);
             }

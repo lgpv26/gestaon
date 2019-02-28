@@ -13,6 +13,7 @@ export default class RequestUIState extends Model {
             requestId: this.attr(null),
             request: this.belongsTo(Request,'requestId'),
             activeTab: this.attr(null),
+            showRequestChat: this.attr(false),
             showClientOrderTimeline: this.attr(false),
             requestClientAddressForm: this.attr(true),
             isAddingClientAddress: this.attr(true),

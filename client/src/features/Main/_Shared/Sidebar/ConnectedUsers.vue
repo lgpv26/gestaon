@@ -1,11 +1,12 @@
 <template>
     <div class="app-connected-users">
-        <ul v-if="connected">
-            <li v-for="(connectedUser, index) in connectedUsers" :key="index">
-                {{ utils.getInitialsFromString(connectedUser.name) }}
+        <ul v-if="connected && _.filter(connectedUsers,connectedUser => user.id !== connectedUser.id).length">
+            <li v-for="(connectedUser, index) in connectedUsers" :key="index" v-if="user.id !== connectedUser.id">
+                <!--<span>{{ utils.getInitialsFromString(connectedUser.name) }}</span>-->
+                <app-gravatar style="width: 32px; height: 32px; border-radius: 32px;" :email="connectedUser.email"></app-gravatar>
             </li>
         </ul>
-        <div v-else class="loader">Loading...</div>
+        <div v-if="!connected" class="loader">Loading...</div>
         <div v-if="!connected" style="line-height: 80%; margin: 10px 0 10px">
             <span style="color: var(--font-color--terciary); font-size: 8px; font-weight: bold; text-align: center; ">
                 SEM<br/>CONEXÃO
@@ -48,6 +49,7 @@
             }
         },
         computed: {
+            ...mapState('auth', ['user']),
             ...mapState('presence', ['connectedUsers'])
         },
         methods: {

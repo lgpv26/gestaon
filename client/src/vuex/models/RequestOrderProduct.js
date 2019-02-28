@@ -15,11 +15,20 @@ export default class RequestOrderProduct extends Model {
       productId: this.attr(null),
       product: this.belongsTo(Product, "productId"),
       quantity: this.attr(1),
-      unitPrice: this.attr("0.00"),
-      unitDiscount: this.attr("0.00"),
+      unitPrice: this.string("0.00"),
+      unitDiscount: this.string("0.00"),
       dateUpdated: this.attr(null),
       dateCreated: this.attr(null),
       dateRemoved: this.attr(null)
-    };
+    }
   }
+    static beforeCreate (model) {
+        model.unitPrice = parseFloat(model.unitPrice).toFixed(2)
+        model.unitDiscount = parseFloat(model.unitDiscount).toFixed(2)
+    }
+
+    static beforeUpdate(model) {
+        model.unitPrice = parseFloat(model.unitPrice).toFixed(2)
+        model.unitDiscount = parseFloat(model.unitDiscount).toFixed(2)
+    }
 }

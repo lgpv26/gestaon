@@ -116,6 +116,7 @@ export default {
             if(!vm.requestQueueInitialized){
                 vm.requestQueueInitialized = true
                 vm.initializeRequestQueue(vm.$socket)
+                vm.initializeChatQueue(vm.$socket)
             }
             // set elasticlunr tokenizer
             elasticlunr.tokenizer = function(str) {
@@ -770,7 +771,8 @@ export default {
                             ...vm.modelDefinitions.offlineDBModels,
                             ...vm.modelDefinitions.stateModels
                         });
-                        vm.clearProcessingQueue();
+                        vm.resetRequestQueueState();
+                        vm.resetChatQueueState();
                         vm.$store.dispatch("entities/deleteAll");
                         vm.setSystemInitialized(false);
                         vm.setLastDataSyncedDate(null);

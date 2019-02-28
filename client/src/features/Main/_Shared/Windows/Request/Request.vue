@@ -1,5 +1,6 @@
 <template>
     <div v-if="_.has(request, 'requestUIState') && _.has(request, 'client') && !request.requestUIState.isLoading" class="request__window">
+        <app-request-chat v-if="request.requestUIState.showRequestChat" :request="request"></app-request-chat>
         <app-request-history v-if="request.requestUIState.showClientOrderTimeline" :request="request" @close="updateValue('entities/requestUIState/update','showClientOrderTimeline',request.requestUIState.id,false)"></app-request-history>
         <div class="request__search">
             <input type="text" autocomplete="off" class="input&#45;&#45;borderless" placeholder="DIGITE AQUI PARA PESQUISAR ..." v-model="searchValue" @focus="searchShow = true" @input="search()" />
@@ -252,6 +253,7 @@
     import AddressSearchInputComponent from "../_Shared/Search/AddressSearchInput";
     import RequestOrder from "./RequestOrder";
     import RequestHistory from "./RequestHistory";
+    import RequestChat from "./RequestChat";
 
     import Request from '../../../../../vuex/models/Request'
 
@@ -259,6 +261,7 @@
         props: ["request"],
         components: {
             "app-request-order": RequestOrder,
+            "app-request-chat": RequestChat,
             "app-request-history": RequestHistory,
             "app-client-search": ClientSearchComponent,
             "app-address-search-input": AddressSearchInputComponent
@@ -361,6 +364,9 @@
             }
         },
         methods: {
+            ...mapActions('chat-queue',{
+                'addToChatQueue': 'addToQueue'
+            }),
             ...mapActions("request-queue", ["addToQueue"]),
             ...mapActions("toast", ["showToast", "showError"]),
             updateValue(path, field, id, value, modifier = false, ev = false) {
@@ -381,6 +387,29 @@
                 if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
                     Vue.nextTick(() => {
                         ev.target.setSelectionRange(start,end);
+                    })
+                }
+            },
+            toggleChat(){
+                this.updateValue("entities/requestUIState/update", "showRequestChat", this.request.requestUIState.id, !this.request.requestUIState.showRequestChat)
+                if(this.request.requestUIState.showRequestChat){
+                    this.addToChatQueue({
+                        type: "request",
+                        op: "chat-open",
+                        data: {
+                            requestId: this.request.id
+                        },
+                        date: this.moment().toISOString()
+                    })
+                }
+                else {
+                    this.addToChatQueue({
+                        type: "request",
+                        op: "chat-leave",
+                        data: {
+                            requestId: this.request.id
+                        },
+                        date: this.moment().toISOString()
                     })
                 }
             },
@@ -442,11 +471,11 @@
                     // create client if not existent
                     if(!this.request.clientId){
                         console.log("Creating client")
-                        const clientTmpId = `tmp/${shortid.generate()}`;
-                        const addressTmpId = `tmp/${shortid.generate()}`;
-                        const clientAddressTmpId = `tmp/${shortid.generate()}`;
-                        const clientPhoneTmpId = `tmp/${shortid.generate()}`;
-                        const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
+                        const clientTmpId = `tmp/${shortid.generate()}`
+                        const addressTmpId = `tmp/${shortid.generate()}`
+                        const clientAddressTmpId = `tmp/${shortid.generate()}`
+                        const clientPhoneTmpId = `tmp/${shortid.generate()}`
+                        const requestClientAddressTmpId = `tmp/${shortid.generate()}`
                         this.$store.dispatch("entities/clients/insert", {
                             data: {
                                 id: clientTmpId
@@ -490,9 +519,8 @@
             cancel() {
                 if (this.request.requestUIState.isAddingClientAddress) {
                     if (this.utils.isTmp(this.request.requestClientAddresses[0].id)) {
-                        const clientAddressId = this.request.requestClientAddresses[0]
-                            .clientAddressId;
-                        this.removeClientAddress(clientAddressId);
+                        const clientAddressId = this.request.requestClientAddresses[0].clientAddressId
+                        this.removeClientAddress(clientAddressId)
                     }
                     this.updateValue(
                         "entities/requestUIState/update",
@@ -516,8 +544,7 @@
                     .with('requestOrder.requestOrderProducts')
                     .with('requestPayments')
                     .with('requestClientAddresses')
-                    .first();
-                console.log(request)
+                    .first()
                 this.addToQueue({
                     type: "request",
                     op: "create",
@@ -528,7 +555,7 @@
                     data: {
                         show: false
                     }
-                });
+                })
             },
 
             /* Client */
@@ -539,34 +566,34 @@
                     data: {
                         id: clientTmpId
                     }
-                });
+                })
                 this.$store.dispatch("entities/requests/update", {
                     where: this.request.id,
                     data: {
                         clientId: clientTmpId
                     }
-                });
+                })
                 this.addClientAddress();
             },
             selectSearchItem(searchItem) {
                 const vm = this;
                 // create client if not existent
                 vm.activateTab("client")
-                const clientId = parseInt(searchItem.id.split("#")[0]);
-                const clientAddressId = parseInt(searchItem.id.split("#")[1]);
+                const clientId = parseInt(searchItem.id.split("#")[0])
+                const clientAddressId = parseInt(searchItem.id.split("#")[1])
                 this.$db.clients.where({ id: clientId }).first().then(client => {
                     this.$db.clientPhones.where({clientId: clientId}).toArray().then(clientPhones => {
                         this.$db.clientAddresses.where({clientId: clientId}).toArray().then(clientAddresses => {
                             const clientAddress = _.find(clientAddresses, { id: clientAddressId })
                             if (clientAddress.addressId) {
                                 this.$db.addresses.where({ id: clientAddress.addressId}).first().then(address => {
-                                    this.$store.dispatch("entities/addresses/insert", { data: address });
-                                    this.$store.dispatch("entities/clients/insert", { data: client });
+                                    this.$store.dispatch("entities/addresses/insert", { data: address })
+                                    this.$store.dispatch("entities/clients/insert", { data: client })
                                     if(clientPhones.length){
-                                        this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones });
+                                        this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
                                     }
                                     if(clientAddresses.length){
-                                        this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses});
+                                        this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
                                     }
                                     this.$store.dispatch(
                                         "entities/requestClientAddresses/update",
@@ -607,9 +634,7 @@
                 vm.searchValueStrings = _.filter(_.map(vm.searchValue.split(" "), searchValue => searchValue.trim(), searchValue => searchValue !== ''))
                 if (vm.searchTimeout) clearTimeout(vm.searchTimeout);
                 vm.searchTimeout = setTimeout(() => {
-
                     if (vm.$static.searchClientsIndex) {
-
                         let resultData = vm.$static.searchClientsIndex.search(vm.searchValue, {
                             fields: {
                                 name: { boost: 1 },
@@ -620,7 +645,6 @@
                             bool: "OR"
                         })
                         resultData = resultData.slice(0, 30)
-
                         vm.$db.searchClients.where("id").anyOf(
                             _.map(resultData, resultDataItem => {
                                 return resultDataItem.ref;
@@ -657,8 +681,6 @@
             /* Client Address */
 
             addClientAddress() {
-                /*
-                 */
                 const requestClientAddressId = this.request.requestClientAddresses[0].id;
                 if (requestClientAddressId) {
                     const clientAddressTmpId = `tmp/${shortid.generate()}`;
