@@ -57,6 +57,6 @@ module.exports = {
         }
     },
     postSettings: ({ClientPhone, Client}) => {
-        ClientPhone.belongsTo(Client, {as: 'client', foreignKey: 'clientId'});
+        ClientPhone.belongsTo(Client, {as: 'client', foreignKey: 'clientId'})
     }
 };

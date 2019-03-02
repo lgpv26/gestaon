@@ -515,7 +515,7 @@ module.exports = server => {
                         },
                         transaction
                     }).then(() => {
-                        return server.mysql.Request.findById(data.id, {
+                        return server.mysql.Request.findByPk(data.id, {
                             transaction,
                             include: [{
                                 model: server.mysql.User,
@@ -534,7 +534,7 @@ module.exports = server => {
                     })
                     .then((create) => {
                         if (!create) return Promise.reject("Erro ao cadastrar o Request!")
-                        return server.mysql.Request.findById(create.id, {
+                        return server.mysql.Request.findByPk(create.id, {
                             transaction,
                             include: [{
                                 model: server.mysql.User,

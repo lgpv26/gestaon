@@ -8,7 +8,7 @@ module.exports = class EventResponse {
         if(data instanceof Error){
             this.success = false
             const error = {
-                message: JSON.parse(data.message)
+                message: data.message
             }
             if(data.data){
                 error.data = data.data

@@ -63,7 +63,7 @@ module.exports = server => {
                     transaction: ctx.params.transaction || null
                 })
                     .then(() => {
-                        return server.mysql.Transaction.findById(ctx.params.data.id, {
+                        return server.mysql.Transaction.findByPk(ctx.params.data.id, {
                             transaction: ctx.params.transaction
                         })
                             .then((transaction) => {

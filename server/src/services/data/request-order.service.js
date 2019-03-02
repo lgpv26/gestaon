@@ -49,7 +49,7 @@ module.exports = (server) => {
                         },
                         transaction
                     }).then(() => {
-                        return server.mysql.RequestOrder.findById(data.id, { transaction })
+                        return server.mysql.RequestOrder.findByPk(data.id, { transaction })
                             .then((requestOrder) => {
                                 return JSON.parse(JSON.stringify(requestOrder))
                             })
@@ -94,7 +94,7 @@ module.exports = (server) => {
                                     paranoid: false,
                                     transaction
                                 }).then(() => {
-                                    return server.mysql.RequestOrderProduct.findById(requestOrderProduct.id, { transaction })
+                                    return server.mysql.RequestOrderProduct.findByPk(requestOrderProduct.id, { transaction })
                                         .then((requestOrderProductUpdated) => {
                                             return JSON.parse(JSON.stringify(requestOrderProductUpdated))
                                         })

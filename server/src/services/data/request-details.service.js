@@ -89,7 +89,7 @@ module.exports = (server) => {
                                         transaction
                                     })
                                     .then(() => {
-                                        return server.mysql.RequestClientAddress.findById(requestClientAddress.id, {
+                                        return server.mysql.RequestClientAddress.findByPk(requestClientAddress.id, {
                                             transaction
                                         }).then((RequestClientAddress) => {
                                             return JSON.parse(JSON.stringify(RequestClientAddress))
@@ -122,7 +122,7 @@ module.exports = (server) => {
     
             getGeo(clientAddressId, transaction){
                 return new Promise((resolve, reject ) => {
-                    return server.mysql.ClientAddress.findById(parseInt(clientAddressId), {
+                    return server.mysql.ClientAddress.findByPk(parseInt(clientAddressId), {
                         include: [{
                             model: server.mysql.Address,
                             as: 'address'

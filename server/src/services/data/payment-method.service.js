@@ -50,7 +50,7 @@ module.exports = (server) => { return {
                         new Error("Nenhum registro encontrado.")
                     )
                 }
-                return server.mysql.PaymentMethod.findById(ctx.params.data.id).then((data) => {
+                return server.mysql.PaymentMethod.findByPk(ctx.params.data.id).then((data) => {
                     return JSON.parse(JSON.stringify(data))
                 })
             });

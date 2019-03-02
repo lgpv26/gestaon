@@ -54,7 +54,7 @@ module.exports = server => {
                      
                     data.forEach((requestPayment, index) => {
                         promises.push(new Promise((resolve, reject) => {
-                            server.mysql.PaymentMethod.findById(requestPayment.paymentMethodId)
+                            server.mysql.PaymentMethod.findByPk(requestPayment.paymentMethodId)
                             .then((paymentMethod) => {
                                 _.set(data[index], "paymentMethod", paymentMethod)
                                 resolve()
@@ -284,7 +284,7 @@ module.exports = server => {
                                             transaction
                                         })
                                         .then((transactionCreate) => {
-                                            return server.mysql.Account.findById(transactionCreate.accountId, {transaction})
+                                            return server.mysql.Account.findByPk(transactionCreate.accountId, {transaction})
                                             .then((account) => {
                                                 if (!accountBalances[account.id]) accountBalances[account.id] = account.balance
                                                     accountBalances[account.id] = parseFloat(accountBalances[account.id]) + parseFloat(transactionCreate.amount)
@@ -377,7 +377,7 @@ module.exports = server => {
                 }).then(() => {
                     if (creditLimitRequired.length && (requestPayments[0].changeStatus !== 'canceled' || (requestPayments[0].changeUser || requestPayments[0].changedPaid || requestPayments[0].changedAmount || requestPayments[0].changedMethod))) {
                                              
-                        return server.mysql.Client.findById(client.id, {
+                        return server.mysql.Client.findByPk(client.id, {
                             transaction
                         }).then((clientConsult) => {
 
@@ -454,7 +454,7 @@ module.exports = server => {
                                         transaction
                                     })
                                 .then(() => {
-                                    return server.mysql.RequestPayment.findById(requestPayment.id, { transaction })
+                                    return server.mysql.RequestPayment.findByPk(requestPayment.id, { transaction })
                                     .then((paymentMethod) => {
                                         paymentMethod = JSON.parse(JSON.stringify(paymentMethod))
                                         if (paymentMethod.paid) paymentsPaids.push(paymentMethod) 
@@ -499,7 +499,7 @@ module.exports = server => {
                                                 transaction
                                             })
                                             .then((transactionCreate) => {
-                                                return server.mysql.Account.findById(transactionCreate.accountId, {
+                                                return server.mysql.Account.findByPk(transactionCreate.accountId, {
                                                         transaction})
                                                     .then((account) => {
 

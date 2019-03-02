@@ -56,7 +56,7 @@ module.exports = (server) => { return {
                     console.log("Nenhum registro encontrado. Update.")
                     return Promise.reject('Erro ao atualizar o produto')
                 }
-                return server.mysql.Product.findById(ctx.params.data.id)
+                return server.mysql.Product.findByPk(ctx.params.data.id)
                 .then((product) => {
                     return JSON.parse(JSON.stringify(product))
                 })

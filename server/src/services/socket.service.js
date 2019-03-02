@@ -22,10 +22,10 @@ module.exports = server => {
                     if (err) return Promise.reject("erro no redis + socket io")
 
                     rooms.splice(0, 1)
-
+                    
                     const index = _.indexOf(rooms, "company/" + ctx.params.companyId)
                     if (index !== -1) rooms.splice(index, 1)
-
+                    
                     if (!rooms.length) {
                         return server.redisClient.hdel("userId:" + _.toString(ctx.params.userId), "rooms", (err, res) => {
                             if (err) {
@@ -148,8 +148,16 @@ module.exports = server => {
                 })
             },
 
+            checkUserIdBySocketId(ctx){
+                return server.redisClient.get("socket:" + ctx.params.socketId)
+                .then((userId) => {
+                    if(!userId) return Promise.resolve(null)
+                    return Promise.resolve(parseInt(userId))
+                })
+            },
+
             checkSocketId(ctx){      
-                return new Promise((resolve, reject) => {              
+                return new Promise((resolve, reject) => { 
                     const checkSocketConfirm = function () {
                         return new Promise((resolve, reject) => {
                             async function start() {
@@ -179,7 +187,6 @@ module.exports = server => {
                             start()
                         })
                         .then((userSocketId) => {
-                            console.log(userSocketId)
                             if(!userSocketId) {
                                 setTimeout(() => { 
                                     console.log("não confirmou o socket, tentando denovo...")
@@ -197,7 +204,7 @@ module.exports = server => {
                 })
             },
 
-            streamQueue(ctx){
+            streamRequestQueue(ctx){
                 return new Promise((resolve, reject) => {
                 
                     async function streamQueueStart() {
@@ -239,8 +246,73 @@ module.exports = server => {
                 })                
             },
 
+            streamChatQueue(ctx){
+                return new Promise((resolve, reject) => {
+                
+                    async function streamQueueStart() {
+                        try {
+                            let response
+
+                            const data = ctx.params.data
+    /*
+                            // if (data.error) {
+                            //     response = new Error(JSON.stringify({
+                            //         triggeredBy: ctx.params.userId,
+                            //         processedQueue: data.data,
+                            //         offset: data.offset,
+                            //         error: data.errorMessage
+                            //     }))
+                            // }
+                            // else {
+                            //     response = {
+                            //         triggeredBy: data.userId,
+                            //         processedQueue: data.data
+                            //     }
+                            // }
+    */
+                            const userSocketId = await server.broker.call('socket.checkSocketId', {userId: ctx.params.userId})
+                            let promises = []
+
+                            data.data.forEach((chat, index) => {
+                                promises.push(new Promise( async (resolve, reject) => {
+                                    const stremTo = await new Promise((resolve, reject) => {
+                                        switch (chat.op) {
+                                            case "open":
+                                                resolve("request-chat:opened")
+                                                break
+                                            case "leave":
+                                                resolve("request-chat:left")
+                                                break
+                                            case "send":
+                                                resolve("request-chat:send")
+                                            break
+                                            default:
+                                                reject("erro")
+                                        }
+                                    })
+
+                                    console.log("Send to Socket:", userSocketId, " userId: ", ctx.params.userId, moment().toISOString(), ctx.params.messageID)
+                                    server.io.to(userSocketId).emit(stremTo, new EventResponse(chat))
+                                    resolve()
+                                }))
+
+                            })
+                            await Promise.all(promises)
+                            return resolve()
+                        }
+                        catch(err) {
+                            console.log(err)
+                            return reject()
+                        }    
+                   
+                    }
+
+                    streamQueueStart()
+                })                
+            },
+
             processedQueue(ctx) {
-                ctx.call("socket.streamQueue", ctx.params)  
+                ctx.call("socket.streamRequestQueue", ctx.params)  
             },
 
             conected(ctx) {
@@ -262,7 +334,7 @@ module.exports = server => {
             },
 
             requestBoardLoad(ctx) {
-                server.io.sockets.sockets[ctx.params.activeSocketId].join("company/" + ctx.params.companyId + "/request-board") // subscribe the user to its request-board company channel
+                //server.io.sockets.sockets[ctx.params.activeSocketId].join("company/" + ctx.params.companyId + "/request-board") // subscribe the user to its request-board company channel
 
                 return ctx.call("socket.control", {
                         userId: ctx.params.userId,

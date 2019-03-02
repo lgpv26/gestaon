@@ -64,7 +64,7 @@ module.exports = (server) => { return {
                     return Promise.reject("Erro ao atualizar o endereço.")
                 }
                 */
-                return server.mysql.Address.findById(ctx.params.data.id, {
+                return server.mysql.Address.findByPk(ctx.params.data.id, {
                 transaction: ctx.params.transaction})
                 .then((address) => {
                     return JSON.parse(JSON.stringify(address))

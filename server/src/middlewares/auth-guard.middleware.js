@@ -98,7 +98,7 @@ module.exports = (server, restify) => {
 
             }
 
-            server.mysql.User.findById(decoded.id).then((user) => {
+            server.mysql.User.findByPk(decoded.id).then((user) => {
                 req['auth'] = user.dataValues;
                 next();
             });

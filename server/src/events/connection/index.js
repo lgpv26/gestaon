@@ -71,6 +71,12 @@ module.exports = class Connection {
                                 next()
                             })
                     break;
+                    case "chat":
+                        return vm.server.broker.call("socket.streamChatQueue", _.assign(message, { userId: vm.socket.user.id, messageID: id }))
+                        .then(() => {
+                            next()
+                        })
+                    break;
                     default:
                             console.log("type error on rsmq")
                     break;
@@ -87,6 +93,7 @@ module.exports = class Connection {
         const vm = this
 
         this.socket.instance.on('system:ready', () => {
+
             const usersSystemArray = _.map(_.keys(this._usersSystemReady))
             if(_.includes(usersSystemArray, "userId:" + this.socket.user.id)) return console.log("Já deu system ready")
             this._usersSystemReady["userId:" + this.socket.user.id] = true

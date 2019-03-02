@@ -208,7 +208,7 @@ module.exports = server => {
                             console.log("Nenhum registro encontrado. Update.")
                             return Promise.reject('Erro ao atualizar o cliente.')
                         }*/
-                        return server.mysql.Client.findById(data.id, { transaction })
+                        return server.mysql.Client.findByPk(data.id, { transaction })
                             .then((client) => {
                                 return JSON.parse(JSON.stringify(client))
                             })
@@ -218,7 +218,7 @@ module.exports = server => {
                             })
                     })
                     .catch(err => {
-                        console.log("Nenhum registro encontrado. Update.")
+                        console.log(err,"Nenhum registro encontrado. Update.")
                         return Promise.reject("Erro ao atualizar o cliente.")
                     })
                 }
@@ -316,7 +316,7 @@ module.exports = server => {
                                         console.log("Nenhum registro encontrado. Update. clientAddressUpdate")
                                         return Promise.reject("Erro ao atualizar endereço do cliente.")
                                     }*/
-                                    return server.mysql.ClientAddress.findById(clientAddress.id, {
+                                    return server.mysql.ClientAddress.findByPk(clientAddress.id, {
                                         transaction
                                     }).then((ClientAddress) => {
                                         return _.assign(JSON.parse(JSON.stringify(ClientAddress)), { type: clientAddress.type, select: clientAddress.select, address: clientAddress.address })
@@ -382,7 +382,7 @@ module.exports = server => {
                                         return Promise.reject("Erro ao atualizar telefone do cliente.")
                                     }
                                     */
-                                    return server.mysql.ClientPhone.findById(clientPhone.id, {
+                                    return server.mysql.ClientPhone.findByPk(clientPhone.id, {
                                         transaction
                                     }).then((clientPhoneUpdated) => {
                                         return _.assign(JSON.parse(JSON.stringify(clientPhoneUpdated)), {select: clientPhone.select})
@@ -451,7 +451,7 @@ module.exports = server => {
                                             return Promise.reject("Erro ao atualizar dados do cliente.")
                                         }
                                         */
-                                        return server.mysql.ClientCustomField.findById(clientCustomField.id, { transaction })
+                                        return server.mysql.ClientCustomField.findByPk(clientCustomField.id, { transaction })
                                             .then(clientCustomFieldUpdated => {
                                                 return JSON.parse(JSON.stringify(clientCustomFieldUpdated))
                                             })

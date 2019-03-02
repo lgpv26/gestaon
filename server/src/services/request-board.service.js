@@ -247,7 +247,7 @@ module.exports = (server) => { return {
                     console.log("Nenhum registro encontrado. Update.")
                     return Promise.reject('Erro ao atualizar a sessão.')
                 }
-                return server.mysql.RequestSection.findById(ctx.params.sectionId)
+                return server.mysql.RequestSection.findByPk(ctx.params.sectionId)
                 .then((section) => {
                     section = JSON.parse(JSON.stringify(section))
                     server.io.in('company/' + ctx.params.companyId + '/request-board').emit('requestBoardCardUpdate', new EventResponse(section))
@@ -302,7 +302,7 @@ module.exports = (server) => { return {
                         console.log("Nenhum registro encontrado. Update.")
                         return Promise.reject('Erro ao mover a Section.')
                     }
-                    return server.mysql.RequestSection.findById(ctx.params.data.sectionId)
+                    return server.mysql.RequestSection.findByPk(ctx.params.data.sectionId)
                     .then((section) => {
                         section = JSON.parse(JSON.stringify(section))
                         server.io.in('company/' + ctx.params.data.companyId + '/request-board').emit('requestBoardSectionMove', new EventResponse(section))
@@ -431,7 +431,7 @@ module.exports = (server) => { return {
                     console.log("Nenhum registro encontrado. Update.")
                     return Promise.reject('Erro ao atualizar o card.')
                 }
-                return server.mysql.RequestCard.findById(ctx.params.cardId, {
+                return server.mysql.RequestCard.findByPk(ctx.params.cardId, {
                     include: [{
                         model: server.mysql.Request,
                         as: 'request'
@@ -518,7 +518,7 @@ module.exports = (server) => { return {
                         console.log("Nenhum registro encontrado. Update.")
                         return Promise.reject('Erro ao mover o Card.')
                     }
-                    return server.mysql.RequestCard.findById(ctx.params.data.cardId)
+                    return server.mysql.RequestCard.findByPk(ctx.params.data.cardId)
                     .then((card) => {
                         card = JSON.parse(JSON.stringify(card))
                         return {
@@ -550,84 +550,133 @@ module.exports = (server) => { return {
         },
 
         getDashboard(ctx) {
-            return server.mysql.Request.findAll({
-                where: {
-                    deliveryDate: {
-                        [Op.gte]: moment(ctx.params.date).startOf("day").toDate(),
-                        [Op.lte]: moment(ctx.params.date).endOf("day").toDate()
-                    },
-                    companyId: parseInt(ctx.params.companyId)
-                },
-                include: [{
-                    model: server.mysql.RequestTimeline,
-                    as: "requestTimeline",
-                    include: [{
-                        model: server.mysql.User,
-                        as: "triggeredByUser",
-                        attributes: ['id', 'name', 'email']
-                    }, {
-                        model: server.mysql.User,
-                        as: "user",
-                        attributes: ['id', 'name', 'email']
-                    }]
-                }, {
-                    model: server.mysql.RequestClientPhone,
-                    as: "requestClientPhones",
-                    include: [{
-                        model: server.mysql.ClientPhone,
-                        as: "clientPhone",
-                    }]
-                }, {
-                    model: server.mysql.RequestClientAddress,
-                    as: "requestClientAddresses",
-                    include: [{
-                        model: server.mysql.ClientAddress,
-                        as: "clientAddress",
-                        include: [{
-                            model: server.mysql.Address,
-                            as: "address"
-                        }]
-                    }]
-                }, {
-                    model: server.mysql.Client,
-                    as: "client",
-                    include: [{
-                        model: server.mysql.ClientPhone,
-                        as: 'clientPhones'
-                    }, {
-                        model: server.mysql.ClientAddress,
-                        as: 'clientAddresses',
-                        include: [{
-                            model: server.mysql.Address,
-                            as: 'address'
-                        }]
-                    }, {
-                        model: server.mysql.ClientCustomField,
-                        as: 'clientCustomFields',
-                        include: [{
-                            model: server.mysql.CustomField,
-                            as: 'customField'
-                        }]
-                    }, {
-                        model: server.mysql.ClientGroup,
-                        as: 'clientGroup'
-                    }]
-                }, {
-                    model: server.mysql.RequestOrder,
-                    as: "requestOrder",
-                    include: [{
-                        model: server.mysql.RequestOrderProduct,
-                        as: 'requestOrderProducts'
-                    }]
-                }, {
-                    model: server.mysql.RequestPayment,
-                    as: "requestPayments"
-                }]
-            })
-                .then((requestBoard) => {
-                    return JSON.parse(JSON.stringify(requestBoard))
-                })
+            return new Promise((resolve, reject) => {
+                async function start(){
+                    try {
 
+                        const requestBoard = await ctx.call("data/request.getList", {
+                            where: {
+                                deliveryDate: {
+                                    [Op.gte]: moment(ctx.params.date).startOf("day").toDate(),
+                                    [Op.lte]: moment(ctx.params.date).endOf("day").toDate()
+                                },
+                                companyId: parseInt(ctx.params.companyId)
+                            },
+                            include: [{
+                                model: server.mysql.RequestTimeline,
+                                as: "requestTimeline",
+                                include: [{
+                                    model: server.mysql.User,
+                                    as: "triggeredByUser",
+                                    attributes: ['id', 'name', 'email']
+                                }, {
+                                    model: server.mysql.User,
+                                    as: "user",
+                                    attributes: ['id', 'name', 'email']
+                                }]
+                            }, {
+                                model: server.mysql.RequestClientPhone,
+                                as: "requestClientPhones",
+                                include: [{
+                                    model: server.mysql.ClientPhone,
+                                    as: "clientPhone",
+                                }]
+                            }, {
+                                model: server.mysql.RequestClientAddress,
+                                as: "requestClientAddresses",
+                                include: [{
+                                    model: server.mysql.ClientAddress,
+                                    as: "clientAddress",
+                                    include: [{
+                                        model: server.mysql.Address,
+                                        as: "address"
+                                    }]
+                                }]
+                            }, {
+                                model: server.mysql.Client,
+                                as: "client",
+                                include: [{
+                                    model: server.mysql.ClientPhone,
+                                    as: 'clientPhones'
+                                }, {
+                                    model: server.mysql.ClientAddress,
+                                    as: 'clientAddresses',
+                                    include: [{
+                                        model: server.mysql.Address,
+                                        as: 'address'
+                                    }]
+                                }, {
+                                    model: server.mysql.ClientCustomField,
+                                    as: 'clientCustomFields',
+                                    include: [{
+                                        model: server.mysql.CustomField,
+                                        as: 'customField'
+                                    }]
+                                }, {
+                                    model: server.mysql.ClientGroup,
+                                    as: 'clientGroup'
+                                }]
+                            }, {
+                                model: server.mysql.RequestOrder,
+                                as: "requestOrder",
+                                include: [{
+                                    model: server.mysql.RequestOrderProduct,
+                                    as: 'requestOrderProducts'
+                                }]
+                            }, {
+                                model: server.mysql.RequestPayment,
+                                as: "requestPayments"
+                            }]
+                        })
+                         
+                        if(!requestBoard.length) return resolve()
+                         
+                        let promises = []
+
+                        requestBoard.forEach((request, index) => {
+                            promises.push(server.mysql.RequestChatItem.findAll({
+                                where: {
+                                    requestId: request.id
+                                },
+                                order: [['dateCreated', 'ASC']],
+                                include: [{
+                                    model: server.mysql.RequestChatItemRead,
+                                    as: "usersRead"
+                                }, {
+                                    model: server.mysql.User,
+                                    as: "user",
+                                    attributes: ["id", "name", "email"]
+                                }]
+                            })
+                            .then(async (chatItems) => {
+                                chatItems = JSON.parse(JSON.stringify(chatItems))
+
+                                const unRead = _.map(_.filter(chatItems, (chat) => {
+                                    if(!_.some(chat.usersRead, ['userId', ctx.params.userId])) return chat
+                                }), (chatUnRead) => {
+                                    return chatUnRead.id
+                                })
+
+
+                                //CHATITEMS = Chat mesmo em si
+                                //unRead = array de ids dos nao lido
+                   
+                            }))
+                        })
+
+                        await Promise.all(promises)
+
+                        return resolve(requestBoard)
+                    }
+
+                    catch(error) {
+                        console.log(error)
+                        return reject()
+                    }
+                    
+                }
+                start()
+            })
         }
     }
 }}

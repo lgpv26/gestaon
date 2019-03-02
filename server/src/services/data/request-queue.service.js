@@ -54,7 +54,13 @@ module.exports = (server) => {
                                             date: obj.date
                                         })
 
-                                        if (!checkId) _.set(mapIds, objId, action.id)
+                                        if (!checkId) {
+                                            await server.redisClient.set(_.toString(objId.replace("/", ":")), action.id, (err, res) => {
+                                                _.set(mapIds, objId, action.id)
+                                                return Promise.resolve()
+                                            })
+                                        } 
+                                        
                                         if (obj.type == "request" && obj.op == "create") _.set(action, "tmpId", objId)
 
                                         objReturn.push(action)
@@ -94,7 +100,6 @@ module.exports = (server) => {
                                                         })
                                                     }
                                                 })
-
                                                 const company = await server.mysql.Company.findOne({
                                                     where: {
                                                         id: ctx.params.companyId
@@ -106,6 +111,9 @@ module.exports = (server) => {
                                                 })
 
                                                 const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
+
+                                                console.log(ctx.params.companyId, companyUsers)
+
 
                                                 const promises = []
 

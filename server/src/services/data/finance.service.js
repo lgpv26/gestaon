@@ -57,7 +57,7 @@ module.exports = (server) => { return {
                     console.log("Nenhum registro encontrado. Update.")
                     throw new Error("Nenhum registro encontrado.")
                 }
-                return server.mysql.Transaction.findById(ctx.params.data.id, {
+                return server.mysql.Transaction.findByPk(ctx.params.data.id, {
                     transaction: ctx.params.transaction
                 }).then((transaction) => {
                     return JSON.parse(JSON.stringify(transaction))

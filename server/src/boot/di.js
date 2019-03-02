@@ -1,5 +1,7 @@
 import config from '~server/config'
 import _ from 'lodash'
+import fs from 'fs'
+import path from 'path'
 
 const restify = require('restify')
 const corsMiddleware = require('restify-cors-middleware')
@@ -66,19 +68,25 @@ module.exports = class DependencyInjection {
         return this.server.fcm
     }
 
-    setElasticSearch(){
-        this.server.elasticSearch = new require('elasticsearch').Client({
-            host: config.elasticSearch.host + ':' + config.elasticSearch.port
-        })
-        return this.server.elasticSearch
-    }
-
     setGoogleApi(){
         this.server.googleMaps = require('@google/maps').createClient({
             key: 'AIzaSyAWi3eGS7ziCHGh264uVstGZTm-lve3XWs',
             Promise: Promise
         })
         return this.server.googleMaps
+    }
+
+    gpsProtocols() {
+        return new Promise ((resolve, reject) => {
+            let promises = []
+            config.protocols.forEach((protocol) => {
+                promises.push(protocol['instance'] = new (require('../modules/Tracker/protocols/' + protocol.name))(this.server, protocol))
+            }) 
+            return Promise.all(promises)
+            .then(() => {
+                return resolve()
+            })
+        })        
     }
 
     setSequelize(){
@@ -135,6 +143,103 @@ module.exports = class DependencyInjection {
     setVersion(){
         this.server.version = require('../../package.json').version
         return this.server.version
+    }
+
+    cronJob(){
+        this.server.jobs = {}
+        this.server.cronJob = require('cron').CronJob
+
+        const cronJobs = this.server.redisClient.scanStream({
+            match: "cronJob:*"
+        })
+
+        cronJobs.on("data", (resultKeys) => {
+            if (resultKeys.length) {
+                resultKeys.forEach((key) => {
+                    this.server.redisClient.get(key, async (err, cronJob) => {
+                        cronJob = JSON.parse(cronJob)
+                        key = key.substring(8,key.length)
+
+                        const user = await this.server.mysql.User.findOne({
+                            where: {
+                                id: cronJob.triggeredBy,
+                                status: 'activated'
+                            },
+                            attributes: { exclude: ["password"] }
+                        })
+
+                        this.server.broker.call("cronJob.createChatJob", {cronJobName: key, companyId: cronJob.companyId, triggeredBy: user})
+                        this.server.broker.call("cronJob.start", {cronJobName: key})
+                    })
+
+                })
+            }
+        })
+        
+        return this.server.cronJob
+    }
+
+    brokerCreateService() {
+        const vm = this
+        return new Promise((resolve, reject) => {
+            async function start(){
+                    const indexPath = await fs.readdirSync(path.join(__dirname, '../services')).filter((fileName) => {
+                        return fileName.substring(fileName.length, fileName.length-6) !== "BKP.js" && fileName.substring(fileName.length, fileName.length-3) == ".js"
+                    }).map((file) => {
+                        return "../services/" + file.substring(0, file.length-3)
+                    })
+
+                    const dataPath = await fs.readdirSync(path.join(__dirname, '../services/data')).filter((fileName) => {
+                        return fileName.substring(fileName.length, fileName.length-6) !== "BKP.js"
+                    }).map((file) => {
+                        return "../services/data/" + file.substring(0, file.length-3)
+                    })
+
+                    let promises = []
+                    _.concat(indexPath,dataPath).forEach((service) => {
+                        promises.push(vm.server.broker.createService(require(service)(vm.server)))
+                    })
+                    
+
+                    await Promise.all(promises)
+                    resolve()                    
+                }
+
+            start()
+        })
+        // this.server.broker.createService(require('../services/auth.service')(this.server))
+        // this.server.broker.createService(require('../services/request-board.service')(this.server))
+        // this.server.broker.createService(require('../services/push-notification.service')(this.server))
+        // this.server.broker.createService(require('../services/cashier-balancing.service')(this.server))
+        // this.server.broker.createService(require('../services/socket.service')(this.server))
+
+        // this.server.broker.createService(require('../services/data/user.service')(this.server))
+        // this.server.broker.createService(require('../services/data/call.service')(this.server))
+        // this.server.broker.createService(require('../services/data/request.service')(this.server))
+        // this.server.broker.createService(require('../services/data/client.service')(this.server))
+        // this.server.broker.createService(require('../services/data/product.service')(this.server))
+        // this.server.broker.createService(require('../services/data/client-group.service')(this.server))
+        // this.server.broker.createService(require('../services/data/custom-field.service')(this.server))
+        // this.server.broker.createService(require('../services/data/account.service')(this.server))
+        // this.server.broker.createService(require('../services/data/promotion-channel.service')(this.server))
+        // this.server.broker.createService(require('../services/data/address.service')(this.server))
+        // this.server.broker.createService(require('../services/data/payment-method.service')(this.server))
+        // this.server.broker.createService(require('../services/data/transaction.service')(this.server))
+        // this.server.broker.createService(require('../services/data/mobile.service')(this.server))
+        // this.server.broker.createService(require('../services/data/bills.service')(this.server))
+        // this.server.broker.createService(require('../services/data/finance.service')(this.server))
+        // this.server.broker.createService(require('../services/data/request-queue.service')(this.server))
+        // this.server.broker.createService(require('../services/data/request-order.service')(this.server))
+        // this.server.broker.createService(require('../services/data/request-payments.service')(this.server))
+        // this.server.broker.createService(require('../services/data/request-details.service')(this.server))
+
+        // this.server.broker.createService(require('../services/draft/index.service')(this.server))
+
+        // this.server.broker.createService(require('../services/draft/request/persistence.service')(this.server))
+        // this.server.broker.createService(require('../services/draft/request/recoverance.service')(this.server))
+
+        // this.server.broker.createService(require('../services/draft/client/persistence.service')(this.server))
+        // this.server.broker.createService(require('../services/draft/client/recoverance.service')(this.server))
     }
 
 }

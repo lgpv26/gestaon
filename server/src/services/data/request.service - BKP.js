@@ -66,7 +66,7 @@ module.exports = (server) => { return {
                     console.log("Nenhum registro encontrado. Update.")
                     return Promise.reject('Erro ao atualizar o pedido.')
                 }
-                return server.mysql.Request.findById(ctx.params.data.id)
+                return server.mysql.Request.findByPk(ctx.params.data.id)
                 .then((request) => {
                     return JSON.parse(JSON.stringify(request))
                 })
@@ -113,7 +113,7 @@ module.exports = (server) => { return {
                     console.log('Erro no requestOrderCreate em request service') //comentar
                     return Promise.reject('Erro ao atualizar a lista de produtos do pedido.')
                 }
-                return server.mysql.RequestOrder.findById(ctx.params.data.id)
+                return server.mysql.RequestOrder.findByPk(ctx.params.data.id)
                 .then((requestOrder) => {
                     return JSON.parse(JSON.stringify(requestOrder))
                 })
@@ -295,7 +295,7 @@ module.exports = (server) => { return {
                     console.log("Nenhum registro encontrado. Update.")
                     return Promise.reject("Erro ao atualizar a forma de pagamento")
                 }
-                return server.mysql.RequestPayment.findById(ctx.params.data.id)
+                return server.mysql.RequestPayment.findByPk(ctx.params.data.id)
                 .then((paymentMethod) => {
                     return JSON.parse(JSON.stringify(paymentMethod))
                 })
@@ -454,7 +454,7 @@ module.exports = (server) => { return {
         },
 
         getGeo(ctx){
-            return server.mysql.ClientAddress.findById(parseInt(ctx.params.clientAddressId), {
+            return server.mysql.ClientAddress.findByPk(parseInt(ctx.params.clientAddressId), {
                 include: [{
                     model: server.mysql.Address,
                     as: 'address'
@@ -524,7 +524,7 @@ module.exports = (server) => { return {
             return server.mysql.RequestChatItem.create(ctx.params.data)
             .then((createChat) => {
                 const createdRequestChatItem = JSON.parse(JSON.stringify(createChat))
-                return server.mysql.RequestChatItem.findById(createChat.id, {
+                return server.mysql.RequestChatItem.findByPk(createChat.id, {
                     include: [{
                         model: server.mysql.User,
                         as: "user",

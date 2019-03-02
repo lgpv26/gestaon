@@ -1,7 +1,6 @@
 const _ = require('lodash')
 const EventResponse = require('~server/models/EventResponse')
-
-const {PermissionError} = require('~errors')
+import {Op} from 'sequelize'
 
 module.exports = class RequestBoard {
 
@@ -18,7 +17,7 @@ module.exports = class RequestBoard {
 
 
         this._defaultPosition = 65535
-
+        
         this._setListeners()
     }
 
@@ -32,101 +31,75 @@ module.exports = class RequestBoard {
 
         /**
          * Load the chat for the socket
-         * @param {object} evData = { cardId:Number }
+         * @param {object} evData = { requestId:Number }
          */
-        vm.socket.instance.on('request-chat:load', (evData) => {
-            return vm.server.mysql.RequestCard.findOne({
-                where: {
-                    requestId: evData.requestId
-                }
-            })
-            .then((card) => {
-                if(!card) return vm.socket.instance.emit('request-chat:load', new EventResponse(new Error('Erro ao recuperar o Card')))
-                vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat')
 
-                    // if from database, call the service
-                return vm.server.broker.call('socket.control', {
+
+
+        vm.socket.instance.on('request-chat:open', async (evData) => {
+            vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/request/' + evData.requestId + '/chat')
+
+                // if from database, call the service
+                await vm.server.broker.call('socket.control', {
                     userId: vm.socket.user.id,
                     socketId: vm.socket.instance.id,
                     companyId: vm.socket.activeCompany.id
-                }).then(() => {
-                    return vm.server.mysql.RequestChatItem.findAll({
-                        where: {
-                            requestId: parseInt(card.requestId)
-                        },
-                        order: [['dateCreated', 'DESC']],
-                        include: [{
-                            model: vm.server.mysql.User,
-                            as: "user",
-                            attributes: ['id', 'name','email','type']
-                        }]
-                    }).then((requestChatItems) => {
-                            let read =[]
-                            let promise = []
-
-                            requestChatItems.forEach((chatItem) => {
-                                promise.push(vm.server.mysql.RequestChatItemRead.findOne({
-                                        where: {
-                                            userId: vm.socket.user.id,
-                                            requestChatItemId: chatItem.id
-                                        }
-                                    }).then((chat) => {
-                                        if(!chat && chatItem.userId !== vm.socket.user.id) read.push({requestChatItemId: chatItem.id, userId: vm.socket.user.id})
-                                    })
-                                )
-                            })
-
-                            return Promise.all(promise).then(() => {
-                                return vm.server.mysql.RequestChatItemRead.bulkCreate(read)
-                                .then(() => {
-                                    return vm.server.mysql.Request.findOne({
-                                        where: {
-                                            id: parseInt(card.requestId)
-                                        },
-                                        attributes: ['id','userId']
-                                    }).then((request) => {
-
-                                        if(request.userId === vm.socket.user.id){
-                                            vm.socket.instance.emit('request:unreadChatItemCountUpdate', new EventResponse({
-                                                requestId: request.id,
-                                                unreadChatItemCount: 0
-                                            }))
-                                        }
-                                        
-                                        vm.socket.instance.emit('request-board:chat', new EventResponse({
-                                            cardId: card.id,
-                                            unreadChatItemCount: 0
-                                        }))
-                                        
-                                        return vm.socket.instance.emit('request-chat:load', new EventResponse(requestChatItems))
-                                    
-                                })                            
-                            })     
-                        })                    
-                    })  
                 })
-            })      
+                
+                const requestChatItems = await vm.server.mysql.RequestChatItem.findAll({
+                    where: {
+                        requestId: evData.requestId,
+                        userId: {
+                            [Op.notIn]: [vm.socket.user.id]
+                        },
+                        dateCreated: {
+                            [Op.lte]: evData.dateCreated
+                        }
+                    },
+                    order: [['dateCreated', 'ASC']],
+                    include:[{
+                        model: vm.server.mysql.RequestChatItemRead,
+                        as: "usersRead"
+                    }]
+                })
+                .then((resultChatItems) =>{
+                    return JSON.parse(JSON.stringify(resultChatItems))
+                })
+
+               const read = await Promise.all(_.map(_.filter(requestChatItems, (chat) => {
+                                    if(chat.usersRead && !_.some(chat.usersRead, ['userId', vm.socket.user.id])) return chat
+                                }), (chatItem) => {
+                                return {requestChatItemId: chatItem.id, userId: vm.socket.user.id}
+                            }))
+
+                await vm.server.mysql.RequestChatItemRead.bulkCreate(read)
+
+                vm.socket.instance.emit('request-chat:updateReadChatItems', new EventResponse({
+                    requestId: evData.requestId,
+                    readChatItemsId: _.map(read, "requestChatItemId")
+                }))
+
+                return vm.socket.instance.emit('request-chat:opened', new EventResponse(read))
         })
         
-        /**
-         * Socket is leaving the chat, remove the socket from its listeners
-         * @param {object} evData = { draftId:Number }
-         */
-        vm.socket.instance.on('request-chat:leave', (evData) => {
-            return vm.server.mysql.RequestCard.findOne({
-                where: {
-                    requestId: evData.requestId
-                } 
-            }).then((card) => {
-                if(!card) return vm.socket.instance.emit('request-chat:leave', new EventResponse(new Error('Erro ao recuperar o Card!')))
-                vm.socket.instance.leave('company/' + vm.socket.activeCompany.id + '/request-chat/' + card.requestId + '/chat')
-                
-                return vm.server.broker.call('socket.control', {
-                    userId: vm.socket.user.id,
-                    socketId: vm.socket.instance.id,
-                    companyId: vm.socket.activeCompany.id
-                })
+
+        vm.socket.instance.on('request-chat:leave', async (evData) => {
+            /**
+             * Socket is leaving the chat, remove the socket from its listeners
+             * @param {object} evData = { draftId:Number }
+             */
+
+            vm.socket.instance.leave('company/' + vm.socket.activeCompany.id + '/request/' + evData.requestId + '/chat')
+
+            await vm.server.broker.call('socket.control', {
+                userId: vm.socket.user.id,
+                socketId: vm.socket.instance.id,
+                companyId: vm.socket.activeCompany.id
             })
+
+            return vm.socket.instance.emit('request-chat:left')
+
+            
         })
 
         /**

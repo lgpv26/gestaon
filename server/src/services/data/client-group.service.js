@@ -44,7 +44,7 @@ module.exports = (server) => { return {
                         new Error("Nenhum registro encontrado.")
                     )
                 }
-                return server.mysql.ClientGroup.findById(ctx.params.data.id).then((data) => {
+                return server.mysql.ClientGroup.findByPk(ctx.params.data.id).then((data) => {
                     return JSON.parse(JSON.stringify(data))
                 })
             })

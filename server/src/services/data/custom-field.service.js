@@ -46,7 +46,7 @@ module.exports = (server) => { return {
                 if(!data){
                     throw new Error("Nenhum registro encontrado.")
                 }
-                return server.mysql.CustomField.findById(ctx.params.data.id).then((data) => {
+                return server.mysql.CustomField.findByPk(ctx.params.data.id).then((data) => {
                     return JSON.parse(JSON.stringify(data))
                 })
             })

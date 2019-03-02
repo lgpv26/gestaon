@@ -46,7 +46,7 @@ module.exports = (server) => { return {
                 if(!data){
                     throw new Error("Nenhum registro encontrado.")
                 }
-                return server.mysql.Account.findById(ctx.params.data.id).then((data) => {
+                return server.mysql.Account.findByPk(ctx.params.data.id).then((data) => {
                     return JSON.parse(JSON.stringify(data))
                 })
             })

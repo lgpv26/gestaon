@@ -12,7 +12,8 @@ module.exports = (server, restify) => {
   server.get("/request-board", authGuard, (req, res, next) => {
     return server.broker.call("request-board.getDashboard", {
         date: req.query.date,
-        companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId
+        companyId: (req.auth.activeCompanyUserId) ? req.auth.activeCompanyUserId : _.first(req.auth.userCompanies).companyId,
+        userId: req.auth.id
       })
       .then((requestBoard) => {
         return res.send(200, { data: requestBoard })

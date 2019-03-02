@@ -61,7 +61,8 @@ module.exports = class RequestBoard {
         })
 
         this.socket.instance.on('request-board:load', (evData) => {
-            vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/request-board') // subscribe the user to its request-board company channel
+            console.log("pudim")
+            //vm.socket.instance.join('company/' + vm.socket.activeCompany.id + '/request-board') // subscribe the user to its request-board company channel
 
             return vm.server.broker.call('socket.control', {
                 userId: vm.socket.user.id,

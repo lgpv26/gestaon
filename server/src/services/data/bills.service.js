@@ -82,7 +82,7 @@ module.exports = (server) => {
                                                 throw new Error("Nenhum registro encontrado.")
                                             }
         
-                                            return server.mysql.RequestPayment.findById(ctx.params.id, {
+                                            return server.mysql.RequestPayment.findByPk(ctx.params.id, {
                                                 transaction: transaction
                                             }).then((billReturn) => {
                                                 return transaction.commit().then(() => {
