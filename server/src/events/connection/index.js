@@ -51,7 +51,8 @@ module.exports = class Connection {
             
             this.server.broker.call('socket.stream', {
                 event: 'import',
-                socketId: this.socket.instance.id
+                socketId: this.socket.instance.id,
+                companyId: this.socket.activeCompany.id
             })
 
             if(this._rsmqWorkers["userId:" + this.socket.user.id]) delete this._rsmqWorkers["userId:" + this.socket.user.id]

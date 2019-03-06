@@ -401,7 +401,7 @@ module.exports = (server) => {
 
                         if(checkOnline.read.length) await server.mysql.RequestChatItemRead.bulkCreate(checkOnline.read)
 
-                        server.io.in('company/' + companyId + '/request/' + request.requestId + '/chat').emit('request-chat:itemSend', new EventResponse(requestChat))
+                        //server.io.in('company/' + companyId + '/request/' + request.requestId + '/chat').emit('request-chat:itemSend', new EventResponse(requestChat))
 
                         const allChatItems = await server.mysql.RequestChatItem.findAll({
                             where: {
@@ -517,6 +517,7 @@ module.exports = (server) => {
                                         }))
                                         resolve()
                                     })
+
                                 }
                                 each()
                             }))

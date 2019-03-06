@@ -18,14 +18,13 @@ module.exports = server => {
                 if (ctx.params.ignore) return Promise.resolve()
 
                 return server.io.of("/").adapter.clientRooms(ctx.params.socketId, (err, rooms) => {
-
+                    
                     if (err) return Promise.reject("erro no redis + socket io")
 
                     rooms.splice(0, 1)
                     
                     const index = _.indexOf(rooms, "company/" + ctx.params.companyId)
-                    if (index !== -1) rooms.splice(index, 1)
-                    
+                    if (index !== -1) rooms.splice(index, 1)                    
                     if (!rooms.length) {
                         return server.redisClient.hdel("userId:" + _.toString(ctx.params.userId), "rooms", (err, res) => {
                             if (err) {
@@ -66,7 +65,7 @@ module.exports = server => {
             stream(ctx) {
                 const socket = server.io.sockets.sockets[ctx.params.socketId]
 
-                ss(socket).on(ctx.params.event, function (stream, data) {
+                ss(socket).on(ctx.params.event, async function (stream, data) {
                     const importPromises = []
                     const where = {}
 
@@ -86,10 +85,32 @@ module.exports = server => {
                     importPromises.push(server.mysql.PaymentMethod.findAll({ where }))
                     importPromises.push(server.mysql.ClientGroup.findAll({ where }))
                     importPromises.push(server.mysql.CustomField.findAll({ where }))
+
+
+                    const devices = await server.mysql.Device.findAll({
+                            where: {
+                                    companyId: ctx.params.companyId
+                            }
+                        })
+                    
+                    let promises = []
+
+                    devices.forEach((device) => {
+                        //{where: _.assign(where, {deviceId: device.id}), order: [['dateCreated', 'DESC']]}
+                        promises.push(server.mysql.Position.findOne({
+                            where: _.assign(where, {deviceId: device.id}),
+                            order: [['dateCreated', 'DESC']]                         
+                        }))
+                    })
+                    const positions = await Promise.all(promises)
+                    importPromises.push(positions)
+
+                    delete where.deviceId
+
                     importPromises.push(server.mysql.Address.findAll({
                         where: _.assign(where, {
                             city: {
-                                [Op.or]: ["MARINGÁ", "SARANDI"]
+                                [Op.or]: ["MARINGÁ", "SARANDI", "PAIÇANDU"]
                             }
                         })
                     }))
@@ -106,6 +127,7 @@ module.exports = server => {
                             paymentMethods,
                             clientGroups,
                             customFields,
+                            positions,
                             addresses
                         ]) => {
                             const fileName = shortid.generate()
@@ -120,6 +142,7 @@ module.exports = server => {
                                     paymentMethods,
                                     clientGroups,
                                     customFields,
+                                    positions,
                                     addresses
                                 }))
 
