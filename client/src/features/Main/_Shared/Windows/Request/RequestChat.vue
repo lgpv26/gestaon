@@ -1,17 +1,18 @@
 <template>
     <div class="request__chat" style="display: flex; flex-direction: column;">
-        <app-perfect-scrollbar class="scrollbar" style="flex-grow: 1">
+        <app-perfect-scrollbar ref="scrollbar" class="scrollbar" style="flex-grow: 1">
             <div class="header">
+                <h3>Chat do pedido {{ request.id }}</h3>
             </div>
             <div class="chat-body">
-                <ul>
+                <ul style="padding-bottom: 20px">
                     <li v-for="(requestChat, index) in request.requestChats" :key="requestChat.id"
                         :class="{'their-message': requestChat.userId !== user.id, 'my-message': requestChat.userId === user.id, 'sequence': checkSequenceMessage(index)}">
                         <div v-if="requestChat.userId !== user.id" class="avatar">
-                            <app-gravatar v-if="!checkSequenceMessage(index)" style="width: 32px; height: 32px; border-radius: 32px;" email="thyoity@gmail.com"></app-gravatar>
+                            <app-gravatar v-if="!checkSequenceMessage(index)" style="width: 32px; height: 32px; border-radius: 32px;" :email="getUser(requestChat.userId).email"></app-gravatar>
                         </div>
                         <div v-if="requestChat.userId !== user.id" class="message">
-                            <span v-if="!checkSequenceMessage(index)" class="name">Thiago</span>
+                            <span v-if="!checkSequenceMessage(index)" class="name">{{ _.startCase(_.lowerCase(getUser(requestChat.userId).name)) }}</span>
                             <div class="message-time">
                                 <span>{{ requestChat.data }}</span>
                                 <span class="time">{{ moment(requestChat.dateCreated).format("HH:mm")}}</span>
@@ -46,8 +47,7 @@
     import _ from 'lodash'
     import Vue from 'vue'
     import shortid from 'shortid'
-
-
+    import User from '../../../../../vuex/models/User'
 
     export default {
         props: ['request'],
@@ -62,6 +62,10 @@
             ...mapState('auth',['user'])
         },
         methods: {
+            ...mapActions('chat-queue',['addToQueue']),
+            getUser(userId){
+                return User.query().whereId(userId).first()
+            },
             checkSequenceMessage(index){
                 if(this.request.requestChats.length && this.request.requestChats[index]){
                     const requestChat = this.request.requestChats[index]
@@ -120,7 +124,21 @@
                     date: this.moment().toISOString()
                 })
                 this.message = ""
+
+                this.scrollToBottom()
+            },
+            scrollToBottom(){
+                Vue.nextTick(() => {
+                    this.$refs.scrollbar.$el.scrollTop += 5000
+                    this.$refs.scrollbar.update()
+                })
             }
+        },
+        created(){
+            const vm = this
+            vm.$socket.on("request-chat:itemSend", (data) => {
+                console.log("Chat itemSend event received", data)
+            })
         }
     }
 </script>
@@ -229,6 +247,7 @@
             background-color: var(--bg-color--5);
             padding: 10px;
             align-items: center;
+            flex-shrink: 0;
             textarea {
                 margin: 0 10px 0 10px;
                 border-bottom: 0;
@@ -236,6 +255,7 @@
                 height: 30px;
                 background-color: var(--bg-color--7);
                 border-radius: 10px;
+                text-transform: initial;
                 &:hover, &:active, &:focus {
                     background-color: var(--bg-color--8);
                 }

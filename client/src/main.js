@@ -275,20 +275,9 @@ require
         );
     });
 
-/*
-require.context('./assets/svgs/menu-icons/', true, /\.svg$/).keys().forEach((svgFile) => {
-    const svgFileName = svgFile.split('.')[1].replace('/','');
-    console.log(svgFileName);
-    Vue.component('menu-icon-' + svgFileName, require('./assets/svgs/menu-icons/' + svgFileName + '.svg'));
-});
-*/
-
 /* Global configs */
 
 moment.locale("pt-br");
-
-/*const SlidingMarker = require('marker-animate-unobtrusive');
-SlidingMarker.initializeGlobally();*/
 
 const router = new Router({
     scrollBehavior: () => ({ y: 0 }),
@@ -309,7 +298,22 @@ router.beforeEach((to, from, next) => {
         to.path !== "/login" &&
         to.path !== "/register"
     ) {
-        return next("/login");
+        Vue.prototype.$db.delete().then(() => {
+            console.log("Everything cleaned");
+            localStorage.removeItem("vuex");
+            Vue.prototype.$db = new Dexie("db");
+            Vue.prototype.$db.version(1).stores({
+                ...Vue.prototype.modelDefinitions.searchModels,
+                ...Vue.prototype.modelDefinitions.offlineDBModels,
+                ...Vue.prototype.modelDefinitions.stateModels
+            });
+            store.dispatch("chat-queue/resetState")
+            store.dispatch("request-queue/resetState")
+            store.dispatch("entities/deleteAll")
+            store.commit("setSystemInitialized",false)
+            store.dispatch("setLastDataSyncedDate",null)
+            return next("/login")
+        });
         /*if(_.has(store.state.auth, "token.refreshToken") && moment(store.state.auth.refreshTokenExpiresAt).isAfter(moment())){
                 oAuth2API.refreshToken(store.state.auth.refreshToken).then((result) => {
                     const data = result.data;
@@ -332,8 +336,6 @@ router.beforeEach((to, from, next) => {
             else {
                 return next('/login');
             }*/
-    } else if (store.state.auth.authenticated && to.path === "/login") {
-        return next("/tracker");
     }
     document.title = to.meta.title;
     next();

@@ -497,10 +497,15 @@
                     });
                 }
             },
+            onRequestChatItemSend(ev){
+                console.log("Request chaat", ev)
+            },
             onSystemInitialized() {
                 console.log("System initialized")
                 if(this.isFirstInitialization){
+                    console.log("Escutando eventos request-queue:sync e request-chat:itemSend")
                     this.$socket.on("request-queue:sync", this.onRequestQueueSync)
+                    this.$socket.on("request-chat:itemSend", this.onRequestChatItemSend)
                     this.isFirstInitialization = false
                 }
                 else {

@@ -392,26 +392,28 @@
             },
             toggleChat(){
                 this.updateValue("entities/requestUIState/update", "showRequestChat", this.request.requestUIState.id, !this.request.requestUIState.showRequestChat)
-                if(this.request.requestUIState.showRequestChat){
-                    this.addToChatQueue({
-                        type: "request",
-                        op: "chat-open",
-                        data: {
-                            requestId: this.request.id
-                        },
-                        date: this.moment().toISOString()
-                    })
-                }
-                else {
-                    this.addToChatQueue({
-                        type: "request",
-                        op: "chat-leave",
-                        data: {
-                            requestId: this.request.id
-                        },
-                        date: this.moment().toISOString()
-                    })
-                }
+                Vue.nextTick(() => {
+                    if(this.request.requestUIState.showRequestChat){
+                        this.addToChatQueue({
+                            type: "request",
+                            op: "chat-open",
+                            data: {
+                                requestId: this.request.id
+                            },
+                            date: this.moment().toISOString()
+                        })
+                    }
+                    else {
+                        this.addToChatQueue({
+                            type: "request",
+                            op: "chat-leave",
+                            data: {
+                                requestId: this.request.id
+                            },
+                            date: this.moment().toISOString()
+                        })
+                    }
+                })
             },
             activateTab(tab) {
                 // if already active tab clicked
@@ -527,7 +529,7 @@
                         "isAddingClientAddress",
                         this.request.requestUIState.id,
                         false
-                    );
+                    )
                 }
                 this.updateValue(
                     "entities/requestUIState/update",

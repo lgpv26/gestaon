@@ -44,6 +44,7 @@ module.exports = (server, restify) => {
         return res.send(200, new EventResponse(chat))
       })
       .catch((err) => {
+          console.log("Deu erro no chat-queue", err)
         return res.send(200, new EventResponse(err))
       })
   })

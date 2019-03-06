@@ -65,7 +65,7 @@ const actions = {
             console.log(`Processando ${processingQueue.length} item(s) na fila de chats!`, processingQueue)
             isRequesting = true
             QueueAPI.sendChatQueue(processingQueue, {
-                timeout: 60 * 1000
+                timeout: 30 * 1000
             }).then(result => {
                 isRequesting = false
                 ctx.commit("REMOVE_PROCESSING_QUEUE_ITEMS")

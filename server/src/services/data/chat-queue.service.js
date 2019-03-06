@@ -29,21 +29,24 @@ module.exports = (server) => {
                             return new Promise((resolve, reject) => {
                                 async function start() {
                                     let obj = ctx.params.data[offset]
-                                    try {  
-                                        const fnc = await vm.path(obj)
-                                        const checkId = await vm.checkId(obj)
+                                    try {
+                                        const fnc = await vm.path(obj) // send
+                                        const checkId = await vm.checkId(obj) // 221
 
                                         if(!checkId) {
                                             await vm.awaitRequest(obj, companyId, triggeredBy)
                                             return resolve()
                                         }
 
-
                                         const tmpId = obj.data.id
                                         delete obj.data.id
 
                                         _.set(obj.data, "requestId", checkId)
                                         _.set(obj.data, "dateCreated", obj.date)
+
+                                        /*console.log("Chegou 1/3", obj.data)
+                                        console.log("Chegou 2/3", companyId)
+                                        console.log("Chegou 3/3", triggeredBy)*/
 
                                         const chat = await vm[fnc](obj.data, companyId, triggeredBy)
                                         
@@ -55,7 +58,6 @@ module.exports = (server) => {
                                         resolve(objReturn)
 
                                     }
-
                                     catch (err) {
                                         console.log(err, "catch try - chat queue")
                                         reject(err)
@@ -240,7 +242,6 @@ module.exports = (server) => {
                     }
                 })
             },
-
             checkId(obj) {
                 return new Promise((resolve, reject) => {
                     if (_.get(obj, "data.requestId") && _.isNumber(obj.data.requestId)) return resolve(obj.data.requestId)
@@ -255,7 +256,6 @@ module.exports = (server) => {
                     }
                 })
             },
-
             awaitRequest(obj, companyId, triggeredBy){
                 const vm = this
                 return new Promise((resolve, reject) => {
@@ -269,7 +269,6 @@ module.exports = (server) => {
                 })
                 
             },
-
             chatInRedis(obj){
                 return server.redisClient.get("chat:" + _.toString(obj.data.requestId), (err, res) => {
                     if(res) {
@@ -311,7 +310,6 @@ module.exports = (server) => {
                 
 
             },
-
             open(data, companyId, triggeredBy){
                 //console.log(data)
 
@@ -366,7 +364,6 @@ module.exports = (server) => {
                 })
 
             },
-
             leave(data, companyId, triggeredBy){
                 return server.broker.call("socket.checkSocketId", {userId: triggeredBy.id})
                 .then( async (socketId) => {
@@ -385,7 +382,6 @@ module.exports = (server) => {
                     return server.io.sockets.sockets[socketId].emit('request-chat:left')
                 })
             },
-
             send(data, companyId, triggeredBy){
                 const vm = this
                 return new Promise((resolve, reject) => {
@@ -423,16 +419,13 @@ module.exports = (server) => {
                             return JSON.parse(JSON.stringify(chats))
                         })
 
-
                         await vm.updateUsersOutChat(companyId, request, allChatItems)
 
-                        if(triggeredBy.id !== request.userId) await vm.pushNotification(checkOnline, allChatItems, request, requestChat, triggeredBy)
+                        // if(triggeredBy.id !== request.userId) await vm.pushNotification(checkOnline, allChatItems, request, requestChat, triggeredBy)
 
                         _.set(requestChat, "op", "send")
-                        console.log("aqui")
 
                         resolve(requestChat)
-
 
                     }
                     sendMessage()
@@ -508,22 +501,21 @@ module.exports = (server) => {
                                 async function each() {
                                     const userId = await server.broker.call("socket.checkUserIdBySocketId", {socketId})
 
-                                    if(!userId) return resolve()                        
+                                    if(!userId) return resolve()
                                 
                                     const unRead = _.filter(allChatItems, (chat) => {
                                         if(chat.userId !== userId  && !_.some(chat.usersRead, ['userId', userId])) return chat
-                                    })    
+                                    })
 
-                                    _.forEach(_.groupBy(unRead, 'requestId'), async (chatUnread, requestId) => {
-                                        if(request.id === parseInt(requestId) && chatUnread.length) {
-                                            /// VER NOME DO EVENTO E DADOS 
-                                            await server.io.sockets.sockets[socketId].in('company/' + companyId + '/request-board').emit('request-board:chat', new EventResponse({
-                                                requestId: request.id,
-                                                unreadChatItemCount: chatUnread.length
-                                            }))
-                                            resolve()
-                                            // ATÉ AQUI
-                                        }
+                                    if(_.isArray(unRead) && !unRead.length) return resolve()
+
+                                    _.forEach(_.groupBy(unRead, 'requestId'), (chatUnread, requestId) => {
+                                        if(request.id !== parseInt(requestId) && !chatUnread.length) return resolve()
+                                        server.io.sockets.sockets[socketId].in('company/' + companyId + '/request-board').emit('request-board:chat', new EventResponse({
+                                            requestId: request.id,
+                                            unreadChatItemCount: chatUnread.length
+                                        }))
+                                        resolve()
                                     })
                                 }
                                 each()
@@ -531,6 +523,7 @@ module.exports = (server) => {
                         })
 
                         await Promise.all(promises)
+
                         return resolve()
                     }
                 start()
