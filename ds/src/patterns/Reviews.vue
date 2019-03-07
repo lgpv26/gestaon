@@ -46,46 +46,50 @@ export default {
 <style>
 @import "../../src/assets/fonts/montserrat.css";
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
-.Reviews {
-  max-width: 1245px;
-  margin: 0px auto 0px auto;
-  position: relative;
-  height: 350px;
-  background: #ffffff;
-  float: left;
+@media only screen and (min-width: 360px) {
 }
-.text1 {
-  position: absolute;
-  top: 20px;
-  left: 80px;
-  text-align: center;
-  font-weight: 20px;
-  font-family: Montserrat-Alternates;
-  color: #276e73;
-}
-.user1 {
-  position: absolute;
-  top: 180px;
-  left: 55px;
-}
+@media only screen and (min-width: 1025px) {
+  .Reviews {
+    max-width: 1245px;
+    margin: 0px auto 0px auto;
+    position: relative;
+    height: 350px;
+    background: #ffffff;
+    float: left;
+  }
+  .text1 {
+    position: absolute;
+    top: 20px;
+    left: 80px;
+    text-align: center;
+    font-weight: 20px;
+    font-family: Montserrat-Alternates;
+    color: #276e73;
+  }
+  .user1 {
+    position: absolute;
+    top: 180px;
+    left: 55px;
+  }
 
-.reviews-name1 {
-  margin: 0px 0px 0px 0px;
-  font-family: Montserrat-Alternates;
-  font-size: 15px;
-  color: #276e73;
-  font-weight: bold;
-}
+  .reviews-name1 {
+    margin: 0px 0px 0px 0px;
+    font-family: Montserrat-Alternates;
+    font-size: 15px;
+    color: #276e73;
+    font-weight: bold;
+  }
 
-.reviews-surname1 {
-  margin: 2px 0px 2px 0px;
-  font-family: Montserrat-Alternates;
-  font-size: 12px;
-  color: #276e73;
-}
-.cx-p1 {
-  position: absolute;
-  top: 180px;
-  left: 120px;
+  .reviews-surname1 {
+    margin: 2px 0px 2px 0px;
+    font-family: Montserrat-Alternates;
+    font-size: 12px;
+    color: #276e73;
+  }
+  .cx-p1 {
+    position: absolute;
+    top: 180px;
+    left: 120px;
+  }
 }
 </style>

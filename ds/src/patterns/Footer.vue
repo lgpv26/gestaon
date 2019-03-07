@@ -96,91 +96,95 @@ export default {
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 @import "../../src/assets/fonts/montserrat.css";
-.Footer {
-  background: #23272b;
+@media only screen and (min-width: 360px) {
 }
-.n1 {
-  max-width: 1245px;
-  margin: 0px auto 0px auto;
-  position: relative;
-}
-.pc img {
-  width: 50%;
-}
-.b1 button {
-  width: 160px;
-  height: 40px;
-  margin: 0px 20px 0px 20px;
-  border: 0px;
-  border-radius: 5px;
-  background: #dc4c30;
-  color: #ffffff;
-  font-family: Montserrat-Alternates;
-  font-size: 12px;
-}
-.cx-1 {
-  position: relative;
-  margin: 20px 0px 0px 140px;
-}
-.cx-1 h3 {
-  color: #ffffff;
-  font-size: 12px;
-  margin: 40px 0px 5px 0px;
-}
-.cx-1 p {
-  color: rgb(218, 214, 214);
-  font-size: 12px;
-  margin: 0px;
-  font-family: Montserrat-Alternates;
-}
-.cx-1 img {
-  width: 25%;
-  margin-left: -150px;
-  margin-top: 10px;
-  margin-bottom: 5px;
-}
-.pc {
-  margin: 0px 0px 0px -45px;
-}
-.pc img {
-  width: 50%;
-  margin: 0px;
-}
-.pc .b1 {
-  margin: 0px;
-}
-.cx-3 {
-  margin: 20px 120px 0px -200px;
-}
-.cx-3 h3 {
-  font-size: 12px;
-  margin: 40px 0px 0px 0px;
-  color: #ffffff;
-  font-family: Montserrat;
-}
-.cx-3 ul {
-  margin: 0px;
-  padding: 0px;
-}
-.cx-3 li {
-  list-style-type: none;
-  margin: 2px 0px 2px 0px;
-}
-.cx-3 a {
-  font-family: Montserrat-Alternates;
-  font-size: 11px;
-  color: #ffffff;
-  cursor: pointer;
-}
-.cx-4 p {
-  font-size: 14px;
-  color: rgb(218, 214, 214);
-  font-family: Montserrat-Alternates;
-}
-.proposal {
-  font-family: Montserrat;
-  font-size: 10px;
-  z-index: 1;
+@media only screen and (min-width: 1025px) {
+  .Footer {
+    background: #23272b;
+  }
+  .n1 {
+    max-width: 1245px;
+    margin: 0px auto 0px auto;
+    position: relative;
+  }
+  .pc img {
+    width: 50%;
+  }
+  .b1 button {
+    width: 160px;
+    height: 40px;
+    margin: 0px 20px 0px 20px;
+    border: 0px;
+    border-radius: 5px;
+    background: #dc4c30;
+    color: #ffffff;
+    font-family: Montserrat-Alternates;
+    font-size: 12px;
+  }
+  .cx-1 {
+    position: relative;
+    margin: 20px 0px 0px 140px;
+  }
+  .cx-1 h3 {
+    color: #ffffff;
+    font-size: 12px;
+    margin: 40px 0px 5px 0px;
+  }
+  .cx-1 p {
+    color: rgb(218, 214, 214);
+    font-size: 12px;
+    margin: 0px;
+    font-family: Montserrat-Alternates;
+  }
+  .cx-1 img {
+    width: 25%;
+    margin-left: -150px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+  }
+  .pc {
+    margin: 0px 0px 0px -45px;
+  }
+  .pc img {
+    width: 50%;
+    margin: 0px;
+  }
+  .pc .b1 {
+    margin: 0px;
+  }
+  .cx-3 {
+    margin: 20px 120px 0px -200px;
+  }
+  .cx-3 h3 {
+    font-size: 12px;
+    margin: 40px 0px 0px 0px;
+    color: #ffffff;
+    font-family: Montserrat;
+  }
+  .cx-3 ul {
+    margin: 0px;
+    padding: 0px;
+  }
+  .cx-3 li {
+    list-style-type: none;
+    margin: 2px 0px 2px 0px;
+  }
+  .cx-3 a {
+    font-family: Montserrat-Alternates;
+    font-size: 11px;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .cx-4 p {
+    font-size: 14px;
+    color: rgb(218, 214, 214);
+    font-family: Montserrat-Alternates;
+  }
+  .proposal {
+    font-family: Montserrat;
+    font-size: 10px;
+    z-index: 1;
+  }
 }
 </style>
 

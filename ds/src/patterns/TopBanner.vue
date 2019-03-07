@@ -55,119 +55,245 @@ export default {
 <style lang="scss" scoped>
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 @import "../../src/assets/fonts/dax.css";
-.top-banner {
-  background: black;
+@media only screen and (min-width: 360px) {
+  .top-banner {
+    background: black;
+    margin-bottom: 150px;
+  }
+  .n1 {
+    max-width: 100%;
+    margin: 0px auto 0px auto;
+    position: relative;
+    height: 498px;
+    background-image: url(../assets/Top-banner.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+  }
+  .card {
+    position: absolute;
+    top: 30px;
+    left: 371px;
+  }
+  .t1 {
+    position: absolute;
+    top: 220px;
+    left: 325px;
+    text-align: center;
+  }
+  .t1 h2 {
+    margin: 0px;
+    font-family: Dax-Bold;
+    font-size: 31px;
+    color: white;
+  }
+  .t1 p {
+    margin: 0px;
+    font-family: DaxCondensed;
+    font-size: 15px;
+    color: white;
+  }
+  .b1 {
+    position: absolute;
+    top: 330px;
+    left: 410px;
+  }
+  .b1 button {
+    width: 182px;
+    height: 78px;
+    background: linear-gradient(217.73deg, #49dfea -10.02%, #0072e4 91.15%);
+    border: 0px;
+    border-radius: 10px;
+  }
+  button h2 {
+    margin: 0px;
+    font-family: Dax-BoldItalic;
+    font-size: 23px;
+    color: white;
+  }
+  .button p {
+    margin: 0px;
+    font-family: Dax-Light-Italic;
+    font-size: 12px;
+    color: white;
+  }
+  .rec {
+    position: absolute;
+    top: 480px;
+    display: none;
+  }
+  .rec img {
+    width: 100%;
+  }
+  .loja {
+    position: absolute;
+    top: 120px;
+    left: 700px;
+    display: none;
+  }
+  .loja2 {
+    position: absolute;
+    top: 180px;
+    left: 170px;
+  }
+  .loja img {
+    width: 65%;
+  }
+  .bg {
+    position: absolute;
+    top: 16px;
+  }
+  .bg2 {
+    position: absolute;
+    top: 175px;
+    left: 660px;
+    display: none;
+  }
+  .bg img {
+    width: 100%;
+  }
+  .map {
+    position: absolute;
+    top: 380px;
+    left: 200px;
+  }
+  .map img {
+    width: 65%;
+  }
+  .map2 {
+    position: absolute;
+    top: 60px;
+    left: 470px;
+  }
+  .map2 img {
+    width: 55%;
+  }
+  .vec {
+    position: absolute;
+    top: 422px;
+  }
+  .vec img {
+    width: 100%;
+  }
 }
-.n1 {
-  max-width: 1245px;
-  margin: 0px auto 0px auto;
-  position: relative;
-  height: 780px;
-  background-image: url(../assets/Top-banner.png);
-  background-size: 100%;
-  background-repeat: no-repeat;
-}
+@media only screen and (min-width: 1025px) {
+  .top-banner {
+    background: black;
+    margin-bottom: 150px;
+  }
+  .n1 {
+    max-width: 1245px;
+    margin: 0px auto 0px auto;
+    position: relative;
+    height: 612px;
+    background-image: url(../assets/Top-banner.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+  }
 
-.card {
-  position: absolute;
-  top: 30px;
-  left: 200px;
-}
-.t1 {
-  position: absolute;
-  top: 220px;
-  left: 205px;
-}
-.t1 h2 {
-  margin: 0px;
-  font-family: Dax-Bold;
-  font-size: 31px;
-  color: white;
-}
-.t1 p {
-  margin: 0px;
-  font-family: DaxCondensed;
-  font-size: 15px;
-  color: white;
-}
-.b1 {
-  position: absolute;
-  top: 330px;
-  left: 200px;
-}
-.b1 button {
-  width: 182px;
-  height: 78px;
-  background: linear-gradient(217.73deg, #49dfea -10.02%, #0072e4 91.15%);
-  border: 0px;
-  border-radius: 10px;
-}
-button h2 {
-  margin: 0px;
-  font-family: Dax-BoldItalic;
-  font-size: 23px;
-  color: white;
-}
-.button p {
-  margin: 0px;
-  font-family: Dax-Light-Italic;
-  font-size: 12px;
-  color: white;
-}
-.rec {
-  position: absolute;
-  top: 480px;
-}
-.rec img {
-  width: 100%;
-}
-.loja {
-  position: absolute;
-  top: 120px;
-  left: 700px;
-}
-.loja2 {
-  position: absolute;
-  top: 180px;
-  left: 170px;
-}
-.loja img {
-  width: 65%;
-}
-.bg {
-  position: absolute;
-  top: 16px;
-}
-.bg2 {
-  position: absolute;
-  top: 175px;
-  left: 660px;
-}
-.bg img {
-  width: 100%;
-}
-.map {
-  position: absolute;
-  top: 458px;
-  left: 290px;
-}
-.map img {
-  width: 65%;
-}
-.map2 {
-  position: absolute;
-  top: 80px;
-  left: 560px;
-}
-.map2 img {
-  width: 65%;
-}
-.vec {
-  position: absolute;
-  top: 519px;
-}
-.vec img {
-  width: 100%;
+  .card {
+    position: absolute;
+    top: 30px;
+    left: 200px;
+  }
+  .t1 {
+    position: absolute;
+    top: 220px;
+    left: 205px;
+    text-align: left;
+  }
+  .t1 h2 {
+    margin: 0px;
+    font-family: Dax-Bold;
+    font-size: 31px;
+    color: white;
+  }
+  .t1 p {
+    margin: 0px;
+    font-family: DaxCondensed;
+    font-size: 15px;
+    color: white;
+  }
+  .b1 {
+    position: absolute;
+    top: 330px;
+    left: 200px;
+  }
+  .b1 button {
+    width: 182px;
+    height: 78px;
+    background: linear-gradient(217.73deg, #49dfea -10.02%, #0072e4 91.15%);
+    border: 0px;
+    border-radius: 10px;
+  }
+  button h2 {
+    margin: 0px;
+    font-family: Dax-BoldItalic;
+    font-size: 23px;
+    color: white;
+  }
+  .button p {
+    margin: 0px;
+    font-family: Dax-Light-Italic;
+    font-size: 12px;
+    color: white;
+  }
+  .rec {
+    position: absolute;
+    top: 480px;
+  }
+  .rec img {
+    width: 100%;
+  }
+  .loja {
+    position: absolute;
+    top: 120px;
+    left: 700px;
+    display: block;
+  }
+  .loja2 {
+    position: absolute;
+    top: 180px;
+    left: 170px;
+  }
+  .loja img {
+    width: 65%;
+  }
+  .bg {
+    position: absolute;
+    top: 16px;
+  }
+  .bg2 {
+    position: absolute;
+    top: 175px;
+    left: 660px;
+    display: block;
+  }
+  .bg img {
+    width: 100%;
+  }
+  .map {
+    position: absolute;
+    top: 458px;
+    left: 290px;
+  }
+  .map img {
+    width: 65%;
+  }
+  .map2 {
+    position: absolute;
+    top: 80px;
+    left: 560px;
+  }
+  .map2 img {
+    width: 65%;
+  }
+  .vec {
+    position: absolute;
+    top: 519px;
+  }
+  .vec img {
+    width: 100%;
+  }
 }
 </style>
 
