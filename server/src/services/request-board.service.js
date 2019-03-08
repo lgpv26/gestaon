@@ -626,45 +626,53 @@ module.exports = (server) => { return {
                             }, {
                                 model: server.mysql.RequestPayment,
                                 as: "requestPayments"
+                            }, {
+                                model: server.mysql.RequestChatItem,
+                                as: "requestChatItems",
+                                include: [{
+                                    model: server.mysql.RequestChatItemRead,
+                                    as: 'usersRead',
+                                    attributes: ['id', 'userId']
+                                }]
                             }]
                         })
                          
                         if(!requestBoard.length) return resolve()
                          
-                        let promises = []
+                        // let promises = []
 
-                        requestBoard.forEach((request, index) => {
-                            promises.push(server.mysql.RequestChatItem.findAll({
-                                where: {
-                                    requestId: request.id
-                                },
-                                order: [['dateCreated', 'ASC']],
-                                include: [{
-                                    model: server.mysql.RequestChatItemRead,
-                                    as: "usersRead"
-                                }, {
-                                    model: server.mysql.User,
-                                    as: "user",
-                                    attributes: ["id", "name", "email"]
-                                }]
-                            })
-                            .then(async (chatItems) => {
-                                chatItems = JSON.parse(JSON.stringify(chatItems))
+                        // requestBoard.forEach((request, index) => {
+                        //     promises.push(server.mysql.RequestChatItem.findAll({
+                        //         where: {
+                        //             requestId: request.id
+                        //         },
+                        //         order: [['dateCreated', 'ASC']],
+                        //         include: [{
+                        //             model: server.mysql.RequestChatItemRead,
+                        //             as: "usersRead"
+                        //         }, {
+                        //             model: server.mysql.User,
+                        //             as: "user",
+                        //             attributes: ["id", "name", "email"]
+                        //         }]
+                        //     })
+                        //     .then(async (chatItems) => {
+                        //         chatItems = JSON.parse(JSON.stringify(chatItems))
 
-                                const unRead = _.map(_.filter(chatItems, (chat) => {
-                                    if(!_.some(chat.usersRead, ['userId', ctx.params.userId])) return chat
-                                }), (chatUnRead) => {
-                                    return chatUnRead.id
-                                })
+                        //         const unRead = _.map(_.filter(chatItems, (chat) => {
+                        //             if(!_.some(chat.usersRead, ['userId', ctx.params.userId])) return chat
+                        //         }), (chatUnRead) => {
+                        //             return chatUnRead.id
+                        //         })
 
 
-                                //CHATITEMS = Chat mesmo em si
-                                //unRead = array de ids dos nao lido
+                        //         //CHATITEMS = Chat mesmo em si
+                        //         //unRead = array de ids dos nao lido
                    
-                            }))
-                        })
+                        //     }))
+                        // })
 
-                        await Promise.all(promises)
+                        // await Promise.all(promises)
 
                         return resolve(requestBoard)
                     }
