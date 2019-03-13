@@ -93,15 +93,28 @@ module.exports = class Connection {
     _setListeners(){
         const vm = this
 
-        this.socket.instance.on('system:ready', () => {
+        this.socket.instance.on('system:ready', async () => {
 
             const usersSystemArray = _.map(_.keys(this._usersSystemReady))
             if(_.includes(usersSystemArray, "userId:" + this.socket.user.id)) return console.log("Já deu system ready")
             this._usersSystemReady["userId:" + this.socket.user.id] = true
             console.log("O client do usuario " + this.socket.user.name + " esta pronto!" )
-            this._rsmqWorkers["userId:" + this.socket.user.id].size((err, size) => {
-                console.log("A fila do",  this.socket.user.name, "está atualmente com", size, "pendentes de ser entregue!")
+            await new Promise((resolve, reject) => {
+                this._rsmqWorkers["userId:" + this.socket.user.id].size(async (err, size) => {
+                    console.log("A fila do",  this.socket.user.name, "está atualmente com", size, "pendentes de ser entregue!")
+                    await new Promise((resolve, reject) => { 
+                        if(size <= 0) return resolve()
+                        let index
+                        for (index = 1; index <= size; index++) {
+                            this.server.rsmq.popMessage({ qname: "userId-" + this.socket.user.id})
+                            console.log("Excluindo", index ,"item da fila")
+                            if(index == size) return resolve()
+                        }
+                    })
+                    return resolve()
+                })
             })
+
             this.server.broker.call('socket.conected', {
                 companyId: this.socket.activeCompany.id,
                 activeSocketId: this.socket.instance.id,
