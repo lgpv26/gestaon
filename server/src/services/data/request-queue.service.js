@@ -87,46 +87,46 @@ module.exports = (server) => {
                                             try {
                                                 console.log("Sincronização concluida! Total: ", offset)
 
-                                                const message = JSON.stringify({
-                                                    type: "request",
-                                                    data: {
-                                                        userId: ctx.params.userId,
-                                                        companyId: ctx.params.companyId,
-                                                        data: _.map(objReturn, (item) => {
+                                                const message =  _.map(objReturn, (item) => {
                                                             return {
                                                                 success: true,
                                                                 data: item
                                                             }
                                                         })
-                                                    }
+
+                                                return ctx.call("socket.processedQueue", {
+                                                    userId: ctx.params.userId,
+                                                    companyId: ctx.params.companyId,
+                                                    data: message
                                                 })
-                                                const company = await server.mysql.Company.findOne({
-                                                    where: {
-                                                        id: ctx.params.companyId
-                                                    },
-                                                    include: [{
-                                                        model: server.mysql.CompanyUser,
-                                                        as: 'companyUsers'
-                                                    }]
+                                                .then(() => {
+                                                    return Promise.resolve(message)
                                                 })
 
-                                                const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
 
-                                                console.log(ctx.params.companyId, companyUsers)
+                                                // const company = await server.mysql.Company.findOne({
+                                                //     where: {
+                                                //         id: ctx.params.companyId
+                                                //     },
+                                                //     include: [{
+                                                //         model: server.mysql.CompanyUser,
+                                                //         as: 'companyUsers'
+                                                //     }]
+                                                // })
 
+                                                // const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
 
-                                                const promises = []
+                                                // const promises = []
+                                                // companyUsers.forEach(async (companyUser) => {
+                                                //     await vm.checkUserQueue(companyUser.userId)
 
-                                                companyUsers.forEach(async (companyUser) => {
-                                                    await vm.checkUserQueue(companyUser.userId)
+                                                //     promises.push(await vm.queueToUser(companyUser.userId, message))
+                                                // })
 
-                                                    promises.push(await vm.queueToUser(companyUser.userId, message))
-                                                })
-
-                                                return Promise.all(promises)
-                                                    .then(() => {
-                                                        resolve()
-                                                    })
+                                                // return Promise.all(promises)
+                                                //     .then(() => {
+                                                //         resolve()
+                                                //     })
                                             }
 
                                             catch (err) {
@@ -165,41 +165,42 @@ module.exports = (server) => {
                                                 })
 
                                                 resolve(dataResponse)
+                                            })                                           
+
+                                            return ctx.call("socket.processedQueue", {
+                                                userId: ctx.params.userId,
+                                                companyId: ctx.params.companyId,
+                                                data: response
                                             })
-
-                                            const message = JSON.stringify({
-                                                type: "request",
-                                                data: {
-                                                    userId: ctx.params.userId,
-                                                    companyId: ctx.params.companyId,
-                                                    data: response
-                                                }
+                                            .then(() => {
+                                                return Promise.reject(response)
                                             })
+                                            
 
-                                            const company = await server.mysql.Company.findOne({
-                                                where: {
-                                                    id: ctx.params.companyId
-                                                },
-                                                include: [{
-                                                    model: server.mysql.CompanyUser,
-                                                    as: 'companyUsers'
-                                                }]
-                                            })
+                                            // const company = await server.mysql.Company.findOne({
+                                            //     where: {
+                                            //         id: ctx.params.companyId
+                                            //     },
+                                            //     include: [{
+                                            //         model: server.mysql.CompanyUser,
+                                            //         as: 'companyUsers'
+                                            //     }]
+                                            // })
 
-                                            const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
+                                            // const companyUsers = JSON.parse(JSON.stringify(company.companyUsers))
 
-                                            const promises = []
+                                            // const promises = []
 
-                                            companyUsers.forEach(async (companyUser) => {
-                                                await vm.checkUserQueue(companyUser.userId)
+                                            // companyUsers.forEach(async (companyUser) => {
+                                            //     await vm.checkUserQueue(companyUser.userId)
 
-                                                promises.push(await vm.queueToUser(companyUser.userId, message))
-                                            })
+                                            //     promises.push(await vm.queueToUser(companyUser.userId, message))
+                                            // })
 
-                                            return Promise.all(promises)
-                                                .then(() => {
-                                                    resolve()
-                                                })
+                                            // return Promise.all(promises)
+                                            //     .then(() => {
+                                            //         resolve()
+                                            //     })
                                         }
 
                                         catch (err) {

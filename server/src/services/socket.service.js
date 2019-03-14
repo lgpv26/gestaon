@@ -335,7 +335,28 @@ module.exports = server => {
             },
 
             processedQueue(ctx) {
-                ctx.call("socket.streamRequestQueue", ctx.params)  
+                //ctx.call("socket.streamRequestQueue", ctx.params)  
+
+                let response
+
+                if (ctx.params.error) {
+                    response = new Error({
+                        triggeredBy: ctx.params.userId,
+                        processedQueue: ctx.params.data,
+                        offset: ctx.params.offset,
+                        error: ctx.params.errorMessage
+                    })
+                } 
+                else {
+                    response = {
+                        triggeredBy: ctx.params.userId,
+                        processedQueue: ctx.params.data
+                    }
+                }
+                console.log("Processed Queue")
+                //processedQueue
+                server.io.in('company/' + ctx.params.companyId).emit("request-queue:sync", new EventResponse(response))
+    
             },
 
             conected(ctx) {
