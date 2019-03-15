@@ -1,14 +1,10 @@
 <template>
   <div class="Footer col-md-12">
     <div class="n1">
-      <div style="position:absolute;top:-120px;">
-        <img src="../assets/rodape-Vector.png" style="width:100%;" />
-      </div>
-      <div style="position:absolute;top:-160px;">
-        <img src="../assets/rodape-Vector2.png" style="width:100%;" />
-      </div>
+      <div class="bx-1"><img src="../assets/rodape-Vector.png" style="width:100%;" /></div>
+      <div class="bx-2"><img src="../assets/rodape-Vector2.png" style="width:100%;" /></div>
 
-      <div class="row" style="position:relative;top:-40px;">
+      <div class="row bx-3">
         <div class="col-md-4 cx-1">
           <div class="col-md-12">
             <h3 class="proposal">PROPOSTA ÚNICA</h3>
@@ -54,7 +50,7 @@
               <h3>GESTAON NAS REDES SOCIAIS</h3>
               <p>Comente e compartilhe, ajude a fazer mais pessoas felizes!</p>
             </div>
-            <div class="col-md-12" style="padding-right:60px;">
+            <div class="col-md-12 icons">
               <Icon name="face" size="medium" style="cursor:pointer;" />
               <Icon name="insta" size="medium" style="cursor:pointer;" />
               <Icon name="twitter" size="medium" style="cursor:pointer;" />
@@ -97,6 +93,108 @@ export default {
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 @import "../../src/assets/fonts/montserrat.css";
 @media only screen and (min-width: 360px) {
+  .Footer {
+    background: #23272b;
+  }
+  .icons {
+    padding-right: 30px;
+  }
+  .n1 {
+    max-width: 1245px;
+    margin: 0px auto 0px auto;
+    position: relative;
+  }
+  .pc img {
+    width: 50%;
+  }
+  .b1 button {
+    width: 140px;
+    height: 40px;
+    margin: 0px 20px 0px 20px;
+    border: 0px;
+    border-radius: 5px;
+    background: #dc4c30;
+    color: #ffffff;
+    font-family: Montserrat-Alternates;
+    font-size: 10px;
+  }
+  .cx-1 {
+    position: relative;
+    margin: 20px 0px 0px 140px;
+  }
+  .cx-1 h3 {
+    color: #ffffff;
+    font-size: 12px;
+    margin: 40px 0px 5px 0px;
+  }
+  .cx-1 p {
+    color: rgb(218, 214, 214);
+    font-size: 10px;
+    margin: 0px;
+    font-family: Montserrat-Alternates;
+  }
+  .cx-1 img {
+    width: 25%;
+    margin-left: -150px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+  }
+  .pc {
+    margin: 0px 40px 0px -95px;
+  }
+  .pc img {
+    width: 45%;
+    margin: 22px 0px 0px 18px;
+  }
+  .pc .b1 {
+    margin: 0px;
+  }
+  .cx-3 {
+    margin: 20px 120px 0px -200px;
+  }
+  .cx-3 h3 {
+    font-size: 12px;
+    margin: 40px 0px 0px 0px;
+    color: #ffffff;
+    font-family: Montserrat;
+  }
+  .cx-3 ul {
+    margin: 0px;
+    padding: 0px;
+  }
+  .cx-3 li {
+    list-style-type: none;
+    margin: 2px 0px 2px 0px;
+  }
+  .cx-3 a {
+    font-family: Montserrat-Alternates;
+    font-size: 10px;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .cx-4 p {
+    font-size: 10px;
+    color: rgb(218, 214, 214);
+    font-family: Montserrat-Alternates;
+  }
+  .proposal {
+    font-family: Montserrat;
+    font-size: 10px;
+    z-index: 1;
+  }
+  //novos
+  .bx-1 {
+    position: absolute;
+    top: -65px;
+  }
+  .bx-2 {
+    position: absolute;
+    top: -94px;
+  }
+  .bx-3 {
+    position: relative;
+    top: -20px;
+  }
 }
 @media only screen and (min-width: 1025px) {
   .Footer {
@@ -106,6 +204,9 @@ export default {
     max-width: 1245px;
     margin: 0px auto 0px auto;
     position: relative;
+  }
+  .icons {
+    padding-right: 60px;
   }
   .pc img {
     width: 50%;
@@ -184,6 +285,18 @@ export default {
     font-family: Montserrat;
     font-size: 10px;
     z-index: 1;
+  }
+  .bx-1 {
+    position: absolute;
+    top: -120px;
+  }
+  .bx-2 {
+    position: absolute;
+    top: -160px;
+  }
+  .bx-3 {
+    position: relative;
+    top: -40px;
   }
 }
 </style>

@@ -114,6 +114,7 @@ export default {
   }
   .h3-3 {
     text-align: center;
+    position: relative;
     font-size: 18px;
     color: white;
   }
@@ -178,7 +179,6 @@ export default {
     top: -50px;
     left: 780px;
     background: #4766d6;
-    width: 11%;
   }
   .h3-3 {
     text-align: center;

@@ -1,8 +1,8 @@
 <template>
   <div class="Features row">
-    <div class="col-md-12" style="position:relative;top:-119px;">
+    <div class="col-md-12 cx-1">
       <img src="../assets/Rectangle 2.png" style="width:100%" />
-      <div class="col-md-12" style="position:relative;top:-50px;left:-60px;">
+      <div class="col-md-12 cx-m-1">
         <ul>
           <li><a class="t" href="javascript:void(0)" @click="tab = 1">Atendimento</a></li>
           <li><a class="t" href="javascript:void(0)" @click="tab = 2">Vendas</a></li>
@@ -13,18 +13,20 @@
       </div>
     </div>
     <div v-if="tab === 1" style="width: 100%">
-      <div style="position:absolute;top:0px;left:200px;">
-        <h2 class="p" style="font-size:24px;color: #276E73;">
+      <div class="cx-2">
+        <h2 class="p">
           Recursos definitivos que te ajudam a<br />gerenciar a venda e distribuição
         </h2>
       </div>
-      <div style="padding:0px 0px 0px 150px;position:absolute;top:90px;">
+      <div class="cx-3">
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
+          <div class="img-1">
+            <!-- position:absolute;top:-2px;left:80px;-->
             <img src="../assets/adv-icon.png" />
           </div>
           <div class="g1">Pesquisa inteligente, rápida e offline</div>
-          <div style="padding-left:0px 25px 0px 30px;">
+          <div class="text-1">
+            <!-- padding-left:0px 25px 0px 30px; -->
             <p class="text">
               Pesquisa de clientes com campo único, o que você digita é analisado na hora; como no
               Google, a parte complicada fica com a gente, não precisa um monte de campos para
@@ -33,9 +35,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">Tudo sincronizado em uma tela</div>
           <div>
             <p class="text">
@@ -45,9 +45,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">Destino identificado</div>
           <div>
             <p class="text">
@@ -58,9 +56,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">Controle em uma tela</div>
           <div>
             <p class="text">
@@ -73,18 +69,16 @@
       </div>
     </div>
     <div v-if="tab === 2" style="width: 100%">
-      <div style="position:absolute;top:0px;left:200px;">
-        <h2 class="p" style="font-size:24px;color: #276E73;">
+      <div class="cx-2">
+        <h2 class="p">
           Recursos definitivos que te ajudam a<br />gerenciar a venda e distribuição
         </h2>
       </div>
-      <div style="padding:0px 0px 0px 150px;position:absolute;top:90px;">
+      <div class="cx-3">
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
-          <div style="padding-left:0px 25px 0px 30px;">
+          <div class="text-1">
             <p class="text">
               Retenha clientes e evite a inadimplência, visualize o histórico de compras, crédito
               disponível e vendas a prazo no momento da negociação.
@@ -92,9 +86,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -104,9 +96,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -116,9 +106,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -131,18 +119,16 @@
       </div>
     </div>
     <div v-if="tab === 3" style="width: 100%">
-      <div style="position:absolute;top:0px;left:200px;">
-        <h2 class="p" style="font-size:24px;color: #276E73;">
+      <div class="cx-2">
+        <h2 class="p">
           Recursos definitivos que te ajudam a<br />gerenciar a venda e distribuição
         </h2>
       </div>
-      <div style="padding:0px 0px 0px 150px;position:absolute;top:90px;">
+      <div class="cx-3">
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
-          <div style="padding-left:0px 25px 0px 30px;">
+          <div class="text-1">
             <p class="text">
               Direcione os pedidos de vendas para o aplicativo do vendedor com um clique ou ative o
               encaminhamento automático e gerencie o tempo e o sucesso das entregas
@@ -150,9 +136,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -162,9 +146,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -175,9 +157,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -189,18 +169,16 @@
       </div>
     </div>
     <div v-if="tab === 4" style="width: 100%">
-      <div style="position:absolute;top:0px;left:200px;">
-        <h2 class="p" style="font-size:24px;color: #276E73;">
+      <div class="cx-2">
+        <h2 class="p">
           Recursos definitivos que te ajudam a<br />gerenciar a venda e distribuição
         </h2>
       </div>
-      <div style="padding:0px 0px 0px 150px;position:absolute;top:90px;">
+      <div class="cx-3">
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
-          <div style="padding-left:0px 25px 0px 30px;">
+          <div class="text-1">
             <p class="text">
               A conferência das entregas é feita rapidamente pela atendente via aplicativo móvel do
               vendedor e painel web, os valores recebidos são recolhidos e posteriormente conferidos
@@ -209,9 +187,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -222,9 +198,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -238,18 +212,16 @@
       </div>
     </div>
     <div v-if="tab === 5" style="width: 100%">
-      <div style="position:absolute;top:0px;left:200px;">
-        <h2 class="p" style="font-size:24px;color: #276E73;">
+      <div class="cx-2">
+        <h2 class="p">
           Recursos definitivos que te ajudam a<br />gerenciar a venda e distribuição
         </h2>
       </div>
-      <div style="padding:0px 0px 0px 150px;position:absolute;top:90px;">
+      <div class="cx-3">
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
-          <div style="padding-left:0px 25px 0px 30px;">
+          <div class="text-1">
             <p class="text">
               Crie ações de marketing associadas a regiões, canais de vendas e grupo de clientes e
               se concentre onde houver maior retorno sobre o investimento
@@ -257,9 +229,7 @@
           </div>
         </div>
         <div class="col-md-6 c" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -269,9 +239,7 @@
           </div>
         </div>
         <div class="col-md-6" style="position:relative;">
-          <div style="position:absolute;top:-2px;left:80px;">
-            <img src="../assets/adv-icon.png" />
-          </div>
+          <div class="img-1"><img src="../assets/adv-icon.png" /></div>
           <div class="g1">#</div>
           <div>
             <p class="text">
@@ -284,13 +252,9 @@
       </div>
     </div>
     <div class="vec"><img src="../assets/Vector6.png" /></div>
-    <div style="text-align:center;position:absolute;top:660px;left:350px;">
-      <h2 style="font-size:28px;margin:0px;color: #276E73;font-family: Montserrat-Alternates;">
-        O que estão dizendo sobre o GestaON?
-      </h2>
-      <p style="font-size:20px;margin:0px;color: #276E73;font-family: Montserrat-Alternates;">
-        Duis aute irure dolor in reprehenderit
-      </p>
+    <div class="text-2">
+      <h2 class="text-h3">O que estão dizendo sobre o GestaON?</h2>
+      <p class="text-h2">Duis aute irure dolor in reprehenderit</p>
     </div>
     <div class="v2"><img src="../assets/v2banner.png" /></div>
     <div class="vector"><img src="../assets/Feature-vector.png" /></div>
@@ -317,6 +281,163 @@ export default {
 @import "../../node_modules/flexboxgrid/dist/flexboxgrid.min.css";
 @import "../../src/assets/fonts/montserrat.css";
 @media only screen and (min-width: 360px) {
+  .Features {
+    max-width: 1245px;
+    margin: 0px auto 0px auto;
+    position: relative;
+    height: 650px;
+    background: #ffffff;
+  }
+  ul {
+    background: #31363c;
+    padding-left: 180px;
+  }
+  li {
+    list-style-type: none;
+    float: left;
+    margin-left: 20px;
+  }
+  a {
+    padding: 20px 30px 22px 30px;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+  }
+  li a:hover {
+    background: linear-gradient(216.93deg, #49dfea -10.02%, #0072e4 91.15%);
+  }
+  .p {
+    font-family: Montserrat-Alternates;
+    color: #276e73;
+    font-weight: 300;
+    top: 100px;
+    margin-left: 30px;
+    margin-top: 0px;
+    font-size: 20px;
+  }
+
+  .c {
+    font-family: Montserrat-Alternates;
+    color: #276e73;
+    font-size: 12px;
+  }
+
+  .g1 {
+    font-family: Montserrat;
+    font-size: 12px;
+    color: #276e73;
+    font-style: normal;
+    margin-left: 110px;
+  }
+
+  .t {
+    font-family: Montserrat;
+    font-weight: bold;
+    font-size: 12px;
+  }
+  .vector {
+    position: absolute;
+    top: 435px;
+  }
+  .vector img {
+    width: 100%;
+  }
+  .map {
+    position: absolute;
+    top: 20px;
+    left: 700px;
+  }
+  .map img {
+    width: 85%;
+  }
+  .nave {
+    position: absolute;
+    top: 60px;
+    left: 600px;
+    z-index: 1;
+  }
+  .nave img {
+    width: 45%;
+  }
+  .caminhao {
+    position: absolute;
+    top: 380px;
+    left: 20px;
+    margin-left: 55%;
+    z-index: 1;
+  }
+  .caminhao img {
+    width: 60%;
+  }
+  .text {
+    margin-top: 5px;
+    text-align: justify;
+    margin-left: 75px;
+    margin-bottom: 20px;
+    font-family: Montserrat-Alternates;
+    color: #276e73;
+    font-size: 10px;
+  }
+  .v2 {
+    position: absolute;
+    top: 25px;
+  }
+  .v2 img {
+    width: 100%;
+  }
+  .vec {
+    position: absolute;
+    top: 510px;
+  }
+  .vec img {
+    width: 100%;
+  }
+  //novos
+  .cx-1 {
+    position: relative;
+    top: -119px;
+  }
+  .cx-m-1 {
+    position: relative;
+    top: -50px;
+    left: -60px;
+  }
+  .cx-2 {
+    position: absolute;
+    top: 0px;
+    left: 200px;
+  }
+  .cx-3 {
+    padding: 0px 0px 0px 150px;
+    position: absolute;
+    top: 90px;
+  }
+  .img-1 {
+    position: absolute;
+    top: -2px;
+    left: 80px;
+  }
+  .text-1 {
+    padding-left: 0px 25px 0px 30px;
+  }
+  .text-2 {
+    text-align: center;
+    position: absolute;
+    top: 540px;
+    left: 350px;
+  }
+  .text-h2 {
+    font-size: 16px;
+    margin: 0px;
+    color: #276e73;
+    font-family: Montserrat-Alternates;
+  }
+  .text-h3 {
+    font-size: 17px;
+    margin: 0px;
+    color: #276e73;
+    font-family: Montserrat-Alternates;
+  }
 }
 @media only screen and (min-width: 1025px) {
   .Features {
@@ -428,6 +549,51 @@ export default {
   }
   .vec img {
     width: 100%;
+  }
+  .cx-1 {
+    position: relative;
+    top: -119px;
+  }
+  .cx-m-1 {
+    position: relative;
+    top: -50px;
+    left: -60px;
+  }
+  .cx-2 {
+    position: absolute;
+    top: 0px;
+    left: 200px;
+  }
+  .cx-3 {
+    padding: 0px 0px 0px 150px;
+    position: absolute;
+    top: 90px;
+  }
+  .img-1 {
+    position: absolute;
+    top: -2px;
+    left: 80px;
+  }
+  .text-1 {
+    padding-left: 0px 25px 0px 30px;
+  }
+  .text-2 {
+    text-align: center;
+    position: absolute;
+    top: 660px;
+    left: 350px;
+  }
+  .text-h2 {
+    font-size: 27px;
+    margin: 0px;
+    color: #276e73;
+    font-family: Montserrat-Alternates;
+  }
+  .text-h3 {
+    font-size: 28px;
+    margin: 0px;
+    color: #276e73;
+    font-family: Montserrat-Alternates;
   }
 }
 </style>
