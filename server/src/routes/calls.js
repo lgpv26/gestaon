@@ -14,7 +14,7 @@ module.exports = (server, restify) => {
 
     server.get('/calls', (req, res, next) => {
         return server.broker.call('data/call.getList', {
-            data: {
+            where: {
                 companyId: req.query.companyId
             }
         }).then((data) => {
@@ -26,7 +26,7 @@ module.exports = (server, restify) => {
 
     server.get('/calls/:id', (req, res, next) => {
         return server.broker.call('data/call.getOne', {
-            data: {
+            where: {
                 id: req.params.id,
                 companyId: req.query.companyId
             }
@@ -39,7 +39,8 @@ module.exports = (server, restify) => {
 
     server.post('/calls', (req, res, next) => {
         return server.broker.call('data/call.create', {
-            data: req.body
+            data: req.body,
+            companyId: req.query.companyId
         }).then((data) => {
             return res.send(200, { data })
         }).catch((err) => {

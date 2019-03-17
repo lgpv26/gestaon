@@ -100,7 +100,7 @@ module.exports = (server) => {
                                                     data: message
                                                 })
                                                 .then(() => {
-                                                    return Promise.resolve(message)
+                                                    return resolve(message)
                                                 })
 
 
@@ -173,7 +173,7 @@ module.exports = (server) => {
                                                 data: response
                                             })
                                             .then(() => {
-                                                return Promise.reject(response)
+                                                return reject(response)
                                             })
                                             
 

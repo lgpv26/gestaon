@@ -6,55 +6,85 @@ module.exports = (server) => { return {
     name: "data/call",
     actions: {
         getOne(ctx) {
-            return server.mongodb.Call.findOne({
-                _id: ctx.params.data.id,
-                companyId: ctx.params.data.companyId
-            }).then((data) => {
-                return data.toJSON()
+            return server.mysql.Call.findOne({
+                where: ctx.params.where || {},
+                include: ctx.params.include || [],
+                transaction: ctx.params.transaction || null,
+                attributes: ctx.params.attributes || null
+            })
+            .then((call) => {
+                if(!call.number) return Promise.resolve([])
+                call = JSON.parse(JSON.stringify(call))
+
+                return server.mysql.ClientPhone.findAll({
+                    where: {
+                        number: call.number
+                    },
+                    include: [{
+                            model: server.mysql.Client,
+                            as: "client"
+                        }]
+                }).then((clientPhones) => {
+                    clientPhones = JSON.parse(JSON.stringify(clientPhones))
+                
+                    call.clients = []
+                    _.forEach(clientPhones, (clientPhone) => {
+                        if(clientPhone.number === call.number){
+                            const alreadyAddedToClients = _.find(call.clients, {id: clientPhone.clientId})
+                            if(!alreadyAddedToClients){
+                                call.clients.push(clientPhone.client)
+                            }
+                        }
+                    })
+                    return Promise.resolve(call)
+                  
+                })
             })
         },
+
         getList(ctx){
-            return server.mongodb.Call.find({
-                // companyId: ctx.params.data.companyId
-            }).sort({createdAt: -1}).limit(10).exec().then((data) => {
-                return JSON.parse(JSON.stringify(data))
-            }).then((calls) => {
-                if(_.isArray(calls) && calls.length > 0){
-                    const phoneNumbers = _.map(calls, (call) => {
-                        return call.number
-                    })
-                    return server.mysql.ClientPhone.findAll({
-                        where: {
-                            number: {
-                                [Op.in]: phoneNumbers
-                            }
-                        },
-                        include: [
-                            {
-                                model: server.mysql.Client,
-                                as: "client"
-                            }
-                        ]
-                    }).then((data) => {
-                        return JSON.parse(JSON.stringify(data))
-                    }).then((clientPhones) => {
-                        return _.map(calls, (call) => {
-                            call.clients = []
-                            _.forEach(clientPhones, (clientPhone) => {
-                                if(clientPhone.number === call.number){
-                                    const alreadyAddedToClients = _.find(call.clients, {id: clientPhone.clientId})
-                                    if(!alreadyAddedToClients){
-                                        call.clients.push(clientPhone.client)
-                                    }
-                                }
-                            })
-                            return call
-                        })
-                    })
-                }
-                return []
+            return server.mysql.Call.findAll({
+                where: ctx.params.where || {},
+                include: ctx.params.include || [],
+                transaction: ctx.params.transaction || null,
+                attributes: ctx.params.attributes || {},
+                order: ctx.params.order || []
             })
+            .then((calls) => {
+                if(!_.isArray(calls) && !calls.length) return Promise.resolve([])
+                calls = JSON.parse(JSON.stringify(calls))
+
+                return server.mysql.ClientPhone.findAll({
+                    where: {
+                        number: {
+                            [Op.in]: _.map(calls, (call) => {
+                                return call.number
+                            })
+                        }
+                    },
+                    include: [{
+                            model: server.mysql.Client,
+                            as: "client"
+                        }]
+                }).then((clientPhones) => {
+                    clientPhones = JSON.parse(JSON.stringify(clientPhones))
+                    
+                    return _.map(calls, (call) => {
+                        call.clients = []
+                        _.forEach(clientPhones, (clientPhone) => {
+                            if(clientPhone.number === call.number){
+                                const alreadyAddedToClients = _.find(call.clients, {id: clientPhone.clientId})
+                                if(!alreadyAddedToClients){
+                                    call.clients.push(clientPhone.client)
+                                }
+                            }
+                        })
+                        return call
+                    })
+                })
+            })        
         },
+
         create(ctx){
 
             // remove leading 0 if there is
@@ -71,7 +101,7 @@ module.exports = (server) => { return {
                 number = number.substring(1)
             }
 
-            if(number.length === 9){
+            if(number.length === 9 || number.length === 8){
                 number = "44" + number
             }
 
@@ -85,29 +115,29 @@ module.exports = (server) => { return {
             }
 
             const createData = {
-                number: number,
+                number,
                 destination: ctx.params.data.destination,
+                companyId: ctx.params.companyId,
                 isValid,
                 isAnonymous
             }
 
-            return server.mongodb.Call.create(createData).then((data) => {
-                return data.toJSON()
-            }).then((call) => {
+            return server.mysql.Call.create(createData)
+            .then((call) => {
+                call = JSON.parse(JSON.stringify(call))
+
                 if(call.number){
                     return server.mysql.ClientPhone.findAll({
                         where: {
                             number: call.number
                         },
-                        include: [
-                            {
+                        include: [{
                                 model: server.mysql.Client,
                                 as: "client"
-                            }
-                        ]
-                    }).then((data) => {
-                        return JSON.parse(JSON.stringify(data))
+                            }]
                     }).then((clientPhones) => {
+                        clientPhones = JSON.parse(JSON.stringify(clientPhones))
+                    
                         call.clients = []
                         _.forEach(clientPhones, (clientPhone) => {
                             if(clientPhone.number === call.number){
@@ -117,8 +147,9 @@ module.exports = (server) => { return {
                                 }
                             }
                         })
+
                         server.io.emit('caller-id.new', new EventResponse(call))
-                        return call
+                        return Promise.resolve(call)                      
                     })
                 }
                 else {
@@ -129,21 +160,16 @@ module.exports = (server) => { return {
             })
         },
         update(ctx){
-            return server.mongodb.Call.update({_id: ctx.params.data.id, companyId: ctx.params.data.companyId}, {$set: ctx.params.data}).then((data) => {
-                if(!data){
-                    throw new Error("Nenhum registro encontrado.")
-                }
-                return data.toJSON()
-            })
-        },
-        remove(ctx){
-            return server.mongodb.Device.findOneAndRemove({_id: ctx.params.data.id, companyId: ctx.params.data.companyId}).exec().then((data) => {
-                if(!data){
-                    throw new Error("Nenhum registro encontrado.")
-                }
-                return {
-                    removedId: ctx.params.data.id
-                }
+            return server.mysql.Call.update(ctx.params.data, {
+                where: ctx.params.where || {},
+                transaction: ctx.params.transaction || null,
+            }).then((data) => {
+                return server.mysql.Call.findByPk(data.id, {
+                    transaction: ctx.params.transaction || null,
+                    include: ctx.params.include || [],
+                }).then((call) => {
+                    return JSON.parse(JSON.stringify(call))
+                })
             })
         }
     }
