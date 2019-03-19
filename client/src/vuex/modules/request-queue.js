@@ -25,6 +25,9 @@ const mutations = {
                 callback(state.processingQueue)
             }
         }
+        else {
+            callback(state.processingQueue)
+        }
     },
     PROCESSING_QUEUE_TO_PENDING_QUEUE(state, processingQueue){
         _.reverse(processingQueue).forEach((queueItem) => {

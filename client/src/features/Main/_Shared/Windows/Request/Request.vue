@@ -200,13 +200,13 @@
             <div class="request__footer">
                 <a class="button" v-if="Number.isInteger(request.id) && request.requestUIState.hasRequestChanges" @click="discardChanges()" style="display: flex; align-items: center; align-self: center; margin-left: 8px; text-transform: uppercase;">Descartar alterações</a>
                 <span class="push-both-sides"></span>
-                <app-select :items="getSelectUsers" :value="request.userId" @input="updateValue('entities/requests/update','userId',request.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                <app-select :items="getSelectUsers" :value="request.userId" @input="updateValue('entities/requests/update','userId',request.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'top-start'}">
                     <input type="text" class="readonly select" style="text-align: center; padding-top: 0; margin-bottom: 0; margin-right: 8px; width: 180px;" readonly :value="(_.has(request,'user.name')) ? request.user.name : 'RESPONSÁVEL'"/>
                     <template slot="item" slot-scope="slotProps">
                         <span>{{ slotProps.text }}</span>
                     </template>
                 </app-select>
-                <app-select :items="selectStatusItems" :value="request.status" @input="updateValue('entities/requests/update','status',request.id,$event)" :popoverProps="{ verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start' }">
+                <app-select :items="selectStatusItems" :value="request.status" @input="updateValue('entities/requests/update','status',request.id,$event)" :popoverProps="{ verticalOffset: 0, horizontalOffset: -15, placement: 'top-start' }">
                     <input type="text" class="select readonly" style="text-align: center; padding-top: 0; margin-bottom: 0; margin-right: 8px; width: 130px;" readonly :value="getStatusText" />
                     <template slot="item" slot-scope="slotProps">
                         <span>{{ slotProps.text }}</span>
@@ -233,7 +233,7 @@
                     </div>
                     <span class="push-both-sides"></span>
                     <div style="display: flex; align-items: center;">
-                        <span style="font-size: 20px; margin-right: 20px; font-weight: 600">{{ searchItem.score }}</span>
+                        <span style="font-size: 20px; margin-right: 20px; font-weight: 600">1</span>
                     </div>
                 </div>
             </app-perfect-scrollbar>
@@ -415,9 +415,9 @@
                     }
                 })
             },
-            activateTab(tab) {
+            activateTab(tab, toggle = true) {
                 // if already active tab clicked
-                if(this.request.requestUIState.activeTab === tab){
+                if(toggle && (this.request.requestUIState.activeTab === tab)){
                     this.updateValue("entities/requestUIState/update", "activeTab", this.request.requestUIState.id, null)
                     return
                 }
@@ -547,10 +547,25 @@
                     .with('requestPayments')
                     .with('requestClientAddresses')
                     .first()
+                const requestJSON = JSON.parse(JSON.stringify(request))
+                if(_.has(requestJSON,'client.name') && _.isEmpty(requestJSON.client.name)) {
+                    this.showError("Adicione um cliente para o pedido")
+                    return
+                }
+                console.log(_.some(requestJSON.requestOrder.requestOrderProducts,(requestOrderProduct) => {
+                    return !requestOrderProduct.productId
+                }))
+                if(_.has(requestJSON,'requestOrder.requestOrderProducts') && _.some(requestJSON.requestOrder.requestOrderProducts,(requestOrderProduct) => {
+                    console.log(requestOrderProduct)
+                    return !requestOrderProduct.productId
+                })) {
+                    this.showError("Adicione os produtos corretamente")
+                    return
+                }
                 this.addToQueue({
                     type: "request",
                     op: "create",
-                    data: JSON.parse(JSON.stringify(request))
+                    data: requestJSON
                 });
                 this.$store.dispatch("entities/windows/update", {
                     where: this.request.card.windowId,
@@ -580,7 +595,7 @@
             selectSearchItem(searchItem) {
                 const vm = this;
                 // create client if not existent
-                vm.activateTab("client")
+                vm.activateTab("client", false)
                 const clientId = parseInt(searchItem.id.split("#")[0])
                 const clientAddressId = parseInt(searchItem.id.split("#")[1])
                 this.$db.clients.where({ id: clientId }).first().then(client => {
@@ -636,7 +651,13 @@
                 vm.searchValueStrings = _.filter(_.map(vm.searchValue.split(" "), searchValue => searchValue.trim(), searchValue => searchValue !== ''))
                 if (vm.searchTimeout) clearTimeout(vm.searchTimeout);
                 vm.searchTimeout = setTimeout(() => {
-                    if (vm.$static.searchClientsIndex) {
+                    vm.$static.fSearchClients.search({
+                        query: vm.searchValue
+                    }).then((results) => {
+                        vm.searchItems = results.slice(0, 30)
+                        console.log("Resultado", results)
+                    })
+                    /*if (vm.$static.searchClientsIndex) {
                         let resultData = vm.$static.searchClientsIndex.search(vm.searchValue, {
                             fields: {
                                 name: { boost: 1 },
@@ -659,7 +680,7 @@
                             })
                             vm.searchItems = vm.items
                         })
-                    }
+                    }*/
                 }, 500)
             },
 
@@ -822,7 +843,7 @@
                             )
                         }
                     }
-                }, 0)
+                }, 1000)
             },
 
             /* Discard changes */

@@ -86,7 +86,10 @@
     import moment from 'moment';
     import _ from 'lodash';
 
+    import Request from '../../../../vuex/models/Request'
+
     import CashierBalancingAPI from '../../../../api/cashier-balancing'
+    import RequestsAPI from '../../../../api/requests'
     import CashierBalancingFilter from './CashierBalancingFilter.vue'
     import { GridCore } from '../../../../components/Utilities/Grid/index'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
@@ -248,8 +251,28 @@
                         return "---"
                 }
             },
-            recover(requestId){
-                this.runRequestRecoverance({ requestId, companyId: this.company.id })
+            async recover(requestId){
+                const vm = this
+                try {
+                    const request = await RequestsAPI.getOne(requestId, {
+                        companyId: this.company.id
+                    })
+                    requestId = await Request.show(this, request, {
+                        ignoreOfflineDBInsertion: false
+                    })
+                    const stateRequest = Request.query().with("card").find(requestId)
+                    vm.$store.dispatch("entities/update", {
+                        entity: 'windows',
+                        where: stateRequest.card.windowId,
+                        data: {
+                            show: true
+                        }
+                    })
+                }
+                catch(err){
+                    console.log("Error occurred", err)
+                }
+                /*this.runRequestRecoverance({ requestId, companyId: this.company.id })*/
             },
             search({ filterData = {}, params = {} } = {}){
                 const requestParams = {

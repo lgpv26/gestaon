@@ -8,12 +8,12 @@
                 <span class="number" v-else>Número desconhecido</span>
             </div>
             <span class="push-both-sides"></span>
-            <span class="time">{{ moment(call.createdAt).format("DD/MM HH:mm") }}</span>
+            <span class="time">{{ moment(call.dateCreated).format("DD/MM HH:mm") }}</span>
         </div>
         <div class="call__body" style="display: flex; flex-direction: row; justify-content: space-between;">
             <div class="call__column">
                 <div class="section__details">
-                    <span class="time">{{ moment(call.createdAt).format("DD/MM HH:mm") }}</span> -
+                    <!--<span class="time">{{ moment(call.dateCreated).format("DD/MM HH:mm") }}</span> - -->
                     <span class="destination">{{ call.destination }}</span>
                 </div>
                 <div class="section__clients">
@@ -30,33 +30,29 @@
                 </div>
             </div>
             <div class="call__column">
-                <span class="buy-infos" style="font-size: 12px; color: var(--font-color--7)">{{ (false) ? "COMPROU" : "SEM COMPRAS" }}</span>
+                <!--<span class="buy-infos" style="font-size: 12px; color: var(&#45;&#45;font-color&#45;&#45;7)">{{ (false) ? "COMPROU" : "SEM COMPRAS" }}</span>-->
             </div>
         </div>
         <div class="call__footer" style="display: flex; flex-direction: row;">
             <div ref="autoCloseProgress" style="width: 34px;"></div>
             <span class="push-both-sides"></span>
-            <a href="javascript:void(0)" class="btn duplicate" @click="createRequestDraft(call)">
+            <!--<a href="javascript:void(0)" class="btn duplicate" @click="createRequestDraft(call)">
                 <i class="mi mi-add-to-photos"></i> Duplicar
-            </a>
-            <a href="javascript:void(0)" class="btn start-service" style="float: right" @click="createRequestDraft(call)">
+            </a>-->
+            <a href="javascript:void(0)" class="btn start-service" style="float: right" @click="addRequest()">
                 <i class="mi mi-center-focus-strong"></i> Iniciar
             </a>
         </div>
-
     </div>
 </template>
 
 <script>
+    import Vue from 'vue'
     import _ from 'lodash'
     import moment from 'moment'
     import shortid from 'shortid'
 
-    import ClientsAPI from '../../../../api/clients'
-
     import { mapGetters, mapActions, mapState } from 'vuex'
-
-    import {createRequest} from '../../../../models/RequestModel'
 
     import Clipboard from 'clipboard'
     import ProgressBar from 'progressbar.js'
@@ -84,106 +80,123 @@
             ...mapActions('morph-screen', ['createDraft']),
             ...mapActions('caller-id', ['setCall','loadCalls']),
             ...mapActions('toast',['showToast']),
-            createRequestDraft(call){
-                if(this.canCreateDraft) {
-                    if (!call.clients.length) {
-                        this.createRequestDraftToNewClient(call)
-                    }
-                    else {
-                        ClientsAPI.getOne(_.first(call.clients).id, {
-                            companyId: this.company.id
-                        }).then(({data}) => {
-                            this.createRequestDraftExistentClient(call, data)
-                        })
-                    }
-                    // this.toggleCallerID()
+            updateValue(path, field, id, value, modifier = false, ev = false) {
+                const data = {};
+                let start, end
+                if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
+                    start = ev.target.selectionStart
+                    end = ev.target.selectionEnd
                 }
-                else {
-                    this.showToast({
-                        type: 'error',
-                        message: "Você só pode iniciar um atendimento a partir da tela inicial."
+                switch (modifier) {
+                    case "uppercase":
+                        data[field] = value.toUpperCase();
+                        break;
+                    default:
+                        data[field] = value;
+                }
+                this.$store.dispatch(path, {where: id, data})
+                if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
+                    Vue.nextTick(() => {
+                        ev.target.setSelectionRange(start,end);
                     })
                 }
             },
-            createRequestDraftToNewClient(call){
-                console.log(call.destination)
-                const createDraftArgs = { body: {
-                    type: 'request',
-                    createdBy: this.user.id,
+            async addRequest() {
+                const requestUIStateTmpId = `tmp/${shortid.generate()}`;
+                const requestTmpId = `tmp/${shortid.generate()}`;
+                const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
+                const windowTmpId = `tmp/${shortid.generate()}`;
+                const cardTmpId = `tmp/${shortid.generate()}`;
+                this.$store.dispatch("entities/windows/insert", {
                     data: {
-                        request: createRequest({
-                            activeStep: 'client',
-                            phoneLine: call.destination,
-                            client: {
-                                clientPhones: [
-                                    {
-                                        id: 'tmp/' + shortid.generate(),
-                                        name: "PRINCIPAL",
-                                        number: call.number
-                                    }
-                                ]
+                        id: windowTmpId,
+                        zIndex: this.$store.getters["entities/windows/query"]().max("zIndex") + 1
+                    }
+                })
+                this.$store.dispatch("entities/cards/insert", {
+                    data: {
+                        id: cardTmpId,
+                        windowId: windowTmpId,
+                        requestId: requestTmpId
+                    }
+                })
+                this.$store.dispatch("entities/requestUIState/insert", {
+                    data: {
+                        id: requestUIStateTmpId,
+                        windowId: windowTmpId,
+                        requestId: requestTmpId
+                    }
+                })
+                this.$store.dispatch("entities/requests/insert", {
+                    data: {
+                        id: requestTmpId,
+                        clientId: null,
+                        requestOrderId: null,
+                        status: "draft"
+                    }
+                });
+
+                Vue.nextTick(async () => {
+                    if(this.client && this.client.id){
+                        const client = await this.$db.clients.where({ id: this.client.id }).first()
+                        const clientPhones = await this.$db.clientPhones.where({clientId: this.client.id}).toArray()
+                        const clientAddresses = await this.$db.clientAddresses.where({clientId: this.client.id}).toArray()
+                        const clientAddress = _.first(clientAddresses)
+                        if (clientAddress && clientAddress.addressId) {
+                            const address = await this.$db.addresses.where({ id: clientAddress.addressId}).first()
+                            this.$store.dispatch("entities/addresses/insert", { data: address })
+                            this.$store.dispatch("entities/clients/insert", { data: client })
+                            if(clientPhones.length){
+                                this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
                             }
-                        })
-                    }
-                }, companyId: this.company.id }
-                this.createDraft(createDraftArgs)
-            },
-            createRequestDraftExistentClient(call, client){
-
-                // mappings for request draft format
-
-                if(_.get(client, 'clientCustomFields', []).length){
-                    client.clientCustomFields = _.map(client.clientCustomFields, (clientCustomField) => {
-                        return {
-                            id: clientCustomField.customFieldId,
-                            value: clientCustomField.value
-                        }
-                    })
-                }
-
-                const createDraftArgs = {
-                    body: {
-                        type: 'request',
-                        createdBy: this.user.id,
-                        data: {
-                            request: createRequest({
-                                activeStep: 'client',
-                                phoneLine: call.destination,
-                                client
+                            if(clientAddresses.length){
+                                this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
+                                this.$store.dispatch("entities/requestClientAddresses/insert", {
+                                    data: {
+                                        id: requestClientAddressTmpId,
+                                        requestId: requestTmpId,
+                                        clientAddressId: _.first(clientAddresses).id
+                                    }
+                                })
+                            }
+                            /*this.$store.dispatch(
+                                "entities/requestClientAddresses/update",
+                                {
+                                    where: _.first(this.request.requestClientAddresses).id,
+                                    data: {
+                                        clientAddressId: clientAddress.id
+                                    }
+                                }
+                            )*/
+                            this.$store.dispatch("entities/requests/update", {
+                                where: requestTmpId,
+                                data: {
+                                    clientId: this.client.id
+                                }
                             })
+                            this.searchShow = false
+                            this.updateValue(
+                                "entities/requestUIState/update",
+                                "requestClientAddressForm",
+                                requestUIStateTmpId,
+                                false
+                            )
+                            this.updateValue(
+                                "entities/requestUIState/update",
+                                "isAddingClientAddress",
+                                requestUIStateTmpId,
+                                false
+                            )
                         }
-                    },
-                    companyId: this.company.id
-                }
-
-                // select first address and phone
-
-                if(client.clientAddresses.length){
-                    createDraftArgs.body.data.request.clientAddressId = client.clientAddresses[0].id
-                }
-                if(client.clientPhones.length){
-                    const clientPhoneIndex = _.findIndex(client.clientPhones, {number: call.number})
-                    if(clientPhoneIndex !== -1){
-                        createDraftArgs.body.data.request.clientPhoneId = client.clientPhones[clientPhoneIndex].id
                     }
-                    else {
-                        createDraftArgs.body.data.request.clientPhoneId = client.clientPhones[0].id
-                    }
-                }
+                })
 
-                //if two of them are selected, go directly to order tab
-
-                if(_.get(createDraftArgs, 'body.data.request.clientAddressId', null) && _.get(createDraftArgs,'body.data.request.clientPhoneId', null)){
-                    createDraftArgs.body.data.request.activeStep = 'order'
-                }
-
-                this.createDraft(createDraftArgs)
-            }
+            },
         },
         mounted(){
             const vm = this
             vm.clipboardInstance = new Clipboard('.clipboard')
-            vm.autoCloseProgressInstance = new ProgressBar.Circle(vm.$refs.autoCloseProgress, {
+            /*vm.autoCloseProgressInstance = new ProgressBar.Circle(vm.$refs.autoCloseProgress, {
                 color: 'var(--font-color--terciary)',
                 strokeWidth: 12,
                 trailWidth: 1,
@@ -191,7 +204,7 @@
                     value: '?'
                 }
             })
-            vm.callActiveTime = moment().diff(moment(vm.call.createdAt), 'seconds')
+            vm.callActiveTime = moment().diff(moment(vm.call.dateCreated), 'seconds')
             vm.intervalInstance = setInterval(() => {
                 vm.callActiveTime += 1
                 if(vm.callActiveTime > 120){
@@ -204,14 +217,14 @@
                     })
                 }
                 vm.autoCloseProgressInstance.setText(vm.callActiveTime)
-            }, 1000)
+            }, 1000)*/
         },
         beforeDestroy(){
-            if(this.intervalInstance){
+            /*if(this.intervalInstance){
                 clearInterval(this.intervalInstance)
-            }
+            }*/
             this.clipboardInstance.destroy()
-            this.autoCloseProgressInstance.destroy()
+            /*this.autoCloseProgressInstance.destroy()*/
         }
     }
 </script>

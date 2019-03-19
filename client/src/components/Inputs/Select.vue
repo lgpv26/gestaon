@@ -142,11 +142,14 @@
                         this.$emit("select", item.value);
                     }
                 } else {
+                    console.log(this.value, item.value)
                     // multiple select
                     if (_.includes(this.value, item.value)) {
+                        this.value.splice(_.findIndex(this.value, item.value),1)
                         this.onValueChanged(this.value);
                         this.$emit("unselect", item.value);
                     } else {
+                        this.value.push(item.value)
                         this.onValueChanged(this.value);
                         this.$emit("select", item.value);
                     }

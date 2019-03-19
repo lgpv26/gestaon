@@ -32,14 +32,14 @@
             </app-select>
         </li>
         <li>
-            <app-select v-model="form.paymentMethod" :popoverProps="{placement:'bottom-start'}" :items="paymentMethodsSelectItems" :multiple="true" :verticalOffset="5" title="Meio de pagamento"
+            <app-select v-model="form.paymentMethod" :popoverProps="{placement:'bottom-start'}" :items="selectPaymentMethods" :multiple="true" :verticalOffset="5" title="Meio de pagamento"
                         @change="onFilterChange($event)">
                 <a class="btn btn--border-only">
                     <icon-flag style="margin-right: 10px;"></icon-flag>
                     Meio de pagamento
                     <div class="dot-separator secondary" v-if="form.paymentMethod.length" style="margin: 0 10px;"></div>
                     <span class="secondary" v-if="form.paymentMethod.length === 1">
-                        {{ _.find(paymentMethodsSelectItems, { value: _.first(form.paymentMethod) }).text }}
+                        {{ _.find(selectPaymentMethods, { value: _.first(form.paymentMethod) }).text }}
                     </span>
                     <span class="secondary" v-else-if="form.paymentMethod.length">
                         {{ form.paymentMethod.length }}
@@ -76,14 +76,13 @@
             </app-select>
         </li>
         <li>
-            <app-select v-model="form.responsibleUser" :popoverProps="{placement:'bottom-start'}" :items="usersSelectItems" :multiple="true" :verticalOffset="5" title="Responsável"
-                        @change="onFilterChange($event)">
+            <app-select v-model="form.responsibleUser" :popoverProps="{placement:'bottom-start'}" :items="selectUsers" :multiple="true" :verticalOffset="5" title="Responsável" @change="onFilterChange($event)">
                 <a class="btn btn--border-only">
                     <icon-flag style="margin-right: 10px;"></icon-flag>
                     Responsável
                     <div class="dot-separator primary" v-if="form.responsibleUser.length" style="margin: 0 10px;"></div>
                     <span class="primary" v-if="form.responsibleUser.length === 1">
-                        {{ _.find(usersSelectItems, { value: _.first(form.responsibleUser) }).text }}
+                        {{ _.find(selectUsers, { value: _.first(form.responsibleUser) }).text }}
                     </span>
                     <span class="primary" v-else-if="form.responsibleUser.length">
                         {{ form.responsibleUser.length }}
@@ -136,6 +135,9 @@
 
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
 
+    import User from "../../../../vuex/models/User"
+    import PaymentMethod from "../../../../vuex/models/PaymentMethod"
+
     export default {
         components: {
         },
@@ -178,10 +180,27 @@
             ...mapGetters('data/client-groups',['clientGroupsSelectItems']),
             ...mapGetters('data/payment-methods',['paymentMethodsSelectItems']),
             ...mapGetters('data/products',['productsSelectItems']),
+            selectUsers() {
+                return _.map(User.all(), user => {
+                    return {
+                        value: user.id,
+                        text: user.name
+                    };
+                });
+            },
+            selectPaymentMethods() {
+                return _.map(PaymentMethod.all(), paymentMethod => {
+                    return {
+                        value: paymentMethod.id,
+                        text: paymentMethod.name
+                    };
+                });
+            },
         },
         methods: {
             ...mapActions('toast',['showToast']),
             onFilterChange(){
+                console.log(this.form.responsibleUser, this.selectUsers)
                 this.$emit('clean-selection')
                 this.apply()
             },

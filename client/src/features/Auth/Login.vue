@@ -47,8 +47,8 @@
         data() {
             return {
                 form: {
-                    email: "",
-                    password: ""
+                    email: "thyoity@gmail.com",
+                    password: "123"
                 }
             };
         },

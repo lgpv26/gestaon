@@ -12,10 +12,12 @@ import Dexie from "dexie";
 import nGram from "n-gram";
 import pako from "pako";
 import allModels from "../../vuex/models/index";
+import FlexSearch from 'flexsearch'
 
 import utils from "../../utils";
 import localForage from "localforage";
 import config from "../../config";
+import store from "../../vuex/store"
 
 const alarmSound = require("../../assets/sounds/alarm.mp3");
 
@@ -25,7 +27,9 @@ export default {
             currentImportedFileSize: 0,
             importFileSize: 0,
             stream: null,
-            requestQueueInitialized: false
+            requestQueueInitialized: false,
+
+            importEventOccurred: false
         };
     },
     methods: {
@@ -73,7 +77,9 @@ export default {
          */
         connect() {
             const vm = this;
-            vm.$socket.on("presence:load", vm.onPresenceLoad);
+            vm.$socket.on("presence:load", vm.onPresenceLoad)
+            if(vm.importEventOccurred) return
+            vm.importEventOccurred = true
             new Promise(resolve => {
                 window.setAppLoadingText("Carregando usuário...");
                 vm.setAuthUser()
@@ -113,13 +119,8 @@ export default {
 
         initializeSystem() {
             const vm = this;
-            if(!vm.requestQueueInitialized){
-                vm.requestQueueInitialized = true
-                vm.initializeRequestQueue(vm.$socket)
-                vm.initializeChatQueue(vm.$socket)
-            }
             // set elasticlunr tokenizer
-            elasticlunr.tokenizer = function(str) {
+            /*elasticlunr.tokenizer = function(str) {
                 //console.log(`-------- Executando ${arguments.length} ---------`)
                 if (!arguments.length || str === null || str === undefined) return [];
                 if (Array.isArray(str)) {
@@ -172,7 +173,7 @@ export default {
                 });
 
                 return finalArray;
-            };
+            };*/
 
             /*
              * if db imported previously
@@ -652,7 +653,30 @@ export default {
                  * load elasticlunar search data
                  */
                 new Promise((resolve, reject) => {
-                    vm.$static.searchClientsIndex = elasticlunr(function() {
+                    vm.$static.fSearchClients = new FlexSearch({
+                        doc: {
+                            id: "id",
+                            field: [
+                                "name",
+                                "address",
+                                "complement",
+                                "number",
+                                "neighborhood",
+                                "city",
+                                "state"
+                            ]
+                        },
+                        tokenize: 'forward',
+                        async: true,
+                        worker: false,
+                        suggest: true
+                    })
+                    vm.$db.searchClients.toArray().then(documents => {
+                        vm.$static.fSearchClients.add(documents)
+                        resolve();
+                    })
+
+                    /*vm.$static.searchClientsIndex = elasticlunr(function() {
                         _.forEach(
                             elasticlunr.Pipeline.registeredFunctions,
                             (value, key) => {
@@ -677,10 +701,32 @@ export default {
                             }, this);
                             resolve();
                         });
-                    });
+                    });*/
                 }),
                 new Promise((resolve, reject) => {
-                    vm.$static.searchAddressesIndex = elasticlunr(function() {
+                    vm.$static.fSearchAddresses = new FlexSearch({
+                        doc: {
+                            id: "id",
+                            field: [
+                                "name",
+                                "address",
+                                "neighborhood",
+                                "city",
+                                "state",
+                                "cep",
+                                "country"
+                            ]
+                        },
+                        tokenize: 'forward',
+                        async: true,
+                        worker: false,
+                        suggest: true
+                    })
+                    vm.$db.searchAddresses.toArray().then(documents => {
+                        vm.$static.fSearchAddresses.add(documents);
+                        resolve();
+                    })
+                    /*vm.$static.searchAddressesIndex = elasticlunr(function() {
                         _.forEach(
                             elasticlunr.Pipeline.registeredFunctions,
                             (value, key) => {
@@ -705,7 +751,7 @@ export default {
                             }, this);
                             resolve();
                         });
-                    });
+                    });*/
                 }),
                 /**
                  * load vuex orm data
@@ -759,7 +805,6 @@ export default {
 
         logout() {
             const vm = this;
-
             vm.logoutAction().then(authenticated => {
                 if (!authenticated) {
                     vm.$db.delete().then(() => {
@@ -776,6 +821,7 @@ export default {
                         vm.$store.dispatch("entities/deleteAll");
                         vm.setSystemInitialized(false);
                         vm.setLastDataSyncedDate(null);
+                        vm.setLastRequestsLoadedDate(null);
                         location.reload()
                     });
                 }
@@ -784,6 +830,7 @@ export default {
     },
     mounted() {
         const vm = this;
+        vm.importEventOccurred = false
         localStorage.debug = false;
         /* start socket.io */
         this.initializeSocketIO();

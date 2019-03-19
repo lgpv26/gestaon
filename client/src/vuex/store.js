@@ -103,7 +103,8 @@ export default new Vuex.Store({
                 height: 0
             }
         },
-        lastDataSyncedDate: null
+        lastDataSyncedDate: null,
+        lastRequestsLoadedDate: null
     },
     mutations,
     actions,
