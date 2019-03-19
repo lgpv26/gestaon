@@ -150,7 +150,8 @@
                                 (_.has(request, "status") &&
                                     _.includes(this.filters.status, request.status));
                             return (
-                                responsibleUsers && promotionChannels && clientGroups && status
+                                responsibleUsers && promotionChannels && clientGroups && status &&
+                                    request.card.status !== 'finished'
                             );
                         });
                     case "scheduled":
@@ -168,7 +169,6 @@
                         shouldOpenWindow = false;
                     }
                 })
-
                 if (shouldOpenWindow && request.card) {
                     this.$store.dispatch("entities/windows/update", {
                         where: request.card.windowId,

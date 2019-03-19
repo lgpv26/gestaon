@@ -1,9 +1,9 @@
 <template>
-    <div id="caller-id" :class="{ open: !isCallerIdDisabled && $store.getters['entities/calls/query']().count() }" @mouseover="mouseOver($event)">
+    <div id="caller-id" :class="{ open: !isCallerIdDisabled && calls.length }" @mouseover="mouseOver($event)">
         <div class="container">
             <div ref="scrollbar">
                 <div class="calls">
-                    <div class="call__phone-number" v-for="(call, index) in $store.getters['entities/calls/query']().withAll().orderBy('createdAt','desc').get()" :key="call.id">
+                    <div class="call__phone-number" v-for="(call, index) in calls" :key="call.id">
                         <app-call v-if="call.clients.length" v-for="client in call.clients" :key="client.id" :client="client" :call="call"></app-call>
                         <app-call v-if="!call.clients.length" :call="call"></app-call>
                     </div>
@@ -38,12 +38,13 @@
                 open: false,
                 scrollbar: null,
                 timeoutInstance: null,
-                clipboardInstance: null
+                clipboardInstance: null,
+                calls: []
             }
         },
         computed: {
             ...mapState('auth', ['user','company']),
-            ...mapState('caller-id', ['calls']),
+            /*...mapState('caller-id', ['calls']),*/
             ...mapState('morph-screen', ['isShowing']),
             ...mapState('caller-id', {
                 isCallerIdDisabled: 'disabled'
@@ -61,11 +62,11 @@
                 }
             },
             addCall(call){
-                const vm = this
+                /*const vm = this
                 const callClientIds = []
                 const callObj = {}
                 const callClients = []
-                const diffInSeconds = moment().diff(moment(call.createdAt), 'seconds')
+                const diffInSeconds = moment().diff(moment(call.dateCreated), 'seconds')
                 if(diffInSeconds < 120){ // if below 120 seconds
                     if(_.has(call,'clients') && call.clients.length){
                         _.forEach(call.clients,(client) => {
@@ -80,27 +81,33 @@
                     vm.$store.dispatch('entities/clients/insertOrUpdate', {
                         data: callClients
                     })
-                }
+                }*/
+                this.calls.unshift(call)
             }
         },
         created(){
             const vm = this
+            vm.calls = []
             CallsAPI.getList({ companyId: vm.company.id }).then(({data}) => {
-                _.forEach(data,(call) => {
+                /*_.forEach(data,(call) => {
                     vm.addCall(call)
-                })
+                })*/
+                vm.calls = data
             })
             /**
              * On new call
              * @param ev = { success:Boolean, evData:Draft }
              */
-            /*vm.$options.sockets['caller-id.new'] = (ev) => {
+            vm.$options.sockets['caller-id.new'] = (ev) => {
                 console.log("Received caller-id.new", ev)
                 if(ev.success){
                     vm.open = true
                     vm.addCall(ev.evData)
+                    if(vm.calls.length > 20){
+                        vm.calls.pop()
+                    }
                 }
-            }*/
+            }
         },
         mounted(){
             this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {

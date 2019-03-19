@@ -91,7 +91,7 @@
                 @select="SET_FILTER({ type: 'status', select: true, id: $event })"
                 :title="'Status do pedido'"
                 :multiple="true"
-                :items="requestStatusListSelectItems"
+                :items="requestBoardRequestStatusListItems"
                 :verticalOffset="15"
         >
             <div class="filter-item__target">
@@ -183,6 +183,11 @@
         computed: {
             ...mapGetters("data/request-status", ["requestStatusListSelectItems"]),
             ...mapState("request-board", ["filters"]),
+            requestBoardRequestStatusListItems(){
+                return _.filter(this.requestStatusListSelectItems,(requestStatusListSelectItem) => {
+                    return requestStatusListSelectItem.value !== "finished"
+                })
+            },
             selectClientGroups() {
                 return _.map(ClientGroup.all(), clientGroup => {
                     return {
@@ -212,53 +217,18 @@
             ...mapMutations(["SET_SYSTEM_REQUESTS_LOADED"]),
             ...mapMutations("request-board", ["SET_FILTER","SET_DELIVERY_DATE"]),
             ...mapActions("request-board", ["setIsLoading"]),
-            ...mapActions(["setSystemRequestsLoaded"]),
-            extractOnlyModelFields(modelName,obj){
-                const returnObj = {}
-                this.modelDefinitions[(modelName.includes('STATE_')) ? "stateModels" : "offlineDBModels"][modelName].split(',').forEach((column) => {
-                    column = column.trim()
-                    if(_.has(obj,column)){
-                        returnObj[column] = obj[column]
-                    }
-                })
-                return returnObj
-            },
-            async fillOfflineDBWithSyncedData(modelName, action, data, replacementColumn = null){
-                const vm = this
-                if(action === 'put'){
-                    return vm.$db[modelName].put(this.extractOnlyModelFields(modelName,data))
-                }
-                else if(action === 'patch'){
-                    return vm.$db[modelName].update(data.id, data)
-                }
-                else if(action === 'bulkPut'){
-                    data = _.map(data, (dataItem) => {
-                        return this.extractOnlyModelFields(modelName, dataItem)
-                    })
-                    return vm.$db[modelName].bulkPut(data)
-                }
-                else if(action === 'bulkPutWithReplacement'){
-                    return vm.$db[modelName].where({
-                        [replacementColumn]: _.first(data)[replacementColumn]
-                    }).toArray((itemsToDelete) => {
-                        const ids = _.map(itemsToDelete, (itemToDelete) => itemToDelete.id)
-                        return vm.$db[modelName].bulkDelete(ids).then(() => {
-                            return this.fillOfflineDBWithSyncedData(modelName, 'bulkPut', data)
-                        })
-                    })
-                }
-            },
+            ...mapActions(["setSystemRequestsLoaded","setLastRequestsLoadedDate"]),
             onDeliveryDateFilterClick(){
                 this.$refs.deliveryDate.fp.open()
             },
             loadRequests(){
                 const vm = this
                 vm.SET_SYSTEM_REQUESTS_LOADED(false)
-                RequestBoardAPI.getRequests({
+                return RequestBoardAPI.getRequests({
                     date: vm.moment(vm.filters.deliveryDate).toISOString()
                 }).then(response => {
-                    console.log("Getting requests from requestBoardAPI")
-                    Promise.all([
+                    console.log("Getting requests from requestBoardAPI", response)
+                    return Promise.all([
                         vm.$db.STATE_cards.toArray().then((cards) => {
                             vm.$store.dispatch("entities/insertOrUpdate", {
                                 entity: 'cards',
@@ -284,122 +254,24 @@
                             return windows
                         })
                     ]).then(() => {
+                        response.data = _.filter(response.data,(request) => {
+                            return request.status !== 'finished'
+                        })
                         const promises = _.map(response.data, (request) => {
-                            // guarantee the order of promises
-                            const requestPromiseQueue = new PromiseQueue({ concurrency: 1})
-
-                            // request
-
-                            requestPromiseQueue.add(() => vm.fillOfflineDBWithSyncedData("requests", 'put', request).then((promise) => {
-                                vm.$store.dispatch("entities/insertOrUpdate", {
-                                    entity: 'requests',
-                                    ignoreOfflineDBInsertion: true,
-                                    data: request
-                                })
-                                return promise
-                            }).then((promise) => {
-                                Request.guaranteeDependencies(
-                                    request,
-                                    requestPromiseQueue,
-                                    vm.fillOfflineDBWithSyncedData,
-                                    true
-                                )
-                                return promise
-                            }))
-
-                            return requestPromiseQueue.onIdle().then(() => {
-                                const savedRequest = Request.query()
-                                    .with("card")
-                                    .with("client.clientAddresses.address")
-                                    .with("client.clientPhones")
-                                    .with("requestClientAddresses.clientAddress.address")
-                                    .with("requestOrder.requestOrderProducts")
-                                    .with("requestPayments")
-                                    .with("requestClientAddresses")
-                                    .with("requestUIState")
-                                    .find(request.id)
-
-                                // verify requestUIState changes
-
-                                vm.$store.dispatch("entities/update", {
-                                    entity: 'requestUIState',
-                                    where: savedRequest.requestUIState.id,
-                                    ignoreOfflineDBInsertion: true,
-                                    data: {
-                                        requestString: Request.getRequestComparationObj(savedRequest),
-                                        hasRequestChanges: false,
-                                        hasRequestOrderChanges: false
-                                    }
-                                })
-
-                                return vm.fillOfflineDBWithSyncedData(
-                                    "STATE_requestUIState",
-                                    "patch",
-                                    {
-                                        id: savedRequest.requestUIState.id,
-                                        requestString: Request.getRequestComparationObj(savedRequest),
-                                        hasRequestChanges: false,
-                                        hasRequestOrderChanges: false
-                                    }
-                                ).then(() => {
-                                    const getClientAddress = () => {
-                                        if (savedRequest.requestClientAddresses.length) {
-                                            const firstClientAddress = _.first(savedRequest.requestClientAddresses).clientAddress;
-                                            return _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), { length: 24, separator: "", omission: "..."}) +
-                                                ", " +
-                                                (firstClientAddress.number ? firstClientAddress.number : "S/N") +
-                                                (firstClientAddress.complement ? " " + firstClientAddress.complement : "")
-                                        }
-                                        return "SEM ENDEREÇO";
-                                    }
-
-                                    const getOrderSubtotal = () => {
-                                        if(!savedRequest.requestOrderId){
-                                            return null
-                                        }
-                                        return _.sumBy(
-                                            savedRequest.requestOrder.requestOrderProducts,
-                                            requestOrderProduct => {
-                                                return (
-                                                    requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
-                                                )
-                                            }
-                                        )
-                                    }
-
-                                    const cardData = _.assign(savedRequest.card, {
-                                        clientName: (savedRequest.clientId) ? ((_.isEmpty(savedRequest.client.name)) ? "SEM NOME" : savedRequest.client.name) : "SEM CLIENTE",
-                                        clientAddress: (savedRequest.clientId) ? getClientAddress() : "SEM ENDEREÇO",
-                                        orderSubtotal: getOrderSubtotal(),
-                                        status: savedRequest.status,
-                                        responsibleUserId: savedRequest.userId,
-                                    })
-
-                                    // the card put into offline db should work with promise
-                                    vm.$store.dispatch("entities/insertOrUpdate", {
-                                        entity: 'cards',
-                                        ignoreOfflineDBInsertion: true,
-                                        data: cardData
-                                    })
-
-                                    return vm.$db["STATE_cards"].put(cardData).then(() => {
-                                        return request.id
-                                    })
-
-                                })
+                            return Request.show(vm, request, {
+                                ignoreOfflineDBInsertion: true
+                            }).catch((err) => {
+                                console.log("Error loading requests", err)
                             })
                         })
 
                         // Once everything got from server, start to fill Vuex ORM with STATE_ db data
-                        Promise.all(promises).then((requests) => {
+                        return Promise.all(promises).then((requests) => {
                             const retrievingDraftPromises = []
                             _.forOwn(vm.modelDefinitions.stateModels, (fields, stateModelName) => {
                                 const modelName = stateModelName.replace("STATE_", "")
                                 retrievingDraftPromises.push(vm.$db[stateModelName].toArray().then(data => {
                                     if(data.length){
-                                        if(modelName === "requestClientAddresses"){
-                                            console.log("Recovering", data)
-                                        }
                                         vm.$store.dispatch("entities/insertOrUpdate", {
                                             entity: modelName,
                                             data: data
@@ -408,7 +280,7 @@
                                     return Promise.resolve()
                                 }))
                             })
-                            Promise.all(retrievingDraftPromises).then(() => {
+                            return Promise.all(retrievingDraftPromises).then(() => {
                                 // verify changes
                                 requests.forEach((requestId) => {
                                     const processedRequest = Request.query()
@@ -421,10 +293,6 @@
                                         .with("requestClientAddresses")
                                         .with("requestUIState")
                                         .find(requestId)
-
-                                    console.log("Diff", !_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString))
-                                    console.log("Recovered one", JSON.parse(processedRequest.requestUIState.requestString))
-                                    console.log("Current one", JSON.parse(Request.getRequestComparationObj(processedRequest)))
                                     if(_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString)){
                                         vm.$store.dispatch("entities/requestUIState/update",{
                                             where: processedRequest.requestUIState.id,
@@ -442,10 +310,10 @@
                                         })
                                     }
                                 })
-
-                                console.log("system:ready event emitted", )
+                                console.log("system:ready event emitted")
                                 vm.$socket.emit("system:ready")
                                 vm.SET_SYSTEM_REQUESTS_LOADED(true)
+                                vm.setLastRequestsLoadedDate(vm.moment().valueOf())
                                 vm.setIsLoading(false)
                             })
                         })
@@ -459,7 +327,9 @@
             }
         },
         mounted() {
-            this.SET_DELIVERY_DATE(this.moment().toISOString())
+            if(!this.moment(this.filters.deliveryDate).isSame(this.moment(), 'day')){
+                this.SET_DELIVERY_DATE(this.moment().toISOString())
+            }
         }
     };
 </script>

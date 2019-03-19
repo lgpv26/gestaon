@@ -17,6 +17,7 @@ export default class RequestChat extends Model {
             user: this.belongsTo(User, "userId"),
             type: this.attr("message"), // message, alert
             data: this.attr(""),
+            status: this.attr("pending"),
             dateUpdated: this.attr(null),
             dateCreated: this.attr(null),
             dateRemoved: this.attr(null),

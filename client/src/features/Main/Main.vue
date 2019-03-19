@@ -23,10 +23,10 @@
                 </div>
                 <div class="main-column" :style="{ width: dimensions.window.width - 60 + 'px' }">
                     <header class="main-column__header">
-                        <div class="header__container" v-if="$route.name === 'dashboard'">
+                        <div class="header__container" v-show="$route.name === 'dashboard'">
                             <app-request-board-filter ref="requestBoardFilter"></app-request-board-filter>
                         </div>
-                        <div class="header__container" v-else>
+                        <div class="header__container" v-show="$route.name !== 'dashboard'">
                             <div class="container__title">
                                 <h3>Olá, {{ truncatedName }}!</h3>
                             </div>
@@ -76,6 +76,7 @@
     import _ from "lodash"
     import shortid from "shortid"
     import moment from "moment"
+    import Vue from 'vue'
 
     import SessionHandler from "./SessionHandler"
 
@@ -95,6 +96,7 @@
         mixins: [SessionHandler],
         data() {
             return {
+                requestQueueInitialized: false,
                 isFirstInitialization: true,
                 requestInterval: null,
                 showSettings: false,
@@ -106,7 +108,7 @@
             };
         },
         computed: {
-            ...mapState(["app", "system", "lastDataSyncedDate"]),
+            ...mapState(["app", "system", "lastDataSyncedDate", "lastRequestsLoadedDate"]),
             ...mapState("auth", ["user", "tokens", "company"]),
             ...mapState("morph-screen", ["screens"]),
             ...mapState("caller-id", {
@@ -124,7 +126,7 @@
         methods: {
             ...mapMutations(["setApp", "setSystemInitialized"]),
             //...mapMutations('request-queue',["REMOVE_PROCESSED_QUEUE_ITEMS"]),
-            ...mapActions(["setLastDataSyncedDate"]),
+            ...mapActions(["setLastDataSyncedDate","setLastRequestsLoadedDate"]),
             ...mapActions("auth", {
                 logoutAction: "logout",
                 setAuthUser: "setAuthUser",
@@ -233,45 +235,15 @@
                     src: [alarmSound]
                 }).play();
             },
-            extractOnlyModelFields(modelName,obj){
-                const returnObj = {}
-                this.modelDefinitions.offlineDBModels[modelName].split(',').forEach((column) => {
-                    column = column.trim()
-                    if(_.has(obj,column)){
-                        returnObj[column] = obj[column]
-                    }
-                })
-                return returnObj
-            },
-            fillOfflineDBWithSyncedData(modelName, action, data, replacementColumn = null){
-                const vm = this
-                if(action === 'put'){
-                    return vm.$db[modelName].put(this.extractOnlyModelFields(modelName,data))
-                }
-                else if(action === 'patch'){
-                    return vm.$db[modelName].update(data.id, data)
-                }
-                else if(action === 'bulkPut'){
-                    data = _.map(data, (dataItem) => {
-                        return this.extractOnlyModelFields(modelName, dataItem)
-                    })
-                    return vm.$db[modelName].bulkPut(data)
-                }
-                else if(action === 'bulkPutWithReplacement'){
-                    return vm.$db[modelName].where({
-                        [replacementColumn]: _.first(data)[replacementColumn]
-                    }).toArray((itemsToDelete) => {
-                        const ids = _.map(itemsToDelete, (itemToDelete) => itemToDelete.id)
-                        return vm.$db[modelName].bulkDelete(ids).then(() => {
-                            return this.fillOfflineDBWithSyncedData(modelName, 'bulkPut', data)
-                        })
-                    })
-                }
-            },
-            onRequestQueueSync(ev){
+            async onRequestQueueSync(ev){
                 const vm = this
                 console.log("request-queue:sync", ev)
                 if(ev.success){
+                    const firstRequest = _.first(ev.evData.processedQueue).data
+                    if(moment(firstRequest.dateUpdated).isBefore(moment(this.lastRequestsLoadedDate))){
+                        console.log("Already updated with recent content")
+                        return
+                    }
                     ev.evData.processedQueue.forEach(function(processedItem){
                         // did the processedItem pass the validation?
                         if(!processedItem.success){
@@ -367,149 +339,69 @@
                             })
                         }
                         else {
-                            // guarantee the order of promises
-                            const requestPromiseQueue = new PromiseQueue({ concurrency: 1})
-
-                            // request
-
-                            requestPromiseQueue.add(() => vm.fillOfflineDBWithSyncedData("requests", 'put', request).then((promise) => {
-                                vm.$store.dispatch("entities/insertOrUpdate", {
-                                    entity: 'requests',
-                                    ignoreOfflineDBInsertion: false,
-                                    data: request
-                                })
-                                return promise
-                            }).then((promise) => {
-                                Request.guaranteeDependencies(
-                                    request,
-                                    requestPromiseQueue,
-                                    vm.fillOfflineDBWithSyncedData,
-                                    false
-                                )
-                                return promise
-                            }))
-
-                            return requestPromiseQueue.onIdle().then(() => {
-                                // check if request has client
-                                if(request.clientId){
-                                    // inserting search data
-                                    const searchClients = _.map(request.client.clientAddresses, (clientAddress) => {
-                                        return {
-                                            id: `${request.client.id}#${clientAddress.id}`,
-                                            name: request.client.name,
-                                            address: _.get(clientAddress, "address.name", null),
-                                            neighborhood: _.get(clientAddress, "address.neighborhood", null),
-                                            number: _.get(clientAddress, "number", false) ? "" + _.get(clientAddress, "number") : null,
-                                            complement: _.get(clientAddress, "complement", null),
-                                            city: _.get(clientAddress, "address.city", null),
-                                            state: _.get(clientAddress, "address.state", null)
-                                        }
-                                    })
-                                    vm.$db.searchClients.bulkPut(searchClients).then(() => {
-                                        searchClients.forEach((searchClient) => {
-                                            vm.$static.searchClientsIndex.addDoc(searchClient)
-                                        })
-                                    })
-                                    const searchAddresses = _.map(request.client.clientAddresses, (clientAddress) => {
-                                        return {
-                                            id: _.get(clientAddress, "address.id", null),
-                                            name: _.get(clientAddress, "address.name", null),
-                                            address: _.get(clientAddress, "address.name", null),
-                                            neighborhood: _.get(clientAddress, "address.neighborhood", null),
-                                            city: _.get(clientAddress, "address.city", null),
-                                            state: _.get(clientAddress, "address.state", null),
-                                            cep: _.get(clientAddress, "address.cep", null),
-                                            country: _.get(clientAddress, "address.country", null)
-                                        }
-                                    })
-                                    vm.$db.searchAddresses.bulkPut(searchAddresses).then(() => {
-                                        searchAddresses.forEach((searchAddress) => {
-                                            vm.$static.searchAddressesIndex.addDoc(searchAddress)
-                                        })
-                                    })
-                                }
-
-                                // update card info
-
-                                const savedRequest = Request.query()
-                                    .with("card")
-                                    .with("client.clientAddresses.address")
-                                    .with("client.clientPhones")
-                                    .with("requestClientAddresses.clientAddress.address")
-                                    .with("requestOrder.requestOrderProducts")
-                                    .with("requestPayments")
-                                    .with("requestClientAddresses")
-                                    .with("requestUIState")
-                                    .find(request.id)
-
-                                vm.$store.dispatch("entities/update", {
-                                    entity: 'requestUIState',
-                                    where: savedRequest.requestUIState.id,
-                                    data: {
-                                        requestString: Request.getRequestComparationObj(savedRequest),
-                                        hasRequestChanges: false,
-                                        hasRequestOrderChanges: false
-                                    }
-                                })
-
-                                const getClientAddress = () => {
-                                    if (savedRequest.requestClientAddresses.length) {
-                                        const firstClientAddress = _.first(savedRequest.requestClientAddresses).clientAddress;
-                                        return _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), { length: 24, separator: "", omission: "..."}) +
-                                            ", " +
-                                            (firstClientAddress.number ? firstClientAddress.number : "S/N") +
-                                            (firstClientAddress.complement ? " " + firstClientAddress.complement : "")
-                                    }
-                                    return "SEM ENDEREÇO";
-                                }
-
-                                const getOrderSubtotal = () => {
-                                    if(!savedRequest.requestOrderId){
-                                        return null
-                                    }
-                                    return _.sumBy(
-                                        savedRequest.requestOrder.requestOrderProducts,
-                                        requestOrderProduct => {
-                                            return (
-                                                requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
-                                            )
-                                        }
-                                    )
-                                }
-
-                                const cardData = _.assign(savedRequest.card, {
-                                    clientName: (savedRequest.clientId) ? ((_.isEmpty(savedRequest.client.name)) ? "SEM NOME" : savedRequest.client.name) : "SEM CLIENTE",
-                                    clientAddress: (savedRequest.clientId) ? getClientAddress() : "SEM ENDEREÇO",
-                                    orderSubtotal: getOrderSubtotal(),
-                                    status: savedRequest.status,
-                                    responsibleUserId: savedRequest.userId
-                                })
-
-                                vm.$store.dispatch("entities/insertOrUpdate", {
-                                    entity: 'cards',
-                                    data: cardData
-                                })
-
-                                //vm.REMOVE_PROCESSED_QUEUE_ITEMS(savedRequest.id)
-
+                            Request.show(vm, request, {
+                                ignoreOfflineDBInsertion: false
+                            }).catch((err) => {
+                                console.log("Error occurred", err)
                             })
                         }
-                    });
+                    })
                 }
             },
             onRequestChatItemSend(ev){
                 console.log("Request chaat", ev)
             },
-            onSystemInitialized() {
+            async onSystemInitialized() {
+                const vm = this
                 console.log("System initialized")
-                if(this.isFirstInitialization){
+                if(vm.isFirstInitialization){
                     console.log("Escutando eventos request-queue:sync e request-chat:itemSend")
-                    this.$socket.on("request-queue:sync", this.onRequestQueueSync)
-                    this.$socket.on("request-chat:itemSend", this.onRequestChatItemSend)
-                    this.isFirstInitialization = false
-                }
-                else {
-                    this.$refs.requestBoardFilter.loadRequests()
+                    vm.isFirstInitialization = false
+                    Vue.nextTick(async () => {
+                        await vm.$refs.requestBoardFilter.loadRequests()
+                        if(!vm.requestQueueInitialized){
+                            vm.requestQueueInitialized = true
+                            vm.initializeRequestQueue(vm.$socket)
+                            vm.initializeChatQueue(vm.$socket)
+                        }
+                        this.$socket.on("request-queue:sync", this.onRequestQueueSync)
+                        this.$socket.on("request-chat:send", (ev) => {
+                            console.log("request-chat:send", ev)
+                            if(ev.evData.op === "send" && ev.evData.success){
+                                if(this.user.id !== ev.evData.data.userId){
+                                    this.$store.dispatch("entities/requestChats/insert", {
+                                        data: {
+                                            id: ev.evData.data.id,
+                                            userId: ev.evData.data.userId,
+                                            requestId: ev.evData.data.requestId,
+                                            type: 'message',
+                                            data: ev.evData.data.data,
+                                            dateUpdated: ev.evData.data.dateUpdated,
+                                            dateCreated: ev.evData.data.dateCreated,
+                                            status: 'synced'
+                                        }
+                                    })
+                                }
+                                else {
+                                    this.$store.dispatch("entities/requestChats/delete", ev.evData.data.tmpId)
+                                    this.$store.dispatch("entities/requestChats/insert", {
+                                        data: {
+                                            id: ev.evData.data.id,
+                                            userId: ev.evData.data.userId,
+                                            requestId: ev.evData.data.requestId,
+                                            type: 'message',
+                                            data: ev.evData.data.data,
+                                            dateUpdated: ev.evData.data.dateUpdated,
+                                            dateCreated: ev.evData.data.dateCreated,
+                                            status: 'synced'
+                                        }
+                                    })
+                                }
+                            }
+
+                        })
+                    })
+
                 }
             }
         },

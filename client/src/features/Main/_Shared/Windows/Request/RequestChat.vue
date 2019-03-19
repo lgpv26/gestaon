@@ -6,21 +6,29 @@
             </div>
             <div class="chat-body">
                 <ul style="padding-bottom: 20px">
-                    <li v-for="(requestChat, index) in request.requestChats" :key="requestChat.id"
-                        :class="{'their-message': requestChat.userId !== user.id, 'my-message': requestChat.userId === user.id, 'sequence': checkSequenceMessage(index)}">
+                    <li v-for="(requestChat, index) in requestChats" :key="requestChat.id"
+                        :class="{'their-message': requestChat.userId !== user.id, 'my-message': requestChat.userId === user.id, 'sequence': requestChat.isSequence}">
                         <div v-if="requestChat.userId !== user.id" class="avatar">
-                            <app-gravatar v-if="!checkSequenceMessage(index)" style="width: 32px; height: 32px; border-radius: 32px;" :email="getUser(requestChat.userId).email"></app-gravatar>
+                            <app-gravatar v-if="!requestChat.isSequence" style="width: 32px; height: 32px; border-radius: 32px;" :email="getUser(requestChat.userId).email"></app-gravatar>
                         </div>
                         <div v-if="requestChat.userId !== user.id" class="message">
-                            <span v-if="!checkSequenceMessage(index)" class="name">{{ _.startCase(_.lowerCase(getUser(requestChat.userId).name)) }}</span>
+                            <span v-if="!requestChat.isSequence" class="name">{{ _.startCase(_.lowerCase(getUser(requestChat.userId).name)) }}</span>
                             <div class="message-time">
                                 <span>{{ requestChat.data }}</span>
-                                <span class="time">{{ moment(requestChat.dateCreated).format("HH:mm")}}</span>
+                                <span class="time">
+                                    {{ moment(requestChat.dateCreated).format("HH:mm")}}
+                                    <i class="mi mi-refresh" v-if="requestChat.status === 'pending'"></i>
+                                    <i class="mi mi-done-all" v-if="requestChat.status === 'synced'"></i>
+                                </span>
                             </div>
                         </div>
                         <div v-if="requestChat.userId === user.id" class="message">
                             <span>{{ requestChat.data }}</span>
-                            <span class="time">{{ moment(requestChat.dateCreated).format("HH:mm")}}</span>
+                            <span class="time">
+                                {{ moment(requestChat.dateCreated).format("HH:mm")}}
+                                <i class="mi mi-refresh" v-if="requestChat.status === 'pending'"></i>
+                                <i class="mi mi-done-all" v-if="requestChat.status === 'synced'"></i>
+                            </span>
                         </div>
                     </li>
                 </ul>
@@ -30,7 +38,10 @@
             <a class="btn btn--circle" @click="sendAlert()" style="padding: 18px;">
                 <i style="position: relative; top: -1px;" class="mi mi-notifications"></i>
             </a>
-            <textarea-autosize v-model="message" class="input message-input" :min-height="30" :max-height="350"></textarea-autosize>
+            <a class="btn btn--circle" @click="getRequestChats()" style="padding: 18px;">
+                <i style="position: relative; top: -1px;" class="mi mi-sync"></i>
+            </a>
+            <textarea-autosize v-model="message" class="input message-input" @keydown.native.prevent.enter="sendMessage(user.id)" :min-height="30" :max-height="350"></textarea-autosize>
             <a class="btn btn--circle" @click="sendMessage(user.id)" style="padding: 18px;">
                 <i class="mi mi-send"></i>
             </a>
@@ -48,6 +59,7 @@
     import Vue from 'vue'
     import shortid from 'shortid'
     import User from '../../../../../vuex/models/User'
+    import RequestChat from '../../../../../vuex/models/RequestChat'
 
     export default {
         props: ['request'],
@@ -55,28 +67,93 @@
         },
         data(){
             return {
-                message: ''
+                message: '',
+                requestChats: []
+            }
+        },
+        sockets:{
+            ['request-chat:send'](ev){
+                switch(ev.evData.op){
+                    case "send":
+                        this.$db.requestChats.where({
+                            id: ev.evData.data.tmpId
+                        }).first(async (requestChat) => {
+                            if(requestChat){
+                                // update if existent
+                                await this.$db.requestChats.where("id").equals(ev.evData.data.tmpId).delete()
+                                await this.$db.requestChats.add({
+                                    id: ev.evData.data.id,
+                                    userId: ev.evData.data.userId,
+                                    requestId: ev.evData.data.requestId,
+                                    type: 'message',
+                                    data: ev.evData.data.data,
+                                    dateUpdated: ev.evData.data.dateUpdated,
+                                    dateCreated: ev.evData.data.dateCreated,
+                                    dateRemoved: null,
+                                    status: 'synced'
+                                })
+                                this.getRequestChats(false)
+                                return
+                            }
+                            // add if new
+                            this.$db.requestChats.add({
+                                id: ev.evData.data.id,
+                                userId: ev.evData.data.userId,
+                                requestId: ev.evData.data.requestId,
+                                type: 'message',
+                                data: ev.evData.data.data,
+                                dateUpdated: ev.evData.data.dateUpdated,
+                                dateCreated: ev.evData.data.dateCreated,
+                                dateRemoved: null,
+                                status: 'synced'
+                            }).then(() => {
+                                this.getRequestChats()
+                            })
+                        })
+                        break
+                }
+                console.log(ev)
+                this.scrollToBottom()
             }
         },
         computed: {
-            ...mapState('auth',['user'])
+            ...mapState('auth',['user']),
+            requestChatsOrder(){
+                return _.sortBy(RequestChat.query().where('requestId',this.request.id).get(), (dateObj) => {
+                    return new Date(dateObj.dateCreated);
+                })
+            }
         },
         methods: {
             ...mapActions('chat-queue',['addToQueue']),
             getUser(userId){
                 return User.query().whereId(userId).first()
             },
-            checkSequenceMessage(index){
-                if(this.request.requestChats.length && this.request.requestChats[index]){
-                    const requestChat = this.request.requestChats[index]
-                    if(this.request.requestChats[index-1]){
-                        const previousRequestChat = this.request.requestChats[index-1]
-                        if(requestChat.userId === previousRequestChat.userId){
-                            return true
+            async getRequestChats(scrollToBottom = true){
+                let requestChats = await this.$db.requestChats.where({
+                    requestId: this.request.id
+                }).toArray()
+                requestChats = _.sortBy(requestChats, (requestChat) => {
+                    return new Date(requestChat.dateCreated);
+                })
+                this.requestChats = Object.freeze(_.map(requestChats,(requestChat, index) => {
+                    if(requestChats.length && requestChats[index]){
+                        const requestChat = requestChats[index]
+                        if(requestChats[index-1]){
+                            const previousRequestChat = requestChats[index-1]
+                            if(requestChat.userId === previousRequestChat.userId){
+                                return _.assign(requestChat,{
+                                    isSequence: true
+                                })
+                            }
                         }
                     }
-                }
-                return false
+                    return _.assign(requestChat,{
+                        isSequence: false
+                    })
+                }))
+                if(scrollToBottom) this.scrollToBottom()
+                return this.requestChats
             },
             sendAlert(){
                 const requestChatTmpId = `tmp/${shortid.generate()}`;
@@ -86,16 +163,19 @@
                     requestId: this.request.id,
                     type: 'alert',
                     data: 'sound',
-                    dateCreated: this.moment().toISOString()
+                    dateUpdated: this.moment().toISOString(),
+                    dateCreated: this.moment().toISOString(),
+                    dateRemoved: null,
+                    status: 'pending'
                 }
-                this.$store.dispatch("entities/requestChats/insert", {
-                    data: sendData
-                })
                 this.addToQueue({
                     type: "request",
                     op: "chat-send",
                     data: sendData,
                     date: this.moment().toISOString()
+                })
+                this.$db.requestChats.add(sendData).then(() => {
+                    this.getRequestChats()
                 })
                 this.message = ""
             },
@@ -112,19 +192,24 @@
                     requestId: this.request.id,
                     type: 'message',
                     data: message,
-                    dateCreated: this.moment().toISOString()
+                    dateUpdated: this.moment().toISOString(),
+                    dateCreated: this.moment().toISOString(),
+                    dateRemoved: null,
+                    status: 'pending'
                 }
-                this.$store.dispatch("entities/requestChats/insert", {
-                    data: sendData
+
+                this.$db.requestChats.add(sendData).then(() => {
+                    this.getRequestChats()
                 })
+
                 this.addToQueue({
                     type: "request",
                     op: "chat-send",
                     data: sendData,
                     date: this.moment().toISOString()
                 })
-                this.message = ""
 
+                this.message = ""
                 this.scrollToBottom()
             },
             scrollToBottom(){
@@ -134,11 +219,9 @@
                 })
             }
         },
-        created(){
-            const vm = this
-            vm.$socket.on("request-chat:itemSend", (data) => {
-                console.log("Chat itemSend event received", data)
-            })
+        async mounted(){
+            this.requestChats = await this.getRequestChats()
+            this.scrollToBottom()
         }
     }
 </script>

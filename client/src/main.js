@@ -75,7 +75,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         clientGroups: "id, name",
         customFields: "id, name",
 
-        requestChats: "id, requestId, userId, type, data, dateUpdated, dateCreated, dateRemoved",
+        requestChats: "id, requestId, userId, type, data, status, dateUpdated, dateCreated, dateRemoved",
         requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
         requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
         requestOrders: "id, obs, promotionChannelId, status, dateUpdated, dateCreated, dateRemoved",
@@ -90,7 +90,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, status, responsibleUserId, clientAddress",
         STATE_requestUIState: "id, activeTab, isAddingClientAddress, requestClientAddressForm, requestId, showRequestChat, showClientOrderTimeline, requestString, requestOrderString, hasRequestOrderChanges, hasRequestChanges, isLoading",
 
-        STATE_requestChats: "id, requestId, userId, type, data, dateUpdated, dateCreated, dateRemoved",
+        STATE_requestChats: "id, requestId, userId, type, data, status, dateUpdated, dateCreated, dateRemoved",
         STATE_requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
         STATE_requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
         STATE_requestOrders: "id, obs, promotionChannelId, status, dateUpdated, dateCreated, dateRemoved",
@@ -293,89 +293,54 @@ if (tokens !== null) {
 /* Login Guard */
 
 router.beforeEach((to, from, next) => {
-    if (
-        !store.state.auth.authenticated &&
-        to.path !== "/login" &&
-        to.path !== "/register"
-    ) {
-        Vue.prototype.$db.delete().then(() => {
-            console.log("Everything cleaned");
-            localStorage.removeItem("vuex");
-            Vue.prototype.$db = new Dexie("db");
-            Vue.prototype.$db.version(1).stores({
-                ...Vue.prototype.modelDefinitions.searchModels,
-                ...Vue.prototype.modelDefinitions.offlineDBModels,
-                ...Vue.prototype.modelDefinitions.stateModels
-            });
-            store.dispatch("chat-queue/resetState")
-            store.dispatch("request-queue/resetState")
-            store.dispatch("entities/deleteAll")
-            store.commit("setSystemInitialized",false)
-            store.dispatch("setLastDataSyncedDate",null)
-            return next("/login")
-        });
-        /*if(_.has(store.state.auth, "token.refreshToken") && moment(store.state.auth.refreshTokenExpiresAt).isAfter(moment())){
-                oAuth2API.refreshToken(store.state.auth.refreshToken).then((result) => {
-                    const data = result.data;
-                    if(data.hasOwnProperty('accessToken')){
-                        store.commit("auth/authenticate", data);
-                        store.commit("auth/setAuthUser", data.user);
-                        if(data.user.userCompanies.length > 0){
-                            store.commit("auth/setSettings", data.user.userCompanies[0].settings);
-                        }
-                        else{
-                            store.commit("auth/setSettings",{});
-                        }
-                    }
-                    return result;
-                }).then((result) => {
-                    document.title = to.meta.title;
-                    next();
-                });
-            }
-            else {
-                return next('/login');
-            }*/
+    console.log(to.path)
+    if (!store.state.auth.authenticated && to.path !== "/login" && to.path !== "/register"){
+        return next('/login')
     }
-    document.title = to.meta.title;
-    next();
+    document.title = to.meta.title
+    next()
 });
 
 /* Request interceptors */
 
 Vue.http.interceptors.push((request, next) => {
     if (store.state.auth.authenticated) {
-        request.params["token"] = store.state.auth.tokens.accessToken;
+        request.params["token"] = store.state.auth.tokens.accessToken
     }
     next(response => {
-        if (
-            _.get(response, "body.error.code", false) === "EXPIRED_TOKEN" &&
-            response.status === 401
-        ) {
-            console.log(
-                "AccessToken expirado, tentativa de renovação do token usando o refreshToken",
-                response.body
-            );
-            return OAuthAPI.refreshToken(store.state.auth.tokens.refreshToken)
-                .then(result => {
-                    store.dispatch("auth/refreshToken", {
-                        accessToken: result.data.accessToken,
-                        refreshToken: result.data.refreshToken
+        if(_.get(response, "body.error.code", false) === "EXPIRED_TOKEN" && response.status === 401){
+            console.log("AccessToken expirado, tentativa de renovação do token usando o refreshToken", store.state.auth.tokens.refreshToken)
+            return OAuthAPI.refreshToken(store.state.auth.tokens.refreshToken).then(result => {
+                store.dispatch("auth/refreshToken", { accessToken: result.data.accessToken, refreshToken: result.data.refreshToken })
+                console.log("Refresh token adquirido com sucesso!", result)
+                return Vue.http(request)
+            }).catch(err => {
+                console.log("Não foi possível renovar o token, redirecionando para a tela de entrada")
+                Vue.prototype.$db.delete().then(async () => {
+                    console.log("Everything cleaned");
+                    localStorage.removeItem("vuex");
+                    Vue.prototype.$db = new Dexie("db");
+                    Vue.prototype.$db.version(1).stores({
+                        ...Vue.prototype.modelDefinitions.searchModels,
+                        ...Vue.prototype.modelDefinitions.offlineDBModels,
+                        ...Vue.prototype.modelDefinitions.stateModels
                     });
-                    console.log("Refresh token adquirido com sucesso!", result);
-                    return Vue.http(request);
+                    store.dispatch("chat-queue/resetState")
+                    store.dispatch("request-queue/resetState")
+                    store.dispatch("entities/deleteAll")
+                    store.commit("setSystemInitialized",false)
+                    store.dispatch("setLastDataSyncedDate",null)
+                    store.dispatch("setLastRequestsLoadedDate",null)
+                    location.reload()
                 })
-                .catch(err => {
-                    return store.dispatch("auth/logout").then(() => {
-                        router.push("/login");
-                        return Promise.reject(
-                            "Não foi possível renovar o token, redirecionando para a tela de entrada"
-                        );
-                    });
-                });
+                /*return store.dispatch("auth/logout").then(() => {
+                    router.push("/login")
+                    return Promise.reject("Não foi possível renovar o token, redirecionando para a tela de entrada")
+                })*/
+            })
         }
-    });
-});
+    })
+})
 
 /* Global Event Bus */
 
@@ -387,7 +352,7 @@ Object.defineProperties(Vue.prototype, {
             return EventBus;
         }
     }
-});
+})
 
 new Vue({
     router,

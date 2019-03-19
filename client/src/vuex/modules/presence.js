@@ -16,6 +16,9 @@ const mutations = {
         })
     },
     ADD(state, connectedUser){
+        state.connectedUsers = _.filter(state.connectedUsers, (_alreadyConnectedUser) => {
+            return _alreadyConnectedUser.id !== connectedUser.id
+        })
         if(_.has(connectedUser,'socketId') && !_.find(state.connectedUsers, { socketId: connectedUser.socketId})){
             state.connectedUsers.push(connectedUser)
         }

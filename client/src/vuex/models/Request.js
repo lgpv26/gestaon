@@ -44,7 +44,427 @@ export default class Request extends Model {
         }
     }
 
-    static guaranteeDependencies(request,promiseQueue,fillOfflineDBWithSyncedData,ignoreOfflineDBInsertion = false){
+    static _extractModelFields(ctx, { modelName, obj }){
+        const returnObj = {}
+        ctx.modelDefinitions[(modelName.includes('STATE_')) ? "stateModels" : "offlineDBModels"][modelName].split(',').forEach((column) => {
+            column = column.trim()
+            if(_.has(obj,column)){
+                returnObj[column] = obj[column]
+            }
+        })
+        return returnObj
+    }
+
+    static _offlineDBHelper(ctx, { modelName, action, data, primaryKey = null }){
+        if(action === 'put'){
+            return ctx.$db[modelName].put(Request._extractModelFields(ctx, {
+                modelName,
+                obj: data
+            }))
+        }
+        else if(action === 'patch'){
+            return ctx.$db[modelName].update(data.id, data)
+        }
+        else if(action === 'bulkPut'){
+            data = _.map(data, (dataItem) => {
+                return Request._extractModelFields(ctx, {
+                    modelName,
+                    obj: dataItem
+                })
+            })
+            return ctx.$db[modelName].bulkPut(data)
+        }
+        else if(action === 'bulkPutWithReplacement'){
+            return ctx.$db[modelName].where({
+                [primaryKey]: _.first(data)[primaryKey]
+            }).toArray((itemsToDelete) => {
+                const ids = _.map(itemsToDelete, (itemToDelete) => itemToDelete.id)
+                return ctx.$db[modelName].bulkDelete(ids).then(() => {
+                    return Request._offlineDBHelper(ctx, {
+                        modelName,
+                        action: 'bulkPut',
+                        data
+                    })
+                })
+            })
+        }
+    }
+
+    static async show(ctx, request, { showWindow = false, ignoreOfflineDBInsertion = false }){
+        // guarantee the order of promises
+        const requestPromiseQueue = new PromiseQueue({ concurrency: 1})
+
+        // request
+        requestPromiseQueue.add(async () => {
+            await Request._offlineDBHelper(ctx, {
+                modelName: "requests",
+                action: 'put',
+                data: request
+            })
+            ctx.$store.dispatch("entities/insertOrUpdate", {
+                entity: 'requests',
+                ignoreOfflineDBInsertion: false,
+                data: request
+            })
+
+            const requestId = _.get(request, "tmpId", request.id)
+
+            const card = Card.query().where("requestId", requestId).with("request.requestUIState").first()
+
+            let windowId = `tmp/${shortid.generate()}`
+            let cardId = `tmp/${shortid.generate()}`
+            let requestUIStateId = `tmp/${shortid.generate()}`
+
+            // map request card/window/requestUIState
+            if(utils.isTmp(requestId) && card){ // is tmp && card exists - it means that the request was created by this user
+                cardId = card.id
+                requestUIStateId = card.request.requestUIState.id
+                store.dispatch("entities/delete", {
+                    entity: 'requests',
+                    where: requestId
+                })
+                store.dispatch("entities/update", {
+                    entity: 'cards',
+                    ignoreOfflineDBInsertion: true,
+                    where: cardId,
+                    data: {
+                        requestId: request.id
+                    }
+                })
+                requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                    modelName: "STATE_cards",
+                    action: "patch",
+                    data: Card.query().where("id", cardId).first()
+                }))
+                store.dispatch("entities/update", {
+                    entity: 'requestUIState',
+                    ignoreOfflineDBInsertion: true,
+                    where: requestUIStateId,
+                    data: {
+                        requestId: request.id
+                    }
+                })
+                requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                    modelName: "STATE_requestUIState",
+                    action: "patch",
+                    data: RequestUIState.query().where("id", requestUIStateId).first()
+                }))
+            }
+            else if(!card) { // card don't exist
+                store.dispatch("entities/insert", {
+                    entity: 'windows',
+                    ignoreOfflineDBInsertion: true,
+                    data: {
+                        id: windowId,
+                        zIndex:
+                        store.getters["entities/windows/query"]().max("zIndex") + 1,
+                        show: showWindow
+                    }
+                })
+                requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                    modelName: "STATE_windows",
+                    action: "put",
+                    data: Window.query().where("id", windowId).first()
+                }))
+                store.dispatch("entities/insert", {
+                    entity: 'cards',
+                    ignoreOfflineDBInsertion: true,
+                    data: {
+                        id: cardId,
+                        windowId: windowId,
+                        requestId: request.id
+                    }
+                })
+                requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                    modelName: "STATE_cards",
+                    action: "put",
+                    data: Card.query().where("id", cardId).first()
+                }))
+                store.dispatch("entities/insert", {
+                    entity: 'requestUIState',
+                    ignoreOfflineDBInsertion: true,
+                    data: {
+                        id: requestUIStateId,
+                        windowId: windowId,
+                        requestId: request.id
+                    }
+                })
+                requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                    modelName: "STATE_requestUIState",
+                    action: "put",
+                    data: RequestUIState.query().where("id", requestUIStateId).first()
+                }))
+            }
+
+            // request.requestPayments
+
+            if(_.isArray(request.requestPayments) && request.requestPayments.length){
+                requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                    modelName: "requestPayments",
+                    action: "bulkPutWithReplacement",
+                    data: request.requestPayments,
+                    primaryKey: "requestId"
+                }).then((promise) => {
+                    const requestPayments = store.getters['entities/requestPayments']().where('requestId',(requestId) => {
+                        return requestId === request.id
+                    }).get()
+                    requestPayments.forEach((requestPayment) => {
+                        store.dispatch('entities/delete', {
+                            entity: 'requestPayments',
+                            ignoreOfflineDBInsertion,
+                            where: requestPayment.id
+                        })
+                    })
+                    store.dispatch("entities/insertOrUpdate", {
+                        entity: 'requestPayments',
+                        ignoreOfflineDBInsertion,
+                        data: request.requestPayments
+                    })
+                    return promise
+                }))
+            }
+
+            // check if requestOrder exists
+
+            if(request.requestOrderId){
+
+                // request.requestOrder
+
+                requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                    modelName: "requestOrders",
+                    action: 'put',
+                    data: request.requestOrder
+                }).then((promise) => {
+                    store.dispatch("entities/insertOrUpdate", {
+                        entity: 'requestOrders',
+                        ignoreOfflineDBInsertion,
+                        data: request.requestOrder
+                    });
+                    return promise
+                }))
+
+                // request.requestOrder.requestOrderProducts
+
+                if(_.isArray(request.requestOrder.requestOrderProducts) && request.requestOrder.requestOrderProducts.length){
+                    requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                        modelName: "requestOrderProducts",
+                        action: "bulkPutWithReplacement",
+                        data: request.requestOrder.requestOrderProducts,
+                        primaryKey: "requestOrderId"
+                    }).then((promise) => {
+                        const requestOrderProducts = store.getters['entities/requestOrderProducts']().where('requestOrderId',(requestOrderId) => {
+                            return requestOrderId === request.requestOrder.id
+                        }).get()
+                        requestOrderProducts.forEach((requestOrderProduct) => {
+                            store.dispatch('entities/delete', {
+                                entity: 'requestOrderProducts',
+                                ignoreOfflineDBInsertion,
+                                where: requestOrderProduct.id
+                            })
+                        })
+                        store.dispatch("entities/insertOrUpdate", {
+                            entity: 'requestOrderProducts',
+                            ignoreOfflineDBInsertion,
+                            data: request.requestOrder.requestOrderProducts
+                        });
+                        return promise
+                    }))
+                }
+
+            }
+
+            // check if client exists
+
+            if(request.clientId){
+                // request.client
+
+                requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                    modelName: "clients",
+                    action: 'put',
+                    data: request.client
+                }).then((promise) => {
+                    store.dispatch("entities/insertOrUpdate", {
+                        entity: 'clients',
+                        ignoreOfflineDBInsertion,
+                        data: request.client
+                    });
+                    if(_.isArray(request.client.clientAddresses) && request.client.clientAddresses.length){
+                        request.client.clientAddresses.forEach(clientAddress => {
+                            Request._offlineDBHelper(ctx, {
+                                modelName: "addresses",
+                                action: 'put',
+                                data: clientAddress.address
+                            })
+                            store.dispatch("entities/insertOrUpdate", {
+                                entity: 'addresses',
+                                ignoreOfflineDBInsertion,
+                                data: clientAddress.address
+                            })
+                        })
+                    }
+                    return promise
+                }))
+
+                // request.client.clientAddresses
+
+                if(_.isArray(request.client.clientAddresses) && request.client.clientAddresses.length) {
+                    requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                        modelName: "clientAddresses",
+                        action: "bulkPutWithReplacement",
+                        data: request.client.clientAddresses,
+                        primaryKey: "clientId"
+                    }).then((promise) => {
+                        const clientAddresses = store.getters['entities/clientAddresses']().where('clientId', (clientId) => {
+                            return clientId === request.client.id
+                        }).get()
+                        clientAddresses.forEach((clientAddress) => {
+                            store.dispatch('entities/delete', {
+                                where: clientAddress.id,
+                                ignoreOfflineDBInsertion,
+                                entity: 'clientAddresses'
+                            })
+                        })
+                        store.dispatch("entities/insertOrUpdate", {
+                            entity: 'clientAddresses',
+                            data: request.client.clientAddresses,
+                            ignoreOfflineDBInsertion
+                        })
+                        return promise
+                    }))
+                }
+
+                // request.requestClientAddresses
+
+                if(_.isArray(request.requestClientAddresses) && request.requestClientAddresses.length){
+                    requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                        modelName: "requestClientAddresses",
+                        action: "bulkPutWithReplacement",
+                        data: request.requestClientAddresses,
+                        primaryKey: "requestId"
+                    }).then((promise) => {
+                        store.dispatch("entities/insertOrUpdate", {
+                            entity: 'requestClientAddresses',
+                            ignoreOfflineDBInsertion,
+                            data: request.requestClientAddresses
+                        })
+                        return promise
+                    }))
+                }
+            }
+        })
+
+        return requestPromiseQueue.onIdle().then(async () => {
+            // check if request has client
+            if(request.clientId){
+                // inserting search data
+                const searchClients = _.map(request.client.clientAddresses, (clientAddress) => {
+                    return {
+                        id: `${request.client.id}#${clientAddress.id}`,
+                        name: request.client.name,
+                        address: _.get(clientAddress, "address.name", null),
+                        neighborhood: _.get(clientAddress, "address.neighborhood", null),
+                        number: _.get(clientAddress, "number", false) ? "" + _.get(clientAddress, "number") : null,
+                        complement: _.get(clientAddress, "complement", null),
+                        city: _.get(clientAddress, "address.city", null),
+                        state: _.get(clientAddress, "address.state", null)
+                    }
+                })
+                ctx.$db.searchClients.bulkPut(searchClients).then(() => {
+                    ctx.$static.fSearchClients.add(searchClients)
+                })
+                const searchAddresses = _.map(request.client.clientAddresses, (clientAddress) => {
+                    return {
+                        id: _.get(clientAddress, "address.id", null),
+                        name: _.get(clientAddress, "address.name", null),
+                        address: _.get(clientAddress, "address.name", null),
+                        neighborhood: _.get(clientAddress, "address.neighborhood", null),
+                        city: _.get(clientAddress, "address.city", null),
+                        state: _.get(clientAddress, "address.state", null),
+                        cep: _.get(clientAddress, "address.cep", null),
+                        country: _.get(clientAddress, "address.country", null)
+                    }
+                })
+                ctx.$db.searchAddresses.bulkPut(searchAddresses).then(() => {
+                    ctx.$static.fSearchAddresses.add(searchAddresses)
+                })
+            }
+
+            // update card info
+
+            const savedRequest = Request.query()
+                .with("card")
+                .with("client.clientAddresses.address")
+                .with("client.clientPhones")
+                .with("requestClientAddresses.clientAddress.address")
+                .with("requestOrder.requestOrderProducts")
+                .with("requestPayments")
+                .with("requestClientAddresses")
+                .with("requestUIState")
+                .find(request.id)
+
+            ctx.$store.dispatch("entities/update", {
+                entity: 'requestUIState',
+                where: savedRequest.requestUIState.id,
+                data: {
+                    requestString: Request.getRequestComparationObj(savedRequest),
+                    hasRequestChanges: false,
+                    hasRequestOrderChanges: false
+                }
+            })
+
+            const getClientAddress = () => {
+                if (savedRequest.requestClientAddresses.length) {
+                    const firstClientAddress = _.first(savedRequest.requestClientAddresses).clientAddress;
+                    return _.truncate(_.startCase(_.toLower(firstClientAddress.address.name)), { length: 24, separator: "", omission: "..."}) +
+                        ", " +
+                        (firstClientAddress.number ? firstClientAddress.number : "S/N") +
+                        (firstClientAddress.complement ? " " + firstClientAddress.complement : "")
+                }
+                return "SEM ENDEREÇO";
+            }
+
+            const getOrderSubtotal = () => {
+                if(!savedRequest.requestOrderId){
+                    return null
+                }
+                return _.sumBy(
+                    savedRequest.requestOrder.requestOrderProducts,
+                    requestOrderProduct => {
+                        return (
+                            requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)
+                        )
+                    }
+                )
+            }
+
+            const cardData = _.assign(savedRequest.card, {
+                clientName: (savedRequest.clientId) ? ((_.isEmpty(savedRequest.client.name)) ? "SEM NOME" : savedRequest.client.name) : "SEM CLIENTE",
+                clientAddress: (savedRequest.clientId) ? getClientAddress() : "SEM ENDEREÇO",
+                orderSubtotal: getOrderSubtotal(),
+                status: savedRequest.status,
+                responsibleUserId: savedRequest.userId
+            })
+
+            await Request._offlineDBHelper(ctx, {
+                modelName: "STATE_cards",
+                action: 'put',
+                data: cardData
+            }).then(() => {
+                ctx.$store.dispatch("entities/insertOrUpdate", {
+                    entity: 'cards',
+                    ignoreOfflineDBInsertion: true,
+                    data: cardData
+                })
+                return true
+            })
+
+            return savedRequest.id
+
+        })
+
+    }
+
+    /*static guaranteeDependencies(request,promiseQueue,fillOfflineDBWithSyncedData,ignoreOfflineDBInsertion = false){
 
         const requestId = _.get(request, "tmpId", request.id)
 
@@ -281,7 +701,7 @@ export default class Request extends Model {
             }
         }
 
-    }
+    }*/
 
     static getRequestComparationObj(request){
         let requestChangeString = JSON.parse(JSON.stringify(request))

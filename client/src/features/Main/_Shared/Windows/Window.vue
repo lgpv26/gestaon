@@ -10,7 +10,7 @@
             <span class="window__spacer">às</span>
             <span class="window__time">10:00</span>-->
             <span class="push-both-sides"></span>
-            <a class="chat-button" @click="chat()">
+            <a class="chat-button" v-if="false" @click="chat()">
                 <i class="mi mi-chat"></i>
             </a>
             <a class="close-button" @click="close()">
