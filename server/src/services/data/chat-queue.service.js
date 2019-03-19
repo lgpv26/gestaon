@@ -421,7 +421,7 @@ module.exports = (server) => {
 
                         await vm.updateUsersOutChat(companyId, request, allChatItems)
 
-                        // if(triggeredBy.id !== request.userId) await vm.pushNotification(checkOnline, allChatItems, request, requestChat, triggeredBy)
+                        if(triggeredBy.id !== request.userId) await vm.pushNotification(checkOnline, allChatItems, request, requestChat, triggeredBy)
 
                         _.set(requestChat, "op", "send")
 

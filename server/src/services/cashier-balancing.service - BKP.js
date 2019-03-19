@@ -355,7 +355,7 @@ module.exports = (server) => {
                     }, {
                     transaction: ctx.params.transaction
                 }).then(() => {
-                    return server.mysql.Account.findById(transaction.accountId, {
+                    return server.mysql.Account.findByPk(transaction.accountId, {
                         transaction: ctx.params.transaction
                     }).then((account) => {
                         return {account, transaction}
@@ -378,7 +378,7 @@ module.exports = (server) => {
                     }, {
                     transaction: ctx.params.transaction
                 }).then(() => {
-                    return server.mysql.Account.findById(transaction.accountId, {
+                    return server.mysql.Account.findByPk(transaction.accountId, {
                         transaction: ctx.params.transaction
                     }).then((account) => {
                         return {account, transaction}

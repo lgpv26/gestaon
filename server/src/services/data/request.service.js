@@ -42,7 +42,7 @@ module.exports = server => {
                                         status: (data.status && data.status !== "processing" && data.status !== "draft") ? _.get(client, "id", null) ? data.status : (data.status === "finished" || data.status === "canceled" ? data.status : "finished") : (_.get(client, "id", null)) ? "pending" : "finished",
                                         deliveredBy: (data.status !== "finished") ? null : (oldRequest.deliveredBy) ? oldRequest.deliveredBy : (data.userId) ? data.userId : triggeredBy,
                                         finishedBy: (data.status !== "finished") ? null : (oldRequest.finishedBy) ? oldRequest.finishedBy : triggeredBy,
-                                        deliveredDate: (oldRequest && oldRequest.deliveredDate) ? oldRequest.deliveredDate : (data.status === "finished") ? ctx.params.date : null,
+                                        deliveredDate: (data.status !== "finished") ? null : (oldRequest && oldRequest.deliveredDate) ? oldRequest.deliveredDate : (data.status === "finished") ? ctx.params.date : null,
                                         tmpId: _.get(data, "tmpId", null)
                                     },
                                     transaction)
@@ -321,7 +321,31 @@ module.exports = server => {
                 .then((result) => {
                     return JSON.parse(JSON.stringify(result))
                 })
-            }
+            },
+
+            update(ctx) {
+                return server.mysql.Request.update(ctx.params.data, {
+                    where: ctx.params.where || {}
+                }).then((updated) => {
+                    return server.mysql.Request.findByPk(ctx.params.data.id)
+                    .then((request) => {
+                        return JSON.parse(JSON.stringify(request))
+                    })
+                })
+            },
+
+            createTimeline(ctx){
+                return new Promise(async (resolve, reject) => {
+                    try {
+                        const requestTimeline = await this.createTimeline(ctx.params.data, ctx.params.transaction || null)
+                        return resolve(requestTimeline)
+                    }
+                    catch(err) {
+                        return reject(err)
+                    }                    
+                })
+           }
+
         },
         methods: {
             checkTempIds(data) {
