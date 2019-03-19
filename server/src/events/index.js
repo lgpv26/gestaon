@@ -113,6 +113,7 @@ module.exports = function (server) {
                             }
                         }).then(() => {
                             // Importing all events
+                            
                             this.events.forEach((event) => {
                                 event.files.forEach((file) => {
                                     const tEventFile = require('./' + event.directoryName + '/' + file)
