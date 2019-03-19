@@ -6,7 +6,6 @@ const _ = require('lodash')
 const shortid = require('shortid')
 
 const requestsController = require('../../../controllers/requests.controller')
-const draftsController = require('../../../controllers/drafts.controller')
 
 const Controller = require('../../../models/Controller')
 
@@ -31,7 +30,6 @@ module.exports = class RequestRecoverance extends Recoverance {
         this._task = null
 
         this.requestsController = requestsController(this.server)
-        this.draftsController = draftsController(this.server)
 
     }
 
@@ -172,28 +170,6 @@ module.exports = class RequestRecoverance extends Recoverance {
     }
 
     createDraft(){
-        return new Promise((resolve, reject) => {
-            const controller = new Controller({
-                request: {
-                    type: 'request',
-                    createdBy: this._createdBy || null,
-                    recoverancedBy: this._recoverancedBy || null,
-                    companyId: this._companyId,
-                    client: this._client,
-                    order: this._order || null,
-                    task: this._task || null,
-                    recoverance: this._request
-                }
-            })
-
-            return this.draftsController.createOne(controller).then((draft) => {
-                console.log("Success creating (recoverance) draft")
-                resolve(draft)             
-            }).catch((err) => {
-                console.log(err);
-                reject() 
-            })
-        })
     }
     
 

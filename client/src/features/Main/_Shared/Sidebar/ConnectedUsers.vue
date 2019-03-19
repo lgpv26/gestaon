@@ -1,7 +1,8 @@
 <template>
     <div class="app-connected-users">
         <ul v-if="connected && _.filter(connectedUsers,connectedUser => user.id !== connectedUser.id).length">
-            <li v-for="(connectedUser, index) in connectedUsers" :key="index" v-if="user.id !== connectedUser.id">
+            <li v-for="(connectedUser, index) in connectedUsers" :key="index" v-if="user.id !== connectedUser.id"
+                :title="connectedUser.name" v-tippy="{ placement: 'right', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
                 <!--<span>{{ utils.getInitialsFromString(connectedUser.name) }}</span>-->
                 <app-gravatar style="width: 32px; height: 32px; border-radius: 32px;" :email="connectedUser.email"></app-gravatar>
             </li>

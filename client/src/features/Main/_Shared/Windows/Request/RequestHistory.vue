@@ -59,6 +59,7 @@
                                     <th>Meio de Pag.</th>
                                     <th style="text-align: center;">Código</th>
                                     <th style="text-align: center;">Vencimento</th>
+                                    <th style="text-align: center;">Pago</th>
                                     <th style="text-align: right;">Valor</th>
                                 </tr>
                                 </thead>
@@ -73,10 +74,11 @@
                                         {{ moment(requestPayment.deadlineDatetime).format("DD/MM/YYYY") }}
                                     </td>
                                     <td style="text-align: center;" v-else>---</td>
+                                    <td style="text-align: center;">{{ (requestPayment.paid) ? 'SIM' : 'NÃO'}}</td>
                                     <td style="text-align: right;">{{ utils.formatMoney(requestPayment.amount, 2, 'R$ ', '.', ',') }}</td>
                                 </tr>
                                 <tr>
-                                    <td colspan="4" style="text-align: right; font-weight: bold;">
+                                    <td colspan="5" style="text-align: right; font-weight: bold;">
                                         {{ utils.formatMoney(_.sumBy(historyRequest.requestPayments, (requestPayment) => parseFloat(requestPayment.amount)), 2, 'R$ ', '.', ',') }}
                                     </td>
                                 </tr>

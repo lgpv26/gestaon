@@ -757,29 +757,27 @@ export default {
          * Logout
          */
 
-        logout() {
+        async logout() {
             const vm = this;
-            vm.logoutAction().then(authenticated => {
-                if (!authenticated) {
-                    vm.$db.delete().then(() => {
-                        console.log("Everything cleaned");
-                        localStorage.removeItem("vuex");
-                        Vue.prototype.$db = new Dexie("db");
-                        vm.$db.version(1).stores({
-                            ...vm.modelDefinitions.searchModels,
-                            ...vm.modelDefinitions.offlineDBModels,
-                            ...vm.modelDefinitions.stateModels
-                        });
-                        vm.resetRequestQueueState();
-                        vm.resetChatQueueState();
-                        vm.$store.dispatch("entities/deleteAll");
-                        vm.setSystemInitialized(false);
-                        vm.setLastDataSyncedDate(null);
-                        vm.setLastRequestsLoadedDate(null);
-                        location.reload()
-                    });
-                }
-            });
+            const authenticated = await vm.logoutAction()
+            if (!authenticated) {
+                await vm.$db.delete()
+                console.log("Everything cleaned");
+                localStorage.removeItem("vuex");
+                Vue.prototype.$db = new Dexie("db");
+                Vue.prototype.$db.version(1).stores({
+                    ...Vue.prototype.modelDefinitions.searchModels,
+                    ...Vue.prototype.modelDefinitions.offlineDBModels,
+                    ...Vue.prototype.modelDefinitions.stateModels
+                });
+                vm.$store.dispatch("chat-queue/resetState")
+                vm.$store.dispatch("request-queue/resetState")
+                vm.$store.dispatch("entities/deleteAll")
+                vm.$store.commit("setSystemInitialized",false)
+                vm.$store.dispatch("setLastDataSyncedDate",null)
+                vm.$store.dispatch("setLastRequestsLoadedDate",null)
+                location.reload()
+            }
         }
     },
     mounted() {

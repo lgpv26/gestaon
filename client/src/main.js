@@ -314,29 +314,25 @@ Vue.http.interceptors.push((request, next) => {
                 store.dispatch("auth/refreshToken", { accessToken: result.data.accessToken, refreshToken: result.data.refreshToken })
                 console.log("Refresh token adquirido com sucesso!", result)
                 return Vue.http(request)
-            }).catch(err => {
+            }).catch(async err => {
                 console.log("Não foi possível renovar o token, redirecionando para a tela de entrada")
-                Vue.prototype.$db.delete().then(async () => {
-                    console.log("Everything cleaned");
-                    localStorage.removeItem("vuex");
-                    Vue.prototype.$db = new Dexie("db");
-                    Vue.prototype.$db.version(1).stores({
-                        ...Vue.prototype.modelDefinitions.searchModels,
-                        ...Vue.prototype.modelDefinitions.offlineDBModels,
-                        ...Vue.prototype.modelDefinitions.stateModels
-                    });
-                    store.dispatch("chat-queue/resetState")
-                    store.dispatch("request-queue/resetState")
-                    store.dispatch("entities/deleteAll")
-                    store.commit("setSystemInitialized",false)
-                    store.dispatch("setLastDataSyncedDate",null)
-                    store.dispatch("setLastRequestsLoadedDate",null)
-                    location.reload()
-                })
-                /*return store.dispatch("auth/logout").then(() => {
-                    router.push("/login")
-                    return Promise.reject("Não foi possível renovar o token, redirecionando para a tela de entrada")
-                })*/
+
+                await Vue.prototype.$db.delete()
+                console.log("Everything cleaned");
+                localStorage.removeItem("vuex");
+                Vue.prototype.$db = new Dexie("db");
+                Vue.prototype.$db.version(1).stores({
+                    ...Vue.prototype.modelDefinitions.searchModels,
+                    ...Vue.prototype.modelDefinitions.offlineDBModels,
+                    ...Vue.prototype.modelDefinitions.stateModels
+                });
+                store.dispatch("chat-queue/resetState")
+                store.dispatch("request-queue/resetState")
+                store.dispatch("entities/deleteAll")
+                store.commit("setSystemInitialized",false)
+                store.dispatch("setLastDataSyncedDate",null)
+                store.dispatch("setLastRequestsLoadedDate",null)
+                location.reload()
             })
         }
     })

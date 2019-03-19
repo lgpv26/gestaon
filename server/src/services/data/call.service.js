@@ -44,7 +44,8 @@ module.exports = (server) => { return {
 
         getList(ctx){
             return server.mysql.Call.findAll({
-                limit: 20
+                limit: 20,
+                order: [["dateCreated", "DESC"]]
             })
             .then((calls) => {
                 if(!_.isArray(calls) && !calls.length) return Promise.resolve([])

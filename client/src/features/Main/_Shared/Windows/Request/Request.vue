@@ -204,6 +204,7 @@
             </div>
             <div class="request__footer">
                 <a class="button" v-if="Number.isInteger(request.id) && request.requestUIState.hasRequestChanges" @click="discardChanges()" style="display: flex; align-items: center; align-self: center; margin-left: 8px; text-transform: uppercase;">Descartar alterações</a>
+                <a class="button" v-if="!Number.isInteger(request.id)" @click="discardDraft()" style="display: flex; align-items: center; align-self: center; margin-left: 8px; text-transform: uppercase;">Descartar rascunho</a>
                 <span class="push-both-sides"></span>
                 <app-select :items="getSelectUsers" :value="request.userId" @input="updateValue('entities/requests/update','userId',request.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'top-start'}">
                     <input type="text" class="readonly select" style="text-align: center; padding-top: 0; margin-bottom: 0; margin-right: 8px; width: 180px;" readonly :value="(_.has(request,'user.name')) ? request.user.name : 'RESPONSÁVEL'"/>
@@ -442,11 +443,11 @@
                                 requestId: this.request.id,
                                 paymentMethodId: 1,
                                 amount: _.get(
-                                    this.$store.getters["entities/products/find"](6),
+                                    this.$store.getters["entities/products/find"](1),
                                     "price",
                                     false
                                 )
-                                    ? this.$store.getters["entities/products/find"](6).price
+                                    ? this.$store.getters["entities/products/find"](1).price
                                     : 0
                             }
                         })
@@ -973,6 +974,31 @@
                         }, 1000)
                     })
 
+                })
+
+            },
+
+            discardDraft(){
+                console.log("Discard draft", this.request)
+
+                this.$store.dispatch("entities/delete", {
+                    entity: "windows",
+                    where: this.request.card.windowId
+                })
+
+                this.$store.dispatch("entities/delete", {
+                    entity: "cards",
+                    where: this.request.card.id
+                })
+
+                this.$store.dispatch("entities/delete", {
+                    entity: "requestUIState",
+                    where: this.request.requestUIState.id
+                })
+
+                this.$store.dispatch("entities/delete", {
+                    entity: "requests",
+                    where: this.request.id
                 })
 
             }
