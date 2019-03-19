@@ -610,6 +610,7 @@ export default {
                                 "state"
                             ]
                         },
+                        encode: 'simple',
                         tokenize: 'forward',
                         async: true,
                         worker: false,
@@ -635,6 +636,7 @@ export default {
                                 "country"
                             ]
                         },
+                        encode: 'simple',
                         tokenize: 'forward',
                         async: true,
                         worker: false,

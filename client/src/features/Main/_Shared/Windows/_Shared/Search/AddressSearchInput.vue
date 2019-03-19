@@ -78,7 +78,10 @@
             },
             async input(ev) {
                 if (this.$static.fSearchAddresses) {
-                    this.items = await this.$static.fSearchAddresses.search({ query: ev.target.value, limit: 20 })
+                    this.items = await this.$static.fSearchAddresses.search({
+                        query: ev.target.value,
+                        limit: 20
+                    })
                 }
                 this.$emit("input", ev.target.value);
             },
