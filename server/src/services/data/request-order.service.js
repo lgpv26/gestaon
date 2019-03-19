@@ -17,15 +17,26 @@ module.exports = (server) => {
                             const transaction = ctx.params.transaction
 
                             const order = await vm.saveOrder(ctx.params.data, transaction)
-
+                            
                             if (_.has(ctx.params.data, "requestOrderProducts")) {
-                                const requestOrderProducts = _.map(ctx.params.data.requestOrderProducts, requestOrderProduct => {
-                                    return _.assign(requestOrderProduct, {
-                                        requestOrderId: order.id,
-                                        productId: (requestOrderProduct.productId) ? requestOrderProduct.productId : null
+
+                                const requestOrderProducts = await new Promise((resolve, reject) => {
+                                    let orderProducts = []
+                                    _.forEach(ctx.params.data.requestOrderProducts, (requestOrderProduct) => {
+                                        if(requestOrderProduct.unitPrice == "0.00" && requestOrderProduct.unitDiscount == "0.00" && (!requestOrderProduct.id && requestOrderProduct.tmpId)) return
+
+                                        orderProducts.push(_.assign(requestOrderProduct, {
+                                            requestOrderId: order.id,
+                                            productId: (requestOrderProduct.productId) ? requestOrderProduct.productId : null
+                                        }))
                                     })
+                                    resolve(orderProducts)
                                 })
-                                _.set(order, 'requestOrderProducts', await vm.saveRequestOrderProducts(requestOrderProducts, order.id, transaction))
+                                  
+                                if(!requestOrderProducts.length) return resolve(order)
+ 
+                                const savedOrderProducts = await vm.saveRequestOrderProducts(requestOrderProducts, order.id, transaction)
+                                _.set(order, 'requestOrderProducts', savedOrderProducts)
                             }
 
                             return resolve(order)
@@ -73,6 +84,7 @@ module.exports = (server) => {
              * @returns {Promise.<Array>} RequestOrderProducts
              */
             saveRequestOrderProducts(data, orderId, transaction) {
+                if(!orderId) return Promise.reject("Erro ao tratar os itens do pedido!")
                 /*
                 * Delete all
                 */
@@ -120,6 +132,7 @@ module.exports = (server) => {
                             return Promise.reject("Erro ao atualizar produtos do pedido.")
                         })
                 }).catch((err) => {
+                    console.log(data)
                     console.log('Erro no saveRequestOrderProducts em request order service ao destroy order products')
                     return Promise.reject(err)
                 })

@@ -40,8 +40,8 @@ module.exports = server => {
                                         phoneLine: (data.phoneLine) ? data.phoneLine : null,
                                         obs: (data.obs) ? data.obs : null,
                                         status: (data.status && data.status !== "processing" && data.status !== "draft") ? _.get(client, "id", null) ? data.status : (data.status === "finished" || data.status === "canceled" ? data.status : "finished") : (_.get(client, "id", null)) ? "pending" : "finished",
-                                        deliveredBy: (data.status !== "finished") ? null : (oldRequest.deliveredBy) ? oldRequest.deliveredBy : (data.userId) ? data.userId : triggeredBy,
-                                        finishedBy: (data.status !== "finished") ? null : (oldRequest.finishedBy) ? oldRequest.finishedBy : triggeredBy,
+                                        deliveredBy: (data.status !== "finished") ? null : (oldRequest && oldRequest.deliveredBy) ? oldRequest.deliveredBy : (data.userId) ? data.userId : triggeredBy,
+                                        finishedBy: (data.status !== "finished") ? null : (oldRequest && oldRequest.finishedBy) ? oldRequest.finishedBy : triggeredBy,
                                         deliveredDate: (data.status !== "finished") ? null : (oldRequest && oldRequest.deliveredDate) ? oldRequest.deliveredDate : (data.status === "finished") ? ctx.params.date : null,
                                         tmpId: _.get(data, "tmpId", null)
                                     },

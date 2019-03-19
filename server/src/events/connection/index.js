@@ -101,13 +101,13 @@ module.exports = class Connection {
             console.log("O client do usuario " + this.socket.user.name + " esta pronto!" )
             await new Promise((resolve, reject) => {
                 this._rsmqWorkers["userId:" + this.socket.user.id].size(async (err, size) => {
-                    console.log("A fila do",  this.socket.user.name, "está atualmente com", size, "pendentes de ser entregue!")
+                    //console.log("A fila do",  this.socket.user.name, "está atualmente com", size, "pendentes de ser entregue!")
                     await new Promise((resolve, reject) => { 
                         if(size <= 0) return resolve()
                         let index
                         for (index = 1; index <= size; index++) {
                             this.server.rsmq.popMessage({ qname: "userId-" + this.socket.user.id})
-                            console.log("Excluindo", index ,"item da fila")
+                            //console.log("Excluindo", index ,"item da fila")
                             if(index == size) return resolve()
                         }
                     })
@@ -133,7 +133,7 @@ module.exports = class Connection {
             const usersSystemArray = _.map(_.keys(this._usersSystemReady))
             if(this.socket.user && _.includes(usersSystemArray, "userId:" + this.socket.user.id)) delete this._usersSystemReady["userId:" + this.socket.user.id]
 
-            if(this.socket.user) console.log("O usuario", this.socket.user.name, "saiu")
+            //if(this.socket.user) console.log("O usuario", this.socket.user.name, "saiu")
 
             if(!!this._versionInterval){
                 clearInterval(this._versionInterval)

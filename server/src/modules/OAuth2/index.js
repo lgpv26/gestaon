@@ -60,12 +60,12 @@ module.exports = (server) => {
                     ]
                 }).then((user) => {
                     if(!user){
-                        return reject('Invalid e-mail or password.')
+                        return Promise.reject('Invalid e-mail or password.')
                     }
                     if(!bcrypt.compareSync(password, user.password)){
-                        return reject("Password is not valid.")
+                        return Promise.reject("Password is not valid.")
                     }
-                    return user;
+                    return Promise.resolve(user)
                 });
             },
             saveToken(token, client, user){
