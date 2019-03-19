@@ -560,6 +560,9 @@ module.exports = (server) => { return {
                                     [Op.gte]: moment(ctx.params.date).startOf("day").toDate(),
                                     [Op.lte]: moment(ctx.params.date).endOf("day").toDate()
                                 },
+                                status: {
+                                    [Op.notIn]: ['finished']
+                                },
                                 companyId: parseInt(ctx.params.companyId)
                             },
                             include: [{

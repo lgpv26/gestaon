@@ -42,7 +42,7 @@ export default {
         columnWidth: 320,
         gutterSize: 10,
         headerHeight: 50,
-        cardHeight: 85
+        cardHeight: 112
       },
       sectionDraggableOptions: {
         handle: ".board-section__header",

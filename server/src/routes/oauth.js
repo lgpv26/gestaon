@@ -32,7 +32,12 @@ module.exports = (server, restify) => {
     });
 
     server.post('/oauth/token', (req, res, next) => { 
-        if(_.isEmpty(req.body.username) || _.isEmpty(req.body.password))  return res.send(400 , {success: false, message: "E-mail ou senha não podem estar em branco!"})
+        if(req.body.grant_type !== 'refresh_token' && (_.isEmpty(req.body.username) || _.isEmpty(req.body.password))){
+            return res.send(400 , {
+                success: false,
+                message: "E-mail ou senha não podem estar em branco!"
+            })
+        }
 
         const request = new Request(req)        
         const response = new Response(res)

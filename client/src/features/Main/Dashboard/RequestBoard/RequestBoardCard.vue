@@ -45,7 +45,14 @@
                     {{ request.phoneLine }}
                 </h3>
             </div>
-            <div class="card__middle"></div>
+            <div class="card__middle">
+                <div v-if="deadlineCheckerObj.inTime" class="delivery-time in-time">
+                    <span>{{ deadlineCheckerObj.value }} {{ deadlineCheckerObj.unit }}</span>
+                </div>
+                <div v-else class="delivery-time">
+                    <span>{{ deadlineCheckerObj.value }} {{ deadlineCheckerObj.unit }}</span>
+                </div>
+            </div>
             <div class="card__footer">
                 <span class="push-both-sides"></span>
                 <a class="footer__status">
@@ -175,6 +182,12 @@
                 dropdownMenuPopoverContentStyle: {
                     "background-color": "var(--bg-color--2)",
                     padding: "8px 12px"
+                },
+                deadlineCheckerInterval: null,
+                deadlineCheckerObj: {
+                    inTime: true,
+                    value: 0,
+                    unit: 'segundo(s)'
                 }
             };
         },
@@ -281,107 +294,49 @@
                         responsibleUserId: ev
                     }
                 })
+            },
+            calculateDeadline(){
+                let timeDiff = moment(this.request.deliveryDate).diff(moment(), 'seconds')
+                if(timeDiff < 0){
+                    this.deadlineCheckerObj.inTime = false
+                    timeDiff = Math.abs(timeDiff)
+                }
+                if(timeDiff < 60){ // dentro de 60 segundos
+                    this.deadlineCheckerObj.value = timeDiff
+                    this.deadlineCheckerObj.unit = 'segundo(s)'
+                }
+                else if(timeDiff < (60 * 60)){ // dentro de 60 minutos
+                    this.deadlineCheckerObj.value = timeDiff / 60
+                    this.deadlineCheckerObj.unit = 'minuto(s)'
+                }
+                else if(timeDiff < (60 * 60 * 24)){
+                    this.deadlineCheckerObj.value = (timeDiff / 60) / 60
+                    this.deadlineCheckerObj.unit = 'horas(s)'
+                }
+                else if(timeDiff < (60 * 60 * 24 * 31)){
+                    this.deadlineCheckerObj.value = ((timeDiff / 60) / 60) / 24
+                    this.deadlineCheckerObj.unit = 'dia(s)'
+                }
+                else if(timeDiff < (60 * 60 * 24 * 31 * 12)){
+                    this.deadlineCheckerObj.value = (((timeDiff / 60) / 60) / 24) / 31
+                    this.deadlineCheckerObj.unit = 'mês(s)'
+                }
+                else if(timeDiff >= (60 * 60 * 24 * 31 * 12)){
+                    this.deadlineCheckerObj.value = ((((timeDiff / 60) / 60) / 24) / 31) / 12
+                    this.deadlineCheckerObj.unit = 'ano(s)'
+                }
+                this.deadlineCheckerObj.value = Math.round(this.deadlineCheckerObj.value)
             }
         },
         mounted() {
-            /*setInterval(() => {
-                        console.log(this.card)
-                    }, 5000)*/
-            /*const vm = this
-                    setTimeout(() => {
-                        vm.loading = false;
-                    }, 1000)
-                    const eachInterval = () => {
-                        const startDate = moment(vm.card.request.dateCreated)
-                        const deliveryDate = moment(vm.card.request.deliveryDate)
-                        const nowDate = moment()
-
-                        // mapping and filtering
-                        vm.inProgressRequestTimeline = _.map(_.filter(vm.card.request.requestTimeline, (requestTimelineItem) => {
-                            // if(requestTimelineItem.action === 'create') return false
-                            const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
-                            /!*const diffUntilTimelineItemInSec = moment.duration(requestTimelineItemDate.diff(startDate)).asSeconds()
-                            const diffUntilNowInSec = moment.duration(deliveryDate.diff(nowDate)).asSeconds()*!/
-
-                            const deadlineToTimelineItemInSec = moment.duration(deliveryDate.diff(requestTimelineItemDate)).asSeconds()
-
-                            return (deadlineToTimelineItemInSec > 0) && (requestTimelineItem.action !== 'create') && (requestTimelineItem.status !== 'finished')
-                        }), (requestTimelineItem) => {
-
-                            const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
-                            const deadlineToStartInSec = moment.duration(deliveryDate.diff(startDate)).asSeconds()
-                            const deadlineToTimelineItemInSec = moment.duration(deliveryDate.diff(requestTimelineItemDate)).asSeconds()
-                            const startToTimelineItemInSec = deadlineToStartInSec - deadlineToTimelineItemInSec
-
-                            const percentage = (startToTimelineItemInSec / deadlineToStartInSec) * 100
-                            const maxWidthInPxs = 200 // max width in pixels, of the progress bar
-                            const leftInPxs = (maxWidthInPxs * percentage) / 100
-
-                            let timeUntilNow = startToTimelineItemInSec
-                            if(timeUntilNow < 0) timeUntilNow = 0
-
-                            return {
-                                timeUntilNow: utils.getShortTime(timeUntilNow),
-                                left: leftInPxs,
-                                data: requestTimelineItem
-                            }
-                        })
-
-                        vm.overDeadlineRequestTimeline = _.filter(vm.card.request.requestTimeline, (requestTimelineItem) => {
-
-                            const requestTimelineItemDate = moment(requestTimelineItem.dateCreated)
-                            const deadlineToTimelineItemInSec = moment.duration(deliveryDate.diff(requestTimelineItemDate)).asSeconds()
-
-                            return (deadlineToTimelineItemInSec <= 0) || (requestTimelineItem.status === 'finished')
-                        })
-
-                        // some variables
-                        const deadlineToNowInSec = moment.duration(deliveryDate.diff(nowDate)).asSeconds()
-                        const deadlineToStartInSec = moment.duration(deliveryDate.diff(startDate)).asSeconds()
-                        const startToNowInSec = Math.abs(deadlineToStartInSec - deadlineToNowInSec)
-
-                        if(deadlineToNowInSec <= 0){
-                            this.deadline.isOver = true
-                            const overTimeInSec = Math.abs(deadlineToNowInSec)
-                            const overTimeInMin = Math.floor(overTimeInSec / 60)
-                            if(overTimeInMin > 99){
-                                this.deadline.time = utils.getShortTime(overTimeInSec)
-                            }
-                            else {
-                                this.deadline.time = utils.getShortTime(startToNowInSec)
-                            }
-                        }
-                        else {
-                            this.deadline.isOver = false
-                            this.deadline.time = utils.getShortTime(Math.abs(deadlineToStartInSec))
-                        }
-
-                        if(this.card.request.status !== 'finished' && !this.deadline.isOver){
-                            const percentage = (startToNowInSec / deadlineToStartInSec) * 100
-                            const maxWidthInPxs = 200 // max width in pixels, of the progress bar
-                            const leftInPxs = (maxWidthInPxs * percentage) / 100
-
-                            this.current = {
-                                time: utils.getShortTime(startToNowInSec),
-                                left: leftInPxs
-                            }
-                        }
-
-                        if(this.card.request.status === 'finished'){
-                            const lastTimelineItem = _.last(this.card.request.requestTimeline)
-                            if(lastTimelineItem.status === 'finished'){
-                                const finishedDate = moment(lastTimelineItem.dateCreated)
-                                const finishToStartInSec = Math.abs(moment.duration(finishedDate.diff(startDate)).asSeconds())
-                                this.deadline.isOver = deadlineToStartInSec < finishToStartInSec
-                                this.deadline.time = utils.getShortTime(finishToStartInSec)
-                            }
-                        }
-                    }
-                    eachInterval()
-                    vm.requestTimelineInterval = setInterval(() => eachInterval(), 3000)*/
+            if(this.deadlineCheckerInterval){
+                clearInterval(this.deadlineCheckerInterval)
+            }
+            this.calculateDeadline()
+            this.deadlineCheckerInterval = setInterval(this.calculateDeadline, 5000)
         },
         beforeDestroy() {
-            //clearInterval(this.requestTimelineInterval)
+            clearInterval(this.deadlineCheckerInterval)
         }
     };
 </script>
@@ -553,6 +508,17 @@
         position: relative;
         flex-grow: 1;
         align-items: center;
+        justify-content: flex-end;
+        .delivery-time {
+            span {
+                color: var(--font-color--danger);
+            }
+            &.in-time {
+                span {
+                    color: var(--font-color--primary);
+                }
+            }
+        }
     }
     .card__middle .card__timer {
         display: flex;

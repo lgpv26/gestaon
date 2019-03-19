@@ -1,6 +1,6 @@
 <template>
     <div v-if="_.has(request, 'requestUIState') && _.has(request, 'client') && !request.requestUIState.isLoading" class="request__window">
-        <app-request-chat v-if="request.requestUIState.showRequestChat" :request="request"></app-request-chat>
+        <app-request-chat v-if="false && request.requestUIState.showRequestChat" :request="request"></app-request-chat>
         <app-request-history v-if="request.requestUIState.showClientOrderTimeline" :request="request" @close="updateValue('entities/requestUIState/update','showClientOrderTimeline',request.requestUIState.id,false)"></app-request-history>
         <div class="request__search">
             <input type="text" autocomplete="off" class="input&#45;&#45;borderless" placeholder="DIGITE AQUI PARA PESQUISAR ..." v-model="searchValue" @focus="searchShow = true" @input="search()" />
@@ -449,7 +449,7 @@
                                 requestOrderId: requestOrderTmpId,
                                 productId: 1,
                                 unitPrice: _.get(
-                                    this.$store.getters["entities/products/find"](6),
+                                    this.$store.getters["entities/products/find"](1),
                                     "price",
                                     0
                                 )
