@@ -17,9 +17,11 @@
                     <div class="title">
                         <h3>{{ moment(historyRequest.deliveryDate).format("DD/MM/YYYY HH:mm") }}</h3><br/>
                         <p>Criado às: {{ moment(historyRequest.dateCreated).format("DD/MM/YYYY HH:mm") }}</p><br/>
-                        <p>Entregador: {{ $store.getters['entities/users/find'](historyRequest.deliveredBy).name }}</p>
-                        <p>Finalizado às: {{ moment(historyRequest.deliveredDate).format("DD/MM/YYYY HH:mm") }}</p>
-                        <p>Finalizado por: {{ $store.getters['entities/users/find'](historyRequest.finishedBy).name }}</p>
+                        <p v-if="$store.getters['entities/users/find'](historyRequest.deliveredBy)">
+                            Entregador: {{ $store.getters['entities/users/find'](historyRequest.deliveredBy).name }}
+                        </p>
+                        <p v-if="moment(historyRequest.deliveredDate).isValid()">Finalizado às: {{ moment(historyRequest.deliveredDate).format("DD/MM/YYYY HH:mm") }}</p>
+                        <p v-if="$store.getters['entities/users/find'](historyRequest.finishedBy)">Finalizado por: {{ $store.getters['entities/users/find'](historyRequest.finishedBy).name }}</p>
                     </div>
                     <div class="body">
                         <div class="table" style="margin-bottom: 10px;">
@@ -83,6 +85,11 @@
                         </div>
                     </div>
                 </div>
+                <div class="entry" v-if="total > offset">
+                    <div class="title">
+                        <a href="javascript:void(0)" @click="getRequestHistory()" style="position: relative; top: 12px;">Carregar mais</a>
+                    </div>
+                </div>
             </div>
             <div v-else-if="isRequesting">
                 Carregando...
@@ -105,6 +112,8 @@
         data(){
             return {
                 total: 0,
+                offset: 0,
+                limit: 3,
                 isRequesting: false,
                 historyRequests: []
             }
@@ -118,20 +127,21 @@
             getRequestHistory(){
                 if(Number.isInteger(this.request.clientId)){
                     this.isRequesting = true
-                    ClientsAPI.getRequestHistory(this.request.clientId, {companyId: 1, offset: 0, limit: 10}).then((response) => {
-                        this.historyRequests = response.data.previousRequests
+                    ClientsAPI.getRequestHistory(this.request.clientId, {companyId: 1, offset: this.offset, limit: this.limit}).then((response) => {
+                        response.data.previousRequests.forEach((previousRequest) => {
+                            this.historyRequests.push(previousRequest)
+                        })
+                        this.offset += this.limit
                         this.total = response.data.total
                         this.isRequesting = false
                         console.log("Request History", response.data)
                     })
                     return true
                 }
-                this.historyRequests = []
             }
         },
-        created(){
-        },
         mounted(){
+            this.historyRequests = []
             this.getRequestHistory()
         }
     }

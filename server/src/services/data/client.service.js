@@ -71,7 +71,7 @@ module.exports = server => {
                                     companyId
                                 },
                                 order: [
-                                    ['deliveredDate', 'DESC']
+                                    ['deliveryDate', 'DESC']
                                 ],
                                 include: [{
                                     model: server.mysql.RequestOrder,

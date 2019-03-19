@@ -41,7 +41,7 @@
                             @click="select(item)"
                             class="result-item__container"
                     >
-                        <span class="address"> {{ item.name }} </span>
+                        <span class="address" v-highlight="{keyword: searchValueStrings, sensitive: false}"> {{ item.name }} </span>
                         <span class="address-details">
               {{ item.neighborhood ? item.neighborhood : "SEM BAIRRO" }} -
               {{ item.city }}/{{ item.state }}
@@ -63,7 +63,8 @@
         data() {
             return {
                 isInputFocused: false,
-                items: []
+                items: [],
+                searchValueStrings: [],
             };
         },
         computed: {
@@ -77,11 +78,34 @@
                 this.$refs.popover.update();
             },
             async input(ev) {
-                if (this.$static.fSearchAddresses) {
-                    this.items = await this.$static.fSearchAddresses.search({
-                        query: ev.target.value,
-                        limit: 20
-                    })
+                this.searchValueStrings = _.filter(_.map(ev.target.value.split(" "), searchValue => searchValue.trim(), searchValue => searchValue !== ''))
+                if (this.$static.searchAddressesIndex) {
+                    let resultData = this.$static.searchAddressesIndex
+                        .search(ev.target.value, {
+                            fields: {
+                                name: {
+                                    boost: 1
+                                }
+                            },
+                            bool: "OR",
+                            expand: false
+                        })
+                        .slice(0, 30);
+                    this.$db.searchAddresses
+                        .where("id")
+                        .anyOf(
+                            _.map(resultData, resultDataItem => {
+                                return parseInt(resultDataItem.ref);
+                            })
+                        )
+                        .toArray()
+                        .then(foundAddresses => {
+                            this.items = _.map(resultData, resultDataItem => {
+                                return _.find(foundAddresses, {
+                                    id: parseInt(resultDataItem.ref)
+                                });
+                            });
+                        });
                 }
                 this.$emit("input", ev.target.value);
             },

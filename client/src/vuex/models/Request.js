@@ -28,6 +28,7 @@ export default class Request extends Model {
             requestOrderId: this.attr(null),
             requestOrder: this.belongsTo(RequestOrder, "requestOrderId"),
             card: this.hasOne(Card, "requestId"),
+            phoneLine: this.attr(null),
             obs: this.attr(null),
             requestUIState: this.hasOne(RequestUIState, "requestId"),
             requestPayments: this.hasMany(RequestPayment, "requestId"),
@@ -370,7 +371,9 @@ export default class Request extends Model {
                     }
                 })
                 ctx.$db.searchClients.bulkPut(searchClients).then(() => {
-                    ctx.$static.fSearchClients.add(searchClients)
+                    searchClients.forEach((searchClient) => {
+                        ctx.$static.searchClientsIndex.addDoc(searchClient)
+                    })
                 })
                 const searchAddresses = _.map(request.client.clientAddresses, (clientAddress) => {
                     return {
@@ -385,7 +388,9 @@ export default class Request extends Model {
                     }
                 })
                 ctx.$db.searchAddresses.bulkPut(searchAddresses).then(() => {
-                    ctx.$static.fSearchAddresses.add(searchAddresses)
+                    searchAddresses.forEach((searchAddress) => {
+                        ctx.$static.searchAddressesIndex.addDoc(searchAddress)
+                    })
                 })
             }
 

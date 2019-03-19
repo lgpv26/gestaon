@@ -30,7 +30,7 @@ module.exports = server => {
                             const dataRequestPayments = await vm.checkChanges(ctx.params.data, request, client, oldRequest)
           
                             await vm.revertPayments(removedRequestPayments, dataRequestPayments, triggeredBy, transaction)
-                            await vm.clientLimit(client, removedRequestPayments, dataRequestPayments, oldRequest, transaction)
+                            // await vm.clientLimit(client, removedRequestPayments, dataRequestPayments, oldRequest, transaction)
                       
                             const requestPayments = await vm.requestPayments(dataRequestPayments, removedRequestPayments, request, triggeredBy, transaction)
          

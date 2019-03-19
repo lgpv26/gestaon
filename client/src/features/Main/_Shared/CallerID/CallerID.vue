@@ -92,6 +92,7 @@
                 /*_.forEach(data,(call) => {
                     vm.addCall(call)
                 })*/
+                console.log(data)
                 vm.calls = data
             })
             /**

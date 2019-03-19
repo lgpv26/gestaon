@@ -124,7 +124,8 @@
                     data: {
                         id: requestUIStateTmpId,
                         windowId: windowTmpId,
-                        requestId: requestTmpId
+                        requestId: requestTmpId,
+                        activeTab: (this.client) ? null : 'client'
                     }
                 })
                 this.$store.dispatch("entities/requests/insert", {
@@ -132,6 +133,7 @@
                         id: requestTmpId,
                         clientId: null,
                         requestOrderId: null,
+                        phoneLine: _.get(this.call,'destination',null),
                         status: "draft"
                     }
                 });
@@ -188,6 +190,51 @@
                                 false
                             )
                         }
+                    }
+                    else {
+                        console.log("Creating client")
+                        const clientTmpId = `tmp/${shortid.generate()}`
+                        const addressTmpId = `tmp/${shortid.generate()}`
+                        const clientAddressTmpId = `tmp/${shortid.generate()}`
+                        const clientPhoneTmpId = `tmp/${shortid.generate()}`
+                        const requestClientAddressTmpId = `tmp/${shortid.generate()}`
+                        this.$store.dispatch("entities/clients/insert", {
+                            data: {
+                                id: clientTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/clientPhones/insert", {
+                            data: {
+                                id: clientPhoneTmpId,
+                                clientId: clientTmpId,
+                                number: this.call.number
+                            }
+                        })
+                        this.$store.dispatch("entities/addresses/insert", {
+                            data: {
+                                id: addressTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/clientAddresses/insert", {
+                            data: {
+                                id: clientAddressTmpId,
+                                clientId: clientTmpId,
+                                addressId: addressTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/requestClientAddresses/insert", {
+                            data: {
+                                id: requestClientAddressTmpId,
+                                requestId: requestTmpId,
+                                clientAddressId: clientAddressTmpId
+                            }
+                        })
+                        this.$store.dispatch("entities/requests/update", {
+                            where: requestTmpId,
+                            data: {
+                                clientId: clientTmpId
+                            }
+                        })
                     }
                 })
 

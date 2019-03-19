@@ -44,11 +44,7 @@ module.exports = (server) => { return {
 
         getList(ctx){
             return server.mysql.Call.findAll({
-                where: ctx.params.where || {},
-                include: ctx.params.include || [],
-                transaction: ctx.params.transaction || null,
-                attributes: ctx.params.attributes || {},
-                order: ctx.params.order || []
+                limit: 20
             })
             .then((calls) => {
                 if(!_.isArray(calls) && !calls.length) return Promise.resolve([])
@@ -63,12 +59,12 @@ module.exports = (server) => { return {
                         }
                     },
                     include: [{
-                            model: server.mysql.Client,
-                            as: "client"
-                        }]
+                        model: server.mysql.Client,
+                        as: "client"
+                    }]
                 }).then((clientPhones) => {
                     clientPhones = JSON.parse(JSON.stringify(clientPhones))
-                    
+
                     return _.map(calls, (call) => {
                         call.clients = []
                         _.forEach(clientPhones, (clientPhone) => {
@@ -82,7 +78,7 @@ module.exports = (server) => { return {
                         return call
                     })
                 })
-            })        
+            })
         },
 
         create(ctx){

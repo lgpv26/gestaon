@@ -80,7 +80,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
         requestOrders: "id, obs, promotionChannelId, status, dateUpdated, dateCreated, dateRemoved",
         requestClientAddresses: "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
-        requests: "id, clientId, obs, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, status, userId",
+        requests: "id, clientId, phoneLine, obs, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, status, userId",
     },
     searchModels: {
         searchClients: "id, name, address, number, complement, neighborhood, city, state",
@@ -99,7 +99,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         STATE_addresses: "id, name, address, cep, city, dateCreated, dateUpdated, neighborhood, state, status",
         STATE_clientAddresses: "id, addressId, clientId, complement, dateCreated, dateUpdated, dateRemoved, name, number, status",
         STATE_requestClientAddresses: "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
-        STATE_requests: "id, obs, clientId, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, requestUIState, status, userId",
+        STATE_requests: "id, phoneLine, obs, clientId, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, requestUIState, status, userId",
         STATE_windows: "id, show, zIndex"
     }
 });

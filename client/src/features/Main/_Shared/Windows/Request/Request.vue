@@ -14,7 +14,7 @@
                     <img :src="require('../../../../../assets/imgs/form-instructions/request.png')" style="width: 314px; height: 191px;" />
                 </div>
                 <div class="request__section" :class="{ active: request.requestUIState.activeTab === 'client' }">
-                    <app-perfect-scrollbar v-if="request.requestUIState.activeTab === 'client'" class="section__content">
+                    <app-perfect-scrollbar v-if="request.requestUIState.activeTab === 'client' && request.client" class="section__content">
                         <div class="columns">
                             <div class="left-side">
                                 <div class="box">
@@ -115,7 +115,12 @@
                             </div>
                             <div class="right-side">
                                 <div class="box">
-                                    <h3>Telefones</h3>
+                                    <div style="display: flex; align-items: center;">
+                                        <h3>Telefones</h3>
+                                        <span class="push-both-sides"></span>
+                                        <span style="font-size: 12px">{{ (request.phoneLine) ? request.phoneLine : ''}}</span>
+                                    </div>
+
                                     <div class="box__item" v-for="clientPhone in request.client.clientPhones" :key="clientPhone.id">
                                         <app-mask :mask="['(##) ####-####', '(##) #####-####']" :value="clientPhone.number" @input="updateValue('entities/clientPhones/update','number',clientPhone.id,$event)" placeholder="(##) #####-####" class="input" style="margin-bottom: 0;"></app-mask>
                                         <a :class="{ disabled: request.client.clientPhones.length <= 1 }" href="javascript:void(0)" @click="removeClientPhone(clientPhone.id)" style="margin-top: 7px; margin-left: 7px; padding: 0 3px; align-self: baseline;">
@@ -233,7 +238,9 @@
                     </div>
                     <span class="push-both-sides"></span>
                     <div style="display: flex; align-items: center;">
-                        <span style="font-size: 20px; margin-right: 20px; font-weight: 600">1</span>
+                        <span style="margin-right: 20px; font-weight: 600"
+                              :style="{'font-size': (((searchItem.score * 3) > 24) ? 24 : searchItem.score * 3) + 'px' }"
+                        >{{ searchItem.score }}</span>
                     </div>
                 </div>
             </app-perfect-scrollbar>
@@ -651,13 +658,7 @@
                 vm.searchValueStrings = _.filter(_.map(vm.searchValue.split(" "), searchValue => searchValue.trim(), searchValue => searchValue !== ''))
                 if (vm.searchTimeout) clearTimeout(vm.searchTimeout);
                 vm.searchTimeout = setTimeout(() => {
-                    vm.$static.fSearchClients.search({
-                        query: vm.searchValue
-                    }).then((results) => {
-                        vm.searchItems = results.slice(0, 30)
-                        console.log("Resultado", results)
-                    })
-                    /*if (vm.$static.searchClientsIndex) {
+                    if (vm.$static.searchClientsIndex) {
                         let resultData = vm.$static.searchClientsIndex.search(vm.searchValue, {
                             fields: {
                                 name: { boost: 1 },
@@ -680,7 +681,7 @@
                             })
                             vm.searchItems = vm.items
                         })
-                    }*/
+                    }
                 }, 500)
             },
 

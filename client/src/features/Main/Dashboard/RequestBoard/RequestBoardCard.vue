@@ -41,7 +41,7 @@
                 <h3 class="card__client-address" v-if="card.clientAddress">
                     {{ card.clientAddress }}
                 </h3>
-                <h3 class="card__phone-line" v-if="request.phoneLine && false">
+                <h3 class="card__phone-line" v-if="request.phoneLine">
                     {{ request.phoneLine }}
                 </h3>
             </div>
