@@ -641,8 +641,12 @@ module.exports = server => {
 
                 const data = {}
 
+                console.log("ESTOU NO CHECK REQUEST DETAILS", moment().toDate())  
+
                 if (_.has(detailsData, "requestClientAddresses") && client && client.clientAddresses) {
                     data.requestClientAddresses = []
+
+                    console.log("ENTREI NO REQUEST CLIENT ADDRESSES PRA SETAR AS COISAS", moment().toDate())  
 
                     detailsData.requestClientAddresses.forEach((requestClientAddress, index) => {
 
@@ -663,11 +667,12 @@ module.exports = server => {
 
                         if(clientAddress) _.set(requestClientAddress, 'clientAddressId', clientAddress.id)
 
-                        data.requestClientAddresses.push(requestClientAddress)
+                        if(_.isNumber(requestClientAddress.clientAddressId)) data.requestClientAddresses.push(requestClientAddress)
                     })
                 }
 
                 if (_.has(detailsData, "requestClientPhones")) {
+                    console.log("ENTREI NO REQUEST CLIENT PHONES PRA SETAR AS COISAS", moment().toDate())  
                     detailsData.requestClientPhones.forEach((requestClientPhone, index) => {
 
                             data.requestClientPhones.push(
@@ -683,6 +688,7 @@ module.exports = server => {
                         })
                 }
 
+                console.log("VOU PARA O REQUEST DETAILS SERVICE", moment().toDate())  
                 return server.broker.call("data/request-details.start", {
                     data,
                     request,

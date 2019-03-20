@@ -89,6 +89,11 @@ module.exports = class DependencyInjection {
         })        
     }
 
+    initializeSentry(){
+        const Sentry = require('@sentry/node')
+        Sentry.init({ dsn: 'https://f51d206d28ea4d01b89bb2b22131f6ba@sentry.io/1419760' })
+    }
+
     setSequelize(){
         const Sequelize = require('sequelize')
         const clsHooked = require('cls-hooked')

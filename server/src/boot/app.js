@@ -16,6 +16,7 @@ const di = new DI()
 async function start() {
     try {
         // overall setup
+        await di.initializeSentry()
         await di.setInnkeeper()
         await di.setFirebaseAdmin()
         await di.setRedis()
