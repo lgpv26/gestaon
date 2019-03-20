@@ -1,6 +1,6 @@
 {
   "name": "agiliza-erp-server",
-  "version": "1.0.0",
+  "version": "0.0.17",
   "description": "Server side API for Blue Agile tracker system.",
   "main": "npm run start",
   "scripts": {
@@ -22,6 +22,7 @@
     "bcryptjs": "^2.4.0",
     "bluebird": "^3.5.1",
     "chalk": "^2.4.1",
+    "cls-hooked": "^4.2.2",
     "continuation-local-storage": "^3.2.1",
     "crc16-ccitt-node": "^1.0.5",
     "cron": "^1.6.0",
@@ -51,6 +52,7 @@
     "restify-errors": "^6.0.0",
     "rsmq-promise": "^1.0.3",
     "rsmq-worker": "^0.5.2",
+    "save": "^2.3.3",
     "sequelize": "^5.0.0-beta.16",
     "sequelize-mysql-timestamp": "^1.3.0",
     "shortid": "^2.2.8",

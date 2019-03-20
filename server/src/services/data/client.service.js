@@ -9,30 +9,42 @@ module.exports = server => {
             start(ctx) {
                 const vm = this
                 const companyId = ctx.params.companyId
+                console.log("NO CLIENT SERVICE", moment().toDate())
 
                 return new Promise((resolve, reject) => {
                     async function start() {
                         try {
+                            console.log("INICIO DA FUNCAO ASYNC DO CLIENT", moment().toDate())
+
                             vm.saveInRequest = ctx.params.transaction ? true : false
                             ctx.params.data = _.assign(ctx.params.data, { companyId })
                             
+                            console.log("CHECANDO TRANSACTION", moment().toDate())
                             const transaction = await vm.checkTransaction(ctx.params.transaction || null)
+                            console.log("CHECADO TRANSATION OK", moment().toDate())
 
                             const request = ctx.params.request
 
                             ctx.params.data = await vm.checkTempIds(ctx.params.data, request)
+                            console.log("REMOVI OS TEMP IDS", moment().toDate())
 
+                            console.log("VOU SALVAR O CLIENT", moment().toDate())
                             const client = await vm.saveClient(ctx.params.data, transaction)
+                            console.log("SALVEI O CLIENT", moment().toDate())
 
                             if (_.has(ctx.params.data, "clientAddresses")) {
+                                console.log("PREPARANDO O CLIENT ADDRESSES", moment().toDate())
                                 _.set(client, "clientAddresses", await vm.setClientAddresses(ctx.params.data.clientAddresses, (client) ? client.id : null, companyId, transaction) )
+                                console.log("CLIENT ADDRESSES: OK", moment().toDate())
                             }
 
                             if (_.has(ctx.params.data, "clientPhones")) {
                                 const clientPhones = _.map(ctx.params.data.clientPhones, (clientPhone) => {
                                         return _.assign(clientPhone, {clientId: (client) ? client.id : null})
                                     })
+                                console.log("PREPARANDO O CLIENT PHONES", moment().toDate())
                                 _.set(client, "clientPhones", await vm.saveClientPhones(clientPhones, (client) ? client.id : null, transaction))
+                                console.log("CLIENT PHONES: OK", moment().toDate())
                             }
 
                             if (_.has(ctx.params.data, "clientCustomFields")) {
@@ -42,8 +54,12 @@ module.exports = server => {
                                             customFieldId: clientCustomField.customField.id
                                         })
                                     })
+                                console.log("PREPARANDO O CLIENT CUSTOM FIELD", moment().toDate())
                                 _.set(client, "clientCustomFields", await vm.saveClientCustomFields(clientCustomFields, (client) ? client.id : null, transaction))
+                                console.log("CLIENT CUSTOM FIELD: OK", moment().toDate())
                             }
+
+                            console.log("TUDO CERTO COM O CLIENT, VOLTANDO PARA O REQUEST", moment().toDate())
 
                             return resolve(client)
                             //console.log(client)
@@ -194,7 +210,6 @@ module.exports = server => {
              */
             saveClient(data, transaction) {
                 if ((data.name === "" || data.name === null) && !data.id) return Promise.resolve(data)
-
                 if (data.id) {
                     return server.mysql.Client.update(data, {
                         where: {
@@ -202,12 +217,7 @@ module.exports = server => {
                         },
                         transaction
                     })
-                    .then((updated) => {
-                        /*
-                        if (parseInt(_.toString(updated)) < 1 ) {
-                            console.log("Nenhum registro encontrado. Update.")
-                            return Promise.reject('Erro ao atualizar o cliente.')
-                        }*/
+                    .then(() => {
                         return server.mysql.Client.findByPk(data.id, { transaction })
                             .then((client) => {
                                 return JSON.parse(JSON.stringify(client))

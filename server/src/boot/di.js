@@ -91,8 +91,8 @@ module.exports = class DependencyInjection {
 
     setSequelize(){
         const Sequelize = require('sequelize')
-        const cls = require('continuation-local-storage')
-        this.server.clsNamespace = cls.createNamespace('default-namespace')
+        const clsHooked = require('cls-hooked')
+        this.server.clsNamespace = clsHooked.createNamespace('gestaOn')
         Sequelize.useCLS(this.server.clsNamespace)
         this.server.sequelize = new Sequelize(config.database.dbName, config.database.user, config.database.password, {
             logging: false,
