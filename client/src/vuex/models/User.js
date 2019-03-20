@@ -10,6 +10,7 @@ export default class User extends Model {
             name: this.attr(null),
             email: this.attr(null),
             type: this.attr(null),
+            status: this.attr('activated'),
         }
     }
 }

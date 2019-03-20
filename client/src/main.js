@@ -68,7 +68,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         clientPhones: "id, name, number, clientId, dateUpdated, dateCreated, dateRemoved",
         clientAddresses: "id, addressId, clientId, complement, dateCreated, dateUpdated, dateRemoved, name, number, status",
         addresses: "id, name, address, cep, city, dateCreated, dateUpdated, neighborhood, state, status",
-        users: "id, name, email, type",
+        users: "id, name, email, type, status",
         products: "id, name, price, quantity",
         paymentMethods: "id, name, rule, tax, taxUnit, autoPay, hasDeadline",
         promotionChannels: "id, name",

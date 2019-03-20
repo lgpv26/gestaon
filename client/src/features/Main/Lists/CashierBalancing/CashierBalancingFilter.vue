@@ -181,7 +181,9 @@
             ...mapGetters('data/payment-methods',['paymentMethodsSelectItems']),
             ...mapGetters('data/products',['productsSelectItems']),
             selectUsers() {
-                return _.map(User.all(), user => {
+                return _.map(_.filter(User.query().orderBy('name').get(), (user) => {
+                    return user.status !== 'deactivated'
+                }), user => {
                     return {
                         value: user.id,
                         text: user.name

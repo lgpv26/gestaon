@@ -264,6 +264,7 @@
     import RequestChat from "./RequestChat";
 
     import Request from '../../../../../vuex/models/Request'
+    import User from '../../../../../vuex/models/User'
 
     export default {
         props: ["request"],
@@ -342,7 +343,9 @@
                 return this.utils.isTmp(this.request.clientId);
             },
             getSelectUsers(){
-                return _.map(this.$store.getters['entities/users/all'](), (user) => {
+                return _.map(_.filter(User.query().orderBy('name').get(), (user) => {
+                    return user.status !== 'deactivated'
+                }), (user) => {
                     return {
                         value: user.id,
                         text: user.name
