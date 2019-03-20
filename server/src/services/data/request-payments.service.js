@@ -406,7 +406,13 @@ module.exports = server => {
 
             requestPayments(data, removedRequestPayments, request, triggeredBy, transaction) {
                 if(data.length && (data[0].changeStatus == 'canceled' || data[0].changeUser)) {
-                    _.map(data, (requestPayment) => {
+                    _.map(data, (requestPayment, index) => {
+
+                        _.set(data[index], "amount", requestPayment.oldAmount)
+                        _.set(data[index], "paid", requestPayment.oldPaid)
+                        _.set(data[index], "deadlineDatetime", requestPayment.oldDeadlineDatetime)
+                        _.set(data[index], "paymentMethodId", requestPayment.oldPaymentMethod.id)
+
                         delete requestPayment.request
                         delete requestPayment.changeStatus
                         delete requestPayment.oldStatus
