@@ -11,3 +11,5 @@ server/package-lock\.json
 server/src/tmp/
 
 client/client\.zip
+
+server/server\.zip
