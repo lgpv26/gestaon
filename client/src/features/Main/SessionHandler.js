@@ -46,9 +46,8 @@ export default {
             const vm = this;
             return {
                 reconnect() {
-                    /*vm.stopLoading();*/
+                    vm.stopLoading();
                     console.log("Reconnected.");
-                    vm.connect(true)
                 },
                 disconnect(reason) {
                     vm.$socket.removeListener("presence:load", vm.onPresenceLoad)
@@ -76,10 +75,10 @@ export default {
         /**
          * On user connect
          */
-        connect(force = false) {
+        connect() {
             const vm = this;
             vm.$socket.on("presence:load", vm.onPresenceLoad)
-            if(vm.importEventOccurred && !force) return
+            if(vm.importEventOccurred) return
             vm.importEventOccurred = true
             new Promise(resolve => {
                 window.setAppLoadingText("Carregando usuário...");
@@ -790,7 +789,6 @@ export default {
         /* if user disconnected / reconnected from socket server */
         this.$socket.on("reconnect_attempt", vm.socketMethods().reconnectAttempt);
         this.$socket.on("disconnect", vm.socketMethods().disconnect);
-        this.$socket.on("reconnect", vm.socketMethods().reconnect);
         this.$socket.on("connect", vm.connect);
     }
 };
