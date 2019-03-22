@@ -118,6 +118,7 @@ const actions = {
                 context.commit("setPermissions",[]);
                 context.commit('setActiveCompany', {});
             }
+            return context.state.user
         }, () => {
             context.dispatch('logout');
         });
@@ -141,13 +142,11 @@ const actions = {
     },
     logout(context){
         return new Promise((resolve) => {
-            setTimeout(() => {
-                context.commit('logout');
-                resolve(context.state.authenticated)
-            }, 300)
-        });
+            context.commit('logout');
+            resolve(context.state.authenticated)
+        })
     }
-};
+}
 
 export default {
     namespaced: true,

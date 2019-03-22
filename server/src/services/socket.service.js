@@ -62,10 +62,10 @@ module.exports = server => {
                     })
             },
 
-            stream(ctx) {
+            async stream(ctx) {
                 const socket = server.io.sockets.sockets[ctx.params.socketId]
 
-                ss(socket).on(ctx.params.event, async function (stream, data) {
+                ss(socket).on(ctx.params.event, async (stream, data) => {
                     const importPromises = []
                     const where = {}
 
@@ -75,18 +75,29 @@ module.exports = server => {
                         }
                     }
 
-                    importPromises.push(server.mysql.User.findAll({ where }))
+                    // import requests
+                    importPromises.push(server.mysql.Request.findAll({ where }))
+                    importPromises.push(server.mysql.RequestClientAddress.findAll({ where }))
+                    importPromises.push(server.mysql.RequestClientPhone.findAll({ where }))
+                    importPromises.push(server.mysql.RequestOrder.findAll({ where }))
+                    importPromises.push(server.mysql.RequestOrderProduct.findAll({ where }))
+                    importPromises.push(server.mysql.RequestPayment.findAll({ where }))
+
+                    // import clients
                     importPromises.push(server.mysql.Client.findAll({ where }))
                     importPromises.push(server.mysql.ClientAddress.findAll({ where }))
                     importPromises.push(server.mysql.ClientPhone.findAll({ where }))
                     importPromises.push(server.mysql.ClientCustomField.findAll({ where }))
+
+                    // import necessary data
+                    importPromises.push(server.mysql.User.findAll({ where }))
                     importPromises.push(server.mysql.Product.findAll({ where }))
                     importPromises.push(server.mysql.PromotionChannel.findAll({ where }))
                     importPromises.push(server.mysql.PaymentMethod.findAll({ where }))
                     importPromises.push(server.mysql.ClientGroup.findAll({ where }))
                     importPromises.push(server.mysql.CustomField.findAll({ where }))
 
-
+                    //import positions
                     const devices = await server.mysql.Device.findAll({
                             where: {
                                     companyId: ctx.params.companyId
@@ -107,6 +118,8 @@ module.exports = server => {
 
                     delete where.deviceId
 
+                    // import addresses
+
                     importPromises.push(server.mysql.Address.findAll({
                         where: _.assign(where, {
                             city: {
@@ -115,59 +128,76 @@ module.exports = server => {
                         })
                     }))
 
-                    Promise.all(importPromises).then(
-                        ([
-                            users,
+                    // resolve promises
+
+                    await Promise.all(importPromises).then(([
+                        requests,
+                        requestClientAddresses,
+                        requestClientPhones,
+                        requestOrders,
+                        requestOrderProducts,
+                        requestPayments,
+
+                        clients,
+                        clientAddresses,
+                        clientPhones,
+                        clientCustomFields,
+
+                        users,
+                        products,
+                        promotionChannels,
+                        paymentMethods,
+                        clientGroups,
+                        customFields,
+
+                        positions,
+                        addresses
+                    ]) => {
+                        const fileName = shortid.generate()
+                        const gzipJson = pako.gzip(JSON.stringify({
+                            requests,
+                            requestClientAddresses,
+                            requestClientPhones,
+                            requestOrders,
+                            requestOrderProducts,
+                            requestPayments,
+
                             clients,
                             clientAddresses,
                             clientPhones,
                             clientCustomFields,
+
+                            users,
                             products,
                             promotionChannels,
                             paymentMethods,
                             clientGroups,
                             customFields,
+
                             positions,
                             addresses
-                        ]) => {
-                            const fileName = shortid.generate()
-                            const gzipJson = pako.gzip(JSON.stringify({
-                                    users,
-                                    clients,
-                                    clientAddresses,
-                                    clientPhones,
-                                    clientCustomFields,
-                                    products,
-                                    promotionChannels,
-                                    paymentMethods,
-                                    clientGroups,
-                                    customFields,
-                                    positions,
-                                    addresses
-                                }))
+                        }))
 
-                            fs.writeFile("src/tmp/" + fileName + ".txt.gz", gzipJson, "utf8", function (err) {
-                                    if (err) {
-                                        console.log("Erro", err)
-                                    } 
-                                    else {
-                                        const stats = fs.statSync("src/tmp/" + fileName + ".txt.gz")
-                                        const fileSize = stats["size"]
+                        fs.writeFile("src/tmp/" + fileName + ".txt.gz", gzipJson, "utf8", (err) => {
+                            if (err) {
+                                console.log("Erro", err)
+                            }
+                            else {
+                                const stats = fs.statSync("src/tmp/" + fileName + ".txt.gz")
+                                const fileSize = stats["size"]
 
-                                        if (ctx.params.event == "import") {
-                                            socket.emit("import", {
-                                                fileName: fileName,
-                                                fileExt: "gz",
-                                                fileSize
-                                            })
-                                        }
-
-                                        fs.createReadStream("src/tmp/" + fileName + ".txt.gz").pipe(stream)
-                                    }
+                                if (ctx.params.event === "import") {
+                                    socket.emit("import", {
+                                        fileName: fileName,
+                                        fileExt: "gz",
+                                        fileSize
+                                    })
                                 }
-                            )
-                        }
-                    )
+
+                                fs.createReadStream("src/tmp/" + fileName + ".txt.gz").pipe(stream)
+                            }
+                        })
+                    })
                 })
             },
 

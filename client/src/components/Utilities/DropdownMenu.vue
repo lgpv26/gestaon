@@ -6,6 +6,7 @@
         <transition>
             <div class="dropdown-menu" v-if="isOpen" ref="popover"
                  :style="{'margin-top': (verticalOffset) ? verticalOffset + 'px' : '0px', 'margin-left': (horizontalOffset) ? horizontalOffset + 'px' : '0px'}">
+                <slot name="header"></slot>
                 <ul>
                     <li v-for="(menuItem, index) in menuList" :key="index" @click="onMenuItemClick(menuItem)">{{ menuItem.text }}</li>
                 </ul>
@@ -98,7 +99,7 @@ div.dropdown-menu {
     text-align: left;
     align-self: center;
     box-shadow: var(--popover-shadow);
-    min-width: 160px;
+    min-width: 200px;
 }
 
 .v-enter-active, .v-leave-active {

@@ -30,6 +30,7 @@ import VuePerfectScrollbar from "vue-perfect-scrollbar";
 import VueTextareaAutosize from 'vue-textarea-autosize'
 import VueHighlight from 'vue-highlight-text/public/directive.min'
 import VueGravatar from 'vue-gravatar'
+import VueSocketIO from 'vue-socket.io'
 
 import DexieRelationships from "dexie-relationships";
 
@@ -52,6 +53,7 @@ import OAuthAPI from "./api/oauth";
 
 import moment from "moment";
 import _ from "lodash";
+import SocketIO from "socket.io-client";
 
 // or import all icons if you don't care about bundle size
 import "vue-awesome/icons";
@@ -64,23 +66,28 @@ Vue.set(Vue.prototype, "config", config)
 Vue.set(Vue.prototype, "utils", utils)
 Vue.set(Vue.prototype, "modelDefinitions", {
     offlineDBModels: {
-        clients: "id, name, obs, document, clientGroupId",
-        clientPhones: "id, name, number, clientId, dateUpdated, dateCreated, dateRemoved",
-        clientAddresses: "id, addressId, clientId, complement, dateCreated, dateUpdated, dateRemoved, name, number, status",
-        addresses: "id, name, address, cep, city, dateCreated, dateUpdated, neighborhood, state, status",
-        users: "id, name, email, type, status",
-        products: "id, name, price, quantity",
-        paymentMethods: "id, name, rule, tax, taxUnit, autoPay, hasDeadline",
-        promotionChannels: "id, name",
-        clientGroups: "id, name",
-        customFields: "id, name",
+
+
+        addresses: "id, name, address, cep, city, neighborhood, state, status, dateCreated, dateUpdated",
+        users: "id, name, email, type, status, dateUpdated, dateCreated, dateRemoved",
+        products: "id, name, price, quantity, dateUpdated, dateCreated, dateRemoved",
+        paymentMethods: "id, name, rule, tax, taxUnit, autoPay, hasDeadline, dateUpdated, dateCreated, dateRemoved",
+        promotionChannels: "id, name, dateUpdated, dateCreated, dateRemoved",
+        clientGroups: "id, name, dateUpdated, dateCreated, dateRemoved",
+        customFields: "id, name, dateUpdated, dateCreated, dateRemoved",
 
         requestChats: "id, requestId, userId, type, data, status, dateUpdated, dateCreated, dateRemoved",
-        requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
-        requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
-        requestOrders: "id, obs, promotionChannelId, status, dateUpdated, dateCreated, dateRemoved",
-        requestClientAddresses: "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
+
+        clients: "id, companyId, name, obs, creditLimit, limitInUse, clientGroupId, legalDocument, dateUpdated, dateCreated, dateRemoved, status, origin",
+        clientPhones: "id, name, number, clientId, dateUpdated, dateCreated, dateRemoved",
+        clientAddresses: "id, addressId, clientId, complement, dateCreated, dateUpdated, dateRemoved, name, number, status",
+
         requests: "id, clientId, phoneLine, obs, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, status, userId",
+        requestClientAddresses: "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
+        requestClientPhones: "id, requestId, clientPhoneId, type, dateUpdated, dateCreated, dateRemoved, status",
+        requestOrders: "id, promotionChannelId, obs, status, dateUpdated, dateCreated, dateRemoved",
+        requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
+        requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
     },
     searchModels: {
         searchClients: "id, name, address, number, complement, neighborhood, city, state",
@@ -89,20 +96,28 @@ Vue.set(Vue.prototype, "modelDefinitions", {
     stateModels: {
         STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, status, responsibleUserId, clientAddress",
         STATE_requestUIState: "id, activeTab, isAddingClientAddress, requestClientAddressForm, requestId, showRequestChat, showClientOrderTimeline, requestString, requestOrderString, hasRequestOrderChanges, hasRequestChanges, isLoading",
+        STATE_windows: "id, show, zIndex",
+
+        STATE_addresses: "id, name, address, cep, city, dateCreated, dateUpdated, neighborhood, state, status",
+
+        STATE_clients: "id, companyId, name, obs, creditLimit, limitInUse, clientGroupId, legalDocument, dateUpdated, dateCreated, dateRemoved, status, origin",
+        STATE_clientPhones: "id, name, number, clientId, dateUpdated, dateCreated, dateRemoved",
+        STATE_clientAddresses: "id, addressId, clientId, complement, dateCreated, dateUpdated, dateRemoved, name, number, status",
+
+        STATE_requests: "id, clientId, phoneLine, obs, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, status, userId, requestUIState",
+        STATE_requestClientAddresses: "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
+        STATE_requestClientPhones: "id, requestId, clientPhoneId, type, dateUpdated, dateCreated, dateRemoved, status",
+        STATE_requestOrders: "id, promotionChannelId, obs, status, dateUpdated, dateCreated, dateRemoved",
+        STATE_requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
+        STATE_requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
 
         STATE_requestChats: "id, requestId, userId, type, data, status, dateUpdated, dateCreated, dateRemoved",
-        STATE_requestPayments: "id, requestId, paymentMethodId, amount, code, paid, deadlineDatetime, dateUpdated, dateCreated, dateRemoved",
-        STATE_requestOrderProducts: "id, unitPrice, unitDiscount, quantity, requestOrderId, productId, dateUpdated, dateCreated, dateRemoved",
-        STATE_requestOrders: "id, obs, promotionChannelId, status, dateUpdated, dateCreated, dateRemoved",
-        STATE_clients: "id, name, obs, document, clientGroupId",
-        STATE_clientPhones: "id, name, number, clientId, dateUpdated, dateCreated, dateRemoved",
-        STATE_addresses: "id, name, address, cep, city, dateCreated, dateUpdated, neighborhood, state, status",
-        STATE_clientAddresses: "id, addressId, clientId, complement, dateCreated, dateUpdated, dateRemoved, name, number, status",
-        STATE_requestClientAddresses: "id, clientAddressId, dateCreated, dateRemoved, dateUpdated, lat, lng, requestId, status, type",
-        STATE_requests: "id, phoneLine, obs, clientId, dateCreated, dateUpdated, dateRemoved, deliveryDate, deliveredDate, deliveredBy, finishedBy, requestOrderId, requestUIState, status, userId",
-        STATE_windows: "id, show, zIndex"
     }
 });
+
+Vue.set(Vue.prototype, "$socket", SocketIO(config.socketServer, {
+    autoConnect: false
+}))
 
 /* Resource Configs */
 
@@ -111,6 +126,20 @@ Vue.use(Resource);
 /* Workers */
 
 Vue.use(VueWorker);
+
+/* Socket.io */
+
+/*Vue.use(new VueSocketIO({
+    debug: true,
+    connection: SocketIO(config.socketServer, {
+        autoConnect: false
+    }), //options object is Optional
+    vuex: {
+        store,
+        actionPrefix: "SOCKET_",
+        mutationPrefix: "SOCKET_"
+    }
+}))*/
 
 /* Vue Plugins */
 
@@ -316,23 +345,10 @@ Vue.http.interceptors.push((request, next) => {
                 return Vue.http(request)
             }).catch(async err => {
                 console.log("Não foi possível renovar o token, redirecionando para a tela de entrada")
-
-                await Vue.prototype.$db.delete()
-                console.log("Everything cleaned");
-                localStorage.removeItem("vuex");
-                Vue.prototype.$db = new Dexie("db");
-                Vue.prototype.$db.version(1).stores({
-                    ...Vue.prototype.modelDefinitions.searchModels,
-                    ...Vue.prototype.modelDefinitions.offlineDBModels,
-                    ...Vue.prototype.modelDefinitions.stateModels
-                });
-                store.dispatch("chat-queue/resetState")
-                store.dispatch("request-queue/resetState")
-                store.dispatch("entities/deleteAll")
-                store.commit("setSystemInitialized",false)
-                store.dispatch("setLastDataSyncedDate",null)
-                store.dispatch("setLastRequestsLoadedDate",null)
-                location.reload()
+                const authenticated = await store.dispatch("auth/logout")
+                if (!authenticated) {
+                    location.reload()
+                }
             })
         }
     })

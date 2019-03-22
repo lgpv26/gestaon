@@ -185,7 +185,7 @@
             ...mapState("request-board", ["filters"]),
             requestBoardRequestStatusListItems(){
                 return _.filter(this.requestStatusListSelectItems,(requestStatusListSelectItem) => {
-                    return requestStatusListSelectItem.value !== "finished"
+                    return requestStatusListSelectItem.value !== "finished" && requestStatusListSelectItem.value !== "canceled"
                 })
             },
             selectClientGroups() {
@@ -223,101 +223,119 @@
             onDeliveryDateFilterClick(){
                 this.$refs.deliveryDate.fp.open()
             },
-            loadRequests(){
+            getRequestsForTest() {
                 const vm = this
-                vm.SET_SYSTEM_REQUESTS_LOADED(false)
                 return RequestBoardAPI.getRequests({
                     date: vm.moment(vm.filters.deliveryDate).toISOString()
                 }).then(response => {
+                    console.log(_.first(response.data))
+                })
+            },
+            async loadRequests(){
+                const vm = this
+                vm.SET_SYSTEM_REQUESTS_LOADED(false)
+                const useIndexedDBData = true
+                let response
+                if(useIndexedDBData){
+                    response = {
+                        data: await vm.getRequestsFromIndexedDB()
+                    }
+                    console.log("Getting requests from IndexedDB", response)
+                }
+                else {
+                    response = await RequestBoardAPI.getRequests({
+                        date: vm.moment(vm.filters.deliveryDate).toISOString()
+                    })
                     console.log("Getting requests from requestBoardAPI", response)
-                    return Promise.all([
-                        vm.$db.STATE_cards.toArray().then((cards) => {
-                            vm.$store.dispatch("entities/insertOrUpdate", {
-                                entity: 'cards',
-                                ignoreOfflineDBInsertion: true,
-                                data: cards
-                            })
-                            return cards
-                        }),
-                        vm.$db.STATE_requestUIState.toArray().then((requestUIState) => {
-                            vm.$store.dispatch("entities/insertOrUpdate", {
-                                entity: 'requestUIState',
-                                ignoreOfflineDBInsertion: true,
-                                data: requestUIState
-                            })
-                            return requestUIState
-                        }),
-                        vm.$db.STATE_windows.toArray().then((windows) => {
-                            vm.$store.dispatch("entities/insertOrUpdate", {
-                                entity: 'windows',
-                                ignoreOfflineDBInsertion: true,
-                                data: windows
-                            })
-                            return windows
-                        })
-                    ]).then(() => {
-                        response.data = _.filter(response.data,(request) => {
-                            return request.status !== 'finished'
-                        })
-                        const promises = _.map(response.data, (request) => {
-                            return Request.show(vm, request, {
-                                ignoreOfflineDBInsertion: true
-                            }).catch((err) => {
-                                console.log("Error loading requests", err)
-                            })
-                        })
+                }
 
-                        // Once everything got from server, start to fill Vuex ORM with STATE_ db data
-                        return Promise.all(promises).then((requests) => {
-                            const retrievingDraftPromises = []
-                            _.forOwn(vm.modelDefinitions.stateModels, (fields, stateModelName) => {
-                                const modelName = stateModelName.replace("STATE_", "")
-                                retrievingDraftPromises.push(vm.$db[stateModelName].toArray().then(data => {
-                                    if(data.length){
-                                        vm.$store.dispatch("entities/insertOrUpdate", {
-                                            entity: modelName,
-                                            data: data
-                                        })
-                                    }
-                                    return Promise.resolve()
-                                }))
+                return Promise.all([
+                    vm.$db.STATE_cards.toArray().then((cards) => {
+                        vm.$store.dispatch("entities/insertOrUpdate", {
+                            entity: 'cards',
+                            ignoreOfflineDBInsertion: true,
+                            data: cards
+                        })
+                        return cards
+                    }),
+                    vm.$db.STATE_requestUIState.toArray().then((requestUIState) => {
+                        vm.$store.dispatch("entities/insertOrUpdate", {
+                            entity: 'requestUIState',
+                            ignoreOfflineDBInsertion: true,
+                            data: requestUIState
+                        })
+                        return requestUIState
+                    }),
+                    vm.$db.STATE_windows.toArray().then((windows) => {
+                        vm.$store.dispatch("entities/insertOrUpdate", {
+                            entity: 'windows',
+                            ignoreOfflineDBInsertion: true,
+                            data: windows
+                        })
+                        return windows
+                    })
+                ]).then(() => {
+                    response.data = _.filter(response.data,(request) => {
+                        return request.status !== 'finished' && request.status !== 'canceled'
+                    })
+                    const promises = _.map(response.data, (request) => {
+                        return Request.show(vm, request, {
+                            ignoreOfflineDBInsertion: true
+                        }).catch((err) => {
+                            console.log("Error loading requests", err)
+                        })
+                    })
+
+                    // Once everything got from server, start to fill Vuex ORM with STATE_ db data
+                    return Promise.all(promises).then((requests) => {
+                        const retrievingDraftPromises = []
+                        _.forOwn(vm.modelDefinitions.stateModels, (fields, stateModelName) => {
+                            const modelName = stateModelName.replace("STATE_", "")
+                            retrievingDraftPromises.push(vm.$db[stateModelName].toArray().then(data => {
+                                if(data.length){
+                                    vm.$store.dispatch("entities/insertOrUpdate", {
+                                        entity: modelName,
+                                        data: data
+                                    })
+                                }
+                                return Promise.resolve()
+                            }))
+                        })
+                        return Promise.all(retrievingDraftPromises).then(() => {
+                            // verify changes
+                            requests.forEach((requestId) => {
+                                const processedRequest = Request.query()
+                                    .with("card")
+                                    .with("client.clientAddresses.address")
+                                    .with("client.clientPhones")
+                                    .with("requestClientAddresses.clientAddress.address")
+                                    .with("requestOrder.requestOrderProducts")
+                                    .with("requestPayments")
+                                    .with("requestClientAddresses")
+                                    .with("requestUIState")
+                                    .find(requestId)
+                                if(_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString)){
+                                    vm.$store.dispatch("entities/requestUIState/update",{
+                                        where: processedRequest.requestUIState.id,
+                                        data: {
+                                            hasRequestChanges: false
+                                        }
+                                    })
+                                }
+                                else {
+                                    vm.$store.dispatch("entities/requestUIState/update",{
+                                        where: processedRequest.requestUIState.id,
+                                        data: {
+                                            hasRequestChanges: true
+                                        }
+                                    })
+                                }
                             })
-                            return Promise.all(retrievingDraftPromises).then(() => {
-                                // verify changes
-                                requests.forEach((requestId) => {
-                                    const processedRequest = Request.query()
-                                        .with("card")
-                                        .with("client.clientAddresses.address")
-                                        .with("client.clientPhones")
-                                        .with("requestClientAddresses.clientAddress.address")
-                                        .with("requestOrder.requestOrderProducts")
-                                        .with("requestPayments")
-                                        .with("requestClientAddresses")
-                                        .with("requestUIState")
-                                        .find(requestId)
-                                    if(_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString)){
-                                        vm.$store.dispatch("entities/requestUIState/update",{
-                                            where: processedRequest.requestUIState.id,
-                                            data: {
-                                                hasRequestChanges: false
-                                            }
-                                        })
-                                    }
-                                    else {
-                                        vm.$store.dispatch("entities/requestUIState/update",{
-                                            where: processedRequest.requestUIState.id,
-                                            data: {
-                                                hasRequestChanges: true
-                                            }
-                                        })
-                                    }
-                                })
-                                console.log("system:ready event emitted")
-                                vm.$socket.emit("system:ready")
-                                vm.SET_SYSTEM_REQUESTS_LOADED(true)
-                                vm.setLastRequestsLoadedDate(vm.moment().valueOf())
-                                vm.setIsLoading(false)
-                            })
+                            console.log("system:ready event emitted")
+                            vm.$socket.emit("system:ready")
+                            vm.SET_SYSTEM_REQUESTS_LOADED(true)
+                            vm.setLastRequestsLoadedDate(vm.moment().valueOf())
+                            vm.setIsLoading(false)
                         })
                     })
                 })
@@ -326,12 +344,108 @@
                 const vm = this
                 vm.SET_DELIVERY_DATE(value)
                 vm.loadRequests()
+            },
+            async getRequestsFromIndexedDB(){
+                const vm = this
+                /* get requests */
+                const requests = await vm.$db.requests.where('deliveryDate').between(
+                    this.moment(this.filters.deliveryDate).startOf('day').toISOString(),
+                    this.moment(this.filters.deliveryDate).endOf('day').toISOString()
+                ).toArray()
+
+                return Promise.all(_.map(requests, async (request) => {
+
+                    return new Promise(async resolve => {
+                        // client
+                        if(_.get(request,'clientId',false)){
+                            _.assign(request, {
+                                client: await vm.$db.clients.where('id').equals(request.clientId).first()
+                            })
+
+                            // clientAddresses
+                            const clientAddresses = await vm.$db.clientAddresses.where('clientId').equals(request.clientId).toArray()
+                            _.assign(request.client, {
+                                clientAddresses: await Promise.all(_.map(clientAddresses, async (clientAddress) => {
+                                    // address
+                                    if(_.get(clientAddress,'addressId',false)){
+                                        _.assign(clientAddress, {
+                                            address: await vm.$db.addresses.where('id').equals(clientAddress.addressId).first()
+                                        })
+                                    }
+                                    return clientAddress
+                                }))
+                            })
+
+                            // clientPhones
+                            _.assign(request.client, {
+                                clientPhones: await vm.$db.clientPhones.where('clientId').equals(request.clientId).toArray()
+                            })
+
+                        }
+                        // requestOrder
+                        if(_.get(request,'requestOrderId',false)){
+                            _.assign(request, {
+                                requestOrder: await vm.$db.requestOrders.where('id').equals(request.requestOrderId).first()
+                            })
+                            // promotionChannel
+                            if(_.get(request,'requestOrder.promotionChannelId',false)) {
+                                _.assign(request.requestOrder, {
+                                    promotionChannel: await vm.$db.promotionChannels.where('id').equals(request.requestOrder.promotionChannelId).first()
+                                })
+                            }
+                            // requestOrderProducts
+                            _.assign(request.requestOrder, {
+                                requestOrderProducts: await vm.$db.requestOrderProducts.where('requestOrderId').equals(request.requestOrderId).toArray()
+                            })
+                        }
+                        // requestClientAddresses
+                        const requestClientAddresses = await vm.$db.requestClientAddresses.where('requestId').equals(request.id).toArray()
+                        _.assign(request, {
+                            requestClientAddresses: await Promise.all(_.map(requestClientAddresses, async (requestClientAddress) => {
+                                // clientAddress
+                                if(_.get(requestClientAddress,'clientAddressId',false)) {
+                                    const clientAddress = await vm.$db.clientAddresses.where('id').equals(requestClientAddress.clientAddressId).first()
+                                    // address
+                                    if(_.get(clientAddress,'addressId',false)){
+                                        _.assign(clientAddress, {
+                                            address: await vm.$db.addresses.where('id').equals(clientAddress.addressId).first()
+                                        })
+                                    }
+                                    _.assign(requestClientAddress, {
+                                        clientAddress
+                                    })
+                                }
+                                return requestClientAddress
+                            }))
+                        })
+
+                        // requestPayments
+                        const requestPayments = await vm.$db.requestPayments.where('requestId').equals(request.id).toArray()
+                        _.assign(request, {
+                            requestPayments: await Promise.all(_.map(requestPayments, async (requestPayment) => {
+                                // requestPaymentMethod
+                                if(_.get(requestPayment,'paymentMethodId',false)) {
+                                    _.assign(requestPayment, {
+                                        paymentMethod: await vm.$db.paymentMethods.where('id').equals(requestPayment.paymentMethodId).first()
+                                    })
+                                }
+                                return requestPayment
+                            }))
+                        })
+
+                        resolve(request)
+                    })
+
+                }))
+
             }
         },
         mounted() {
             if(!this.moment(this.filters.deliveryDate).isSame(this.moment(), 'day')){
                 this.SET_DELIVERY_DATE(this.moment().toISOString())
             }
+
+
         }
     };
 </script>

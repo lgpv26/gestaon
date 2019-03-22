@@ -11,9 +11,14 @@
                         <div class="header__dropdown-menu">
                             <app-dropdown-menu :menuList="menuList" placement="bottom-start" :verticalOffset="-10">
                                 <div class="dropdown-menu__company-name">
-                                    <app-gravatar style="width: 32px; height: 32px; border-radius: 32px;" :email="user.email"></app-gravatar>
-
+                                    <app-gravatar style="width: 32px; height: 32px; border-radius: 32px;" :email="user.email"
+                                          :title="user.name"
+                                          v-tippy="{ placement: 'bottom-start', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
+                                    </app-gravatar>
                                 </div>
+                                <template slot="header">
+                                    <h3 style="font-size: 14px; padding: 10px 12px;">{{ user.name }}</h3>
+                                </template>
                             </app-dropdown-menu>
                         </div>
                     </header>
@@ -23,14 +28,15 @@
                 </div>
                 <div class="main-column" :style="{ width: dimensions.window.width - 60 + 'px' }">
                     <header class="main-column__header">
-                        <div class="header__container" v-show="$route.name === 'dashboard'">
+                        <div class="header__container" v-if="$route.name === 'dashboard'">
                             <app-request-board-filter ref="requestBoardFilter"></app-request-board-filter>
                         </div>
-                        <div class="header__container" v-show="$route.name !== 'dashboard'">
+                        <div class="header__container" v-else>
                             <div class="container__title">
                                 <h3>Olá, {{ truncatedName }}!</h3>
                             </div>
                         </div>
+                        <a href="javascript:void(0)" v-if="false" class="btn btn--primary" style="margin-left: 12px;" @click="customMethod()">Test button</a>
                         <span class="push-both-sides"></span>
                         <ul class="header__menu">
                             <li><i class="mi mi-notifications-none"></i></li>
@@ -77,8 +83,10 @@
     import shortid from "shortid"
     import moment from "moment"
     import Vue from 'vue'
+    import ss from "socket.io-stream"
 
     import SessionHandler from "./SessionHandler"
+    import DataImporter from "../../helpers/DataImporter"
 
     export default {
         name: "app-main",
@@ -93,13 +101,15 @@
             "app-request-board-filter": RequestBoardFilterComponent,
             "app-connected-users": ConnectedUsersComponent
         },
-        mixins: [SessionHandler],
+        mixins: [SessionHandler, DataImporter],
         data() {
             return {
                 requestQueueInitialized: false,
                 isFirstInitialization: true,
                 requestInterval: null,
                 showSettings: false,
+                stream: null,
+                requestQueueSyncAcumulator: [],
                 menuList: [
                     /*{text: 'Add. empresa', type: 'system', action: this.addCompany, onlyAdmin: true},*/
                     /*{text: 'Configurações', type: 'system', action: this.toggleSettings, onlyAdmin: false},*/
@@ -235,15 +245,19 @@
                     src: [alarmSound]
                 }).play();
             },
+            pushToRequestQueueSyncAcumulator(ev){
+                console.log("Happneed")
+                this.requestQueueSyncAcumulator.push(ev)
+            },
             async onRequestQueueSync(ev){
                 const vm = this
                 console.log("request-queue:sync", ev)
                 if(ev.success){
                     const firstRequest = _.first(ev.evData.processedQueue).data
-                    if(moment(firstRequest.dateUpdated).isBefore(moment(this.lastRequestsLoadedDate))){
+                    /*if(moment(firstRequest.dateUpdated).isBefore(moment(this.lastRequestsLoadedDate))){
                         console.log("Already updated with recent content")
                         return
-                    }
+                    }*/
                     ev.evData.processedQueue.forEach(function(processedItem){
                         // did the processedItem pass the validation?
                         if(!processedItem.success){
@@ -349,23 +363,33 @@
                 }
             },
             onRequestChatItemSend(ev){
-                console.log("Request chaat", ev)
+                //console.log("Request chaat", ev)
             },
             async onSystemInitialized() {
                 const vm = this
                 console.log("System initialized")
+
                 if(vm.isFirstInitialization){
                     console.log("Escutando eventos request-queue:sync e request-chat:itemSend")
                     vm.isFirstInitialization = false
+
                     Vue.nextTick(async () => {
                         await vm.$refs.requestBoardFilter.loadRequests()
+
                         if(!vm.requestQueueInitialized){
                             vm.requestQueueInitialized = true
                             vm.initializeRequestQueue(vm.$socket)
                             vm.initializeChatQueue(vm.$socket)
                         }
-                        this.$socket.on("request-queue:sync", this.onRequestQueueSync)
-                        this.$socket.on("request-chat:send", (ev) => {
+
+                        vm.requestQueueSyncAcumulator.forEach((requestQueueSyncEv,index) => {
+                            console.log("Sincronizando",index,requestQueueSyncEv)
+                            vm.onRequestQueueSync(requestQueueSyncEv)
+                        })
+                        vm.$socket.removeListener("request-queue:sync", vm.pushToRequestQueueSyncAcumulator)
+                        vm.$socket.on("request-queue:sync", vm.onRequestQueueSync)
+
+                        /*this.$socket.on("request-chat:send", (ev) => {
                             console.log("request-chat:send", ev)
                             if(ev.evData.op === "send" && ev.evData.success){
                                 if(this.user.id !== ev.evData.data.userId){
@@ -399,15 +423,19 @@
                                 }
                             }
 
-                        })
+                        })*/
                     })
 
                 }
+            },
+            customMethod(){
+                this.importFromLastDataSyncedDate()
             }
         },
-        created() {
+        mounted() {
             this.isFirstInitialization = true
             this.$bus.$on("sound-play", this.registerSoundEventListeners)
+            this.stream = ss.createStream()
         },
         beforeDestroy() {
             this.$bus.$off("sound-play", this.registerSoundEventListeners);

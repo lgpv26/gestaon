@@ -85,6 +85,11 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div style="margin-top: 15px; display: flex; flex-direction: row; justify-content: flex-end;">
+                            <a href="javascript:void(0)" @click="copyOrder(historyRequest.id)" class="btn btn--primary" style="width: 150px; display: flex; justify-content: center;">
+                                Copiar venda
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="entry" v-if="total > offset">
@@ -140,7 +145,112 @@
                     })
                     return true
                 }
-            }
+            },
+            async copyOrder(requestId){
+                const vm = this
+                /**
+                 * retrieve target request data from indexeddb
+                 */
+                const request = await vm.$db.requests.where('id').equals(requestId).first()
+                if(_.get(request,'requestOrderId',false)){
+                    _.assign(request, {
+                        requestOrder: await vm.$db.requestOrders.where('id').equals(request.requestOrderId).first()
+                    })
+                    _.assign(request.requestOrder, {
+                        requestOrderProducts: await vm.$db.requestOrderProducts.where('requestOrderId').equals(request.requestOrderId).toArray()
+                    })
+                }
+                _.assign(request, {
+                    requestPayments: await vm.$db.requestPayments.where('requestId').equals(request.id).toArray()
+                })
+                /**
+                 * put request order data to draft
+                 */
+                if(_.get(this.request,'requestOrderId',false)){ // if it is a requestOrder created
+                    // updating existent requestOrder
+                    this.request.requestPayments.forEach((requestPayment) => {
+                        this.$store.dispatch("entities/requestPayments/delete", requestPayment.id)
+                    })
+                    this.request.requestOrder.requestOrderProducts.forEach((requestOrderProduct) => {
+                        this.$store.dispatch("entities/requestOrderProducts/delete", requestOrderProduct.id)
+                    })
+                    this.$store.dispatch("entities/requestPayments/insert", {
+                        data: _.map(request.requestPayments, (requestPayment) => {
+                            return {
+                                id: `tmp/${shortid.generate()}`,
+                                requestId: this.request.id,
+                                paymentMethodId: requestPayment.paymentMethodId,
+                                amount: requestPayment.amount
+                            }
+                        })
+                    })
+                    this.$store.dispatch("entities/requestOrderProducts/insert", {
+                        data: _.map(request.requestOrder.requestOrderProducts, (requestPayment) => {
+                            return {
+                                id: `tmp/${shortid.generate()}`,
+                                requestOrderId: this.request.requestOrderId,
+                                productId: requestPayment.productId,
+                                quantity: requestPayment.quantity,
+                                unitPrice: requestPayment.unitPrice,
+                                unitDiscount: requestPayment.unitDiscount
+                            }
+                        })
+                    })
+                    this.$store.dispatch("entities/requestOrders/update", {
+                        where: this.request.requestOrderId,
+                        data: {
+                            promotionChannelId: request.requestOrder.promotionChannelId
+                        }
+                    })
+                    this.$store.dispatch("entities/requests/update", {
+                        where: this.request.id,
+                        data: {
+                            obs: request.obs
+                        }
+                    })
+                }
+                else { // if there is not a requestOrder created
+                    console.log("Creating requestOrder")
+                    const requestOrderTmpId = `tmp/${shortid.generate()}`
+
+                    this.$store.dispatch("entities/requestOrders/insert", {
+                        data: {
+                            id: requestOrderTmpId,
+                            promotionChannelId: request.requestOrder.promotionChannelId
+                        }
+                    })
+                    this.$store.dispatch("entities/requests/update", {
+                        where: this.request.id,
+                        data: {
+                            requestOrderId: requestOrderTmpId,
+                            obs: request.obs
+                        }
+                    })
+
+                    this.$store.dispatch("entities/requestPayments/insert", {
+                        data: _.map(request.requestPayments, (requestPayment) => {
+                            return {
+                                id: `tmp/${shortid.generate()}`,
+                                requestId: this.request.id,
+                                paymentMethodId: requestPayment.paymentMethodId,
+                                amount: requestPayment.amount
+                            }
+                        })
+                    })
+                    this.$store.dispatch("entities/requestOrderProducts/insert", {
+                        data: _.map(request.requestOrder.requestOrderProducts, (requestPayment) => {
+                            return {
+                                id: `tmp/${shortid.generate()}`,
+                                requestOrderId: requestOrderTmpId,
+                                productId: requestPayment.productId,
+                                quantity: requestPayment.quantity,
+                                unitPrice: requestPayment.unitPrice,
+                                unitDiscount: requestPayment.unitDiscount
+                            }
+                        })
+                    })
+                }
+            },
         },
         mounted(){
             this.historyRequests = []
