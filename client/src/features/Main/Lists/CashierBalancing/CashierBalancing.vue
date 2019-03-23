@@ -358,7 +358,7 @@
                             payload: {
                                 requestId: row.requestId,
                                 amount: row.amount,
-                                received: row.received
+                                received: row.paid
                             }
                         }
                     })
