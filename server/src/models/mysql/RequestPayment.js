@@ -38,7 +38,7 @@ module.exports = {
                 },               
                 lastReceivedFromUserId: {
                     type: Sequelize.INTEGER
-                },
+                },*/
                 received: {
                     type: Sequelize.BOOLEAN,
                     default: false
@@ -46,7 +46,6 @@ module.exports = {
                 receivedDate: {
                     type: TIMESTAMP
                 },
-                */
                 deadlineDatetime: {
                     type: TIMESTAMP
                 },                

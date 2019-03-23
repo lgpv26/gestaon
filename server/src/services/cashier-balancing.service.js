@@ -4,6 +4,7 @@ import Sequelize, {Op} from 'sequelize'
 import EventResponse from '~server/models/EventResponse'
 import config from '~config'
 import { base64encode, base64decode } from 'nodejs-base64'
+import { ServerResponse } from 'http';
 
 module.exports = (server) => {
     //PRIVATES
@@ -352,83 +353,246 @@ module.exports = (server) => {
             },
 
             markAsReceived(ctx) {
-                return server.sequelize.transaction((t) => {
-                    return server.mysql.RequestPayment.findAll({
-                        where: {
-                            id: {
-                                [Op.in]: ctx.params.data.requestPaymentIds
-                            },
-                            received: {
-                                [Op.or]: [false, null]
-                            }
-                        },
-                        include: [
-                            {
-                                model: server.mysql.RequestPaymentTransaction,
-                                as: 'requestPaymentTransactions',
-                                include: [{
-                                    model: server.mysql.Transaction,
-                                    as: 'transaction'
-                                }]
-                            },
-                            {
-                                model: server.mysql.Request,
-                                as: 'request',
-                                where: {
-                                    companyId: {
-                                        [Op.in]: [ctx.params.data.companyId]
-                                    }
-                                },
-                                include: [{
-                                    model: server.mysql.User,
-                                    as: "responsibleUser",
-                                    attributes: ['id', 'activeCompanyUserId', 'accountId', 'name', 'email']
-                                }]
-                            }
-                        ],
-                        transaction: this._transaction
-                    }).then((requestPayments) => {
-                        const promises = _.map(requestPayments, (requestPayment) => {
-                            return ctx.call('data/transaction.create', {
-                                data: {
-                                    amount: Math.abs(requestPayment.amount),
-                                    createdById: ctx.params.data.createdById,
-                                    accountId: (ctx.params.data.accountId) ? ctx.params.data.accountId : requestPayment.request.responsibleUser.accountId,
-                                    companyId: requestPayment.request.companyId,
-                                    description: 'Recebido o pagamento ' + requestPayment.id + ' do pedido #' + requestPayment.request.id + ' por acerto de contas.',
-                                },
-                                transaction: this._transaction
-                            }).then((transaction) => {
-                                return server.mysql.RequestPaymentTransaction.create({
-                                    requestPaymentId: ctx.params.paymentMethodId,
-                                    requestPaymentId: requestPayment.id,
-                                    transactionId: transaction.id,
-                                    action: 'received',
-                                    operation: null,
-                                    revert: false
+                const vm = this
+
+                return server.sequelize.transaction((transaction) => {
+                    return new Promise((resolve, reject) => {
+                        async function start() {
+                            try {
+                                const data = await vm.setData(ctx.params.data)
+                               
+                                const requestPayments = vm.removeReactivity(await server.mysql.RequestPayment.findAll({
+                                    where: {
+                                        id: {
+                                            [Op.in]: ctx.params.data.requestPaymentIds
+                                        },
+                                        paid: {
+                                            [Op.in]: [false, null]
+                                        }
+                                    },
+                                    include: [
+                                        {
+                                            model: server.mysql.RequestPaymentTransaction,
+                                            as: 'requestPaymentTransactions',
+                                            include: [{
+                                                model: server.mysql.Transaction,
+                                                as: 'transaction'
+                                            }]
+                                        },
+                                        {
+                                            model: server.mysql.Request,
+                                            as: 'request',
+                                            where: {
+                                                companyId: {
+                                                    [Op.in]: [ctx.params.data.companyId]
+                                                }
+                                            },
+                                            include: [{
+                                                model: server.mysql.User,
+                                                as: "responsibleUser"
+                                            }]
+                                        }
+                                    ],
+                                    transaction
+                                }))
+
+                                const account = vm.removeReactivity(await server.mysql.Account.findOne({
+                                    include:[{
+                                        model: server.mysql.User,
+                                        as: "user",
+                                        attributes: ['id'],
+                                        where: {
+                                            id: data.createdById
+                                        },
+                                        required: true
+                                    }]
+                                }))
+
+                                let balance = account.balance
+
+                                if(!account) return reject("Não foi possível definir a conta para crédito do recebimento!")
+                               
+                                let promises = []
+
+                                requestPayments.forEach((requestPayment) => {
+                                    promises.push(new Promise(async (resolve, reject) => {
+
+                                        const transactionFinance = await ctx.call('data/transaction.create', {
+                                            data: {
+                                                amount: Math.abs(requestPayment.amount),
+                                                createdById: data.createdById,
+                                                accountId: account.id,
+                                                companyId: data.companyId,
+                                                description: 'Adição do valor do pagamento do pedido #' + requestPayment.request.id + ' na conta de destino',
+                                            },
+                                            transaction
+                                        })
+
+                                        balance = parseFloat(balance) + parseFloat(requestPayment.amount)
+
+                                        await server.mysql.RequestPaymentTransaction.create({                   
+                                            requestPaymentId: requestPayment.id,
+                                            transactionId: transactionFinance.id,
+                                            action: 'payment',
+                                            operation: null,
+                                            revert: false
+                                            }, {
+                                            transaction
+                                        })
+
+                                        await server.mysql.RequestPayment.update(data,{
+                                            where: {
+                                                id: requestPayment.id
+                                            },
+                                            transaction
+                                        })
+                                        return resolve()
+                                    }))
+                                })
+
+                            await Promise.all(promises)
+                                await server.mysql.Account.update({
+                                    balance
                                 }, {
-                                        transaction: this._transaction
-                                    }).then(() => {
-                                        return requestPayment.update({
-                                            lastTriggeredUserId: ctx.params.data.createdById,
-                                            lastReceivedFromUserId: requestPayment.request.userId,
-                                            receivedDate: (ctx.params.data.receivedDate) ? ctx.params.data.receivedDate : moment(),
-                                            received: (ctx.params.data.received) ? ctx.params.data.received : false
-                                        }, {
-                                                returning: true,
-                                                plain: true,
-                                                transaction: this._transaction
-                                            })
-                                    })
-                            })
-                        })
-                        return Promise.all(promises)
+                                    where: {
+                                        id: account.id,
+                                        companyId: data.companyId
+                                    },
+                                    transaction
+                                })
+
+                                return resolve()
+                            }
+                            catch(err) {
+                                console.log(err)
+                                return reject(err)
+                            }
+                        }
+                        start()
+
                     })
-                })
+                    
+                })    
             },
 
+            changeReceived(ctx){
+                let counts = 1
+                let i = 0
+                const vm = this
 
+                    return server.sequelize.transaction((transaction) => {
+                        return new Promise(async (resolve, reject) => {
 
+                            const count = await server.mysql.RequestPayment.count({
+                                where: {
+                                    received: {
+                                        [Op.or]: [true, 1]
+                                    },
+                                    receivedDate: {
+                                        [Op.not]: null
+                                    }
+                                }
+                            })
+                                                   
+                            let limitPerConsult = 200
+                            let initialOffset = 0
+                            let limitReached = false
+            
+                            const totalItemsLimit = count
+                      
+                            const bunch = async function (offset) {
+                                
+                                if ((offset + limitPerConsult) > totalItemsLimit) {  
+                                    limitPerConsult = ((totalItemsLimit - offset) !== 0) ? totalItemsLimit - offset : limitPerConsult 
+                                    limitReached = true
+                                }
+
+                                const requestPayments = vm.removeReactivity(await server.mysql.RequestPayment.findAll({
+                                    where: {
+                                        received: {
+                                            [Op.or]: [true, 1]
+                                        },
+                                        receivedDate: {
+                                            [Op.not]: null
+                                        }
+                                    },
+                                    limit: limitPerConsult,
+                                    offset: offset
+                                }))
+
+                                console.log("Consultou com offset " + offset + "-" + (offset + limitPerConsult) + "/" + totalItemsLimit + ' - Total de interações: ' + counts)
+                
+                                let promises = []
+
+                                requestPayments.forEach((requestPayment, index) => {
+                                    promises.push(new Promise(async (resolve, reject) => {
+                                            _.set(requestPayments[index], "paid", true)
+                                            _.set(requestPayments[index], "paidDatetime", requestPayments[index].receivedDate)
+    
+                                            i++
+                                            return resolve()
+                                        }))          
+                                })
+
+                                // requestPayments.forEach((requestPayment, index) => {
+                                //     promises.push(new Promise(async (resolve, reject) => {
+
+                                //         _.set(requestPayment, "paid", true)
+                                //         _.set(requestPayment, "paidDatetime", requestPayment.receivedDate)
+
+                                //         await server.mysql.RequestPayment.update(requestPayment, {
+                                //             where: {
+                                //                 id: requestPayment.id
+                                //             },
+                                //             transaction
+                                //         })
+                                //         i++
+                                //         return resolve()
+                                //     }))
+                                // })
+
+                                await Promise.all(promises)
+                                    offset += limitPerConsult
+                                    counts++
+
+                                await server.mysql.RequestPayment.bulkCreate(requestPayments, {
+                                    updateOnDuplicate:['paid', 'paidDatetime'],
+                                    returning: true,
+                                    transaction
+                                })
+
+                                if (!limitReached) {
+                                    if((totalItemsLimit - (offset + limitPerConsult)) === 0) limitReached = true 
+                                    bunch(offset)
+                                }
+                                else {
+                                    console.log("Alteração concluida! Total: ", i)
+                                    return resolve()
+                                }                                
+                            }
+            
+                            bunch(initialOffset)
+                        
+                        })  
+                    })  
+            },
+
+        },
+        methods: {
+            removeReactivity(data){
+                return JSON.parse(JSON.stringify(data))
+            },
+            setData(data) {
+                return new Promise((resolve, reject) => {
+                    _.set(data, "paid", data.received)
+                    _.set(data, "paidDatetime", (data.receivedDate) ? data.receivedDate : moment().toDate())
+
+                    delete data.received
+                    delete data.receivedDate
+
+                    return resolve(data)
+                })
+            } 
         }
     }
 }

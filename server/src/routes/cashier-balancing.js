@@ -40,6 +40,16 @@ module.exports = (server, restify) => {
         })
     })
 
+    server.post('/cashier-balancing/change-received-as-paid', (req, res, next) => {
+        return server.broker.call('cashier-balancing.changeReceived', {
+                companyId: parseInt(req.query.companyId)
+        }).then((data) => {
+            return res.send(200, { data })
+        }).catch((err) => {
+            return next(err)
+        })
+    })
+
     server.post('/cashier-balancing/mark-as-settled', (req, res, next) => {
         return server.broker.call('cashier-balancing.markAsSettled', {
             data: _.assign({
