@@ -134,7 +134,7 @@
             })
             vm.load()
             /*vm.updateScrollPosition()*/
-            vm.$options.sockets['request-chat:load'] = (ev) => {
+            /*vm.$options.sockets['request-chat:load'] = (ev) => {
                 console.log("Received request-chat:load", ev)
                 if (ev.success) {
                     vm.items = _.map(_.reverse(ev.evData), (item) => {
@@ -149,7 +149,7 @@
                     vm.items.push(ev.evData)
                     vm.updateScrollPosition()
                 }
-            }
+            }*/
         },
         beforeDestroy(){
             const emitData = {

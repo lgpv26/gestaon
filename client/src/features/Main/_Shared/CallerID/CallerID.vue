@@ -1,14 +1,14 @@
 <template>
     <div id="caller-id" :class="{ open: !isCallerIdDisabled && calls.length }" @mouseover="mouseOver($event)">
         <div class="container">
-            <div ref="scrollbar">
+            <app-perfect-scrollbar>
                 <div class="calls">
                     <div class="call__phone-number" v-for="(call, index) in calls" :key="call.id">
                         <app-call v-if="call.clients.length" v-for="client in call.clients" :key="client.id" :client="client" :call="call"></app-call>
                         <app-call v-if="!call.clients.length" :call="call"></app-call>
                     </div>
                 </div>
-            </div>
+            </app-perfect-scrollbar>
         </div>
     </div>
 </template>
@@ -83,23 +83,8 @@
                     })
                 }*/
                 this.calls.unshift(call)
-            }
-        },
-        created(){
-            const vm = this
-            vm.calls = []
-            CallsAPI.getList({ companyId: vm.company.id }).then(({data}) => {
-                /*_.forEach(data,(call) => {
-                    vm.addCall(call)
-                })*/
-                console.log(data)
-                vm.calls = data
-            })
-            /**
-             * On new call
-             * @param ev = { success:Boolean, evData:Draft }
-             */
-            vm.$options.sockets['caller-id.new'] = (ev) => {
+            },
+            onCallerIDNew(ev){
                 console.log("Received caller-id.new", ev)
                 if(ev.success){
                     vm.open = true
@@ -111,13 +96,22 @@
             }
         },
         mounted(){
-            this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
-                overscrollEffect: 'bounce',
-                alwaysShowTracks: true
+            const vm = this
+            vm.calls = []
+            CallsAPI.getList({ companyId: vm.company.id }).then(({data}) => {
+                /*_.forEach(data,(call) => {
+                    vm.addCall(call)
+                })*/
+                vm.calls = data
             })
+            /**
+             * On new call
+             * @param ev = { success:Boolean, evData:Draft }
+             */
+            vm.$socket.on('caller-id.new', vm.onCallerIDNew)
         },
         beforeDestroy(){
-            this.scrollbar.destroy()
+            this.$socket.removeListener('caller-id.new', this.onCallerIDNew)
         }
     }
 </script>
@@ -170,7 +164,7 @@
                 display: flex;
                 flex-direction: column;
                 width: 100%;
-                padding: 10px 22px 10px 10px;
+                padding: 10px;
                 .call {
                     flex-shrink: 0;
                     background: var(--bg-color--1);

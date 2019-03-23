@@ -41,7 +41,7 @@ module.exports = class DependencyInjection {
     setSocketIO(){
         this.server.io = require('socket.io')(this.server.server, {
             pingInterval: 3000,
-            pingTimeout: 8000
+            pingTimeout: 30000
         })
         this.server.io.sockets.setMaxListeners(0)
         const redisAdapter = require('socket.io-redis')

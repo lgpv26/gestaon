@@ -561,7 +561,7 @@ module.exports = (server) => { return {
                                     [Op.lte]: moment(ctx.params.date).endOf("day").toDate()
                                 },
                                 status: {
-                                    [Op.notIn]: ['finished']
+                                    [Op.notIn]: ['finished','canceled']
                                 },
                                 companyId: parseInt(ctx.params.companyId)
                             },

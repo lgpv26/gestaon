@@ -151,7 +151,7 @@
                                     _.includes(this.filters.status, request.status));
                             return (
                                 responsibleUsers && promotionChannels && clientGroups && status &&
-                                    request.card.status !== 'finished'
+                                    request.card.status !== 'finished' && request.card.status !== 'canceled'
                             );
                         });
                     case "scheduled":
@@ -162,9 +162,32 @@
         methods: {
             ...mapMutations("morph-screen", []),
             ...mapActions("request-board", ["expandSection", "collapseSection"]),
+            _evPathPolyfill(ev){
+                const path = (ev.composedPath && ev.composedPath()) || ev.path,
+                    target = ev.target;
+                if (path != null) {
+                    // Safari doesn't include Window, but it should.
+                    return (path.indexOf(window) < 0) ? path.concat(window) : path;
+                }
+                if (target === window) {
+                    return [window];
+                }
+                function getParents(node, memo) {
+                    memo = memo || [];
+                    const parentNode = node.parentNode;
+
+                    if (!parentNode) {
+                        return memo;
+                    }
+                    else {
+                        return getParents(parentNode, memo.concat(parentNode));
+                    }
+                }
+                return [target].concat(getParents(target), window)
+            },
             cardClick(request, ev) {
                 let shouldOpenWindow = true;
-                ev.path.forEach(pathItem => {
+                this._evPathPolyfill(ev).forEach(pathItem => {
                     if (pathItem.classList && pathItem.classList.contains("ignore")) {
                         shouldOpenWindow = false;
                     }
