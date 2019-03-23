@@ -192,7 +192,7 @@
                     </div>
                 </div>
                 <div class="request__section" :class="{ active: request.requestUIState.activeTab === 'order' }">
-                    <app-request-order v-if="request.requestUIState.activeTab === 'order'" :request="request"></app-request-order>
+                    <app-request-order ref="requestOrder" v-if="request.requestUIState.activeTab === 'order' && hasValidRequestOrder" :request="request"></app-request-order>
                     <div class="section__summary" @click="activateTab('order')">
                         <div class="summary-radio" style="margin-right: 5px;">
                             <app-switch :readonly="true" :value="request.requestUIState.activeTab === 'order'"></app-switch>
@@ -339,6 +339,9 @@
                     this.request.client.name.trim()
                 );
             },
+            hasValidRequestOrder(){
+                return _.get(this.request,'requestOrder.requestOrderProducts',false) && _.get(this.request,'requestPayments',false)
+            },
             isNewClient() {
                 return this.utils.isTmp(this.request.clientId);
             },
@@ -426,108 +429,170 @@
                     }
                 })
             },
-            activateTab(tab, toggle = true) {
+            async activateTab(tab, toggle = true) {
+                const vm = this
                 // if already active tab clicked
-                if(toggle && (this.request.requestUIState.activeTab === tab)){
-                    this.updateValue("entities/requestUIState/update", "activeTab", this.request.requestUIState.id, null)
+                if(toggle && (vm.request.requestUIState.activeTab === tab)){
+                    vm.updateValue("entities/requestUIState/update", "activeTab", vm.request.requestUIState.id, null)
                     return
                 }
                 // if going to order tab
                 if (tab === "order") {
                     // create requestOrder if not existent
-                    if(!this.request.requestOrderId){
-                        console.log("Creating requestOrder")
-                        const requestPaymentTmpId = `tmp/${shortid.generate()}`
-                        const requestOrderTmpId = `tmp/${shortid.generate()}`
-                        const requestOrderProductTmpId = `tmp/${shortid.generate()}`
-                        this.$store.dispatch("entities/requestPayments/insert", {
-                            data: {
-                                id: requestPaymentTmpId,
-                                requestId: this.request.id,
-                                paymentMethodId: 1,
-                                amount: _.get(
-                                    this.$store.getters["entities/products/find"](1),
-                                    "price",
-                                    false
-                                )
-                                    ? this.$store.getters["entities/products/find"](1).price
-                                    : 0
-                            }
+                    if(!_.get(vm.request,'requestOrderId',false)){
+
+                        const clientRequests = await vm.$db.requests.where('clientId').equals(vm.request.clientId).toArray()
+                        _.sortBy(clientRequests, (clientRequest) => {
+                            return clientRequest.deliveryDate
                         })
-                        this.$store.dispatch("entities/requestOrderProducts/insert", {
-                            data: {
-                                id: requestOrderProductTmpId,
-                                requestOrderId: requestOrderTmpId,
-                                productId: 1,
-                                unitPrice: _.get(
-                                    this.$store.getters["entities/products/find"](1),
-                                    "price",
-                                    0
-                                )
+                        const mostRecentClientRequest = _.last(clientRequests)
+                        if(mostRecentClientRequest){
+                            if(_.get(mostRecentClientRequest,'requestOrderId',false)){
+                                _.assign(mostRecentClientRequest, {
+                                    requestOrder: await vm.$db.requestOrders.where('id').equals(mostRecentClientRequest.requestOrderId).first()
+                                })
+                                _.assign(mostRecentClientRequest.requestOrder, {
+                                    requestOrderProducts: await vm.$db.requestOrderProducts.where('requestOrderId').equals(mostRecentClientRequest.requestOrderId).toArray()
+                                })
                             }
-                        })
-                        this.$store.dispatch("entities/requestOrders/insert", {
-                            data: {
-                                id: requestOrderTmpId
-                            }
-                        })
-                        this.$store.dispatch("entities/requests/update", {
-                            where: this.request.id,
-                            data: {
-                                requestOrderId: requestOrderTmpId
-                            }
-                        })
+                            _.assign(mostRecentClientRequest, {
+                                requestPayments: await vm.$db.requestPayments.where('requestId').equals(mostRecentClientRequest.id).toArray()
+                            })
+
+                            console.log("Most recent client request is", mostRecentClientRequest)
+
+                            console.log("Creating requestOrder")
+                            const requestOrderTmpId = `tmp/${shortid.generate()}`
+
+                            vm.$store.dispatch("entities/requestOrders/insert", {
+                                data: {
+                                    id: requestOrderTmpId,
+                                    promotionChannelId: mostRecentClientRequest.requestOrder.promotionChannelId
+                                }
+                            })
+                            vm.$store.dispatch("entities/requests/update", {
+                                where: vm.request.id,
+                                data: {
+                                    requestOrderId: requestOrderTmpId
+                                }
+                            })
+                            vm.$store.dispatch("entities/requestPayments/insert", {
+                                data: _.map(mostRecentClientRequest.requestPayments, (requestPayment) => {
+                                    return {
+                                        id: `tmp/${shortid.generate()}`,
+                                        requestId: vm.request.id,
+                                        paymentMethodId: requestPayment.paymentMethodId,
+                                        amount: requestPayment.amount
+                                    }
+                                })
+                            })
+                            vm.$store.dispatch("entities/requestOrderProducts/insert", {
+                                data: _.map(mostRecentClientRequest.requestOrder.requestOrderProducts, (requestPayment) => {
+                                    return {
+                                        id: `tmp/${shortid.generate()}`,
+                                        requestOrderId: requestOrderTmpId,
+                                        productId: requestPayment.productId,
+                                        quantity: requestPayment.quantity,
+                                        unitPrice: requestPayment.unitPrice,
+                                        unitDiscount: requestPayment.unitDiscount
+                                    }
+                                })
+                            })
+                        }
+                        else {
+                            console.log("Creating requestOrder")
+                            const requestPaymentTmpId = `tmp/${shortid.generate()}`
+                            const requestOrderTmpId = `tmp/${shortid.generate()}`
+                            const requestOrderProductTmpId = `tmp/${shortid.generate()}`
+                            vm.$store.dispatch("entities/requestPayments/insert", {
+                                data: {
+                                    id: requestPaymentTmpId,
+                                    requestId: vm.request.id,
+                                    paymentMethodId: 1,
+                                    amount: _.get(
+                                        vm.$store.getters["entities/products/find"](1),
+                                        "price",
+                                        false
+                                    )
+                                        ? vm.$store.getters["entities/products/find"](1).price
+                                        : 0
+                                }
+                            })
+                            vm.$store.dispatch("entities/requestOrderProducts/insert", {
+                                data: {
+                                    id: requestOrderProductTmpId,
+                                    requestOrderId: requestOrderTmpId,
+                                    productId: 1,
+                                    unitPrice: _.get(
+                                        vm.$store.getters["entities/products/find"](1),
+                                        "price",
+                                        0
+                                    )
+                                }
+                            })
+                            vm.$store.dispatch("entities/requestOrders/insert", {
+                                data: {
+                                    id: requestOrderTmpId
+                                }
+                            })
+                            vm.$store.dispatch("entities/requests/update", {
+                                where: vm.request.id,
+                                data: {
+                                    requestOrderId: requestOrderTmpId
+                                }
+                            })
+                        }
                     }
                 }
                 // if going to client tab
                 if(tab === "client"){
                     // create client if not existent
-                    if(!this.request.clientId){
+                    if(!vm.request.clientId){
                         console.log("Creating client")
                         const clientTmpId = `tmp/${shortid.generate()}`
                         const addressTmpId = `tmp/${shortid.generate()}`
                         const clientAddressTmpId = `tmp/${shortid.generate()}`
                         const clientPhoneTmpId = `tmp/${shortid.generate()}`
                         const requestClientAddressTmpId = `tmp/${shortid.generate()}`
-                        this.$store.dispatch("entities/clients/insert", {
+                        vm.$store.dispatch("entities/clients/insert", {
                             data: {
                                 id: clientTmpId
                             }
                         })
-                        this.$store.dispatch("entities/clientPhones/insert", {
+                        vm.$store.dispatch("entities/clientPhones/insert", {
                             data: {
                                 id: clientPhoneTmpId,
                                 clientId: clientTmpId
                             }
                         })
-                        this.$store.dispatch("entities/addresses/insert", {
+                        vm.$store.dispatch("entities/addresses/insert", {
                             data: {
                                 id: addressTmpId
                             }
                         })
-                        this.$store.dispatch("entities/clientAddresses/insert", {
+                        vm.$store.dispatch("entities/clientAddresses/insert", {
                             data: {
                                 id: clientAddressTmpId,
                                 clientId: clientTmpId,
                                 addressId: addressTmpId
                             }
                         })
-                        this.$store.dispatch("entities/requestClientAddresses/insert", {
+                        vm.$store.dispatch("entities/requestClientAddresses/insert", {
                             data: {
                                 id: requestClientAddressTmpId,
-                                requestId: this.request.id,
+                                requestId: vm.request.id,
                                 clientAddressId: clientAddressTmpId
                             }
                         })
-                        this.$store.dispatch("entities/requests/update", {
-                            where: this.request.id,
+                        vm.$store.dispatch("entities/requests/update", {
+                            where: vm.request.id,
                             data: {
                                 clientId: clientTmpId
                             }
                         })
                     }
                 }
-                this.updateValue("entities/requestUIState/update", "activeTab", this.request.requestUIState.id, tab)
+                vm.updateValue("entities/requestUIState/update", "activeTab", vm.request.requestUIState.id, tab)
             },
             cancel() {
                 if (this.request.requestUIState.isAddingClientAddress) {
@@ -603,59 +668,55 @@
                 })
                 this.addClientAddress();
             },
-            selectSearchItem(searchItem) {
+            async selectSearchItem(searchItem) {
                 const vm = this;
                 // create client if not existent
                 vm.activateTab("client", false)
                 const clientId = parseInt(searchItem.id.split("#")[0])
                 const clientAddressId = parseInt(searchItem.id.split("#")[1])
-                this.$db.clients.where({ id: clientId }).first().then(client => {
-                    this.$db.clientPhones.where({clientId: clientId}).toArray().then(clientPhones => {
-                        this.$db.clientAddresses.where({clientId: clientId}).toArray().then(clientAddresses => {
-                            const clientAddress = _.find(clientAddresses, { id: clientAddressId })
-                            if (clientAddress.addressId) {
-                                this.$db.addresses.where({ id: clientAddress.addressId}).first().then(address => {
-                                    this.$store.dispatch("entities/addresses/insert", { data: address })
-                                    this.$store.dispatch("entities/clients/insert", { data: client })
-                                    if(clientPhones.length){
-                                        this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
-                                    }
-                                    if(clientAddresses.length){
-                                        this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
-                                    }
-                                    this.$store.dispatch(
-                                        "entities/requestClientAddresses/update",
-                                        {
-                                            where: _.first(this.request.requestClientAddresses).id,
-                                            data: {
-                                                clientAddressId: clientAddress.id
-                                            }
-                                        }
-                                    )
-                                    this.$store.dispatch("entities/requests/update", {
-                                        where: vm.request.id,
-                                        data: {
-                                            clientId: clientId
-                                        }
-                                    })
-                                    vm.searchShow = false
-                                    vm.updateValue(
-                                        "entities/requestUIState/update",
-                                        "requestClientAddressForm",
-                                        this.request.requestUIState.id,
-                                        false
-                                    )
-                                    vm.updateValue(
-                                        "entities/requestUIState/update",
-                                        "isAddingClientAddress",
-                                        this.request.requestUIState.id,
-                                        false
-                                    )
-                                })
+                const client = await this.$db.clients.where({ id: clientId }).first()
+                const clientPhones = await this.$db.clientPhones.where({clientId: clientId}).toArray()
+                const clientAddresses = await this.$db.clientAddresses.where({clientId: clientId}).toArray()
+                const clientAddress = _.find(clientAddresses, { id: clientAddressId })
+                if (clientAddress.addressId) {
+                    const address = await this.$db.addresses.where({ id: clientAddress.addressId}).first()
+                    this.$store.dispatch("entities/addresses/insert", { data: address })
+                    this.$store.dispatch("entities/clients/insert", { data: client })
+                    if(clientPhones.length){
+                        this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
+                    }
+                    if(clientAddresses.length){
+                        this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
+                    }
+                    this.$store.dispatch(
+                        "entities/requestClientAddresses/update",
+                        {
+                            where: _.first(this.request.requestClientAddresses).id,
+                            data: {
+                                clientAddressId: clientAddress.id
                             }
-                        })
+                        }
+                    )
+                    this.$store.dispatch("entities/requests/update", {
+                        where: vm.request.id,
+                        data: {
+                            clientId: clientId
+                        }
                     })
-                })
+                    vm.searchShow = false
+                    vm.updateValue(
+                        "entities/requestUIState/update",
+                        "requestClientAddressForm",
+                        this.request.requestUIState.id,
+                        false
+                    )
+                    vm.updateValue(
+                        "entities/requestUIState/update",
+                        "isAddingClientAddress",
+                        this.request.requestUIState.id,
+                        false
+                    )
+                }
             },
             search() {
                 const vm = this

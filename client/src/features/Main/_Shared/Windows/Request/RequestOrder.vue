@@ -316,11 +316,9 @@
                     })
                 }
             },
-
             onDeliveryDateChange(value){
                 this.updateValue('entities/requests/update','deliveryDate',this.request.id,value)
             },
-
             /* Order Product */
             selectOrderProduct(requestOrderProduct, productId){
                 this.updateValue('entities/requestOrderProducts/update','productId',requestOrderProduct.id,productId)

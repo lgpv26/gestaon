@@ -223,19 +223,12 @@
             onDeliveryDateFilterClick(){
                 this.$refs.deliveryDate.fp.open()
             },
-            getRequestsForTest() {
-                const vm = this
-                return RequestBoardAPI.getRequests({
-                    date: vm.moment(vm.filters.deliveryDate).toISOString()
-                }).then(response => {
-                    console.log(_.first(response.data))
-                })
-            },
             async loadRequests(){
                 const vm = this
                 vm.SET_SYSTEM_REQUESTS_LOADED(false)
                 const useIndexedDBData = true
                 let response
+                vm.setIsLoading(true)
                 if(useIndexedDBData){
                     response = {
                         data: await vm.getRequestsFromIndexedDB()

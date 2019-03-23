@@ -7,7 +7,7 @@ import {
 import utils from "../../utils";
 
 const initialState = () => ({
-    isLoading: false,
+    isLoading: true,
     sections: {
         requests: {
             size: 1

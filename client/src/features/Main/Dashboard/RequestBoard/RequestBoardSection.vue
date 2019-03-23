@@ -148,7 +148,7 @@
                             const status =
                                 _.get(this.filters, "status", []).length === 0 ||
                                 (_.has(request, "status") &&
-                                    _.includes(this.filters.status, request.status));
+                                    _.includes(this.filters.status, request.card.status));
                             return (
                                 responsibleUsers && promotionChannels && clientGroups && status &&
                                     request.card.status !== 'finished' && request.card.status !== 'canceled'

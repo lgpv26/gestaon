@@ -4,7 +4,8 @@
   "description": "Server side API for Blue Agile tracker system.",
   "main": "npm run start",
   "scripts": {
-    "start": "nodemon --exec babel-node src/boot/app.js",
+    "dev-start": "nodemon --exec babel-node src/boot/app.js",
+    "start": "babel-node src/boot/app.js",
     "build": "babel src -d dist",
     "test": "npm run build && node dist/boot/app.js"
   },
