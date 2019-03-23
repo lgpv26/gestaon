@@ -15,6 +15,7 @@ const di = new DI()
 
 async function start() {
     try {
+
         // overall setup
         await di.initializeSentry()
         await di.setInnkeeper()
@@ -50,7 +51,8 @@ async function start() {
         log(chalk.gray("Loading CronJob"))
         await di.cronJob()
 
-        // try to connect to MySQL and create database if it was not found
+// try to connect to MySQL and create database if it was not found
+
         const connectToMySQL = new Promise((resolve, reject) => {
             const mysqlConnection = require('mysql').createConnection({
                 host: config.database.host,
@@ -163,5 +165,4 @@ async function start() {
 
     }
 }
-
 start()

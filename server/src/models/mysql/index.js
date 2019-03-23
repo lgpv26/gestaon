@@ -1,6 +1,6 @@
 const fs = require('fs'),
     path = require('path'),
-    _ = require('lodash');
+    _ = require('lodash')
 
 module.exports = function(server){
 

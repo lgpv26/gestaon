@@ -132,9 +132,6 @@ module.exports = (server, restify) => {
                                 model: server.mysql.Transaction,
                                 as: 'transaction'
                             }]
-                        },{
-                            model: server.mysql.RequestPaymentBill,
-                            as: 'requestPaymentBills'
                         }]
                 },
                 {

@@ -513,13 +513,6 @@ module.exports = server => {
                                 model: server.mysql.Transaction,
                                 as: "transaction"
                             }]
-                        },{
-                            model: server.mysql.RequestPaymentBill,
-                            as: "requestPaymentBills",
-                            include: [{
-                                model: server.mysql.RequestPaymentBillPayment,
-                                as: "requestPaymentBillPayments"
-                            }]
                         }]
                     },{
                         model: server.mysql.User,
