@@ -150,7 +150,7 @@ module.exports = class DependencyInjection {
         return this.server.version
     }
 
-    cronJob(){
+    async cronJob(){
         this.server.jobs = {}
         this.server.cronJob = require('cron').CronJob
 
@@ -179,6 +179,14 @@ module.exports = class DependencyInjection {
 
                 })
             }
+        })
+        
+        await this.server.broker.call("cronJob.backup", {
+            rotines: [
+                '*/15 8-21 * * *',
+                '*/30 21-23 * * *',
+                '*/60 0-8 * * *'
+            ]
         })
         
         return this.server.cronJob

@@ -65,6 +65,30 @@ module.exports = (server) => {
                 })
             },
 
+            backup(ctx){
+                return new Promise(async (resolve, reject) => {
+                    let promiseRotines = []
+                    ctx.params.rotines.forEach((rotine, index) => {
+                        promiseRotines.push(new Promise(async (resolve,reject) => {
+                            const name = "backupRotine" + (index + 1)
+                            server.jobs[name] = new server.cronJob(rotine, async function() {
+                                await server.broker.call("backup.start")
+                                return Promise.resolve()
+                            })
+                            return resolve()
+                        }))
+                    })                    
+                    await Promise.all(promiseRotines)
+                    return resolve()
+
+                })
+                .then(() => {
+                    ctx.params.rotines.forEach((rotine, index) => {
+                        server.jobs["backupRotine" + (index + 1)].start()
+                    })
+                })
+            },
+
             start(ctx){
                 return new Promise((resolve, reject) => {
                     server.jobs[_.toString(ctx.params.cronJobName)].start()
@@ -87,6 +111,5 @@ module.exports = (server) => {
             }
 
         }
-
     }
 }
