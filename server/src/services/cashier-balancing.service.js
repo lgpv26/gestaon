@@ -367,19 +367,17 @@ module.exports = (server) => {
                                             [Op.in]: ctx.params.data.requestPaymentIds
                                         },
                                         paid: {
-                                            [Op.in]: [false, null]
+                                            [Op.or]: [false, null]
                                         }
                                     },
-                                    include: [
-                                        {
+                                    include: [{
                                             model: server.mysql.RequestPaymentTransaction,
                                             as: 'requestPaymentTransactions',
                                             include: [{
                                                 model: server.mysql.Transaction,
                                                 as: 'transaction'
                                             }]
-                                        },
-                                        {
+                                        }, {
                                             model: server.mysql.Request,
                                             as: 'request',
                                             where: {
