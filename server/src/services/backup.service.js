@@ -7,12 +7,7 @@ import fs from 'fs'
 import ProgressBar from 'progress'
 import chalk from 'chalk'
 
-
-const readline = require('readline')
 const {google} = require('googleapis')
-const scopes = config.google.scopes
-const token_path = config.google.tokenPath
-const keys = JSON.parse(fs.readFileSync(config.google.credentials))
 
 module.exports = (server) => { 
     return {
@@ -75,7 +70,7 @@ module.exports = (server) => {
                         return resolve()
                     }
                     catch(err){
-                        
+                        console.log(err)
                     }
                     
                 })
@@ -88,7 +83,7 @@ module.exports = (server) => {
             async googleDriveUpload(dir, file){
                 console.log("Iniciado processo de upload, ", moment().format("DD/MM/YY HH:mm:ss"))
                 return new Promise(async (resolve, reject) => {
-                    const auth = await this.authorize()
+                    const auth = await server.broker.call("apiExternal/google.authorize")
                     console.log("Logado com sucesso", moment().format("DD/MM/YY HH:mm:ss"))
 
                     const drive = google.drive({version: 'v3', auth})
@@ -125,56 +120,6 @@ module.exports = (server) => {
 
                     return resolve()
                 })
-            },            
-            authorize() {
-                const vm = this
-                return new Promise((resolve, reject) => {
-                    console.log("Logando no google drive", moment().format("DD/MM/YY HH:mm:ss"))
-                    
-                    const {client_secret, client_id, redirect_uris} = keys.installed
-                    const oAuth2Client = new google.auth.OAuth2(
-                        client_id, client_secret, redirect_uris[0])
-                
-                    // Check if we have previously stored a token.
-                    fs.readFile(token_path, async (err, token) => {
-                        if (err) await this.getAccessToken(oAuth2Client)
-                        oAuth2Client.setCredentials(JSON.parse(token))
-                        return resolve(oAuth2Client)
-                    })
-                })
-            },
-            /**
-             * Get and store new token after prompting for user authorization, and then
-             * execute the given callback with the authorized OAuth2 client.
-             * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
-             * @param {getEventsCallback} callback The callback for the authorized client.
-             */
-            getAccessToken(oAuth2Client) {
-                const vm = this
-                    return new Promise((resolve, reject) => {
-                        const authUrl = oAuth2Client.generateAuthUrl({
-                            access_type: 'offline',
-                            scope: scopes,
-                        });
-                        console.log('Authorize this app by visiting this url:', authUrl);
-                        const rl = readline.createInterface({
-                            input: process.stdin,
-                            output: process.stdout,
-                        })
-                        rl.question('Enter the code from that page here: ', (code) => {
-                            rl.close();
-                            oAuth2Client.getToken(code, (err, token) => {
-                                if (err) return console.error('Error retrieving access token', err)
-                                oAuth2Client.setCredentials(token)
-                                // Store the token to disk for later program executions
-                                fs.writeFile(token_path, JSON.stringify(token), (err) => {
-                                    if (err) return console.error(err);
-                                    console.log('Token stored to', token_path)
-                                });
-                                return resolve(oAuth2Client)
-                            });
-                        });
-                    })
             },
 
             checkPath(drive){

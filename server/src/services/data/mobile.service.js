@@ -174,6 +174,7 @@ module.exports = server => {
                             }
                         }).then(request => {
                             if (!request) return Promise.reject("Request não encontrado")
+                            console.log(request.dateUpdated, moment(obj.actionDate).toDate())
                             if (request.dateUpdated > moment(obj.actionDate).toDate()) return Promise.reject("Não é possivel realizar está ação! Pedido já foi alterado após essa ação offline!")
                             return Promise.resolve()
                         })
@@ -213,13 +214,14 @@ module.exports = server => {
                                     const dataUpdate = await new Promise((resolve, reject) => {
                                         const updateData = {
                                             id: data.id,
-                                            status: data.status
+                                            status: data.status,
+                                            dateUpdated: moment(dateAction).toDate()
                                         }
 
                                         if (data.status === "finished") {
                                             _.set(updateData, "deliveredBy", data.createdBy.id) // quem entregou
                                             _.set(updateData, "finishedBy", data.createdBy.id) // quem finalizou
-                                            _.set(updateData, "deliveredDate", dateAction) // Horário que foi feito a entrega
+                                            _.set(updateData, "deliveredDate", moment(dateAction).toDate()) // Horário que foi feito a entrega
                                         }
                                         else {
                                             _.set(updateData, "deliveredBy", null) // quem entregou
@@ -238,6 +240,12 @@ module.exports = server => {
                                         transaction
                                     })
 
+                                    await server.mysql.Request.update({dateUpdated: null}, {
+                                    where: {
+                                        id: data.id
+                                    },
+                                    transaction})
+
                                     const requestTimelineItem = await server.broker.call('data/request.createTimeline', {
                                         data: {
                                             requestId: data.id,
@@ -246,7 +254,7 @@ module.exports = server => {
                                             action: 'update-status',
                                             userId: _.first(requestWithTimeline.requestTimeline).userId,
                                             status: data.status,
-                                            dateCreated: dateAction
+                                            dateCreated: moment(dateAction).toDate()
                                         },
                                         transaction
                                     })
