@@ -54,7 +54,7 @@ module.exports = (server) => {
                                             date: obj.date
                                         })
 
-                                        if (!checkId) {
+                                        if (!checkId && !_.includes(["update-user", "update-status"], obj.op)) {
                                             await server.redisClient.set(_.toString(objId.replace("/", ":")), action.id, (err, res) => {
                                                 _.set(mapIds, objId, action.id)
                                                 return Promise.resolve()

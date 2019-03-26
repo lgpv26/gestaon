@@ -30,7 +30,7 @@ module.exports = (server) => {
 
                         let timeParcial = moment()
                         console.log("Iniciado dump no db", moment().format("DD/MM/YY HH:mm:ss"))
-                        const result = await mysqldump({
+                        await mysqldump({
                             connection: {
                                 host: config.database.host,
                                 user: config.database.user,
@@ -100,7 +100,7 @@ module.exports = (server) => {
                         total: fileSize
                     })
 
-                    const res = await drive.files.create({
+                    await drive.files.create({
                         media: {
                                 body: fs.createReadStream(dir + "/" + file),
                                 mimeType: "application/gzip"

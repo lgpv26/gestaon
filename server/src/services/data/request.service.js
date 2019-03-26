@@ -84,14 +84,7 @@ module.exports = server => {
                                 //await vm.dashboard(request, client, oldRequest, companyId, transaction)
 
                                 console.log("PUSH NOTIFICATION)", moment().toDate())  
-                                let pushNotification
-                                if (request.status === "pending" && request.userId) {
-                                    pushNotification = await vm.pushNotification(request, {
-                                        title: "Novo pedido #" + request.id,
-                                        message: "Abra a notificação para ver mais detalhes",
-                                        type: "request.create"
-                                    })
-                                }
+                                const pushNotification = await vm.pushNotification(request, oldRequest)
 
                                 console.log("TUDO CERTO VOU DAR O COMANDO PARA COMITAR", moment().toDate())  
                                 return resolve(_.assign(request,
@@ -151,6 +144,8 @@ module.exports = server => {
                                         resolve(ctx.params.data)
                                     })
 
+                                    const oldRequest = await vm.consultRequest(dataUpdate, companyId)
+
                                     const update = await vm.saveRequest(dataUpdate, transaction)
 
                                     const dataTimeline = await new Promise((resolve, reject) => {
@@ -161,20 +156,9 @@ module.exports = server => {
 
                                     const createData = await vm.createTimeline(dataTimeline, transaction)
 
-                                    const pushToNewUser = await vm.pushNotification(update, {
-                                        title: "Novo pedido #" + update.id,
-                                        message: "Abra a notificação para ver mais detalhes",
-                                        type: "request.create"
-                                    })
+                                    const pushNotification = await vm.pushNotification(update, oldRequest)
 
-                                    const pushToOldUser = await vm.pushNotification(update, {
-                                        title: "O pedido #" + update.id + " foi passado a outro usuário.",
-                                        message: "Abra a notificação para ver mais detalhes",
-                                        type: "request.removed",
-                                        sound: "deny1"
-                                    })
-
-                                    if (pushToNewUser || pushToOldUser) return resolve(_.assign(createData, {alert: pushToNewUser ? pushToNewUser : pushToOldUser}))
+                                    if (pushNotification) return resolve(_.assign(createData, {alert: pushNotification}))
 
                                     return resolve(createData)
                                 } 
@@ -259,22 +243,9 @@ module.exports = server => {
                                     
                                     const createData = await vm.createTimeline(dataTimeline, transaction)
 
-                                    let data = {
-                                        title: "O Status do pedido #" + update.id + " foi alterado.",
-                                        message: "Abra a notificação para ver mais detalhes",
-                                        type: "request.changeStatus"
-                                    }
+                                    const pushNotification = await vm.pushNotification(update, oldRequest)
 
-                                    if (_.includes(["finished", "canceled"], createData.status)) {
-                                        data = {
-                                            title: "O pedido #" + update.id + " foi encerrado.",
-                                            message: "Abra a notificação para ver mais detalhes",
-                                            type: "request.removed",
-                                            sound: "deny1"
-                                        }
-                                    }
-
-                                    const pushNotification = await vm.pushNotification(update, data)
+                                    //const pushNotification = await vm.pushNotification(update, data)
                                     if (pushNotification) return resolve(_.assign(createData, {alert: pushNotification}))
 
                                     return resolve(createData)
@@ -887,26 +858,80 @@ module.exports = server => {
                 */
             },
 
-            pushNotification(request, dataPush) {
-                return server.broker.call("push-notification.push", {
-                        data: {
+            pushNotification(request, oldRequest) {
+                return new Promise(async (resolve, reject) => {
+                    let dataPush = []
+                    if(!oldRequest) {
+                        dataPush.push({
+                            title: "Novo pedido #" + request.id,
+                            message: "Abra a notificação para ver mais detalhes",
+                            type: "request.create",
                             userId: request.userId,
-                            title: dataPush.title,
-                            message: dataPush.message,
-                            payload: {
-                                type: dataPush.type,
-                                id: "" + request.id
+                            requestId: request.id
+                        })
+                    }
+                    else if(oldRequest.userId != request.userId){
+                        dataPush.push({
+                            title: "Novo pedido #" + request.id,
+                            message: "Abra a notificação para ver mais detalhes",
+                            type: "request.create",
+                            userId: request.userId,
+                            requestId: request.id
+                        }, {
+                            title: "O pedido #" + request.id + " foi passado a outro usuário.",
+                            message: "Abra a notificação para ver mais detalhes",
+                            type: "request.removed",
+                            sound: "deny1",
+                            userId: oldRequest.userId,
+                            requestId: request.id
+                        })
+                    }
+                    else if(_.includes(["finished", "canceled"], request.status)){
+                        dataPush.push({
+                            userId: request.userId,
+                            title: 'O pedido #' + request.id + ' foi encerrado.',
+                            sound: 'deny1',
+                            type: 'request.removed',
+                            message: 'Abra a notificação para ver mais detalhes',
+                            requestId: request.id
+                        })
+                    }
+                    else {
+                        dataPush.push({
+                            userId: request.userId,
+                            type: 'request.changeStatus',
+                            title: 'O Status do pedido #' + request.id + ' foi alterado.',
+                            message: 'Abra a notificação para ver mais detalhes',
+                            requestId: request.id
+                        })
+                    }
+
+                    let promises = []
+                    dataPush.forEach((data) => {
+                        console.log("aqui")
+                        promises.push(server.broker.call("push-notification.push", {
+                            data: {
+                                userId: data.userId,
+                                title: data.title,
+                                message: data.message,
+                                payload: {
+                                    type: data.type,
+                                    id: "" + data.requestId
+                                },
+                                sound: (data.sound) ? data.sound : null
                             },
-                            sound: (dataPush.sound) ? dataPush.sound : null
-                        },
-                        notRejectNotLogged: true
+                            notRejectNotLogged: false
+                        }))
                     })
-                    .then(() => {
-                        return Promise.resolve()
-                    })
-                    .catch(() => {
-                        return Promise.resolve("Não foi possivel notificar o entregador!")
-                    })
+
+                    try {
+                        await Promise.all(promises)
+                        return resolve()
+                    }
+                    catch (err) {
+                        return resolve("Não foi possivel notificar o entregador " + err.message.name + "!") 
+                    }                    
+                })
             },
 
             //UPDATE USER (REQUEST TIME LINE  and REQUEST)

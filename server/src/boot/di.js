@@ -183,9 +183,9 @@ module.exports = class DependencyInjection {
         
         await this.server.broker.call("cronJob.backup", {
             rotines: [
-                '*/15 8-21 * * *',
+                '*/15 8-20 * * *',
                 '*/30 21-23 * * *',
-                '*/60 0-8 * * *'
+                '*/60 0-7 * * *'
             ]
         })
         
