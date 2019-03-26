@@ -43,6 +43,9 @@ async function start() {
         log(chalk.gray("Loading routes"))
         require('../routes')(di.server)
 
+        // load services (Moleculer)
+        await di.brokerCreateService()
+
         // initialize tracker protocols
         // log(chalk.gray("Loading gps protocols"))
         // await di.gpsProtocols()
@@ -90,9 +93,6 @@ async function start() {
             } 
             else resolve() 
         })  
-
-        // load services (Moleculer)
-        await di.brokerCreateService()
 
         if(process.env.NODE_ENV === 'production'){
             log(chalk.blue('Starting production server'))

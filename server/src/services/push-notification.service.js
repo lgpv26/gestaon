@@ -5,7 +5,7 @@ module.exports = (server) => { return {
     name: "push-notification",
     actions: {
         push(ctx){
-            return server.mysql.UserAccessToken.findOne({
+                return server.mysql.UserAccessToken.findOne({
                 where: {
                     userId: ctx.params.data.userId,
                     fcmToken: {
@@ -21,7 +21,13 @@ module.exports = (server) => { return {
                         return "User didn't logged in through the app before"
                     }
                     else{
-                        return Promise.reject("User didn't logged in through the app before")
+                        return server.mysql.User.findByPk(ctx.params.data.userId, {
+                            attributes: { exclude: ['password'] }
+                        })
+                        .then((user) => {
+                            if(!user) return Promise.reject("Usuario não encontrado!")
+                            return Promise.reject(JSON.parse(JSON.stringify(user)))
+                        })
                     }
                 }
                 const message = {

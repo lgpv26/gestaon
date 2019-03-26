@@ -38,14 +38,14 @@ module.exports = {
                 },               
                 lastReceivedFromUserId: {
                     type: Sequelize.INTEGER
-                },*/
+                },
                 received: {
                     type: Sequelize.BOOLEAN,
                     default: false
                 },
                 receivedDate: {
                     type: TIMESTAMP
-                },
+                },*/
                 deadlineDatetime: {
                     type: TIMESTAMP
                 },                

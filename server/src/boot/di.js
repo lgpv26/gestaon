@@ -150,7 +150,7 @@ module.exports = class DependencyInjection {
         return this.server.version
     }
 
-    cronJob(){
+    async cronJob(){
         this.server.jobs = {}
         this.server.cronJob = require('cron').CronJob
 
@@ -181,6 +181,14 @@ module.exports = class DependencyInjection {
             }
         })
         
+        await this.server.broker.call("cronJob.backup", {
+            rotines: [
+                '*/15 8-20 * * *',
+                '*/30 21-23 * * *',
+                '*/60 0-7 * * *'
+            ]
+        })
+        
         return this.server.cronJob
     }
 
@@ -200,8 +208,14 @@ module.exports = class DependencyInjection {
                         return "../services/data/" + file.substring(0, file.length-3)
                     })
 
+                    const apiExternal = await fs.readdirSync(path.join(__dirname, '../services/apiExternal')).filter((fileName) => {
+                        return fileName.substring(fileName.length, fileName.length-6) !== "BKP.js"
+                    }).map((file) => {
+                        return "../services/apiExternal/" + file.substring(0, file.length-3)
+                    })
+
                     let promises = []
-                    _.concat(indexPath,dataPath).forEach((service) => {
+                    _.concat(indexPath,dataPath,apiExternal).forEach((service) => {
                         promises.push(vm.server.broker.createService(require(service)(vm.server)))
                     })
                     
