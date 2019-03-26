@@ -36,13 +36,7 @@ module.exports = (server) => {
                                 if(_.has(ctx.params.data, "requestClientPhones")) {
                                     console.log("NO REQUEST CLIENT ADDRESS - VOU CHAMAR O SET REQUEST CLIENT PHONES", moment().toDate())  
 
-                                    const requestClientPhones = _.map(ctx.params.data.requestClientPhones, (requestClientPhone) => {
-                                        return _.assign({clientPhoneId: requestClientPhone.id,
-                                            requestId: request.id
-                                        })
-                                    })
-
-                                    await vm.setRequestClientPhones(requestClientPhones, request.id, transaction)
+                                    await vm.setRequestClientPhones(ctx.params.data.requestClientPhones, request.id, transaction)
                                     .then((clientPhones) => {
                                         console.log("VOLTEI DO REQUEST CLIENT PHONES", moment().toDate())  
                                         _.set(requestClient, 'requestClientPhones', clientPhones)
@@ -82,8 +76,7 @@ module.exports = (server) => {
                             })
                         })
                     )
-                })
-                console.log("SÓ UM TESTE AQUI MESMO", moment().toDate())  
+                })  
 
                 
                 return Promise.all(promises).then(() => {
@@ -138,8 +131,7 @@ module.exports = (server) => {
                                 )
                             }
                         })
-    
-                console.log("TESTE DE PROMISE ALL 2222222222222222", moment().toDate())  
+     
 
                         return Promise.all(promisesRequest)
                             .then((requestClientAddresses) => {
@@ -202,16 +194,44 @@ module.exports = (server) => {
                     },
                     transaction
                 }).then(() => {
-                console.log("EXCLUIDO OK - VOU FAZER O BULK CREATE", moment().toDate())  
-                    return server.mysql.RequestClientPhone.bulkCreate(data, {
-                        updateOnDuplicate: ['requestId', 'clientPhoneId', 'type', 'dateUpdated', 'dateRemoved', 'status'],
-                        transaction
-                    }).then((response) => {
-                console.log("BULK DO CLIENT PHONE OK VOU VOLTAR PARA O PRINCIPAL", moment().toDate())  
-                        return response
-                    }).catch((error) => {
-                        console.log("Erro: no bulkCreate do data/request.setRequestClientPhones")
-                        return Promise.reject("Erro ao salvar o telefone do cliente no pedido")
+                    let promisesRequest = []
+                    data.forEach((requestClientPhone) => {
+                        if (requestClientPhone.id) { 
+                            promisesRequest.push(
+                                server.mysql.RequestClientPhone.update(_.assign(requestClientPhone, {dateRemoved: null}),{
+                                    where: {
+                                        id: requestClientPhone.id
+                                    },
+                                    paranoid: false,
+                                    transaction
+                                })
+                                .then(() => {
+                                    return server.mysql.RequestClientPhone.findByPk(requestClientPhone.id, {
+                                        transaction
+                                    }).then((RequestClientPhone) => {
+                                        return _.assign(JSON.parse(JSON.stringify(RequestClientPhone)), {tmpId: requestClientPhone.tmpId})
+                                    })
+                                })
+                            )
+                        } 
+                        else {
+                            promisesRequest.push(
+                                server.mysql.RequestClientPhone.create(requestClientPhone, {
+                                    transaction
+                                }).then((requestClientPhoneCreate) => {
+                                    if (!requestClientPhoneCreate) return Promise.reject("Erro ao cadastrar endereço do cliente.")
+                                    return _.assign(JSON.parse(JSON.stringify(requestClientPhoneCreate)), {tmpId: requestClientPhone.tmpId})
+                                })
+                            )
+                        }
+                    })
+
+                    return Promise.all(promisesRequest)
+                    .then((requestClientPhones) => {
+                        return requestClientPhones
+                    })
+                    .catch((err) => {
+                        return Promise.reject(err,"Erro ao atualizar endereços do cliente no pedido.")
                     })
                 })
             }

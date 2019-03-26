@@ -645,12 +645,17 @@ module.exports = server => {
                             if(requestClientPhone.clientPhoneId && !_.isNumber(requestClientPhone.clientPhoneId)){
                                 clientPhone = _.find(client.clientPhones, (clientPhone) => {
                                     if (_.has(clientPhone, "tmpId")) {
-                                        return clientPhone.tmpId == requestClientPhones.clientPhoneId
+                                        return clientPhone.tmpId == requestClientPhone.clientPhoneId
                                     } 
                                     else {
-                                        return clientPhone.id == requestClientPhones.clientPhoneId
+                                        return clientPhone.id == requestClientPhone.clientPhoneId
                                     }
                                 })
+                            }
+
+                            if(!_.isNumber(requestClientPhone.id)) {
+                                _.set(requestClientPhone, 'tmpId', requestClientPhone.id)
+                                delete requestClientPhone.id
                             }
 
                             if(!_.isNumber(requestClientPhone.requestId)) _.set(requestClientPhone, 'requestId', request.id)
