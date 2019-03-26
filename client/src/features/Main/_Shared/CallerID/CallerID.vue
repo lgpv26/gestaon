@@ -87,10 +87,10 @@
             onCallerIDNew(ev){
                 console.log("Received caller-id.new", ev)
                 if(ev.success){
-                    vm.open = true
-                    vm.addCall(ev.evData)
-                    if(vm.calls.length > 20){
-                        vm.calls.pop()
+                    this.open = true
+                    this.addCall(ev.evData)
+                    if(this.calls.length > 20){
+                        this.calls.pop()
                     }
                 }
             }
@@ -120,12 +120,12 @@
         position: absolute;
         z-index: 500000;
         top: 60px;
-        bottom: 0;
+        bottom: 170px;
         right: -320px;
         display: flex;
         flex-direction: row;
         transition: .2s all;
-        background: rgba(21,23,28,.5);
+        background: var(--bg-color--6);
         .opener {
             cursor: pointer;
             height: 30px;

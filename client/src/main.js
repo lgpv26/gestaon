@@ -113,7 +113,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
 
         STATE_requestChats: "id, requestId, userId, type, data, status, dateUpdated, dateCreated, dateRemoved",
     }
-});
+})
 
 Vue.set(Vue.prototype, "$socket", SocketIO(config.socketServer, {
     autoConnect: false
