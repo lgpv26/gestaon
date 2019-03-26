@@ -93,12 +93,10 @@ module.exports = (server, restify) => {
                     [Op.or]: ['pending','in-displacement']
                 }
             },
-            include: [
-                {
+            include: [{
                     model: server.mysql.Client,
                     as: 'client'
-                },
-                {
+                }, {
                     model: server.mysql.RequestClientAddress,
                     as: 'requestClientAddresses',
                     include: [{
@@ -109,23 +107,20 @@ module.exports = (server, restify) => {
                             as: 'address'
                         }]
                     }]
-                },
-                {
+                }, {
                     model: server.mysql.RequestClientPhone,
                     as: 'requestClientPhones',
                     include: [{
                         model: server.mysql.ClientPhone,
                         as: 'clientPhone'
                     }]
-                },
-                {
+                }, {
                     model: server.mysql.RequestPayment,
                     as: "requestPayments",
                     include: [{
                         model: server.mysql.PaymentMethod,
                         as: 'paymentMethod'
-                    },
-                        {
+                    }, {
                             model: server.mysql.RequestPaymentTransaction,
                             as: 'requestPaymentTransactions',
                             include: [{
@@ -133,8 +128,7 @@ module.exports = (server, restify) => {
                                 as: 'transaction'
                             }]
                         }]
-                },
-                {
+                }, {
                     model: server.mysql.RequestOrder,
                     as: "requestOrder",
                     include: [{
@@ -145,8 +139,7 @@ module.exports = (server, restify) => {
                             as: 'product'
                         }]
                     }]
-                }
-            ]
+                }]
         }).then((requests) => {
             requests = JSON.parse(JSON.stringify(requests))
             let promises = []
@@ -186,16 +179,14 @@ module.exports = (server, restify) => {
             where: {
                 id: req.params.id,
                 userId: req.auth.id,
-                status: {
+                /*status: {
                     [Op.or]: ['pending','in-displacement']
-                }
+                }*/
             },
-            include: [
-                {
+            include: [{
                     model: server.mysql.Client,
                     as: 'client'
-                },
-                {
+                }, {
                     model: server.mysql.RequestClientAddress,
                     as: 'requestClientAddresses',
                     include: [{
@@ -206,37 +197,28 @@ module.exports = (server, restify) => {
                             as: 'address'
                         }]
                     }]
-                },
-                {
+                }, {
                     model: server.mysql.RequestClientPhone,
                     as: 'requestClientPhones',
                     include: [{
                         model: server.mysql.ClientPhone,
                         as: 'clientPhone'
                     }]
-                },
-                {
+                }, {
                     model: server.mysql.RequestPayment,
                     as: "requestPayments",
-                    include: [
-                        {
+                    include: [{
                             model: server.mysql.PaymentMethod,
                             as: 'paymentMethod'
-                        },
-                        {
+                        }, {
                             model: server.mysql.RequestPaymentTransaction,
                             as: 'requestPaymentTransactions',
                             include: [{
                                 model: server.mysql.Transaction,
                                 as: 'transaction'
                             }]
-                        },{
-                            model: server.mysql.RequestPaymentBill,
-                            as: 'requestPaymentBills'
-                        }
-                    ]
-                },
-                {
+                        }]
+                },{
                     model: server.mysql.RequestOrder,
                     as: "requestOrder",
                     include: [{
@@ -250,9 +232,7 @@ module.exports = (server, restify) => {
                 }
             ]
         }).then((request) => {
-            /*request.requestPayments.forEach((requestPayment, index) => {
-                if(requestPayment.requestPaymentBills) _.set(request.requestPayments[index], 'deadlineDatetime', requestPayment.requestPaymentBills.deadlineDatetime)
-            })*/
+            if(!request) return res.send(200, {success: false, data: "Este pedido não esta com este entregador!"})
             request = JSON.parse(JSON.stringify(request))
 
             return server.mysql.RequestChatItem.findAll({
