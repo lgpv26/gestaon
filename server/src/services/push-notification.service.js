@@ -42,8 +42,6 @@ module.exports = (server) => { return {
 
                 const sound = _.get(ctx.params.data,'sound','sound1') + '.mp3'
 
-                console.log(sound, ctx.params.data.userId)
-
                 const notification = {
                     data: ctx.params.data.payload,
                     notification: {

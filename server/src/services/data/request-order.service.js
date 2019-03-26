@@ -10,18 +10,14 @@ module.exports = (server) => {
             start(ctx) {
                 const vm = this
                 const companyId = ctx.params.companyId
-                console.log("NO REQUEST ORDER SERVICE", moment().toDate())
 
                 return new Promise((resolve, reject) => {
                     async function start() {
                         try {
-                            console.log("INICIO DA FUNCAO ASYNC DO REQUEST ORDER", moment().toDate())
                             ctx.params.data = _.assign(ctx.params.data, { companyId })
                             const transaction = ctx.params.transaction
 
-                            console.log("VOU SALVAR O ORDER", moment().toDate())
                             const order = await vm.saveOrder(ctx.params.data, transaction)
-                            console.log("SALVEI O ORDER", moment().toDate())
                             
                             if (_.has(ctx.params.data, "requestOrderProducts")) {
 

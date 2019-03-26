@@ -12,34 +12,23 @@ module.exports = server => {
                 const companyId = ctx.params.data.companyId
                 const triggeredBy = ctx.params.data.createdBy.id
 
-                console.log("INICIANDO PEDIDO!", moment().toDate())
-
                 return server.sequelize.transaction((transaction) => {
-                console.log("CRIADO A TRANSACTION", moment().toDate())
 
                     return new Promise((resolve, reject) => {
                         async function start() {
                             try {
                                 let oldRequest = null
-                                console.log("ENTROU NA PROMISSE DO ASYNC", moment().toDate())
 
                                 const data = await vm.checkTempIds(ctx.params.data)
-                                console.log("CHECOU TEMPS IDS", moment().toDate())
 
                                 if (data.id) oldRequest = await vm.consultRequest(data, companyId)
-                                if (data.id) console.log("CONSULTOU O OLD REQUEST", moment().toDate())
 
-                                console.log("ESTOU INDO PARA O CHECK CLIENT", moment().toDate())
                                 const client = await vm.checkClient(data.client || null, {request: data}, transaction, companyId)
-                                console.log("VOLTEI DO CHECK CLIENT", moment().toDate())
-
-                                console.log("ESTOU INDO PARA O REQUEST ORDER", moment().toDate())                          
+                        
                                 const requestOrder = await vm.checkRequestOrder(data.requestOrder || null, transaction, companyId)
-                                console.log("VOLTEI DO REQUEST ORDER", moment().toDate())
 
                                 const task = null
 
-                                console.log("SALVANDO O REQUEST", moment().toDate())   
                                 const request = await vm.saveRequest({
                                         id: _.get(data, "id", null),
                                         companyId,
@@ -59,9 +48,6 @@ module.exports = server => {
                                     },
                                     transaction)
 
-                                console.log("SALVEI O REQUEST", moment().toDate())   
-
-                                console.log("SALVANDO A TIMELINE", moment().toDate())  
                                 const requestTimeline = await vm.createTimeline({
                                         requestId: _.get(request, "id", null),
                                         triggeredBy: triggeredBy,
@@ -71,22 +57,15 @@ module.exports = server => {
                                         status: (data.status && data.status !== "processing" && data.status !== "draft") ? (_.get(client, "id", null)) ? data.status : data.status : (_.get(client, "id", null)) ? "pending" : "finished"
                                     },
                                     transaction)
-                                console.log("SALVEI O TIMELINE", moment().toDate())   
 
-                                console.log("INDO PARA OS PAGAMENTOS", moment().toDate())  
                                 const requestPayments = await vm.checkRequestPayments(data, request, client, oldRequest, triggeredBy, transaction)
-                                console.log("VOLTEI DOS PAGAMENTOS", moment().toDate())  
                                 
-                                console.log("INDO PARA OS DETALHES (TIPO ENDEREÇO REQUEST E TAL)", moment().toDate())  
                                 const requestDetails = await vm.checkRequestDetails(data, request, client, triggeredBy, transaction)
-                                console.log("VOLTEI DOS DETALHES (TIPO ENDEREÇO REQUEST E TAL)", moment().toDate())  
 
                                 //await vm.dashboard(request, client, oldRequest, companyId, transaction)
 
-                                console.log("PUSH NOTIFICATION)", moment().toDate())  
                                 const pushNotification = await vm.pushNotification(request, oldRequest)
 
-                                console.log("TUDO CERTO VOU DAR O COMANDO PARA COMITAR", moment().toDate())  
                                 return resolve(_.assign(request,
                                         { client },
                                         { requestOrder },
@@ -96,7 +75,7 @@ module.exports = server => {
                                         (pushNotification) ? { pushNotification } : null))
                             }
                             catch(err) {
-                                console.log(moment().toDate(), err, "try catch do request")
+                                console.log(err, "try catch do request")
                                 reject(err)
                             }
                         }
@@ -104,12 +83,10 @@ module.exports = server => {
                     })
                 })
                 .then((result) => {
-                    console.log("COMITOU NEGO, FIM!", moment().toDate())  
-                    //console.log(result)
                     return Promise.resolve(result)
                 })
                 .catch((err) => {
-                    console.log(moment().toDate(), "catch transaction on Request")
+                    console.log("catch transaction on Request")
                     return Promise.reject(err)
                 })
             },
@@ -498,7 +475,6 @@ module.exports = server => {
             checkClient(data, dataRequest, transaction, companyId) {
                 if (!data) return Promise.resolve(null)
 
-                console.log("CHAMNDO O CLIENT SERVICE", moment().toDate())
                 const request = dataRequest.request
                 return server.broker.call("data/client.start", {
                     data,
@@ -510,7 +486,6 @@ module.exports = server => {
 
             checkRequestOrder(data, transaction, companyId) {
                 if (!data) return Promise.resolve(null)
-                console.log("CHAMNDO O REQUEST ORDER SERVICE", moment().toDate())
 
                 return server.broker.call("data/request-order.start", {
                     data,
@@ -605,12 +580,8 @@ module.exports = server => {
 
                 const data = {}
 
-                console.log("ESTOU NO CHECK REQUEST DETAILS", moment().toDate())  
-
                 if (_.has(detailsData, "requestClientAddresses") && client && client.clientAddresses) {
                     data.requestClientAddresses = []
-
-                    console.log("ENTREI NO REQUEST CLIENT ADDRESSES PRA SETAR AS COISAS", moment().toDate())  
 
                     detailsData.requestClientAddresses.forEach((requestClientAddress, index) => {
 
@@ -637,7 +608,6 @@ module.exports = server => {
 
                 if (_.has(detailsData, "requestClientPhones") && client && client.clientPhones) {
                     data.requestClientPhones = []
-                    console.log("ENTREI NO REQUEST CLIENT PHONES PRA SETAR AS COISAS", moment().toDate())  
                     detailsData.requestClientPhones.forEach((requestClientPhone, index) => {
 
                             let clientPhone = null
@@ -667,7 +637,6 @@ module.exports = server => {
                         })
                 }
 
-                console.log("VOU PARA O REQUEST DETAILS SERVICE", moment().toDate())  
                 return server.broker.call("data/request-details.start", {
                     data,
                     request,
