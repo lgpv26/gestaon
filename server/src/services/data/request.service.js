@@ -875,6 +875,8 @@ module.exports = server => {
 
             pushNotification(request, oldRequest) {
                 return new Promise(async (resolve, reject) => {
+                    if(!oldRequest && _.includes(["finished", "canceled"], request.status)) return resolve()
+
                     let dataPush = []
                     if(!oldRequest) {
                         dataPush.push({
