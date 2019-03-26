@@ -48,7 +48,7 @@ module.exports = server => {
                                         taskId: _.get(task, "id", null),
                                         userId: (data.userId) ? data.userId : triggeredBy,
                                         deliveryDate: (data.deliveryDate) ? moment(data.deliveryDate) : (!data.id) ? moment().add(20, "m") : (!oldRequest.isScheduled) ? oldRequest.deliveryDate : moment().add(20, "m"),
-                                        isScheduled: !!data.deliveryDate,
+                                        isScheduled: (oldRequest) ? (oldRequest.deliveryDate == data.deliveryDate) ? oldRequest.isScheduled : (data.deliveryDate) ? true : false : (data.deliveryDate) ? true : false,
                                         phoneLine: (data.phoneLine) ? data.phoneLine : null,
                                         obs: (data.obs) ? data.obs : null,
                                         status: (data.status && data.status !== "processing" && data.status !== "draft") ? _.get(client, "id", null) ? data.status : (data.status === "finished" || data.status === "canceled" ? data.status : "finished") : (_.get(client, "id", null)) ? "pending" : "finished",
@@ -635,20 +635,30 @@ module.exports = server => {
                     })
                 }
 
-                if (_.has(detailsData, "requestClientPhones")) {
+                if (_.has(detailsData, "requestClientPhones") && client && client.clientPhones) {
+                    data.requestClientPhones = []
                     console.log("ENTREI NO REQUEST CLIENT PHONES PRA SETAR AS COISAS", moment().toDate())  
                     detailsData.requestClientPhones.forEach((requestClientPhone, index) => {
 
-                            data.requestClientPhones.push(
-                                _.find(client.clientPhones, clientPhone => {
+                            let clientPhone = null
+
+                            if(requestClientPhone.clientPhoneId && !_.isNumber(requestClientPhone.clientPhoneId)){
+                                clientPhone = _.find(client.clientPhones, (clientPhone) => {
                                     if (_.has(clientPhone, "tmpId")) {
-                                        return clientPhone.tmpId == requestClientPhone.clientPhoneId
+                                        return clientPhone.tmpId == requestClientPhones.clientPhoneId
                                     } 
                                     else {
-                                        return clientPhone.id == requestClientPhone.clientPhoneId
+                                        return clientPhone.id == requestClientPhones.clientPhoneId
                                     }
                                 })
-                            )
+                            }
+
+                            if(!_.isNumber(requestClientPhone.requestId)) _.set(requestClientPhone, 'requestId', request.id)
+
+                            if(clientPhone) _.set(requestClientPhone, 'clientPhoneId', clientPhone.id)
+
+                            if(_.isNumber(requestClientPhone.clientPhoneId)) data.requestClientPhones.push(requestClientPhone)
+
                         })
                 }
 
@@ -908,7 +918,6 @@ module.exports = server => {
 
                     let promises = []
                     dataPush.forEach((data) => {
-                        console.log("aqui")
                         promises.push(server.broker.call("push-notification.push", {
                             data: {
                                 userId: data.userId,
@@ -918,7 +927,7 @@ module.exports = server => {
                                     type: data.type,
                                     id: "" + data.requestId
                                 },
-                                sound: (data.sound) ? data.sound : null
+                                sound: (data.sound) ? data.sound : undefined
                             },
                             notRejectNotLogged: false
                         }))

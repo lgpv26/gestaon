@@ -226,39 +226,6 @@ module.exports = class DependencyInjection {
 
             start()
         })
-        // this.server.broker.createService(require('../services/auth.service')(this.server))
-        // this.server.broker.createService(require('../services/request-board.service')(this.server))
-        // this.server.broker.createService(require('../services/push-notification.service')(this.server))
-        // this.server.broker.createService(require('../services/cashier-balancing.service')(this.server))
-        // this.server.broker.createService(require('../services/socket.service')(this.server))
-
-        // this.server.broker.createService(require('../services/data/user.service')(this.server))
-        // this.server.broker.createService(require('../services/data/call.service')(this.server))
-        // this.server.broker.createService(require('../services/data/request.service')(this.server))
-        // this.server.broker.createService(require('../services/data/client.service')(this.server))
-        // this.server.broker.createService(require('../services/data/product.service')(this.server))
-        // this.server.broker.createService(require('../services/data/client-group.service')(this.server))
-        // this.server.broker.createService(require('../services/data/custom-field.service')(this.server))
-        // this.server.broker.createService(require('../services/data/account.service')(this.server))
-        // this.server.broker.createService(require('../services/data/promotion-channel.service')(this.server))
-        // this.server.broker.createService(require('../services/data/address.service')(this.server))
-        // this.server.broker.createService(require('../services/data/payment-method.service')(this.server))
-        // this.server.broker.createService(require('../services/data/transaction.service')(this.server))
-        // this.server.broker.createService(require('../services/data/mobile.service')(this.server))
-        // this.server.broker.createService(require('../services/data/bills.service')(this.server))
-        // this.server.broker.createService(require('../services/data/finance.service')(this.server))
-        // this.server.broker.createService(require('../services/data/request-queue.service')(this.server))
-        // this.server.broker.createService(require('../services/data/request-order.service')(this.server))
-        // this.server.broker.createService(require('../services/data/request-payments.service')(this.server))
-        // this.server.broker.createService(require('../services/data/request-details.service')(this.server))
-
-        // this.server.broker.createService(require('../services/draft/index.service')(this.server))
-
-        // this.server.broker.createService(require('../services/draft/request/persistence.service')(this.server))
-        // this.server.broker.createService(require('../services/draft/request/recoverance.service')(this.server))
-
-        // this.server.broker.createService(require('../services/draft/client/persistence.service')(this.server))
-        // this.server.broker.createService(require('../services/draft/client/recoverance.service')(this.server))
     }
 
 }

@@ -112,8 +112,8 @@ module.exports = (server) => {
                         },
                         {
                         onUploadProgress: (evt) => {
-                            if(bar.complete) return
-                            bar.tick(evt.bytesRead)
+                                if(!bar.complete) bar.tick(evt.bytesRead)
+                                return Promise.resolve()
                             }
                         }
                     )

@@ -40,7 +40,9 @@ module.exports = (server) => { return {
 
                 const sendMessage = server.firebaseAdmin.messaging().send(message)
 
-                let sound = _.get(ctx.params.data,'sound','sound1') + '.mp3'
+                const sound = _.get(ctx.params.data,'sound','sound1') + '.mp3'
+
+                console.log(sound, ctx.params.data.userId)
 
                 const notification = {
                     data: ctx.params.data.payload,
