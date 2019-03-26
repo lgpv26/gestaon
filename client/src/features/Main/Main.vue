@@ -274,6 +274,7 @@
                                 .with("requestOrder.requestOrderProducts")
                                 .with("requestPayments")
                                 .with("requestClientAddresses")
+                                .with("requestClientPhones")
                                 .with("requestUIState")
                                 .find(request.requestId)
 

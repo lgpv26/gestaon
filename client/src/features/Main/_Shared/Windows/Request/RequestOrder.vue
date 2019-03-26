@@ -317,6 +317,7 @@
                 }
             },
             onDeliveryDateChange(value){
+                if(value === "") value = null
                 this.updateValue('entities/requests/update','deliveryDate',this.request.id,value)
             },
             /* Order Product */

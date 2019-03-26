@@ -305,6 +305,7 @@
                                     .with("requestOrder.requestOrderProducts")
                                     .with("requestPayments")
                                     .with("requestClientAddresses")
+                                    .with("requestClientPhones")
                                     .with("requestUIState")
                                     .find(requestId)
                                 if(_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString)){
@@ -391,6 +392,20 @@
                                 requestOrderProducts: await vm.$db.requestOrderProducts.where('requestOrderId').equals(request.requestOrderId).toArray()
                             })
                         }
+                        // requestClientPhones
+                        const requestClientPhones = await vm.$db.requestClientPhones.where('requestId').equals(request.id).toArray()
+                        _.assign(request, {
+                            requestClientPhones: await Promise.all(_.map(requestClientPhones, async (requestClientPhone) => {
+                                // clientAddress
+                                if(_.get(requestClientPhone,'clientPhoneId',false)) {
+                                    const clientPhone = await vm.$db.clientPhone.where('id').equals(requestClientPhone.clientPhoneId).first()
+                                    _.assign(requestClientPhone, {
+                                        clientPhone
+                                    })
+                                }
+                                return requestClientPhone
+                            }))
+                        })
                         // requestClientAddresses
                         const requestClientAddresses = await vm.$db.requestClientAddresses.where('requestId').equals(request.id).toArray()
                         _.assign(request, {

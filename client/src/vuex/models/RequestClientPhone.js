@@ -15,8 +15,8 @@ export default class RequestClientPhone extends Model {
             clientPhoneId: this.attr(null),
             clientPhone: this.belongsTo(ClientPhone,"clientPhoneId"),
             type: this.attr(null),
-            dateUpdated: this.attr(moment()),
-            dateCreated: this.attr(moment()),
+            dateUpdated: this.attr(null),
+            dateCreated: this.attr(null),
             dateRemoved: this.attr(null),
             status: this.attr(null)
         }

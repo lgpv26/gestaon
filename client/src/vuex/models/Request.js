@@ -13,6 +13,7 @@ import RequestOrder from "./RequestOrder"
 import moment from "moment/moment"
 import RequestPayment from "./RequestPayment"
 import RequestChat from "./RequestChat"
+import RequestClientPhone from "./RequestClientPhone"
 import RequestClientAddress from "./RequestClientAddress"
 import RequestUIState from "./RequestUIState"
 
@@ -33,6 +34,7 @@ export default class Request extends Model {
             requestUIState: this.hasOne(RequestUIState, "requestId"),
             requestPayments: this.hasMany(RequestPayment, "requestId"),
             requestChats: this.hasMany(RequestChat, "requestId"),
+            requestClientPhones: this.hasMany(RequestClientPhone, "requestId"),
             requestClientAddresses: this.hasMany(RequestClientAddress, "requestId"),
             deliveryDate: this.attr(null),
             deliveredBy: this.attr(null),

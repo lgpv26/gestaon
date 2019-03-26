@@ -113,9 +113,8 @@
                         const requests = Request.query()
                             .with("card.window")
                             .with("client|client.clientAddresses.address")
-                            .with(
-                                "requestClientAddresses|requestClientAddresses.clientAddress.address"
-                            )
+                            .with("requestClientAddresses|requestClientAddresses.clientAddress.address")
+                            .with("requestClientPhones|requestClientPhones.clientPhone")
                             .with("requestUIState")
                             .with("requestOrder.requestOrderProducts.product")
                             .with("requestPayments.paymentMethod")

@@ -122,6 +122,15 @@
                                     </div>
 
                                     <div class="box__item" v-for="clientPhone in request.client.clientPhones" :key="clientPhone.id">
+                                        <a href="javascript:void(0)" v-if="clientPhone.id === _.get(request,'requestClientPhones[0].clientPhoneId',false)"
+                                           style="margin-top: 7px; margin-right: 7px; padding: 0 3px; align-self: baseline;">
+                                            <i class="mi mi-check" style="font-size: 18px;"></i>
+                                        </a>
+                                        <a href="javascript:void(0)" v-else
+                                           @click="updateValue('entities/requestClientPhones/update','clientPhoneId',request.requestClientPhones[0].id,clientPhone.id)"
+                                           style="margin-top: 7px; margin-right: 7px; padding: 0 3px; align-self: baseline;">
+                                            <i class="mi mi-close" style="font-size: 18px;"></i>
+                                        </a>
                                         <app-mask :mask="['(##) ####-####', '(##) #####-####']" :value="clientPhone.number" @input="updateValue('entities/clientPhones/update','number',clientPhone.id,$event)" placeholder="(##) #####-####" class="input" style="margin-bottom: 0;"></app-mask>
                                         <a :class="{ disabled: request.client.clientPhones.length <= 1 }" href="javascript:void(0)" @click="removeClientPhone(clientPhone.id)" style="margin-top: 7px; margin-left: 7px; padding: 0 3px; align-self: baseline;">
                                             <i class="mi mi-close" style="font-size: 18px;"></i>
@@ -554,6 +563,7 @@
                         const clientAddressTmpId = `tmp/${shortid.generate()}`
                         const clientPhoneTmpId = `tmp/${shortid.generate()}`
                         const requestClientAddressTmpId = `tmp/${shortid.generate()}`
+                        const requestClientPhoneTmpId = `tmp/${shortid.generate()}`
                         vm.$store.dispatch("entities/clients/insert", {
                             data: {
                                 id: clientTmpId
@@ -582,6 +592,13 @@
                                 id: requestClientAddressTmpId,
                                 requestId: vm.request.id,
                                 clientAddressId: clientAddressTmpId
+                            }
+                        })
+                        vm.$store.dispatch("entities/requestClientPhones/insert", {
+                            data: {
+                                id: requestClientPhoneTmpId,
+                                requestId: vm.request.id,
+                                clientPhoneId: clientPhoneTmpId
                             }
                         })
                         vm.$store.dispatch("entities/requests/update", {
@@ -622,6 +639,7 @@
                     .with('requestOrder.requestOrderProducts')
                     .with('requestPayments')
                     .with('requestClientAddresses')
+                    .with('requestClientPhones')
                     .first()
                 const requestJSON = JSON.parse(JSON.stringify(request))
                 if(_.has(requestJSON,'client.name') && _.isEmpty(requestJSON.client.name)) {
@@ -683,7 +701,17 @@
                     this.$store.dispatch("entities/addresses/insert", { data: address })
                     this.$store.dispatch("entities/clients/insert", { data: client })
                     if(clientPhones.length){
+                        console.log(this.request)
                         this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
+                        this.$store.dispatch(
+                            "entities/requestClientPhones/update",
+                            {
+                                where: _.first(this.request.requestClientPhones).id,
+                                data: {
+                                    clientPhoneId: _.first(clientPhones).id
+                                }
+                            }
+                        )
                     }
                     if(clientAddresses.length){
                         this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
