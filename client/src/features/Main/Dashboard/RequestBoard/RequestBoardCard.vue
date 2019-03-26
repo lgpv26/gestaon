@@ -344,14 +344,14 @@
 <style lang="scss">
     .request-board-card {
         display: flex;
-        background: var(--bg-color--2);
-        box-shadow: var(--card-shadow);
+        background: var(--bg-color--4);
+        box-shadow: none;
         position: relative;
         outline: 0;
         &:hover {
-            background: var(--bg-color--3);
+            background: var(--bg-color--5);
             .request-board-card__overlay {
-                background: var(--bg-color--3);
+                background: var(--bg-color--5);
             }
         }
     }

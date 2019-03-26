@@ -14,6 +14,7 @@ export default {
                 console.log("Not showing loading")
                 window.showAppLoading()
             }
+            this.importEventRequestedDate = moment().valueOf()
             console.log("Última data de sincronização", moment(this.lastDataSyncedDate).format("DD/MM/YYYY HH:mm:ss"))
             window.setAppLoadingText(`Importando dados novos...`)
             this.stream = ss.createStream()

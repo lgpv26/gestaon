@@ -9,17 +9,20 @@
             <app-bottom-panel :map.sync="map"></app-bottom-panel>
             -->
         </div>
+        <app-map></app-map>
     </div>
 </template>
 
 <script>
     import { mapMutations } from 'vuex'
     import RequestBoard from './RequestBoard/RequestBoard.vue'
+    import Map from './Map/Map'
 
     export default {
         name: 'app-dashboard',
         components: {
-            'app-request-board': RequestBoard
+            'app-request-board': RequestBoard,
+            'app-map': Map
         },
         methods: {
             ...mapMutations(['setMainContentArea']),
@@ -46,7 +49,7 @@
     div.vertical-align {
         display: flex;
         flex-direction: column;
-        flex-grow: 1;
+        flex-shrink: 0;
     }
     div.horizontal-align {
         display: flex;

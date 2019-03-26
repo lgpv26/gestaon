@@ -18,76 +18,6 @@ export default {
             importEventOccurred: false
         };
     },
-    /*sockets: {
-        connect(){
-            const vm = this;
-            vm.$socket.on("presence:load", vm.onPresenceLoad)
-            if(vm.importEventOccurred) return
-            vm.importEventOccurred = true
-            new Promise(resolve => {
-                window.setAppLoadingText("Carregando usuário...");
-                vm.setAuthUser()
-                    .then(() => {
-                        vm.menuList = _.filter(vm.menuList, menuItem => {
-                            if (menuItem.type === "system") {
-                                if (menuItem.onlyAdmin && vm.user.type === "admin") {
-                                    return true;
-                                } else if (!menuItem.onlyAdmin) {
-                                    return true;
-                                }
-                            }
-                        });
-                        vm.user.userCompanies.forEach(userCompany => {
-                            vm.menuList.unshift({
-                                text: userCompany.company.name,
-                                type: "company",
-                                action: () => {
-                                    console.log("Feature yet to be implemented");
-                                },
-                                param: userCompany
-                            });
-                        });
-                        console.log("Authenticated user set.");
-                        resolve("Authenticated user set.");
-                    })
-                    .catch(() => {
-                        window.removeAppLoading();
-                        vm.stopLoading();
-                        console.log("Couldn't get authenticated user.");
-                        vm.logout();
-                    });
-            }).then(() => {
-                vm.initializeSystem();
-            })
-        },
-        reconnectAttempt(attemptNumber) {
-            console.log("Tentando reconectar (" + attemptNumber + ").")
-        },
-        reconnect() {
-            console.log("Reconnected.");
-        },
-        disconnect(reason) {
-            this.$socket.removeListener("presence:load", vm.onPresenceLoad)
-            this.$socket.removeListener("import", vm.onImportFromLastDataSyncedDate)
-            this.$socket.removeListener("import", vm.onImportForTheFirstTime)
-            console.log("Disconnected.", reason)
-            /!*
-            vm.$socket.removeListener("presence:load", vm.onPresenceLoad)
-            vm.$socket.removeListener("import", vm.onImportFromLastDataSyncedDate)
-            vm.$socket.removeListener("import", vm.onImportForTheFirstTime)
-            vm.setLoadingText("Desconectado.");
-            vm.startLoading();
-            console.log("Disconnected from socket server. Reason: ", reason);*!/
-        },
-        import(ev){
-            if(this.lastDataSyncedDate){
-                this.onImportFromLastDataSyncedDate(ev)
-            }
-            else {
-                this.onImportForTheFirstTime(ev)
-            }
-        }
-    },*/
     methods: {
         /**
          * Socket.IO
@@ -104,7 +34,12 @@ export default {
             })
             vm.$socket.on('reconnect', () => {
                 console.log('Socket reconnected.')
-                vm.importFromLastDataSyncedDate()
+                /*
+                 * if db imported previously
+                 * */
+                if (vm.lastDataSyncedDate) {
+                    vm.importFromLastDataSyncedDate()
+                }
             })
         },
 
@@ -226,9 +161,9 @@ export default {
             }
         },
         onImportForTheFirstTime(ev){
-            console.log("Import event received", ev)
+            console.log("First import event received", ev)
             const vm = this
-            vm.importFileSize = ev.fileSize;
+            vm.importFileSize = ev.fileSize
             const arrayOfChunks = []
 
             vm.stream.on("data", (chunk) => {
@@ -427,11 +362,11 @@ export default {
         },
 
         onImportFromLastDataSyncedDate(ev){
-            console.log("Import event received", ev);
+            console.log("Data sync import event received", ev)
             const vm = this
+            vm.importFileSize = ev.fileSize
+            const arrayOfChunks = []
 
-            vm.importFileSize = ev.fileSize;
-            const arrayOfChunks = [];
             vm.stream.on("data", (chunk) => {
                 vm.currentImportedFileSize += chunk.length
                 arrayOfChunks.push(chunk)

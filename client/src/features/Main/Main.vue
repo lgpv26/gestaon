@@ -246,7 +246,6 @@
                 }).play();
             },
             pushToRequestQueueSyncAcumulator(ev){
-                console.log("Happneed")
                 this.requestQueueSyncAcumulator.push(ev)
             },
             async onRequestQueueSync(ev){
@@ -512,15 +511,19 @@
         opacity: 0;
     }
 
-    .left-column,
-    .left-column header,
-    .main-column header {
+    .left-column {
         background-color: var(--bg-color--2);
     }
 
+    .left-column header, .main-column header {
+        background-color: var(--bg-color--5);
+    }
+
     .left-column {
-        -webkit-box-shadow: var(--main-menu-shadow);
-        box-shadow: var(--main-menu-shadow);
+        /* -webkit-box-shadow: var(--main-menu-shadow);
+        box-shadow: var(--main-menu-shadow); */
+        -webkit-box-shadow: none;
+        box-shadow: none;
         position: relative;
         z-index: 9999;
         width: 60px;

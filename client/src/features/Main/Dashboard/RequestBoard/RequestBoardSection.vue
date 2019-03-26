@@ -130,7 +130,7 @@
                             const responsibleUsers =
                                 _.get(this.filters, "responsibleUsers", []).length === 0 ||
                                 (_.has(request, "userId") &&
-                                    _.includes(this.filters.responsibleUsers, request.userId));
+                                    _.includes(this.filters.responsibleUsers, request.userId))
                             const clientGroups =
                                 _.get(this.filters, "clientGroups", []).length === 0 ||
                                 (_.has(request, "client.clientGroupId") &&
@@ -226,9 +226,9 @@
 
 <style>
     .board-section {
-        margin: 10px 10px 10px 0;
+        margin: 0;
         padding: 0;
-        background: rgba(21, 23, 28, 0.5);
+        background: var(--bg-color--2);
         overflow: hidden;
         flex-shrink: 0;
     }

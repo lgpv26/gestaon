@@ -97,7 +97,6 @@ export default {
 #request-panel {
   display: flex;
   flex-direction: row;
-  position: absolute;
   z-index: 999;
   height: 100%;
   pointer-events: none;
@@ -109,7 +108,7 @@ export default {
   user-select: none; /* Non-prefixed version, currently */
 }
 #request-panel > .board {
-  margin: 0 0 0 10px;
+  margin: 0 0 0 0;
   display: flex;
   flex-direction: row;
   height: 100%;
