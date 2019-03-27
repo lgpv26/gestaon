@@ -66,8 +66,6 @@ Vue.set(Vue.prototype, "config", config)
 Vue.set(Vue.prototype, "utils", utils)
 Vue.set(Vue.prototype, "modelDefinitions", {
     offlineDBModels: {
-
-
         addresses: "id, name, address, cep, city, neighborhood, state, status, dateCreated, dateUpdated",
         users: "id, name, email, type, status, dateUpdated, dateCreated, dateRemoved",
         products: "id, name, price, quantity, dateUpdated, dateCreated, dateRemoved",
