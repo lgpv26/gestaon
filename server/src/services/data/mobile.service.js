@@ -240,12 +240,6 @@ module.exports = server => {
                                         transaction
                                     })
 
-                                    await server.mysql.Request.update({dateUpdated: null}, {
-                                    where: {
-                                        id: data.id
-                                    },
-                                    transaction})
-
                                     const requestTimelineItem = await server.broker.call('data/request.createTimeline', {
                                         data: {
                                             requestId: data.id,

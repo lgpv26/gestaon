@@ -296,8 +296,10 @@ module.exports = server => {
 
             update(ctx) {
                 return server.mysql.Request.update(ctx.params.data, {
-                    where: ctx.params.where || {}
-                }).then((updated) => {
+                    where: ctx.params.where || {},
+                    silent: true,
+                    force: true
+                }).then(() => {
                     return server.mysql.Request.findByPk(ctx.params.data.id)
                     .then((request) => {
                         return JSON.parse(JSON.stringify(request))
