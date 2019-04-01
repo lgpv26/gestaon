@@ -272,7 +272,7 @@
                         return request.status !== 'finished' && request.status !== 'canceled'
                     })
                     const promises = _.map(response.data, (request) => {
-                        return Request.show(vm, request, {
+                        return Request.load(vm, request, {
                             ignoreOfflineDBInsertion: true
                         }).catch((err) => {
                             console.log("Error loading requests", err)
@@ -308,7 +308,7 @@
                                     .with("requestClientPhones")
                                     .with("requestUIState")
                                     .find(requestId)
-                                if(_.isEqual(Request.getRequestComparationObj(processedRequest), processedRequest.requestUIState.requestString)){
+                                if(_.isEqual(Request.getComparationObj(processedRequest), processedRequest.requestUIState.requestString)){
                                     vm.$store.dispatch("entities/requestUIState/update",{
                                         where: processedRequest.requestUIState.id,
                                         data: {
@@ -317,6 +317,8 @@
                                     })
                                 }
                                 else {
+                                    console.log(Request.getComparationObj(processedRequest))
+                                    console.log(processedRequest.requestUIState.requestString)
                                     vm.$store.dispatch("entities/requestUIState/update",{
                                         where: processedRequest.requestUIState.id,
                                         data: {
@@ -398,7 +400,7 @@
                             requestClientPhones: await Promise.all(_.map(requestClientPhones, async (requestClientPhone) => {
                                 // clientAddress
                                 if(_.get(requestClientPhone,'clientPhoneId',false)) {
-                                    const clientPhone = await vm.$db.clientPhone.where('id').equals(requestClientPhone.clientPhoneId).first()
+                                    const clientPhone = await vm.$db.clientPhones.where('id').equals(requestClientPhone.clientPhoneId).first()
                                     _.assign(requestClientPhone, {
                                         clientPhone
                                     })

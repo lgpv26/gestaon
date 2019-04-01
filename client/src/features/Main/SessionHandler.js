@@ -3,7 +3,7 @@ import Vue from "vue"
 import async from "async"
 import ss from "socket.io-stream"
 import moment from "moment"
-import elasticlunr from "elasticlunr"
+import shortid from "shortid"
 import pako from "pako"
 
 export default {
@@ -85,57 +85,6 @@ export default {
                 vm.stopLoading();
                 console.log("Couldn't get authenticated user.");
                 vm.logout();
-            }
-            // set elasticlunr tokenizer
-            elasticlunr.tokenizer = function(str) {
-                //console.log(`-------- Executando ${arguments.length} ---------`)
-                if (!arguments.length || str === null || str === undefined) return [];
-                if (Array.isArray(str)) {
-                    let arr = str.filter(function(token) {
-                        return token !== null && token !== undefined
-                    });
-
-                    arr = arr.map(function(t) {
-                        return elasticlunr.utils.toString().toLowerCase();
-                    });
-
-                    let out = [];
-                    arr.forEach(function(item) {
-                        const tokens = item.split(elasticlunr.tokenizer.seperator);
-                        out = out.concat(tokens);
-                    }, this);
-
-                    return out;
-                }
-
-                // edge n-gram
-
-                const strArray = str
-                    .toString()
-                    .trim()
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "")
-                    .toLowerCase()
-                    .split(/,?\s+/);
-
-                const edgeNGram = function(xD) {
-                    let i = 1;
-                    const wordLength = xD.length;
-                    const resultArray = [];
-                    while (i <= wordLength) {
-                        resultArray.push(xD.substr(0, i));
-                        i++;
-                    }
-                    return resultArray;
-                };
-
-                let finalArray = [];
-
-                strArray.forEach(str => {
-                    finalArray = _.concat(finalArray, edgeNGram(str));
-                });
-
-                return finalArray;
             }
             /*
              * if db imported previously
@@ -556,69 +505,44 @@ export default {
 
         async beforeSystemInitialization(){
             const vm = this
+            // load search
+            vm.$db.searchClients.toArray().then(documents => {
+                const taskId = `task/${shortid.generate()}`
+                return new Promise((resolve, reject) => {
+                    vm.$searchWorker.postMessage({
+                        taskId,
+                        operation: 'bulkAdd',
+                        documents,
+                        index: 'clients'
+                    })
+                    vm.$searchWorker.onmessage = (event) => {
+                        if(event.data.taskId === taskId){
+                            resolve(event.data)
+                        }
+                    }
+                })
+            })
+            vm.$db.searchAddresses.toArray().then(documents => {
+                const taskId = `task/${shortid.generate()}`
+                return new Promise((resolve, reject) => {
+                    vm.$searchWorker.postMessage({
+                        taskId,
+                        operation: 'bulkAdd',
+                        documents,
+                        index: 'addresses'
+                    })
+                    vm.$searchWorker.onmessage = (event) => {
+                        if(event.data.taskId === taskId){
+                            resolve(event.data)
+                        }
+                    }
+                })
+            })
+
+            /**
+             * load vuex orm data
+             */
             return Promise.all([
-                /**
-                 * load elasticlunar search data
-                 */
-                new Promise((resolve, reject) => {
-                    vm.$static.searchClientsIndex = elasticlunr(function() {
-                        _.forEach(
-                            elasticlunr.Pipeline.registeredFunctions,
-                            (value, key) => {
-                                if (key === "stemmer") {
-                                    this.pipeline.remove(value);
-                                } else if (key === "stopWordFilter") {
-                                    this.pipeline.remove(value);
-                                }
-                            }
-                        );
-                        this.setRef("id");
-                        this.addField("name");
-                        this.addField("address");
-                        this.addField("complement");
-                        this.addField("number");
-                        this.addField("neighborhood");
-                        this.addField("city");
-                        this.addField("state");
-                        vm.$db.searchClients.toArray().then(documents => {
-                            documents.forEach(function(doc) {
-                                this.addDoc(doc);
-                            }, this);
-                            resolve();
-                        });
-                    });
-                }),
-                new Promise((resolve, reject) => {
-                    vm.$static.searchAddressesIndex = elasticlunr(function() {
-                        _.forEach(
-                            elasticlunr.Pipeline.registeredFunctions,
-                            (value, key) => {
-                                if (key === "stemmer") {
-                                    this.pipeline.remove(value);
-                                } else if (key === "stopWordFilter") {
-                                    this.pipeline.remove(value);
-                                }
-                            }
-                        );
-                        this.setRef("id");
-                        this.addField("name");
-                        this.addField("address");
-                        this.addField("neighborhood");
-                        this.addField("city");
-                        this.addField("state");
-                        this.addField("cep");
-                        this.addField("country");
-                        vm.$db.searchAddresses.toArray().then(documents => {
-                            documents.forEach(function(doc) {
-                                this.addDoc(doc);
-                            }, this);
-                            resolve();
-                        });
-                    });
-                }),
-                /**
-                 * load vuex orm data
-                 */
                 new Promise((resolve, reject) => {
                     vm.$db.products.toArray().then(products => {
                         vm.$store.dispatch("entities/products/insert", {

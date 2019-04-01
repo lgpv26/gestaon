@@ -25,19 +25,17 @@ import VueTimeago from "vue-timeago";
 import VueResize from "vue-resize";
 import VueTippy from "vue-tippy";
 import VueStatic from "vue-static";
-import VueWorker from "vue-worker";
 import VuePerfectScrollbar from "vue-perfect-scrollbar";
 import VueTextareaAutosize from 'vue-textarea-autosize'
 import VueHighlight from 'vue-highlight-text/public/directive.min'
 import VueGravatar from 'vue-gravatar'
-import VueSocketIO from 'vue-socket.io'
+import VueMoney from "v-money";
 
-import DexieRelationships from "dexie-relationships";
+import SearchWorker from 'worker-loader!./workers/search.worker.js'
 
 import ElementPtBr from "element-ui/lib/locale/lang/pt-br";
 import ElementLocale from "element-ui/lib/locale";
 
-import VueMoney from "v-money";
 import App from "./App.vue";
 
 /* App imports */
@@ -64,6 +62,9 @@ Vue.set(Vue.prototype, "_", _)
 Vue.set(Vue.prototype, "moment", moment)
 Vue.set(Vue.prototype, "config", config)
 Vue.set(Vue.prototype, "utils", utils)
+
+Vue.set(Vue.prototype, "$searchWorker", new SearchWorker())
+
 Vue.set(Vue.prototype, "modelDefinitions", {
     offlineDBModels: {
         addresses: "id, name, address, cep, city, neighborhood, state, status, dateCreated, dateUpdated",
@@ -120,10 +121,6 @@ Vue.set(Vue.prototype, "$socket", SocketIO(config.socketServer, {
 /* Resource Configs */
 
 Vue.use(Resource);
-
-/* Workers */
-
-Vue.use(VueWorker);
 
 /* Socket.io */
 

@@ -32,34 +32,34 @@
                                     <h3 style="margin-bottom: 5px;">Endereços</h3>
                                     <table class="client-addresses" style="margin: 3px 0 12px 0;" v-if="request.requestClientAddresses.length > 0 && request.client.clientAddresses.length > 0">
                                         <tbody>
-                                        <tr v-for="clientAddress in request.client.clientAddresses"
-                                            :class="{ selected: request.requestClientAddresses[0].clientAddressId === clientAddress.id }"
-                                            :key="clientAddress.id"
-                                            v-if="clientAddress.address"
-                                            @click="selectClientAddress(clientAddress.id)">
-                                            <td>
-                                                {{ clientAddress.address.name }},
-                                                {{ clientAddress.number }}<br />
-                                                {{
-                                                clientAddress.complement
-                                                ? clientAddress.complement
-                                                : "S/ COMPLEMENTO"
-                                                }}
-                                            </td>
-                                            <td>
-                                                {{ clientAddress.address.neighborhood }}<br />{{
-                                                clientAddress.address.city
-                                                }}/{{ clientAddress.address.state }}
-                                            </td>
-                                            <td style="text-align: right; white-space: nowrap;">
-                                                <a href="javascript:void(0)" @click.stop="editClientAddress(clientAddress.id)">
-                                                    <i class="mi mi-edit" style="font-size: 18px; padding: 2px;"></i>
-                                                </a>
-                                                <a href="javascript:void(0)" @click.stop="removeClientAddress(clientAddress.id)" style="margin-left: 7px;">
-                                                    <i class="mi mi-close" style="font-size: 18px; padding: 2px;"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
+                                            <tr v-for="clientAddress in request.client.clientAddresses"
+                                                :class="{ selected: request.requestClientAddresses[0].clientAddressId === clientAddress.id }"
+                                                :key="clientAddress.id"
+                                                v-if="clientAddress.address"
+                                                @click="selectClientAddress(clientAddress.id)">
+                                                <td>
+                                                    {{ clientAddress.address.name }},
+                                                    {{ clientAddress.number }}<br />
+                                                    {{
+                                                    clientAddress.complement
+                                                    ? clientAddress.complement
+                                                    : "S/ COMPLEMENTO"
+                                                    }}
+                                                </td>
+                                                <td>
+                                                    {{ clientAddress.address.neighborhood }}<br />{{
+                                                    clientAddress.address.city
+                                                    }}/{{ clientAddress.address.state }}
+                                                </td>
+                                                <td style="text-align: right; white-space: nowrap;">
+                                                    <a href="javascript:void(0)" @click.stop="editClientAddress(clientAddress.id)">
+                                                        <i class="mi mi-edit" style="font-size: 18px; padding: 2px;"></i>
+                                                    </a>
+                                                    <a href="javascript:void(0)" @click.stop="removeClientAddress(clientAddress.id)" style="margin-left: 7px;">
+                                                        <i class="mi mi-close" style="font-size: 18px; padding: 2px;"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                     <div style="margin: 3px 0 12px 0;" v-else>
@@ -131,7 +131,8 @@
                                            style="margin-top: 7px; margin-right: 7px; padding: 0 3px; align-self: baseline;">
                                             <i class="mi mi-close" style="font-size: 18px;"></i>
                                         </a>
-                                        <app-mask :mask="['(##) ####-####', '(##) #####-####']" :value="clientPhone.number" @input="updateValue('entities/clientPhones/update','number',clientPhone.id,$event)" placeholder="(##) #####-####" class="input" style="margin-bottom: 0;"></app-mask>
+                                        <app-mask :mask="['(##) ####-####', '(##) #####-####']" :value="clientPhone.number"
+                                                  @input="updateMaskValue('entities/clientPhones/update','number',clientPhone.id,$event)" placeholder="(##) #####-####" class="input" style="margin-bottom: 0;"></app-mask>
                                         <a :class="{ disabled: request.client.clientPhones.length <= 1 }" href="javascript:void(0)" @click="removeClientPhone(clientPhone.id)" style="margin-top: 7px; margin-left: 7px; padding: 0 3px; align-self: baseline;">
                                             <i class="mi mi-close" style="font-size: 18px;"></i>
                                         </a>
@@ -322,7 +323,9 @@
                 searchItems: [],
 
                 lastRequest: null,
-                changeCheckInterval: null
+                changeCheckInterval: null,
+
+                worker: null
             }
         },
         watch: {
@@ -392,6 +395,7 @@
             }),
             ...mapActions("request-queue", ["addToQueue"]),
             ...mapActions("toast", ["showToast", "showError"]),
+
             updateValue(path, field, id, value, modifier = false, ev = false) {
                 const data = {};
                 let start, end
@@ -412,6 +416,18 @@
                         ev.target.setSelectionRange(start,end);
                     })
                 }
+            },
+            updateMaskValue(path, field, id, event){
+                this.updateValue(path, field, id, event)
+                console.log(path, field, id, event)
+                /*if(event.isTrusted){
+                    const data = {}
+                    data[field] = this.utils.getMoneyAsDecimal(event.target.value)
+                    this.$store.dispatch(path, {
+                        where: id,
+                        data
+                    })
+                }*/
             },
             toggleChat(){
                 this.updateValue("entities/requestUIState/update", "showRequestChat", this.request.requestUIState.id, !this.request.requestUIState.showRequestChat)
@@ -468,9 +484,6 @@
                                 requestPayments: await vm.$db.requestPayments.where('requestId').equals(mostRecentClientRequest.id).toArray()
                             })
 
-                            console.log("Most recent client request is", mostRecentClientRequest)
-
-                            console.log("Creating requestOrder")
                             const requestOrderTmpId = `tmp/${shortid.generate()}`
 
                             vm.$store.dispatch("entities/requestOrders/insert", {
@@ -646,11 +659,7 @@
                     this.showError("Adicione um cliente para o pedido")
                     return
                 }
-                console.log(_.some(requestJSON.requestOrder.requestOrderProducts,(requestOrderProduct) => {
-                    return !requestOrderProduct.productId
-                }))
                 if(_.has(requestJSON,'requestOrder.requestOrderProducts') && _.some(requestJSON.requestOrder.requestOrderProducts,(requestOrderProduct) => {
-                    console.log(requestOrderProduct)
                     return !requestOrderProduct.productId
                 })) {
                     this.showError("Adicione os produtos corretamente")
@@ -686,95 +695,125 @@
                 })
                 this.addClientAddress();
             },
+
+            /* Search */
+
             async selectSearchItem(searchItem) {
                 const vm = this;
+
+                // set is loading state
+                vm.updateValue("entities/requestUIState/update", "isLoading", this.request.requestUIState.id, true)
+
                 // create client if not existent
                 vm.activateTab("client", false)
-                const clientId = parseInt(searchItem.id.split("#")[0])
-                const clientAddressId = parseInt(searchItem.id.split("#")[1])
-                const client = await this.$db.clients.where({ id: clientId }).first()
-                const clientPhones = await this.$db.clientPhones.where({clientId: clientId}).toArray()
-                const clientAddresses = await this.$db.clientAddresses.where({clientId: clientId}).toArray()
-                const clientAddress = _.find(clientAddresses, { id: clientAddressId })
-                if (clientAddress.addressId) {
-                    const address = await this.$db.addresses.where({ id: clientAddress.addressId}).first()
-                    this.$store.dispatch("entities/addresses/insert", { data: address })
-                    this.$store.dispatch("entities/clients/insert", { data: client })
-                    if(clientPhones.length){
-                        console.log(this.request)
-                        this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
+
+                await Vue.nextTick()
+
+                    // client
+                    const clientId = parseInt(searchItem.id.split("#")[0]) // get clientId from search
+                    const client = await this.$db.clients.where({ id: clientId }).first() // get client
+
+                    // clientAddresses
+                    const clientAddressId = parseInt(searchItem.id.split("#")[1]) // get clientAddressId from search
+                    const clientAddresses = await this.$db.clientAddresses.where({clientId: clientId}).toArray() // get clientAddresses
+                    const clientAddress = _.find(clientAddresses, { id: clientAddressId }) // get clientAddress clicked in search
+
+                    if (clientAddress.addressId) {
+                        const address = await this.$db.addresses.where({ id: clientAddress.addressId}).first()
+                        this.$store.dispatch("entities/addresses/insert", { data: address })
+                        this.$store.dispatch("entities/clients/insert", { data: client })
+
+                        if(clientAddresses.length){
+                            this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
+                        }
                         this.$store.dispatch(
-                            "entities/requestClientPhones/update",
+                            "entities/requestClientAddresses/update",
                             {
-                                where: _.first(this.request.requestClientPhones).id,
+                                where: _.first(this.request.requestClientAddresses).id,
                                 data: {
-                                    clientPhoneId: _.first(clientPhones).id
+                                    clientAddressId: clientAddress.id
                                 }
                             }
                         )
-                    }
-                    if(clientAddresses.length){
-                        this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
-                    }
-                    this.$store.dispatch(
-                        "entities/requestClientAddresses/update",
-                        {
-                            where: _.first(this.request.requestClientAddresses).id,
+                        this.$store.dispatch("entities/requests/update", {
+                            where: vm.request.id,
                             data: {
-                                clientAddressId: clientAddress.id
+                                clientId: clientId
                             }
-                        }
-                    )
-                    this.$store.dispatch("entities/requests/update", {
-                        where: vm.request.id,
-                        data: {
-                            clientId: clientId
-                        }
-                    })
-                    vm.searchShow = false
-                    vm.updateValue(
-                        "entities/requestUIState/update",
-                        "requestClientAddressForm",
-                        this.request.requestUIState.id,
-                        false
-                    )
-                    vm.updateValue(
-                        "entities/requestUIState/update",
-                        "isAddingClientAddress",
-                        this.request.requestUIState.id,
-                        false
-                    )
-                }
+                        })
+                        vm.searchShow = false
+                        vm.updateValue(
+                            "entities/requestUIState/update",
+                            "requestClientAddressForm",
+                            this.request.requestUIState.id,
+                            false
+                        )
+                        vm.updateValue(
+                            "entities/requestUIState/update",
+                            "isAddingClientAddress",
+                            this.request.requestUIState.id,
+                            false
+                        )
+                    }
+
+                    // clientPhones
+                    const clientPhones = await this.$db.clientPhones.where({clientId: clientId}).toArray() // get clientPhones
+                    if(clientPhones.length){
+                        this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
+                        this.$store.dispatch("entities/requestClientPhones/update", {
+                            where: _.first(this.request.requestClientPhones).id,
+                            data: {
+                                clientPhoneId: _.first(clientPhones).id
+                            }
+                        })
+                    }
+
+                await Vue.nextTick()
+
+                    // remove loading state
+                    vm.updateValue("entities/requestUIState/update", "isLoading", this.request.requestUIState.id, false)
             },
             search() {
                 const vm = this
                 vm.searchValueStrings = _.filter(_.map(vm.searchValue.split(" "), searchValue => searchValue.trim(), searchValue => searchValue !== ''))
                 if (vm.searchTimeout) clearTimeout(vm.searchTimeout);
-                vm.searchTimeout = setTimeout(() => {
-                    if (vm.$static.searchClientsIndex) {
-                        let resultData = vm.$static.searchClientsIndex.search(vm.searchValue, {
-                            fields: {
-                                name: { boost: 1 },
-                                address: { boost: 1 },
-                                number: { boost: 2 },
-                                complement: { boost: 1 }
-                            },
-                            bool: "OR"
+                vm.searchTimeout = setTimeout(async () => {
+                    const documents = await new Promise((resolve, reject) => {
+                        const taskId = `task/${shortid.generate()}`
+                        vm.$searchWorker.postMessage({
+                            taskId,
+                            operation: 'search',
+                            query: vm.searchValue,
+                            index: 'clients',
+                            options: {
+                                fields: {
+                                    name: { boost: 1 },
+                                    address: { boost: 1 },
+                                    number: { boost: 2 },
+                                    complement: { boost: 1 }
+                                },
+                                limit: 30,
+                                bool: "OR"
+                            }
                         })
-                        resultData = resultData.slice(0, 30)
-                        vm.$db.searchClients.where("id").anyOf(
-                            _.map(resultData, resultDataItem => {
-                                return resultDataItem.ref;
-                            })
-                        ).toArray().then(foundClients => {
-                            vm.items = _.map(resultData, resultDataItem => {
-                                return _.assign(_.find(foundClients, { id: resultDataItem.ref }), {
-                                    score: resultDataItem.score.toFixed(1)
-                                })
-                            })
-                            vm.searchItems = vm.items
+                        vm.$searchWorker.onmessage = (event) => {
+                            if(event.data.taskId === taskId){
+                                resolve(event.data.documents)
+                            }
+                        }
+                    })
+                    vm.$db.searchClients.where("id").anyOf(
+                        _.map(documents, resultDataItem => {
+                            return resultDataItem.ref;
                         })
-                    }
+                    ).toArray().then(foundClients => {
+                        vm.items = _.map(documents, resultDataItem => {
+                            return _.assign(_.find(foundClients, { id: resultDataItem.ref }), {
+                                score: resultDataItem.score.toFixed(1)
+                            })
+                        })
+                        vm.searchItems = vm.items
+                    })
                 }, 500)
             },
 
@@ -911,13 +950,14 @@
                 if(vm.changeCheckInterval){
                     clearInterval(vm.changeCheckInterval)
                 }
-                vm.lastRequest = Request.getRequestComparationObj(this.request)
+                vm.lastRequest = Request.getComparationObj(this.request)
                 vm.changeCheckInterval = setInterval(() => {
-                    const currentRequest = Request.getRequestComparationObj(this.request)
+                    const currentRequest = Request.getComparationObj(this.request)
                     if(!_.isEqual(currentRequest, vm.lastRequest)){
+
                         vm.lastRequest = currentRequest
                         if(_.isEqual(currentRequest, vm.request.requestUIState.requestString)){
-                            /* console.log("Original") */
+                            /*console.log("Original")*/
                             this.updateValue(
                                 "entities/requestUIState/update",
                                 "hasRequestChanges",
@@ -942,7 +982,7 @@
 
             /* Discard changes */
 
-            discardChanges(){
+            async discardChanges(){
                 console.log("Discard changes", this.request.id)
 
                 const vm = this
@@ -952,7 +992,7 @@
                         return Promise.reject("Request not found")
                     }
                     return request
-                }).then((request) => {
+                }).then(async (request) => {
                     // _.assign(originalRequest, request)
 
                     vm.$store.dispatch("entities/insertOrUpdate", {
@@ -994,6 +1034,7 @@
                     }
 
                     if(request.clientId){
+
                         asyncOperations.push(this.$db.clients.where({ id: request.clientId }).first((client) => {
                             vm.$store.dispatch("entities/insertOrUpdate", {
                                 entity: "clients",
@@ -1001,6 +1042,9 @@
                             })
                             return true
                         }))
+
+                        // clientAddresses
+
                         const clientAddresses = vm.$store.getters['entities/clientAddresses']().where('clientId',(clientId) => {
                             return clientId === request.clientId
                         }).get()
@@ -1023,6 +1067,21 @@
                                 }))
                             })
                             return Promise.all(addressAsyncOperations)
+                        }))
+
+                        // clientPhones
+
+                        const clientPhones = vm.$store.getters['entities/clientPhones']().where('clientId',(clientId) => {
+                            return clientId === request.clientId
+                        }).get()
+                        clientPhones.forEach((clientPhone) => {
+                            vm.$store.dispatch("entities/clientPhones/delete", clientPhone.id)
+                        })
+                        asyncOperations.push(this.$db.clientPhones.where({ clientId: request.clientId }).toArray((clientPhones) => {
+                            vm.$store.dispatch("entities/insertOrUpdate", {
+                                entity: "clientPhones",
+                                data: clientPhones
+                            })
                         }))
                     }
 
@@ -1054,22 +1113,35 @@
                         return true
                     }))
 
-                    Promise.all(asyncOperations).then(() => {
-                        setTimeout(() => {
-                            vm.$store.dispatch("entities/update", {
-                                entity: "requestUIState",
-                                where: vm.request.requestUIState.id,
-                                data: {
-                                    isLoading: false
-                                }
-                            })
-                        }, 1000)
+                    const requestClientPhones = vm.$store.getters['entities/requestClientPhones']().where('requestId',(requestId) => {
+                        return requestId === request.id
+                    }).get()
+                    requestClientPhones.forEach((requestClientPhone) => {
+                        vm.$store.dispatch("entities/requestClientPhones/delete", requestClientPhone.id)
+                    })
+                    asyncOperations.push(this.$db.requestClientPhones.where({ requestId: request.id }).toArray((requestClientPhones) => {
+                        vm.$store.dispatch("entities/insertOrUpdate", {
+                            entity: "requestClientPhones",
+                            data: requestClientPhones
+                        })
+                        return true
+                    }))
+
+                    await Promise.all(asyncOperations)
+
+                    await Vue.nextTick()
+
+                    vm.$store.dispatch("entities/update", {
+                        entity: "requestUIState",
+                        where: vm.request.requestUIState.id,
+                        data: {
+                            isLoading: false
+                        }
                     })
 
                 })
 
             },
-
             discardDraft(){
                 console.log("Discard draft", this.request)
 

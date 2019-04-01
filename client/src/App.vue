@@ -74,9 +74,6 @@
                         ))
                         return true;
                     }
-                    if(mutation.payload.entity === 'requestClientPhones'){
-                        console.log(mutation.payload.result.data[mutation.payload.entity])
-                    }
                     vm.stateDBQueue.add(() => vm.$db["STATE_" + mutation.payload.entity].bulkPut(
                         mutation.payload.result.data[mutation.payload.entity]
                     ))

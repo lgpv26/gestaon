@@ -4,6 +4,9 @@ module.exports = {
         host: '0.0.0.0'
     },
     configureWebpack: {
+        output: {
+            globalObject: 'this'
+        },
         module: {
             rules: [
                 {

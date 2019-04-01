@@ -49,7 +49,3 @@ export default {
         flex-direction: column;
     }
 </style>
-
-<docs>
-  <tab-button />
-</docs>

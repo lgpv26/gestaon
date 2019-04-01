@@ -1,6 +1,5 @@
 <template>
     <div class="body" v-if="system.initialized">
-        <app-new-request></app-new-request>
         <app-caller-id></app-caller-id>
         <app-morph-screen></app-morph-screen>
         <app-windows></app-windows>
@@ -72,7 +71,6 @@
     import SearchComponent from "./_Shared/Search.vue"
     import CallerIDComponent from "./_Shared/CallerID/CallerID.vue"
     import MenuComponent from "./_Shared/Menu.vue"
-    import NewRequestComponent from "./_Shared/NewRequest/NewRequest.vue"
     import Modals from "./Dashboard/Modals.vue"
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue"
     import Windows from "./_Shared/Windows/Windows.vue"
@@ -102,7 +100,6 @@
             "app-caller-id": CallerIDComponent,
             "app-request-board-filter": RequestBoardFilterComponent,
             "app-connected-users": ConnectedUsersComponent,
-            "app-new-request": NewRequestComponent
         },
         mixins: [SessionHandler, DataImporter],
         data() {
@@ -307,8 +304,8 @@
                                 entity: 'requestUIState',
                                 where: originalRequest.requestUIState.id,
                                 data: {
-                                    requestString: Request.getRequestComparationObj(changedRequest),
-                                    hasRequestChanges: _.isEqual(Request.getRequestComparationObj(originalRequest),Request.getRequestComparationObj(changedRequest))
+                                    requestString: Request.getComparationObj(changedRequest),
+                                    hasRequestChanges: _.isEqual(Request.getComparationObj(originalRequest),Request.getComparationObj(changedRequest))
                                 }
                             })
                         }
@@ -350,13 +347,13 @@
                                 entity: 'requestUIState',
                                 where: originalRequest.requestUIState.id,
                                 data: {
-                                    requestString: Request.getRequestComparationObj(changedRequest),
-                                    hasRequestChanges: _.isEqual(Request.getRequestComparationObj(originalRequest),Request.getRequestComparationObj(changedRequest))
+                                    requestString: Request.getComparationObj(changedRequest),
+                                    hasRequestChanges: _.isEqual(Request.getComparationObj(originalRequest),Request.getComparationObj(changedRequest))
                                 }
                             })
                         }
                         else {
-                            Request.show(vm, request, {
+                            Request.load(vm, request, {
                                 ignoreOfflineDBInsertion: false
                             }).catch((err) => {
                                 console.log("Error occurred", err)
