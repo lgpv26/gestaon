@@ -12,24 +12,24 @@
                         <span v-else>{{ column.text }}</span>
                     </div>
                 </div>
-                <div class="grid__main__container" ref="scrollbar">
-                    <div :style="{ width: (gridFullWidth + (grid.settings.horizontalPadding * 2)) + 'px', 'min-width': '100%' }">
-                        <div class="grid__body">
-                            <div class="body__row" v-for="(row, index) in grid.rows" :key="index" :class="{active: _.find(form.selectedList, { id: row.id })}" :style="{ 'height': row.height + 'px' }" @click="rowClick(row)">
-                                <div class="row__column" v-for="(rowColumn, index) in row.columns" :key="index"
-                                     :style="[{ width: getColumn(rowColumn.column).width + 'px', 'left': getColumnLeftSpace(rowColumn.column) + 'px' }, rowColumn.style]">
-                                    <div v-if="rowColumn.column === 'check'" class="check" :class="{active: _.find(form.selectedList, { id: row.id })}"></div>
-                                    <div v-else-if="rowColumn.html">
-                                        <slot :name="rowColumn.column" v-bind:row="row"></slot>
+                    <app-perfect-scrollbar class="grid__main__container" ref="scrollbar" @ps-scroll-x="xScrollHandler($event)">
+                        <div :style="{ height: 0, width: (gridFullWidth + (grid.settings.horizontalPadding * 2)) + 'px', 'min-width': '100%' }">
+                            <div class="grid__body">
+                                <div class="body__row" v-for="(row, index) in grid.rows" :key="index" :class="{active: _.find(form.selectedList, { id: row.id })}" :style="{ 'height': row.height + 'px' }" @click="rowClick(row)">
+                                    <div class="row__column" v-for="(rowColumn, index) in row.columns" :key="index"
+                                         :style="[{ width: getColumn(rowColumn.column).width + 'px', 'left': getColumnLeftSpace(rowColumn.column) + 'px' }, rowColumn.style]">
+                                        <div v-if="rowColumn.column === 'check'" class="check" :class="{active: _.find(form.selectedList, { id: row.id })}"></div>
+                                        <div v-else-if="rowColumn.html">
+                                            <slot :name="rowColumn.column" v-bind:row="row"></slot>
+                                        </div>
+                                        <span :title="rowColumn.showTitle ? (_.isFunction(rowColumn.text) ? rowColumn.text() : rowColumn.text) : ''" v-else>
+                                            {{ _.isFunction(rowColumn.text) ? rowColumn.text() : rowColumn.text }}
+                                        </span>
                                     </div>
-                                    <span :title="rowColumn.showTitle ? (_.isFunction(rowColumn.text) ? rowColumn.text() : rowColumn.text) : ''" v-else>
-                                        {{ _.isFunction(rowColumn.text) ? rowColumn.text() : rowColumn.text }}
-                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </app-perfect-scrollbar>
             </div>
             <div class="grid__section" v-if="false"></div>
         </div>
@@ -129,12 +129,11 @@
             }
         },
         methods: {
-            reload(){
-                if(this.scrollbar){
-                    this.$nextTick(() => {
-                        // this.scrollbar.setPosition(0,0)
-                        this.scrollbar.update()
-                    })
+            async reload(){
+                const vm = this
+                if(this.$refs.scrollbar){
+                    await this.$nextTick()
+                    vm.$refs.scrollbar.update()
                 }
             },
             getColumn(columnName){
@@ -171,26 +170,12 @@
                     })
                 }
                 this.$emit('input', this.form.selectedList)
+            },
+            xScrollHandler(ev){
+                this.grid.x = ev.target.scrollLeft
             }
         },
-        mounted(){
-            const vm = this
-            this.scrollbar = Scrollbar.init(this.$refs.scrollbar, {
-                overscrollEffect: 'bounce',
-                alwaysShowTracks: true
-            })
-            this.scrollbar.addListener((ev) => {
-                vm.grid.x = ev.offset.x
-                /*vm.internalLoading = true
-                if(vm.scrollbarStopTimeout){
-                    clearTimeout(vm.scrollbarStopTimeout)
-                }
-                vm.scrollbarStopTimeout = setTimeout(() => {
-                    vm.internalLoading = false
-                    vm.calculateScrollPosition(ev)
-                }, 50)*/
-            })
-        }
+        mounted(){}
     }
 </script>
 

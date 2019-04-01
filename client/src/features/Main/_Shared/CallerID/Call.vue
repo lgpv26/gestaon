@@ -1,5 +1,5 @@
 <template>
-    <div class="call">
+    <div class="call" ref="call">
         <div class="call__header">
             <div class="number__container">
                 <a class="number clipboard" v-if="!call.isAnonymous && call.isValid" :data-clipboard-text="call.number">{{ utils.formatPhone(call.number) }}</a>
@@ -102,9 +102,11 @@
                 }
             },
             async addRequest() {
+                const vm = this
                 const requestUIStateTmpId = `tmp/${shortid.generate()}`;
                 const requestTmpId = `tmp/${shortid.generate()}`;
                 const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
+                const requestClientPhoneTmpId = `tmp/${shortid.generate()}`;
                 const windowTmpId = `tmp/${shortid.generate()}`;
                 const cardTmpId = `tmp/${shortid.generate()}`;
                 this.$store.dispatch("entities/windows/insert", {
@@ -125,7 +127,8 @@
                         id: requestUIStateTmpId,
                         windowId: windowTmpId,
                         requestId: requestTmpId,
-                        activeTab: (this.client) ? null : 'client'
+                        activeTab: (this.client) ? 'order' : 'client',
+                        isLoading: true
                     }
                 })
                 this.$store.dispatch("entities/requests/insert", {
@@ -138,140 +141,242 @@
                     }
                 });
 
-                Vue.nextTick(async () => {
-                    if(this.client && this.client.id){
-                        const client = await this.$db.clients.where({ id: this.client.id }).first()
-                        const clientPhones = await this.$db.clientPhones.where({clientId: this.client.id}).toArray()
-                        const clientAddresses = await this.$db.clientAddresses.where({clientId: this.client.id}).toArray()
-                        const clientAddress = _.first(clientAddresses)
-                        if (clientAddress && clientAddress.addressId) {
-                            const address = await this.$db.addresses.where({ id: clientAddress.addressId}).first()
-                            this.$store.dispatch("entities/addresses/insert", { data: address })
-                            this.$store.dispatch("entities/clients/insert", { data: client })
-                            if(clientPhones.length){
-                                this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
-                            }
-                            if(clientAddresses.length){
-                                this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
-                                this.$store.dispatch("entities/requestClientAddresses/insert", {
+
+                // post request create
+
+                await Vue.nextTick()
+
+                if(this.client && this.client.id){
+                    const client = await this.$db.clients.where({ id: this.client.id }).first()
+                    const clientPhones = await this.$db.clientPhones.where({clientId: this.client.id}).toArray()
+                    const clientAddresses = await this.$db.clientAddresses.where({clientId: this.client.id}).toArray()
+                    const clientAddress = _.first(clientAddresses)
+                    if (clientAddress && clientAddress.addressId) {
+                        const address = await this.$db.addresses.where({ id: clientAddress.addressId}).first()
+                        this.$store.dispatch("entities/addresses/insert", { data: address })
+                        this.$store.dispatch("entities/clients/insert", { data: client })
+                        if(clientPhones.length){
+                            this.$store.dispatch("entities/clientPhones/insert", { data: clientPhones })
+                            const foundNumber = _.find(clientPhones, { number: this.call.number })
+                            if(foundNumber){
+                                this.$store.dispatch("entities/requestClientPhones/insert", {
                                     data: {
-                                        id: requestClientAddressTmpId,
+                                        id: requestClientPhoneTmpId,
                                         requestId: requestTmpId,
-                                        clientAddressId: _.first(clientAddresses).id
+                                        clientPhoneId: foundNumber.id
                                     }
                                 })
                             }
-                            /*this.$store.dispatch(
-                                "entities/requestClientAddresses/update",
-                                {
-                                    where: _.first(this.request.requestClientAddresses).id,
-                                    data: {
-                                        clientAddressId: clientAddress.id
-                                    }
-                                }
-                            )*/
-                            this.$store.dispatch("entities/requests/update", {
-                                where: requestTmpId,
+                        }
+                        if(clientAddresses.length){
+                            this.$store.dispatch("entities/clientAddresses/insert", {data: clientAddresses})
+                            this.$store.dispatch("entities/requestClientAddresses/insert", {
                                 data: {
-                                    clientId: this.client.id
+                                    id: requestClientAddressTmpId,
+                                    requestId: requestTmpId,
+                                    clientAddressId: _.first(clientAddresses).id
                                 }
                             })
-                            this.searchShow = false
-                            this.updateValue(
-                                "entities/requestUIState/update",
-                                "requestClientAddressForm",
-                                requestUIStateTmpId,
-                                false
-                            )
-                            this.updateValue(
-                                "entities/requestUIState/update",
-                                "isAddingClientAddress",
-                                requestUIStateTmpId,
-                                false
-                            )
                         }
-                    }
-                    else {
-                        console.log("Creating client")
-                        const clientTmpId = `tmp/${shortid.generate()}`
-                        const addressTmpId = `tmp/${shortid.generate()}`
-                        const clientAddressTmpId = `tmp/${shortid.generate()}`
-                        const clientPhoneTmpId = `tmp/${shortid.generate()}`
-                        const requestClientAddressTmpId = `tmp/${shortid.generate()}`
-                        this.$store.dispatch("entities/clients/insert", {
-                            data: {
-                                id: clientTmpId
+                        /*this.$store.dispatch(
+                            "entities/requestClientAddresses/update",
+                            {
+                                where: _.first(this.request.requestClientAddresses).id,
+                                data: {
+                                    clientAddressId: clientAddress.id
+                                }
                             }
-                        })
-                        this.$store.dispatch("entities/clientPhones/insert", {
-                            data: {
-                                id: clientPhoneTmpId,
-                                clientId: clientTmpId,
-                                number: this.call.number
-                            }
-                        })
-                        this.$store.dispatch("entities/addresses/insert", {
-                            data: {
-                                id: addressTmpId
-                            }
-                        })
-                        this.$store.dispatch("entities/clientAddresses/insert", {
-                            data: {
-                                id: clientAddressTmpId,
-                                clientId: clientTmpId,
-                                addressId: addressTmpId
-                            }
-                        })
-                        this.$store.dispatch("entities/requestClientAddresses/insert", {
-                            data: {
-                                id: requestClientAddressTmpId,
-                                requestId: requestTmpId,
-                                clientAddressId: clientAddressTmpId
-                            }
-                        })
+                        )*/
                         this.$store.dispatch("entities/requests/update", {
                             where: requestTmpId,
                             data: {
-                                clientId: clientTmpId
+                                clientId: this.client.id
+                            }
+                        })
+                        this.searchShow = false
+                        this.updateValue(
+                            "entities/requestUIState/update",
+                            "requestClientAddressForm",
+                            requestUIStateTmpId,
+                            false
+                        )
+                        this.updateValue(
+                            "entities/requestUIState/update",
+                            "isAddingClientAddress",
+                            requestUIStateTmpId,
+                            false
+                        )
+                    }
+
+                    // add requestOrder
+
+                    const clientRequests = await vm.$db.requests.where('clientId').equals(vm.client.id).toArray()
+                    _.sortBy(clientRequests, (clientRequest) => {
+                        return clientRequest.deliveryDate
+                    })
+                    const mostRecentClientRequest = _.last(clientRequests)
+                    if(mostRecentClientRequest){
+                        if(_.get(mostRecentClientRequest,'requestOrderId',false)){
+                            _.assign(mostRecentClientRequest, {
+                                requestOrder: await vm.$db.requestOrders.where('id').equals(mostRecentClientRequest.requestOrderId).first()
+                            })
+                            _.assign(mostRecentClientRequest.requestOrder, {
+                                requestOrderProducts: await vm.$db.requestOrderProducts.where('requestOrderId').equals(mostRecentClientRequest.requestOrderId).toArray()
+                            })
+                        }
+                        _.assign(mostRecentClientRequest, {
+                            requestPayments: await vm.$db.requestPayments.where('requestId').equals(mostRecentClientRequest.id).toArray()
+                        })
+
+                        const requestOrderTmpId = `tmp/${shortid.generate()}`
+
+                        vm.$store.dispatch("entities/requestOrders/insert", {
+                            data: {
+                                id: requestOrderTmpId,
+                                promotionChannelId: mostRecentClientRequest.requestOrder.promotionChannelId
+                            }
+                        })
+                        vm.$store.dispatch("entities/requests/update", {
+                            where: requestTmpId,
+                            data: {
+                                requestOrderId: requestOrderTmpId
+                            }
+                        })
+                        vm.$store.dispatch("entities/requestPayments/insert", {
+                            data: _.map(mostRecentClientRequest.requestPayments, (requestPayment) => {
+                                return {
+                                    id: `tmp/${shortid.generate()}`,
+                                    requestId: requestTmpId,
+                                    paymentMethodId: requestPayment.paymentMethodId,
+                                    amount: requestPayment.amount
+                                }
+                            })
+                        })
+                        vm.$store.dispatch("entities/requestOrderProducts/insert", {
+                            data: _.map(mostRecentClientRequest.requestOrder.requestOrderProducts, (requestPayment) => {
+                                return {
+                                    id: `tmp/${shortid.generate()}`,
+                                    requestOrderId: requestOrderTmpId,
+                                    productId: requestPayment.productId,
+                                    quantity: requestPayment.quantity,
+                                    unitPrice: requestPayment.unitPrice,
+                                    unitDiscount: requestPayment.unitDiscount
+                                }
+                            })
+                        })
+                    }
+                    else {
+                        console.log("Creating requestOrder")
+                        const requestPaymentTmpId = `tmp/${shortid.generate()}`
+                        const requestOrderTmpId = `tmp/${shortid.generate()}`
+                        const requestOrderProductTmpId = `tmp/${shortid.generate()}`
+                        vm.$store.dispatch("entities/requestPayments/insert", {
+                            data: {
+                                id: requestPaymentTmpId,
+                                requestId: requestTmpId,
+                                paymentMethodId: 1,
+                                amount: _.get(
+                                    vm.$store.getters["entities/products/find"](1),
+                                    "price",
+                                    false
+                                )
+                                    ? vm.$store.getters["entities/products/find"](1).price
+                                    : 0
+                            }
+                        })
+                        vm.$store.dispatch("entities/requestOrderProducts/insert", {
+                            data: {
+                                id: requestOrderProductTmpId,
+                                requestOrderId: requestOrderTmpId,
+                                productId: 1,
+                                unitPrice: _.get(
+                                    vm.$store.getters["entities/products/find"](1),
+                                    "price",
+                                    0
+                                )
+                            }
+                        })
+                        vm.$store.dispatch("entities/requestOrders/insert", {
+                            data: {
+                                id: requestOrderTmpId
+                            }
+                        })
+                        vm.$store.dispatch("entities/requests/update", {
+                            where: requestTmpId,
+                            data: {
+                                requestOrderId: requestOrderTmpId
                             }
                         })
                     }
+
+                }
+                else {
+                    console.log("Creating client")
+                    const clientTmpId = `tmp/${shortid.generate()}`
+                    const addressTmpId = `tmp/${shortid.generate()}`
+                    const clientAddressTmpId = `tmp/${shortid.generate()}`
+                    const clientPhoneTmpId = `tmp/${shortid.generate()}`
+                    const requestClientAddressTmpId = `tmp/${shortid.generate()}`
+                    this.$store.dispatch("entities/clients/insert", {
+                        data: {
+                            id: clientTmpId
+                        }
+                    })
+                    this.$store.dispatch("entities/clientPhones/insert", {
+                        data: {
+                            id: clientPhoneTmpId,
+                            clientId: clientTmpId,
+                            number: this.call.number
+                        }
+                    })
+                    this.$store.dispatch("entities/addresses/insert", {
+                        data: {
+                            id: addressTmpId
+                        }
+                    })
+                    this.$store.dispatch("entities/clientAddresses/insert", {
+                        data: {
+                            id: clientAddressTmpId,
+                            clientId: clientTmpId,
+                            addressId: addressTmpId
+                        }
+                    })
+                    this.$store.dispatch("entities/requestClientAddresses/insert", {
+                        data: {
+                            id: requestClientAddressTmpId,
+                            requestId: requestTmpId,
+                            clientAddressId: clientAddressTmpId
+                        }
+                    })
+                    this.$store.dispatch("entities/requests/update", {
+                        where: requestTmpId,
+                        data: {
+                            clientId: clientTmpId
+                        }
+                    })
+                }
+
+                this.$store.dispatch("entities/requestUIState/update", {
+                    where: requestUIStateTmpId,
+                    data: {
+                        isLoading: false
+                    }
                 })
+
 
             },
         },
         mounted(){
             const vm = this
             vm.clipboardInstance = new Clipboard('.clipboard')
-            /*vm.autoCloseProgressInstance = new ProgressBar.Circle(vm.$refs.autoCloseProgress, {
-                color: 'var(--font-color--terciary)',
-                strokeWidth: 12,
-                trailWidth: 1,
-                text: {
-                    value: '?'
+            setTimeout(() => {
+                if(!vm.$refs.call.classList.contains('appeared')){
+                    vm.$refs.call.classList.add('appeared')
                 }
-            })
-            vm.callActiveTime = moment().diff(moment(vm.call.dateCreated), 'seconds')
-            vm.intervalInstance = setInterval(() => {
-                vm.callActiveTime += 1
-                if(vm.callActiveTime > 120){
-                    clearInterval(vm.intervalInstance)
-                    vm.$store.dispatch('entities/calls/delete', vm.call.id)
-                }
-                else {
-                    vm.autoCloseProgressInstance.animate(vm.callActiveTime / 120, {
-                        duration: 800
-                    })
-                }
-                vm.autoCloseProgressInstance.setText(vm.callActiveTime)
-            }, 1000)*/
+            }, 100)
         },
         beforeDestroy(){
-            /*if(this.intervalInstance){
-                clearInterval(this.intervalInstance)
-            }*/
             this.clipboardInstance.destroy()
-            /*this.autoCloseProgressInstance.destroy()*/
         }
     }
 </script>
@@ -325,13 +430,18 @@
                 flex-direction: column;
                 width: 100%;
                 padding: 10px 22px 10px 10px;
+                .call.appeared {
+                    background-color: var(--bg-color--1);
+                }
                 .call {
                     flex-shrink: 0;
-                    background: var(--bg-color--1);
+                    background-color: var(--bg-color--primary);
                     margin-bottom: 10px;
                     padding: 8px 12px;
                     display: flex;
                     flex-direction: column;
+                    transition: 2s all;
+
                     .call__header {
                         display: flex;
                         flex-direction: row;

@@ -248,6 +248,5 @@
 <style lang="scss" scoped>
     #map {
         flex-grow: 1;
-        background-color: #990000
     }
 </style>

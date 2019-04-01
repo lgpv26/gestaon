@@ -1,0 +1,15 @@
+<svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1 23.2581H25" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M3.25 3.22581V1H22.75V3.22581" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M25 5.4516H1.75V7.67741" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M6.25 7.67741V5.4516" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M10.75 7.67741V5.4516" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M15.25 7.67741V5.4516" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M6.25 7.67743C6.25 8.90904 5.245 9.90324 4 9.90324C2.755 9.90324 1.75 8.90904 1.75 7.67743" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M10.75 7.67743C10.75 8.90904 9.745 9.90324 8.5 9.90324C7.255 9.90324 6.25 8.90904 6.25 7.67743" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M15.25 7.67743C15.25 8.90904 14.245 9.90324 13 9.90324C11.755 9.90324 10.75 8.90904 10.75 7.67743" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M3.25 12.129V22.5161" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M14.5 12.871H7V24" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M17 12.5412C17 14.5434 20.5 19.7957 20.5 19.7957C20.5 19.7957 24 14.5434 24 12.5412C24 10.5389 22.432 8.91394 20.5 8.91394C18.568 8.91394 17 10.5389 17 12.5412Z" stroke="#55595E" stroke-width="2" stroke-miterlimit="10"/>
+<ellipse cx="20.5" cy="12.3763" rx="1.5" ry="1.48387" fill="#55595E"/>
+</svg>

@@ -56,6 +56,7 @@
 <script>
     import { mapMutations, mapState, mapGetters } from "vuex";
     import _ from "lodash";
+    import shortid from 'shortid'
 
     export default {
         props: ["value", "address"],
@@ -78,36 +79,48 @@
                 this.$refs.popover.update();
             },
             async input(ev) {
+                const vm = this
+                this.$emit("input", ev.target.value);
                 this.searchValueStrings = _.filter(_.map(ev.target.value.split(" "), searchValue => searchValue.trim(), searchValue => searchValue !== ''))
-                if (this.$static.searchAddressesIndex) {
-                    let resultData = this.$static.searchAddressesIndex
-                        .search(ev.target.value, {
+                const documents = await new Promise((resolve, reject) => {
+                    const taskId = `task/${shortid.generate()}`
+                    vm.$searchWorker.postMessage({
+                        taskId,
+                        operation: 'search',
+                        query: ev.target.value,
+                        index: 'addresses',
+                        options: {
                             fields: {
                                 name: {
                                     boost: 1
                                 }
                             },
+                            limit: 30,
                             bool: "OR",
                             expand: false
+                        }
+                    })
+                    vm.$searchWorker.onmessage = (event) => {
+                        if(event.data.taskId === taskId){
+                            resolve(event.data.documents)
+                        }
+                    }
+                })
+                this.$db.searchAddresses
+                    .where("id")
+                    .anyOf(
+                        _.map(documents, resultDataItem => {
+                            return parseInt(resultDataItem.ref);
                         })
-                        .slice(0, 30);
-                    this.$db.searchAddresses
-                        .where("id")
-                        .anyOf(
-                            _.map(resultData, resultDataItem => {
-                                return parseInt(resultDataItem.ref);
+                    )
+                    .toArray()
+                    .then(foundAddresses => {
+                        this.items = _.map(documents, resultDataItem => {
+                            return _.find(foundAddresses, {
+                                id: parseInt(resultDataItem.ref)
                             })
-                        )
-                        .toArray()
-                        .then(foundAddresses => {
-                            this.items = _.map(resultData, resultDataItem => {
-                                return _.find(foundAddresses, {
-                                    id: parseInt(resultDataItem.ref)
-                                });
-                            });
-                        });
-                }
-                this.$emit("input", ev.target.value);
+                        })
+                    })
             },
             select(address) {
                 this.$refs.popover.closePopover();

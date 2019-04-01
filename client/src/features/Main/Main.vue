@@ -99,7 +99,7 @@
             "app-menu": MenuComponent,
             "app-caller-id": CallerIDComponent,
             "app-request-board-filter": RequestBoardFilterComponent,
-            "app-connected-users": ConnectedUsersComponent
+            "app-connected-users": ConnectedUsersComponent,
         },
         mixins: [SessionHandler, DataImporter],
         data() {
@@ -304,8 +304,8 @@
                                 entity: 'requestUIState',
                                 where: originalRequest.requestUIState.id,
                                 data: {
-                                    requestString: Request.getRequestComparationObj(changedRequest),
-                                    hasRequestChanges: _.isEqual(Request.getRequestComparationObj(originalRequest),Request.getRequestComparationObj(changedRequest))
+                                    requestString: Request.getComparationObj(changedRequest),
+                                    hasRequestChanges: _.isEqual(Request.getComparationObj(originalRequest),Request.getComparationObj(changedRequest))
                                 }
                             })
                         }
@@ -347,13 +347,13 @@
                                 entity: 'requestUIState',
                                 where: originalRequest.requestUIState.id,
                                 data: {
-                                    requestString: Request.getRequestComparationObj(changedRequest),
-                                    hasRequestChanges: _.isEqual(Request.getRequestComparationObj(originalRequest),Request.getRequestComparationObj(changedRequest))
+                                    requestString: Request.getComparationObj(changedRequest),
+                                    hasRequestChanges: _.isEqual(Request.getComparationObj(originalRequest),Request.getComparationObj(changedRequest))
                                 }
                             })
                         }
                         else {
-                            Request.show(vm, request, {
+                            Request.load(vm, request, {
                                 ignoreOfflineDBInsertion: false
                             }).catch((err) => {
                                 console.log("Error occurred", err)

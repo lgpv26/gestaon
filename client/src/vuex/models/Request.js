@@ -93,7 +93,7 @@ export default class Request extends Model {
         }
     }
 
-    static async show(ctx, request, { showWindow = false, ignoreOfflineDBInsertion = false }){
+    static async load(ctx, request, { showWindow = false, ignoreOfflineDBInsertion = false }){
         // guarantee the order of promises
         const requestPromiseQueue = new PromiseQueue({ concurrency: 1})
 
@@ -292,6 +292,7 @@ export default class Request extends Model {
                         data: request.client
                     });
                     if(_.isArray(request.client.clientAddresses) && request.client.clientAddresses.length){
+                        // loop to insert addresses
                         request.client.clientAddresses.forEach(clientAddress => {
                             Request._offlineDBHelper(ctx, {
                                 modelName: "addresses",
@@ -353,6 +354,52 @@ export default class Request extends Model {
                         return promise
                     }))
                 }
+
+                // request.client.clientPhones
+
+                if(_.isArray(request.client.clientPhones) && request.client.clientPhones.length) {
+                    requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                        modelName: "clientPhones",
+                        action: "bulkPutWithReplacement",
+                        data: request.client.clientPhones,
+                        primaryKey: "clientId"
+                    }).then((promise) => {
+                        const clientPhones = store.getters['entities/clientPhones']().where('clientId', (clientId) => {
+                            return clientId === request.client.id
+                        }).get()
+                        clientPhones.forEach((clientPhone) => {
+                            store.dispatch('entities/delete', {
+                                where: clientPhone.id,
+                                ignoreOfflineDBInsertion,
+                                entity: 'clientPhones'
+                            })
+                        })
+                        store.dispatch("entities/insertOrUpdate", {
+                            entity: 'clientPhones',
+                            data: request.client.clientPhones,
+                            ignoreOfflineDBInsertion
+                        })
+                        return promise
+                    }))
+                }
+
+                // request.requestClientPhones
+
+                if(_.isArray(request.requestClientPhones) && request.requestClientPhones.length){
+                    requestPromiseQueue.add(() => Request._offlineDBHelper(ctx, {
+                        modelName: "requestClientPhones",
+                        action: "bulkPutWithReplacement",
+                        data: request.requestClientPhones,
+                        primaryKey: "requestId"
+                    }).then((promise) => {
+                        store.dispatch("entities/insertOrUpdate", {
+                            entity: 'requestClientPhones',
+                            ignoreOfflineDBInsertion,
+                            data: request.requestClientPhones
+                        })
+                        return promise
+                    }))
+                }
             }
         })
 
@@ -373,8 +420,11 @@ export default class Request extends Model {
                     }
                 })
                 ctx.$db.searchClients.bulkPut(searchClients).then(() => {
-                    searchClients.forEach((searchClient) => {
-                        ctx.$static.searchClientsIndex.addDoc(searchClient)
+                    ctx.$searchWorker.postMessage({
+                        taskId: `task/${shortid.generate()}`,
+                        operation: 'bulkAdd',
+                        documents: searchClients,
+                        index: 'clients'
                     })
                 })
                 const searchAddresses = _.map(request.client.clientAddresses, (clientAddress) => {
@@ -390,8 +440,11 @@ export default class Request extends Model {
                     }
                 })
                 ctx.$db.searchAddresses.bulkPut(searchAddresses).then(() => {
-                    searchAddresses.forEach((searchAddress) => {
-                        ctx.$static.searchAddressesIndex.addDoc(searchAddress)
+                    ctx.$searchWorker.postMessage({
+                        taskId: `task/${shortid.generate()}`,
+                        operation: 'bulkAdd',
+                        documents: searchAddresses,
+                        index: 'addresses'
                     })
                 })
             }
@@ -405,7 +458,8 @@ export default class Request extends Model {
                 .with("requestClientAddresses.clientAddress.address")
                 .with("requestOrder.requestOrderProducts")
                 .with("requestPayments")
-                .with("requestClientAddresses")
+                .with("requestClientAddresses.clientPhone")
+                .with("requestClientPhones")
                 .with("requestUIState")
                 .find(request.id)
 
@@ -413,7 +467,7 @@ export default class Request extends Model {
                 entity: 'requestUIState',
                 where: savedRequest.requestUIState.id,
                 data: {
-                    requestString: Request.getRequestComparationObj(savedRequest),
+                    requestString: Request.getComparationObj(savedRequest),
                     hasRequestChanges: false,
                     hasRequestOrderChanges: false
                 }
@@ -471,7 +525,7 @@ export default class Request extends Model {
 
     }
 
-    static getRequestComparationObj(request){
+    static getComparationObj(request){
         let requestChangeString = JSON.parse(JSON.stringify(request))
         requestChangeString = _.omit(requestChangeString, ['user','card','requestUIState','dateUpdated','dateCreated'])
 
@@ -489,6 +543,10 @@ export default class Request extends Model {
         requestChangeString.requestClientAddresses = _.map(requestChangeString.requestClientAddresses, (requestClientAddress) => {
             requestClientAddress = _.omit(requestClientAddress, ['clientAddress','request','dateUpdated','dateCreated'])
             return requestClientAddress
+        })
+        requestChangeString.requestClientPhones = _.map(requestChangeString.requestClientPhones, (requestClientPhone) => {
+            requestClientPhone = _.omit(requestClientPhone, ['clientPhone','request','dateUpdated','dateCreated'])
+            return requestClientPhone
         })
         if(requestChangeString.requestOrder){
             requestChangeString.requestOrder = _.omit(requestChangeString.requestOrder, ['promotionChannel','request','dateUpdated','dateCreated'])

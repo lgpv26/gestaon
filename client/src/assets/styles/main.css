@@ -472,6 +472,23 @@ li.router-link-active svg.icon {
     width: 8px!important;
 }
 
+.ps>.ps__scrollbar-x-rail {
+    width: 10px;
+    background: transparent!important;
+}
+
+.ps:hover>.ps__scrollbar-x-rail:hover {
+    background-color: transparent!important;
+}
+
+.ps>.ps__scrollbar-x-rail>.ps__scrollbar-x, .ps>.ps__scrollbar-x-rail>.ps__scrollbar-x {
+    background-color: rgba(255,255,255,.25)!important;
+}
+
+.ps>.ps__scrollbar-x-rail:active>.ps__scrollbar-x, .ps>.ps__scrollbar-x-rail:hover>.ps__scrollbar-x {
+    height: 8px!important;
+}
+
 .highcharts-credits {
     display: none;
 }

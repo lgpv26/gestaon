@@ -257,7 +257,7 @@
                     const request = await RequestsAPI.getOne(requestId, {
                         companyId: this.company.id
                     })
-                    requestId = await Request.show(this, request, {
+                    requestId = await Request.load(this, request, {
                         ignoreOfflineDBInsertion: false
                     })
                     const stateRequest = Request.query().with("card").find(requestId)
