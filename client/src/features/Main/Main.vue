@@ -1,5 +1,6 @@
 <template>
     <div class="body" v-if="system.initialized">
+        <app-NewRequest></app-NewRequest>
         <app-caller-id></app-caller-id>
         <app-morph-screen></app-morph-screen>
         <app-windows></app-windows>
@@ -75,6 +76,7 @@
     import DropdownMenuComponent from "../../components/Utilities/DropdownMenu.vue"
     import Windows from "./_Shared/Windows/Windows.vue"
     import ConnectedUsersComponent from "./_Shared/Sidebar/ConnectedUsers.vue"
+    import NewRequest from "./_Shared/NewRequest/NewRequest.vue"
 
     import Card from "../../vuex/models/Card"
     import Request from "../../vuex/models/Request"
@@ -100,6 +102,7 @@
             "app-caller-id": CallerIDComponent,
             "app-request-board-filter": RequestBoardFilterComponent,
             "app-connected-users": ConnectedUsersComponent,
+            "app-NewRequest" : NewRequest,
         },
         mixins: [SessionHandler, DataImporter],
         data() {

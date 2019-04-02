@@ -1,59 +1,29 @@
 <template>
     <div id="app-new-request">
-       <div class="new-request__header">
-           <span style="padding: 0 10px;"># 2324</span>
-           <span>Maringás celular</span>
-           <span style="flex-grow: 1"></span>
-           <span><i class="mi mi-chat"></i></span>
-           <span><i class="mi mi-list"></i></span>
-           <span><i class="mi mi-close"></i></span>
-       </div>
-       <div class="new-request__menu">
-           <tab-button style="padding: 0 10px;" v-for="(tab, index) in tabs" :key="index" :tab="tab"></tab-button>
-       </div>
-       <div class="new-request__body"></div>
-       <div class="new-request__footer"></div>
+       <new-TopHeader></new-TopHeader>
+       <new-button></new-button>
+       <new-TopBody></new-TopBody>
+       <new-TopFooter></new-TopFooter>
     </div>
 </template>
 
 <script>
     import Vue from "vue"
-    import TabButton from "./TabButton.vue"
+    import TopHeader from "./CardHeader.vue"
+    import TopButton from "./CardButton.vue"
+    import TopBody from "./CardBody.vue"
+    import TopFooter from "./CardFooter.vue"
     
     export default {
         components: {
-            'tab-button' : TabButton,
+           'new-TopHeader' : TopHeader,
+           'new-button' : TopButton,
+           'new-TopBody' : TopBody,
+           'new-TopFooter' : TopFooter,
         },
         data(){
             return {
-
-              tabs: [
-                  {
-                      titulo: "Busca",
-                      text1: 0 + " cadastros",
-                      text2: "encontrados",
-                      icons: '',
-                  },
-                  {
-                      titulo: "Lembrete",
-                      text1: "Crie uma anotação ou ",
-                      text2: "salve o texto da busca",
-                      icons: '',
-                  },
-                  {
-                      titulo: "Contato",
-                      text1: "Nome e telefone ",
-                      text2: "Endereço da entrega",
-                      icons: '',
-                  },
-                  {
-                      titulo: "Pedido",
-                      text1: 0 + " itens",
-                      text2: "R$ " + 0.00,
-                      icons: '',
-                  },
-              ],  
-            }
+        }
         },
         computed: {
         },
@@ -88,9 +58,6 @@
             display: flex;
             flex-direction: row;
              align-items: center;
-        }
-        .new-request__body {
-            flex-grow: 1;
         }
         .new-request__footer {
             height: 40px;
