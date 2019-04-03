@@ -1,15 +1,30 @@
 <template>
     <div class="new-request__footer">
+            <div>
             <img class="new-footer__img"  src="./Elements/ic-down-lixeira.png">
            <img class="new-footer__img" src="./Elements/ic-down-bandeira.png">
            <span class="new-footer__text" >Acimar Rocha</span>
            <img class="new-footer__img" src="./Elements/ic-down-cima.png">
+           </div>
+
            <span style="flex-grow: 1"></span>
-       </div>
+
+            <div v-if="activeTab !== 'search'">
+            <img class="new-footer__img" src="./Elements/ic-status.png">
+            <span class="new-footer__text" >Posição Pendente</span>
+            <img class="new-footer__img" src="./Elements/ic-down-cima.png">
+            <new-button-img-text class="backgrand-button" NomeButton='Enviar' />
+           </div>
+    </div>
 </template>
 
 <script>
+import CompButtonIT from "./CompButtonIT.vue"
 export default {
+props:['activeTab'],
+components: {
+    'new-button-img-text' : CompButtonIT,
+}
 
 }
 </script>
@@ -29,6 +44,12 @@ export default {
             font-family: Halton;
             font-size: 14px;
             color: #73777B;
+            }
+        }
+        .backgrand-button{
+            background: linear-gradient(89.54deg, #0072E4 -0.59%, #25A0A8 100.95%);
+            span{
+                color: white;
             }
         }
 </style>

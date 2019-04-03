@@ -1,12 +1,17 @@
 <template>
-     <button class="new-request__button" type="button">
+     <button class="new-request__button">
         <img :src="img"><span class="new-request__span">{{NomeButton}}</span>
     </button>
 </template>
 
 <script>
 export default {
-props:['NomeButton','img'],
+props:['NomeButton','img',],
+data(){
+    return{
+       
+    }
+}
 }
 </script>
 

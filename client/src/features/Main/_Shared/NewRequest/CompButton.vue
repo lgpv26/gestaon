@@ -1,5 +1,5 @@
 <template>
-    <div class="new-request__menu__button">
+    <div class="new-request__menu__button" @click="onClick()">
             <div class="new-menu__head">
             <span class="new-head__text">{{ tab.titulo }}</span> 
             <span style="flex-grow: 1"></span>
@@ -13,6 +13,11 @@
 
 export default {
 props:['tab','icons','img'],
+    methods: {
+        onClick(){
+            this.$emit('NomeDoEvento', this.tab.name)
+        }
+    }
 }
 </script>
 
@@ -25,6 +30,7 @@ props:['tab','icons','img'],
             border: 0.5px solid #161A1D;
             padding: 2px 4px 0px 10px;
             flex-grow: 1;
+            
             }
             .new-request__menu__button:hover{
             background: linear-gradient(89.54deg, #0072E4 -0.59%, #25A0A8 100.95%);    

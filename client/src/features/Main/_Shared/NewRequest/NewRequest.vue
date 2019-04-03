@@ -1,25 +1,16 @@
 <template>
     <div id="app-new-request">
-       <new-TopHeader></new-TopHeader>
-       <new-button></new-button>
-       <new-TopBody></new-TopBody>
-       <new-TopFooter></new-TopFooter>
+       <new-Atendimento />
     </div>
 </template>
 
 <script>
     import Vue from "vue"
-    import TopHeader from "./CardHeader.vue"
-    import TopButton from "./CardButton.vue"
-    import TopBody from "./CardBody.vue"
-    import TopFooter from "./CardFooter.vue"
+    import Atendimento from "./Atendimento.vue"
     
     export default {
         components: {
-           'new-TopHeader' : TopHeader,
-           'new-button' : TopButton,
-           'new-TopBody' : TopBody,
-           'new-TopFooter' : TopFooter,
+           'new-Atendimento' : Atendimento
         },
         data(){
             return {
@@ -35,7 +26,7 @@
 <style lang="scss">
     #app-new-request {
         width: 640px;
-        height: 600px;
+        // height: 600px;
         position: absolute;
         z-index: 999999999;
         top: 30px;

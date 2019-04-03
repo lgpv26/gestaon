@@ -2,7 +2,7 @@
      <div class="new-request__body">
                <div class="new-request__caixa">
                    <span class="new-request__span">DIGITE PARA PESQUISAR OU LEMBRAR</span>
-                     <new-button-it img="./Elements/Vector.png" NomeButton="Lembrar" />
+                     <new-button-it NomeButton="Lembrar"  />
                </div>
             <div class="new-request__centro">
                 <div>
@@ -21,6 +21,14 @@ import CompButtonIT from './CompButtonIT.vue'
 export default {
     components: {
         'new-button-it' : CompButtonIT,
+    },
+    data(){
+        return{
+    
+        }
+    },
+    methods:{
+      
     }
 }
 </script>
@@ -54,5 +62,6 @@ export default {
                 font-size: 14px;
                 margin-top: 10px;
             }
+        
         }
 </style>
