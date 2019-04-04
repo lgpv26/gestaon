@@ -6,7 +6,7 @@
     </div>
     <new-TopBody v-if="activeTab === 'search'"></new-TopBody>
     <new-TopBodyLembrete  v-if="activeTab === 'note'"></new-TopBodyLembrete>
-    <div v-if="activeTab === 'contact'">Contato</div>
+    <new-TopBodyContato v-if="activeTab === 'contact'"></new-TopBodyContato>
     <div v-if="activeTab === 'order'">Pedido</div>
     <new-TopFooter :activeTab="activeTab"></new-TopFooter>
     </div>
@@ -17,6 +17,7 @@ import CompButton from './CompButton.vue'
 import TopHeader from "./CardHeader.vue"
 import TopBodyBusca from "./CardBodyBusca.vue"
 import TopBodyLembrete from "./CardBodyLembrete.vue"
+import TopBodyContato from "./CardBodyContato.vue"
 import TopFooter from "./CardFooter.vue"
 
 export default {
@@ -25,6 +26,7 @@ export default {
     'new-TopHeader' : TopHeader,
     'new-TopBody' : TopBodyBusca,
     'new-TopBodyLembrete' : TopBodyLembrete,
+    'new-TopBodyContato' : TopBodyContato,
     'new-TopFooter' : TopFooter,
     },
     data(){

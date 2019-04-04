@@ -12,7 +12,7 @@
 <script>
 
 export default {
-props:['tab','icons','img'],
+props:['tab'],
     methods: {
         onClick(){
             this.$emit('NomeDoEvento', this.tab.name)
@@ -28,9 +28,8 @@ props:['tab','icons','img'],
             background: #23272B;
             height: 70px;
             border: 0.5px solid #161A1D;
-            padding: 2px 4px 0px 10px;
-            flex-grow: 1;
-            
+            padding: 6px 4px 6px 10px;
+            flex-grow: 1; 
             }
             .new-request__menu__button:hover{
             background: linear-gradient(89.54deg, #0072E4 -0.59%, #25A0A8 100.95%);    
@@ -43,7 +42,7 @@ props:['tab','icons','img'],
             }
             .new-menu__head{
             display: flex;
-            flex-direction: row;  
+            flex-direction: row;
             }
             .new-menu__text{
             font-family: Halton;
@@ -53,6 +52,7 @@ props:['tab','icons','img'],
             .new-head__text{
             font-family: Halton;
             font-size: 18px;
-            color: #73777B;   
+            color: #73777B;  
+            margin-bottom: 3px; 
             }
 </style>
