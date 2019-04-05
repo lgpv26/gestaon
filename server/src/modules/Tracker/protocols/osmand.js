@@ -1,78 +1,163 @@
-const Protocol = require('../Protocol');
-const moment = require('moment');
-const log = new require('pretty-logger')();
-const _ = require('lodash');
-const config = require('../../../config/index');
-const utils = require('../../../utils/index');
-const restify = require('restify');
-const corsMiddleware = require('restify-cors-middleware');
+import Protocol from "../Protocol";
+import _ from "lodash";
+import moment from "moment";
 
 module.exports = class OSMAND extends Protocol {
+  constructor(server, protocol) {
+    super(server, protocol);
 
-    constructor(server, protocol){
+    this.server = server;
+    this.protocol = protocol;
 
-        super(server, protocol);
+    this.protocolServer = null;
+  }
 
-        this.server = server;
+  init() {
+    return new Promise(async (resolve, reject) => {
+      await super.createServer();
+      this.connectionListen();
 
-        // create restify server
-        let protocolServer = restify.createServer({
-            name: protocol.name
-        });
+      resolve();
+    });
+  }
 
-        /* configure cors */
-        const cors = corsMiddleware({
-            origins: ['*'],
-            allowHeaders: ['X-Requested-With', 'Authorization', 'Content-type']
-        });
+  connectionListen() {
+    this.protocolServer = super.getProtocolServer();
 
-        protocolServer.pre(cors.preflight);
-        protocolServer.use(cors.actual);
+    this.protocolServer.post("/", async (req, res, next) => {
+      await this.dataReceived(req);
 
-        /* configuring restify plugins */
-        protocolServer.use(restify.plugins.acceptParser(protocolServer.acceptable));
-        protocolServer.use(restify.plugins.queryParser());
-        protocolServer.use(restify.plugins.bodyParser());
-        protocolServer.use(restify.plugins.gzipResponse());
+      return res.send(200, { success: true, data: "ok" });
+    });
+  }
 
-        protocolServer.post('/', (req, res, next) => {
+  dataReceived(data) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        data = await this.parseData(data);
+        const cmd = await this.getCommand(data);
+        await this.action(data, cmd);
 
-            const position = {
-                position: {
-                    deviceCode: req.params.id,
-                    isActive: true,
-                    isAccOn: false,
-                    latitude: req.params.lat,
-                    longitude: req.params.lon,
-                    speed: (parseInt(req.params.speed, 10) * 1.85).toFixed(2),
-                    bearing: req.params.bearing,
-                    altitude: req.params.altitude,
-                    battery: req.params.batt,
-                    generatedAt: new Date(parseInt(req.params.timestamp) * 1000)
-                },
-                options: {
-                    shouldBroadcast: true
-                }
-            };
+        resolve();
+      } catch (err) {
+        console.log(err);
+        return reject(err);
+      }
+    });
+  }
 
-             return super.savePosition(position).then((data) => {
-                 return res.send(200, {
-                    data
-                 });
-             }).catch((err) => {
-                 return next(
-                     new restify.InternalServerError({body:{
-                         "code": 'ERROR_ON_POSITION_SAVE',
-                         "message": 'Error on saving position(s).'
-                     }})
-                 );
-             });
-        });
+  parseData(data) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log(data.query.speed);
+        const parse = {
+          device: data.query.id,
+          cmd: "ping",
+          time: moment.unix(parseInt(data.query.timestamp)).toDate(),
+          latitude: data.query.lat,
+          //latitudeSymbol: (req.query.lat) ? : ,
+          longitude: data.query.lon,
+          //longitudeSymbol: data[8],
+          speed: (parseInt(data.query.speed, 10) * 1.85).toFixed(2),
+          orientation: data.query.bearing,
+          battery: data.query.batt,
+          altitude: data.query.altitude
+        };
 
-        protocolServer.listen(protocol.port, () => {
-            log.info(protocol.name.toUpperCase() + ' listening on port: ' + protocol.port);
-        });
+        //return console.log(parse)
+        return resolve(parse);
+      } catch (err) {
+        return reject(err);
+      }
+    });
+  }
 
-    };
+  getCommand(data) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        return resolve("ping");
+      } catch (err) {
+        console.log(err);
+        return reject(err);
+      }
+    });
+  }
 
+  action(data, cmd) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        switch (cmd) {
+          case "ping":
+            await this.ping(data);
+            resolve();
+            break;
+          case "heartbeat":
+            await this.heartbeat(data);
+            resolve();
+            break;
+          default:
+            return reject("Não foi possivel identificar a ação.");
+            break;
+        }
+      } catch (err) {
+        return reject();
+      }
+    });
+  }
+
+  ping(data) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const deviceInfos = await this.server.broker.call(
+          "data/device.getOne",
+          {
+            where: { code: data.device }
+          }
+        );
+        if (!deviceInfos) return reject("Erro ao recuperar o dispositivo");
+
+        if (this.protocol.debug) {
+          console.log(
+            "Opa chegou um ping PROTOCOLO OSMAND de:",
+            deviceInfos.id,
+            "localização:",
+            data.latitude,
+            data.longitude,
+            "orientação:",
+            data.orientation,
+            "velocidade:",
+            data.speed
+          );
+        }
+
+        const save = {
+          deviceId: deviceInfos.id,
+          position: {
+            type: "Point",
+            coordinates: [data.latitude, data.longitude]
+          },
+          speed: data.speed,
+          orientation: data.orientation
+        };
+        const position = await super.savePosition(save);
+
+        await super.broadcast(position, deviceInfos);
+
+        return resolve();
+      } catch (err) {
+        return reject();
+      }
+    });
+  }
+
+  heartbeat(data) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log("coração ta batendo");
+        return resolve();
+      } catch (err) {
+        return reject();
+      }
+    });
+  }
 };
