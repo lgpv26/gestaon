@@ -62,56 +62,29 @@
             </div>
             </div>
             <!-- parte 2 -->
-            <div  class="new-row" style="margin: 16px 0px 0px 0px;">
-                <div class="new_bairro" style="margin: 0px 5px 0px 0px;max-width: 210px;"><span>Bairro</span><div>
-                   <div>
-                        <input style="max-width: 200px;" type="text">
-                    </div>
-                </div>
-                </div>
-                <div class="new_bairro" style="margin: 0px 5px 0px 5px;max-width: 103px;"><span>CEP</span><div>
-                   <div>
-                        <input  style="max-width: 93px;"  type="text">
-                    </div>
-                </div>
-                </div>
-                <div class="new_bairro" style="margin: 0px 5px 0px 5px;max-width: 210px;"><span>Cidade</span><div>
-                   <div>
-                        <input style="max-width: 190px;" type="text">
-                    </div>
-                </div>
-                </div>
-                <div class="new_bairro" style="margin: 0px 5px 0px 5px;max-width: 57px;"><span>UF</span><div>
-                    <div class="new-row">
-                        <input style="max-width: 30px;" type="text">
-                        <div>
-                            <img style="margin: 10px 0px 0px 0px;cursor: pointer;" src="./Elements/ic-down.png">
-                        </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            <div style="display:flex;flex-direction: row-reverse;margin-top:20px;" >
-                <div style="margin: 0px 5px 0px 5px;">
-                     <input class="new_button" type="button"  value="Salvar endereço">
-                </div>
-                <div style="margin: 0px 5px 0px 5px;">
-                     <input class="new_button" type="button" value="descartar">
-                </div>
-            </div>
+           <!-- <new-contato></new-contato> -->
+          <!-- <new-contato__button></new-contato__button> -->
         </div>
-        
+        <new-scroll></new-scroll>
         
 </div>
 </template>
 
 <script>
+import CompContatoButton from "./CompContatoButton.vue"
+import CompScroll from "./CompScroll.vue"
+import CompContato from "./CompContato.vue"
 export default {
-
+components: {
+    'new-contato__button' : CompContatoButton,
+    'new-contato' : CompContato,
+    'new-scroll' :CompScroll,
+},
 }
 </script>
 
 <style lang="scss" >
+
 .new-request__body {
 display: flex;
 flex-direction: column;
@@ -194,9 +167,9 @@ background: #161A1D;
     cursor: pointer;
 }
 .new-form{
-    height: 178px;
+    height: auto;
     background: #23272B;
-    margin: 0px -10px 158px -10px;
+    margin: 0px -10px 12px -10px;
     padding: 10px;
 }
 .new-inputs{
@@ -250,32 +223,5 @@ background: #161A1D;
     }
 }
 
-.new_bairro{
-    border-bottom: 2px solid #373C42;
-    padding-bottom: 6px;
-    span{
-    font-family: Halton;
-    font-size: 14px;
-    line-height: normal;
-    color: #73777B;    
-    }
-    input[type="text"]{
-    font-family: Halton;
-    font-size: 18px;
-    color: #E7E8E8;
-    background: transparent;
-    border: 0px;
-    margin: 0px 5px;
-    }
-}
-.new_button{
-background: #373C42;
-border-radius: 2px;
-font-family: Halton;
-font-size: 12px;
-color: #73777B;
-height: 24px;
-border: 0px;
-cursor: pointer;
-}
+
 </style>

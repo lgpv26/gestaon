@@ -1,8 +1,8 @@
 import _ from "lodash";
 
 let config = {
-  apiBaseUrl: "http://192.168.15.22:8080",
-  socketServer: "http://192.168.15.22:8080",
+  apiBaseUrl: "http://192.168.15.14:8080",
+  socketServer: "http://192.168.15.14:8080",
   system: {
     // don't change settings under this object if you don't know what you're doing
     IDMappings: {
