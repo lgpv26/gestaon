@@ -34,38 +34,33 @@
 
         <div class="new-form">
             <!-- parte 1 -->
-            <div class="new-row">
-            <div class="new-column">
-            <span>Rua, Avenida, Praça...</span> 
-            <div class="new-inputs" style="width:398px;">
-            <input type="text" value="Buscar cadastrados ou criar novo">
-            <div style=" flex-grow: 1;margin:0px;"></div>
-            <div>
-                <img src="./Elements/ic-search.png">
-            </div>
-            </div>   
-            </div>
-
-            <div class="new-column numero">
-               <span>Nº <span style="color: tomato;">*</span></span>
-               <div class="new-inputs">
-            <input type="text">
-            </div>   
-            </div>
-            <div class="new-column">
-               <div class="button-img">
-                   <div>
-                       <img src="./Elements/ic-address-details.png">
-                   </div>
-                   <span>Complemento</span>
-               </div>
-            </div>
-            </div>
+            <new-cotato-part1></new-cotato-part1>
+            <!-- <new-addres></new-addres> -->
             <!-- parte 2 -->
-           <!-- <new-contato></new-contato> -->
+           <div>
+               <div>
+                <input type="text">
+               <input type="checkbox">
+               <span></span>
+               <input type="checkbox">
+               <span></span>
+               <input type="checkbox">
+               <span></span>
+               <input type="checkbox">
+               <span></span>
+               <input type="checkbox">
+               <span></span>
+               </div>
+               <div>
+                   <input type="text">
+                    <input type="text">
+                     <input type="text">
+               </div>
+           </div>
+           <new-contato></new-contato>
           <!-- <new-contato__button></new-contato__button> -->
         </div>
-        <new-scroll></new-scroll>
+        <!-- <new-scroll></new-scroll> -->
         
 </div>
 </template>
@@ -74,17 +69,20 @@
 import CompContatoButton from "./CompContatoButton.vue"
 import CompScroll from "./CompScroll.vue"
 import CompContato from "./CompContato.vue"
+import CompContatoPart1 from "./CompContatoPar1.vue"
+import CompAddres from "./CompAddres.vue"
 export default {
 components: {
     'new-contato__button' : CompContatoButton,
     'new-contato' : CompContato,
     'new-scroll' :CompScroll,
+    'new-cotato-part1' : CompContatoPart1,
+    'new-addres' : CompAddres,
 },
 }
 </script>
 
 <style lang="scss" >
-
 .new-request__body {
 display: flex;
 flex-direction: column;
@@ -169,59 +167,16 @@ background: #161A1D;
 .new-form{
     height: auto;
     background: #23272B;
-    margin: 0px -10px 12px -10px;
+    margin: 0px -10px 156px -10px;
     padding: 10px;
 }
-.new-inputs{
-    border-bottom: 2px solid #373C42;
-    padding-bottom: 6px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-top: 1px;
-    input[type="text"]{
-    font-family: Halton;
-    font-size: 18px;
-    color: #E7E8E8;
-    background: transparent;
-    border: 0px;
-    width: 323px;
-    }
-}
-.numero{
-    display: flex;
-    margin: 0px 10px;
-    max-width: 50px ;
-    flex-shrink: 0;
-    input[type="text"]{
-    font-family: Halton;
-    font-size: 18px;
-    color: #E7E8E8;
-    background: transparent;
-    border: 0px;
-    max-width: 40px;
-    margin: 0px 5px;
-    }
-}
-.button-img{
-    max-width: 132px;
-    padding: 7px 10px 5px 10px;
-    margin-top: 20px;
-    display: flex;
-    height: 32px;
-    background: #31363C;
-    border-radius: 5px;
-    cursor: pointer;
-    img{
-        margin-right: 5px;
-    } 
+
     span{
     font-family: Halton;
     font-size: 14px;
     line-height: normal;
     color: #73777B;
     }
-}
 
 
 </style>

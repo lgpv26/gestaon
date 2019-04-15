@@ -18,8 +18,9 @@ components: {
     width: 390px;
     overflow-y: scroll; 
     margin-bottom:20px;
-    height:233px;
     padding-right: 10px;
+    margin-top: -150px;
+    height: 235px;
 }
 #scroll::-webkit-scrollbar { width:10px;background:transparent;} /* configurando scroll */
 #scroll::-webkit-scrollbar-track { background:transparent;}
