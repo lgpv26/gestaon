@@ -34,30 +34,35 @@
 
         <div class="new-form">
             <!-- parte 1 -->
-            <new-cotato-part1></new-cotato-part1>
+            <div>
+                <div style="display:flex;flex-direction:column;margin:0px 0px 15px 0px;">
+                <input type="text" value="Informação adicional (visível no histórico do contato)" style="">    
+                </div>
+                <div style="display:flex;flex-direction:row;margin:10px 0px 0px 0px;">
+                <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
+                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
+                </div>
+                <div style="display:flex;flex-direction:row;margin:20px 0px 0px 0px;">
+                <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
+                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
+                </div>
+                <div style="display:flex;flex-direction:row;margin:10px 0px 0px 0px;">
+                <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
+                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
+                </div><div style="display:flex;flex-direction:row;margin:10px 0px 0px 0px;">
+                <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
+                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
+                </div>
+                <div style="display:flex;flex-direction:row;margin:10px 0px 0px 0px;">
+                 <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
+                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
+                </div>
+            </div>
+            <!-- <new-cotato-part1></new-cotato-part1> -->
+            <!-- <new-form></new-form> -->
             <!-- <new-addres></new-addres> -->
             <!-- parte 2 -->
-           <div>
-               <div>
-                <input type="text">
-               <input type="checkbox">
-               <span></span>
-               <input type="checkbox">
-               <span></span>
-               <input type="checkbox">
-               <span></span>
-               <input type="checkbox">
-               <span></span>
-               <input type="checkbox">
-               <span></span>
-               </div>
-               <div>
-                   <input type="text">
-                    <input type="text">
-                     <input type="text">
-               </div>
-           </div>
-           <new-contato></new-contato>
+           <!-- <new-contato></new-contato> -->
           <!-- <new-contato__button></new-contato__button> -->
         </div>
         <!-- <new-scroll></new-scroll> -->
@@ -71,6 +76,7 @@ import CompScroll from "./CompScroll.vue"
 import CompContato from "./CompContato.vue"
 import CompContatoPart1 from "./CompContatoPar1.vue"
 import CompAddres from "./CompAddres.vue"
+import CompContatoForm from "./CompContatoForm.vue"
 export default {
 components: {
     'new-contato__button' : CompContatoButton,
@@ -78,17 +84,20 @@ components: {
     'new-scroll' :CompScroll,
     'new-cotato-part1' : CompContatoPart1,
     'new-addres' : CompAddres,
+    'new-form' : CompContatoForm,
 },
 }
 </script>
 
 <style lang="scss" >
+
 .new-request__body {
 display: flex;
 flex-direction: column;
 flex-grow: 1;
 padding: 20px 20px 0px 20px ;
 background: #161A1D; 
+ 
 }
 .new-column{
     display: flex;
@@ -167,7 +176,7 @@ background: #161A1D;
 .new-form{
     height: auto;
     background: #23272B;
-    margin: 0px -10px 156px -10px;
+    margin: 0px -10px 106px -10px;
     padding: 10px;
 }
 
