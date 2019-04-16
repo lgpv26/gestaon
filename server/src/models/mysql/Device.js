@@ -83,10 +83,9 @@ module.exports = {
             })
         }
     },
-    postSettings: ({Device, Company, DeviceSetting, Position}) => {
-        Device.belongsTo(Company, {as: 'company'})
-        Device.hasMany(DeviceSetting,  {as: 'deviceSettings', foreignKey: 'deviceId'})
-
-        Device.hasMany(Position, {as: "positions", foreignKey: 'deviceId'})
+    postSettings: ({Device, Company, Position, DeviceSetting}) => {
+        Device.belongsTo(Company, {as: 'company'});
+        Device.hasMany(DeviceSetting,  {as: 'deviceSettings', foreignKey: 'deviceId'});
+        Device.hasMany(Position,  {as: 'positions', foreignKey: 'deviceId'});
     }
 }

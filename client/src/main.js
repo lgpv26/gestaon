@@ -53,6 +53,9 @@ import moment from "moment";
 import _ from "lodash";
 import SocketIO from "socket.io-client";
 
+import SlidingMaker from 'marker-animate-unobtrusive'
+SlidingMaker.initializeGlobally()
+
 // or import all icons if you don't care about bundle size
 import "vue-awesome/icons";
 import Icon from "vue-awesome/components/Icon";
@@ -69,6 +72,8 @@ Vue.set(Vue.prototype, "modelDefinitions", {
     offlineDBModels: {
         addresses: "id, name, address, cep, city, neighborhood, state, status, dateCreated, dateUpdated",
         users: "id, name, email, type, status, dateUpdated, dateCreated, dateRemoved",
+        devices: "id, companyId, code, name, protocol, color, isPortable, phoneNumber, obs, dateUpdated, dateCreated, dateRemoved, status",
+        positions: "id, deviceId, lat, lng, speed, orientation, obs, dateUpdated, dateCreated, dateRemoved, status",
         products: "id, name, price, quantity, dateUpdated, dateCreated, dateRemoved",
         paymentMethods: "id, name, rule, tax, taxUnit, autoPay, hasDeadline, dateUpdated, dateCreated, dateRemoved",
         promotionChannels: "id, name, dateUpdated, dateCreated, dateRemoved",
@@ -93,7 +98,7 @@ Vue.set(Vue.prototype, "modelDefinitions", {
         searchAddresses: "id, name, address, neighborhood, city, state, cep, country"
     },
     stateModels: {
-        STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, status, responsibleUserId, clientAddress",
+        STATE_cards: "id, windowId, type, requestId, orderSubtotal, clientName, clientAddress, deliveryDate, status, responsibleUserId",
         STATE_requestUIState: "id, activeTab, isAddingClientAddress, requestClientAddressForm, requestId, showRequestChat, showClientOrderTimeline, requestString, requestOrderString, hasRequestOrderChanges, hasRequestChanges, isLoading",
         STATE_windows: "id, show, zIndex",
 

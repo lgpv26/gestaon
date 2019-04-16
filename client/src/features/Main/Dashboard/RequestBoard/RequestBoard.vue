@@ -5,10 +5,6 @@
         :options="boardOptions"
         :section="{ id: 'requests', name: 'Pedidos', size: 1 }"
       />
-      <app-request-board-section
-        :options="boardOptions"
-        :section="{ id: 'scheduled', name: 'Agendados', size: 1 }"
-      />
     </div>
   </div>
 </template>

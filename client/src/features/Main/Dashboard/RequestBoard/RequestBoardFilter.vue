@@ -129,6 +129,8 @@
     import Request from "../../../../vuex/models/Request"
     import Card from "../../../../vuex/models/Card"
 
+    import RequestHelper from '../../../../helpers/RequestHelper'
+
     import { Portuguese } from "flatpickr/dist/l10n/pt"
 
     export default {
@@ -215,6 +217,7 @@
                 });
             }
         },
+        mixins: [RequestHelper],
         methods: {
             ...mapMutations(["SET_SYSTEM_REQUESTS_LOADED"]),
             ...mapMutations("request-board", ["SET_FILTER","SET_DELIVERY_DATE"]),
@@ -339,7 +342,7 @@
             onDeliveryDateChange(value){
                 const vm = this
                 vm.SET_DELIVERY_DATE(value)
-                vm.loadRequests()
+                vm.loadCards(value)
             },
             async getRequestsFromIndexedDB(){
                 const vm = this

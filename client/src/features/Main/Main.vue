@@ -11,9 +11,8 @@
                         <div class="header__dropdown-menu">
                             <app-dropdown-menu :menuList="menuList" placement="bottom-start" :verticalOffset="-10">
                                 <div class="dropdown-menu__company-name">
-                                    <app-gravatar style="width: 32px; height: 32px; border-radius: 32px;" :email="user.email"
-                                          :title="user.name"
-                                          v-tippy="{ placement: 'bottom-start', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
+                                    <app-gravatar style="width: 32px; height: 32px; border-radius: 32px;" :email="user.email" :title="user.name"
+                                                  v-tippy="{ placement: 'bottom-start', theme: 'light', inertia: true, arrow: true, animation: 'perspective' }">
                                     </app-gravatar>
                                 </div>
                                 <template slot="header">
@@ -39,8 +38,8 @@
                         <a href="javascript:void(0)" v-if="false" class="btn btn--primary" style="margin-left: 12px;" @click="customMethod()">Test button</a>
                         <span class="push-both-sides"></span>
                         <ul class="header__menu">
-                            <li><i class="mi mi-notifications-none"></i></li>
-                            <li @click="addRequest()">
+                            <li @click="checkAllState()"><i class="mi mi-notifications-none"></i></li>
+                            <li @click="addCard()">
                                 <i class="mi mi-add-circle-outline"></i>
                             </li>
                             <li v-if="!isCallerIdDisabled" @click="isCallerIdDisabled ? activateCallerId() : disableCallerId()"
@@ -76,17 +75,16 @@
     import Windows from "./_Shared/Windows/Windows.vue"
     import ConnectedUsersComponent from "./_Shared/Sidebar/ConnectedUsers.vue"
 
-    import Card from "../../vuex/models/Card"
     import Request from "../../vuex/models/Request"
 
     import _ from "lodash"
     import shortid from "shortid"
-    import moment from "moment"
     import Vue from 'vue'
     import ss from "socket.io-stream"
 
     import SessionHandler from "./SessionHandler"
     import DataImporter from "../../helpers/DataImporter"
+    import RequestHelper from "../../helpers/RequestHelper"
 
     export default {
         name: "app-main",
@@ -101,7 +99,7 @@
             "app-request-board-filter": RequestBoardFilterComponent,
             "app-connected-users": ConnectedUsersComponent,
         },
-        mixins: [SessionHandler, DataImporter],
+        mixins: [SessionHandler, RequestHelper, DataImporter],
         data() {
             return {
                 requestQueueInitialized: false,
@@ -136,7 +134,7 @@
         methods: {
             ...mapMutations(["setApp", "setSystemInitialized"]),
             //...mapMutations('request-queue',["REMOVE_PROCESSED_QUEUE_ITEMS"]),
-            ...mapActions(["setLastDataSyncedDate","setLastRequestsLoadedDate"]),
+            ...mapActions(["setLastDataSyncedDate","setLastRequestsLoadedDate","setIsSearchReady"]),
             ...mapActions("auth", {
                 logoutAction: "logout",
                 setAuthUser: "setAuthUser",
@@ -186,39 +184,17 @@
                     this.disableCallerId();
                 }
             },
-            async addRequest() {
-                const requestUIStateTmpId = `tmp/${shortid.generate()}`;
-                const requestTmpId = `tmp/${shortid.generate()}`;
-                const windowTmpId = `tmp/${shortid.generate()}`;
-                const cardTmpId = `tmp/${shortid.generate()}`;
-                this.$store.dispatch("entities/windows/insert", {
-                    data: {
-                        id: windowTmpId,
-                        zIndex: this.$store.getters["entities/windows/query"]().max("zIndex") + 1
-                    }
-                })
-                this.$store.dispatch("entities/cards/insert", {
-                    data: {
-                        id: cardTmpId,
-                        windowId: windowTmpId,
-                        requestId: requestTmpId
-                    }
-                })
-                this.$store.dispatch("entities/requestUIState/insert", {
-                    data: {
-                        id: requestUIStateTmpId,
-                        windowId: windowTmpId,
-                        requestId: requestTmpId
-                    }
-                })
-                this.$store.dispatch("entities/requests/insert", {
-                    data: {
-                        id: requestTmpId,
-                        clientId: null,
-                        requestOrderId: null,
-                        status: "draft"
-                    }
-                });
+            checkAllState(){
+                console.log(this.$store.getters[`entities/cards`]().get())
+                console.log(this.$store.getters[`entities/windows`]().get())
+                console.log(this.$store.getters[`entities/requests`]().get())
+                console.log(this.$store.getters[`entities/requestUIState`]().get())
+                console.log(this.$store.getters[`entities/clients`]().get())
+                console.log(this.$store.getters[`entities/clientAddresses`]().get())
+                console.log(this.$store.getters[`entities/clientPhones`]().get())
+                console.log(this.$store.getters[`entities/requestOrders`]().get())
+                console.log(this.$store.getters[`entities/requestOrderProducts`]().get())
+                console.log(this.$store.getters[`entities/requestPayments`]().get())
             },
             changeCompany(userCompany) {
                 const vm = this;
@@ -374,7 +350,7 @@
                     vm.isFirstInitialization = false
 
                     Vue.nextTick(async () => {
-                        await vm.$refs.requestBoardFilter.loadRequests()
+                        await vm.$refs.requestBoardFilter.loadCards()
 
                         if(!vm.requestQueueInitialized){
                             vm.requestQueueInitialized = true

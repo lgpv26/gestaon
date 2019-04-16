@@ -1,5 +1,5 @@
 <template>
-    <div class="app-window" v-show="window.show" :style="{'z-index': window.zIndex}" ref="window" @mousedown="focus()">
+    <div class="app-window" :style="{'z-index': window.zIndex}" ref="window" @mousedown="focus()">
         <div class="resizable-edge" style="position: absolute; background-color: transparent; right: -8px; width: 30px; height: 15px; bottom: -8px; z-index: 3;"></div>
         <div class="resizable-edge" style="position: absolute; background-color: transparent; right: -8px; bottom: -5px; height:25px; width: 15px; z-index: 3;"></div>
         <div class="window__header">
@@ -28,9 +28,11 @@
     import interact from 'interactjs'
     import _ from 'lodash'
     import Request from './Request/Request.vue'
+    import RequestHelper from '../../../../helpers/RequestHelper'
 
     export default {
         props: ['window'],
+        mixins: [RequestHelper],
         data(){
             return {
                 windowInteractInstance: null,
@@ -50,10 +52,7 @@
                 this.$refs.request.toggleChat()
             },
             close(){
-                this.$store.dispatch('entities/windows/update', {
-                    id: this.window.id,
-                    show: false
-                })
+                this.closeWindow(this.window.id)
             }
         },
         mounted(){
@@ -77,9 +76,12 @@
                         target.setAttribute('data-y', y);
                     },
                     onend  : function (event) {
-                        vm.$store.dispatch('entities/windows/update', {
-                            where: vm.window.id,
+                        vm.stateHelper({
+                            modelName:'windows',
+                            action:'update',
+                            persist: true,
                             data: {
+                                id: vm.window.id,
                                 x: (parseFloat(event.target.getAttribute('data-x')) || 20) + event.dx,
                                 y: (parseFloat(event.target.getAttribute('data-y')) || 20) + event.dy
                             }
@@ -120,11 +122,11 @@
                 target.setAttribute('data-y', this.window.y);
             }
         },
-        beforeDestroy(){
+        /*beforeDestroy(){
             if(this.windowInteractInstance){
                 this.windowInteractInstance.unset()
             }
-        }
+        }*/
     }
 </script>
 

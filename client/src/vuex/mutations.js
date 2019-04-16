@@ -12,6 +12,10 @@ export const SET_SYSTEM_REQUESTS_LOADED = (state, requestsLoaded) => {
     state.system.requestsLoaded = requestsLoaded;
 };
 
+export const SET_IS_SEARCH_READY = (state, isSearchReady) => {
+    state.system.isSearchReady = isSearchReady;
+};
+
 export const setSystemInitialized = (state, initialized) => {
     state.system.initialized = initialized;
 };

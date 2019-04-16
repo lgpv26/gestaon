@@ -148,6 +148,21 @@ export default {
                 await vm.$db.clientAddresses.bulkPut(downloadedData.clientAddresses)
                 window.setAppLoadingText(`Importando produtos...`)
                 await vm.$db.products.bulkPut(downloadedData.products)
+                window.setAppLoadingText(`Importando dispositivos...`)
+                const devices = await Promise.all(_.map(downloadedData.devices, (device) => {
+                    return new Promise(async (resolve) => {
+                        const devicePositions = _.map(device.positions,(devicePosition) => {
+                            devicePosition.lat = devicePosition.position.coordinates[0]
+                            devicePosition.lng = devicePosition.position.coordinates[1]
+                            delete devicePosition['position']
+                            return devicePosition
+                        })
+                        if(devicePositions.length) await vm.$db.positions.bulkPut(devicePositions)
+                        delete device['positions']
+                        resolve(device)
+                    })
+                }))
+                await vm.$db.devices.bulkPut(devices)
                 window.setAppLoadingText(`Importando canais de divulgação...`)
                 await vm.$db.promotionChannels.bulkPut(downloadedData.promotionChannels)
                 window.setAppLoadingText(`Importando grupos de clientes...`)
@@ -351,6 +366,20 @@ export default {
                 await vm.$db.clientAddresses.bulkPut(downloadedData.clientAddresses)
                 window.setAppLoadingText(`Importando produtos...`)
                 await vm.$db.products.bulkPut(downloadedData.products)
+                window.setAppLoadingText(`Importando dispositivos...`)
+                const devices = await Promise.all(_.map(downloadedData.devices, (device) => {
+                    return new Promise(async (resolve) => {
+                        const devicePositions = _.map(device.positions,(devicePosition) => {
+                            devicePosition.lat = devicePosition.position.coordinates[0]
+                            devicePosition.lng = devicePosition.position.coordinates[1]
+                            delete devicePosition['position']
+                            return devicePosition
+                        })
+                        if(devicePositions.length) await vm.$db.positions.bulkPut(devicePositions)
+                        delete device['positions']
+                        resolve(device)
+                    })
+                }))
                 window.setAppLoadingText(`Importando canais de divulgação...`)
                 await vm.$db.promotionChannels.bulkPut(downloadedData.promotionChannels)
                 window.setAppLoadingText(`Importando grupos de clientes...`)
@@ -506,37 +535,43 @@ export default {
         async beforeSystemInitialization(){
             const vm = this
             // load search
+            const taskIds = []
             vm.$db.searchClients.toArray().then(documents => {
                 const taskId = `task/${shortid.generate()}`
-                return new Promise((resolve, reject) => {
-                    vm.$searchWorker.postMessage({
-                        taskId,
-                        operation: 'bulkAdd',
-                        documents,
-                        index: 'clients'
-                    })
-                    vm.$searchWorker.onmessage = (event) => {
-                        if(event.data.taskId === taskId){
-                            resolve(event.data)
-                        }
-                    }
+                taskIds.push(taskId)
+                vm.$searchWorker.postMessage({
+                    taskId,
+                    operation: 'bulkAdd',
+                    documents,
+                    index: 'clients'
                 })
             })
             vm.$db.searchAddresses.toArray().then(documents => {
                 const taskId = `task/${shortid.generate()}`
-                return new Promise((resolve, reject) => {
-                    vm.$searchWorker.postMessage({
-                        taskId,
-                        operation: 'bulkAdd',
-                        documents,
-                        index: 'addresses'
-                    })
-                    vm.$searchWorker.onmessage = (event) => {
-                        if(event.data.taskId === taskId){
-                            resolve(event.data)
-                        }
-                    }
+                taskIds.push(taskId)
+                vm.$searchWorker.postMessage({
+                    taskId,
+                    operation: 'bulkAdd',
+                    documents,
+                    index: 'addresses'
                 })
+            })
+
+            new Promise((resolve) => {
+                vm.$searchWorker.onmessage = (event) => {
+                    const taskIndexInArray = _.findIndex(taskIds, (val) => {
+                        return val === event.data.taskId
+                    })
+                    if(taskIndexInArray >= 0){
+                        taskIds.splice(taskIndexInArray,1)
+                    }
+                    if(taskIds.length === 0){
+                        resolve()
+                    }
+                }
+            }).then(() => {
+                console.log("Search is ready!")
+                vm.setIsSearchReady(true)
             })
 
             /**
@@ -547,6 +582,14 @@ export default {
                     vm.$db.products.toArray().then(products => {
                         vm.$store.dispatch("entities/products/insert", {
                             data: products
+                        });
+                        resolve();
+                    });
+                }),
+                new Promise((resolve, reject) => {
+                    vm.$db.devices.toArray().then(devices => {
+                        vm.$store.dispatch("entities/devices/insert", {
+                            data: devices
                         });
                         resolve();
                     });

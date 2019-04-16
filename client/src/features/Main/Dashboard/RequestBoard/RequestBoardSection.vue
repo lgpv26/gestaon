@@ -1,5 +1,5 @@
 <template>
-    <div class="board-section" v-show="sectionRequests.length && !isLoading" :style="{ width: sectionWidth }">
+    <div class="board-section" v-show="sectionCards.length" :style="{ width: sectionWidth }">
         <div class="board-section__header" :style="{ height: options.headerHeight + 'px' }">
             <div class="header__section-title">
                 <h3>{{ section.name }}</h3>
@@ -24,11 +24,15 @@
         <div class="scrollable-content">
             <app-perfect-scrollbar class="board-section__viewport" :style="{ width: sectionWidth, height: sectionHeight }">
                 <div class="board-section__cards" :style="{'padding-bottom': options.gutterSize + 'px','padding-left': options.gutterSize + 'px'}">
-                    <div class="request-card" v-for="request in sectionRequests" :key="'request-' + request.id"
+                    <div class="request-card" v-for="card in sectionCards" :key="card.id"
+                         :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px' }">
+                        <app-request-board-card class="request-card__main" :card="card"></app-request-board-card>
+                    </div>
+                    <!--<div class="request-card" v-for="request in sectionRequests" :key="'request-' + request.id"
                             :style="{ height: options.cardHeight + 'px', width: options.columnWidth + 'px', 'margin-top': options.gutterSize + 'px', 'margin-right': options.gutterSize + 'px' }"
                             @click="cardClick(request, $event)">
                         <app-request-board-card class="request-card__main" :card="request.card" :request="request"></app-request-board-card>
-                    </div>
+                    </div>-->
                 </div>
             </app-perfect-scrollbar>
         </div>
@@ -44,6 +48,7 @@
     import RequestBoardDraftCard from "./RequestBoardDraftCard.vue"
     import RequestBoardCard from "./RequestBoardCard.vue"
 
+    import Card from "../../../../vuex/models/Card"
     import Request from "../../../../vuex/models/Request"
 
     import Vue from "vue";
@@ -107,6 +112,9 @@
                     "px"
                 );
             },
+            sectionCards(){
+                return Card.all()
+            },
             sectionRequests() {
                 switch (this.section.id) {
                     case "requests":
@@ -151,10 +159,8 @@
                             return (
                                 responsibleUsers && promotionChannels && clientGroups && status &&
                                     request.card.status !== 'finished' && request.card.status !== 'canceled'
-                            );
-                        });
-                    case "scheduled":
-                        return [];
+                            )
+                        })
                 }
             }
         },

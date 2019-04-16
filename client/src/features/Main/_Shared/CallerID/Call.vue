@@ -55,11 +55,13 @@
     import { mapGetters, mapActions, mapState } from 'vuex'
 
     import Clipboard from 'clipboard'
+    import RequestHelper from '../../../../helpers/RequestHelper'
     import ProgressBar from 'progressbar.js'
 
     export default {
         components: {
         },
+        mixins: [RequestHelper],
         props: ['call','client'],
         data(){
             return {
@@ -80,8 +82,7 @@
             ...mapActions('morph-screen', ['createDraft']),
             ...mapActions('caller-id', ['setCall','loadCalls']),
             ...mapActions('toast',['showToast']),
-            updateValue(path, field, id, value, modifier = false, ev = false) {
-                const data = {};
+            updateValue(modelName, field, id, value, modifier = false, ev = false) {
                 let start, end
                 if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
                     start = ev.target.selectionStart
@@ -89,12 +90,19 @@
                 }
                 switch (modifier) {
                     case "uppercase":
-                        data[field] = value.toUpperCase();
+                        value = value.toUpperCase();
                         break;
-                    default:
-                        data[field] = value;
                 }
-                this.$store.dispatch(path, {where: id, data})
+                // this.$store.dispatch(path, {where: id, data})
+                this.stateHelper({
+                    modelName,
+                    action: 'update',
+                    persist: true,
+                    data: {
+                        id: id,
+                        [field]: value
+                    }
+                })
                 if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
                     Vue.nextTick(() => {
                         ev.target.setSelectionRange(start,end);
@@ -103,6 +111,177 @@
             },
             async addRequest() {
                 const vm = this
+                let card = await this.addCard()
+                card = await this.clickCard(card.id)
+
+                const windowId = card.windowId
+
+                card = vm.$store.getters[`entities/cards`]()
+                    .where('windowId',windowId)
+                    .with('request.requestUIState')
+                    .with('request.client')
+                    .with('request.client.clientPhones')
+                    .with('request.client.clientAddresses.address')
+                    .with('request.requestOrder')
+                    .with('request.requestOrder.requestOrderProducts')
+                    .with('request.requestPayments')
+                    .with('request.requestClientAddresses.clientAddress.address')
+                    .with('request.requestClientPhones.clientPhone')
+                    .first()
+
+                const request = card.request
+
+                await this.stateHelper({
+                    modelName: 'requestUIState',
+                    action: 'patch',
+                    persist: false,
+                    data: {
+                        id: request.requestUIState.id,
+                        isLoading: true
+                    }
+                })
+
+                if(this.client){ // if client
+                    const client = await this.$db.clients.where({ id: this.client.id }).first() // get client
+                    let clientAddresses = await this.$db.clientAddresses.where({clientId: this.client.id}).toArray() // get clientAddresses
+                    const clientPhones = await this.$db.clientPhones.where({clientId: this.client.id}).toArray() // get clientAddresses
+
+                    await this.stateHelper({
+                        modelName: 'clients',
+                        action: 'put',
+                        persist: true,
+                        data: client
+                    })
+
+                    vm.removeClientFromRequest(request)
+
+                    if(clientAddresses.length){
+
+                        clientAddresses = await Promise.all(_.map(clientAddresses, (clientAddress) => {
+                            return new Promise(async (resolve, reject) => {
+                                if(clientAddress.addressId){
+                                    const address = await vm.$db.addresses.where({id: clientAddress.addressId}).first()
+                                    await vm.stateHelper({
+                                        modelName: 'addresses',
+                                        action: 'put',
+                                        persist: true,
+                                        data: address
+                                    })
+                                }
+                                clientAddress =  await vm.stateHelper({
+                                    modelName: 'clientAddresses',
+                                    action: 'put',
+                                    data: clientAddress
+                                })
+                                resolve(clientAddress)
+                            })
+                        }))
+
+                        await this.stateHelper({
+                            modelName: 'requestClientAddresses',
+                            action: 'patch',
+                            persist: true,
+                            data: {
+                                id: _.first(request.requestClientAddresses).id,
+                                clientAddressId: _.first(clientAddresses).id
+                            }
+                        })
+
+                        await this.stateHelper({
+                            modelName: 'requestClientAddresses',
+                            action: 'patch',
+                            persist: true,
+                            data: {
+                                id: _.first(request.requestClientAddresses).id,
+                                clientAddressId: _.first(clientAddresses).id
+                            }
+                        })
+
+
+                    }
+
+                    // fill with clientPhones
+
+                    await Promise.all(_.map(clientPhones, async (clientPhone) => {
+                        return await vm.stateHelper({
+                            modelName: 'clientPhones',
+                            action: 'put',
+                            persist: true,
+                            data: clientPhone
+                        })
+                    }))
+
+                    // deal with clientPhones
+
+                    if(clientPhones.length){
+                        await this.stateHelper({
+                            modelName: 'requestClientPhones',
+                            action: 'patch',
+                            persist: true,
+                            data: {
+                                id: _.first(request.requestClientPhones).id,
+                                clientPhoneId: _.first(clientPhones).id
+                            }
+                        })
+                    }
+                    else {
+                        const clientPhoneTmpId = `tmp/${shortid.generate()}`
+                        await this.stateHelper({
+                            modelName: 'clientPhones',
+                            action: 'put',
+                            persist: true,
+                            data: {
+                                id: clientPhoneTmpId,
+                                clientId: client.id
+                            }
+                        })
+                        await this.stateHelper({
+                            modelName: 'requestClientPhones',
+                            action: 'patch',
+                            persist: true,
+                            data: {
+                                id: _.first(request.requestClientPhones).id,
+                                clientPhoneId: clientPhoneTmpId
+                            }
+                        })
+                    }
+
+                    await this.stateHelper({
+                        modelName: 'requestUIState',
+                        action: 'patch',
+                        persist: true,
+                        data: {
+                            id: request.requestUIState.id,
+                            requestClientAddressForm: false
+                        }
+                    })
+
+                    await this.stateHelper({
+                        modelName: 'requests',
+                        action: 'patch',
+                        persist: true,
+                        data: {
+                            id: request.id,
+                            clientId: client.id
+                        }
+                    })
+
+                }
+                else {
+                    this.updateValue('clientPhones','number',_.first(card.request.client.clientPhones).id,vm.call.number)
+                }
+
+                await this.stateHelper({
+                    modelName: 'requestUIState',
+                    action: 'patch',
+                    persist: false,
+                    data: {
+                        id: request.requestUIState.id,
+                        isLoading: false
+                    }
+                })
+
+                /*const vm = this
                 const requestUIStateTmpId = `tmp/${shortid.generate()}`;
                 const requestTmpId = `tmp/${shortid.generate()}`;
                 const requestClientAddressTmpId = `tmp/${shortid.generate()}`;
@@ -178,15 +357,6 @@
                                 }
                             })
                         }
-                        /*this.$store.dispatch(
-                            "entities/requestClientAddresses/update",
-                            {
-                                where: _.first(this.request.requestClientAddresses).id,
-                                data: {
-                                    clientAddressId: clientAddress.id
-                                }
-                            }
-                        )*/
                         this.$store.dispatch("entities/requests/update", {
                             where: requestTmpId,
                             data: {
@@ -361,7 +531,7 @@
                     data: {
                         isLoading: false
                     }
-                })
+                })*/
 
 
             },

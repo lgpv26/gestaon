@@ -6,6 +6,7 @@
 <script>
     import { mapMutations, mapState, mapGetters, mapActions } from "vuex"
     import _ from "lodash"
+    import geolib from 'geolib/dist/geolib';
     import Vue from "vue"
 
     // map scripts
@@ -20,12 +21,13 @@
             return {
                 map: null,
                 markers: {
-                    baseMarker: null
+                    baseMarker: null,
+                    deviceMarkers: {}
                 }
             }
         },
         computed: {
-
+            ...mapState('tracker',['followingDeviceId']),
         },
         methods: {
             initializeMap(){
@@ -236,13 +238,128 @@
                     zIndex: 0,
                     map: this.map
                 })
+            },
+            async onTrackerPosition(ev){
+                const vm = this
+                if(ev && _.has(ev, 'position.coordinates[0]') && _.has(ev, 'position.coordinates[1]')){
+                    ev.lat = parseFloat(ev.position.coordinates[0])
+                    ev.lng = parseFloat(ev.position.coordinates[1])
+                    delete ev['position']
+
+                    const persistedPositions = _.orderBy(vm.$store.getters['entities/positions']().where('deviceId',ev.deviceId).get(), ['id'], ['desc'])
+                    const positionsToRemove = []
+                    let k = 0, limitToStore = 2
+
+                    persistedPositions.forEach((position) => {
+                        k ++;
+                        if(k > limitToStore){
+                            positionsToRemove.push(position.id)
+                        }
+                    })
+                    positionsToRemove.forEach((positionToRemove) => {
+                        vm.$store.dispatch('entities/delete', {
+                            entity: 'positions',
+                            where: positionToRemove
+                        })
+                    })
+
+                    await vm.$db.positions.put(ev)
+
+                    vm.$store.dispatch("entities/insert", {
+                        entity: 'positions',
+                        data: ev
+                    })
+
+                    const device = vm.$store.getters['entities/devices']().where('id',ev.deviceId).first()
+                    if(_.has(this.markers.deviceMarkers, ev.deviceId)){
+                        this.markers.deviceMarkers[ev.deviceId].setIcon({
+                            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                            scale: 5,
+                            strokeColor: "#FFF",
+                            strokeWeight: 2,
+                            fillColor: (device.color) ? device.color : vm.utils.getRandomDarkColor(),
+                            fillOpacity: 1,
+                            zIndex: 9999999999,
+                            rotation: parseFloat(ev.orientation),
+                            origin: new google.maps.Point(0, 0),
+                            anchor: new google.maps.Point(0, 2.6)
+                        })
+                        const currentPositionCoordinates = new google.maps.LatLng(ev.lat, ev.lng)
+                        this.markers.deviceMarkers[ev.deviceId].setPosition(currentPositionCoordinates);
+                    }
+                    else {
+                        this.markers.deviceMarkers[ev.deviceId] = new Marker({
+                            position: { lat: ev.lat, lng: ev.lng },
+                            icon: {
+                                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                                scale: 5,
+                                rotation: parseFloat(ev.orientation),
+                                strokeColor: "#FFF",
+                                strokeWeight: 2,
+                                fillColor: (device.color) ? device.color : vm.utils.getRandomDarkColor(),
+                                fillOpacity: 1,
+                                origin: new google.maps.Point(0, 0),
+                                anchor: new google.maps.Point(0, 2.6)
+                            },
+                            draggable: false,
+                            labelContent: device.name,
+                            labelAnchor: new google.maps.Point(60, -15),
+                            labelClass: "tracked-device-label", // the CSS class for the label
+                        })
+                        this.markers.deviceMarkers[ev.deviceId].setDuration(1000)
+                        this.markers.deviceMarkers[ev.deviceId].setEasing('linear')
+                        this.markers.deviceMarkers[ev.deviceId].setMap(vm.map)
+                    }
+
+                    if(vm.followingDeviceId){
+                        vm.map.panTo(vm.markers.deviceMarkers[ev.deviceId].getPosition())
+                    }
+                }
+            },
+            panMapToDevice(deviceId){
+                if(this.markers.deviceMarkers[deviceId]){
+                    this.map.panTo(this.markers.deviceMarkers[deviceId].getPosition())
+                }
             }
         },
-        mounted(){
-            this.initializeMap()
-            this.setBaseMarker()
+        async mounted(){
+            const vm = this
+            vm.initializeMap()
+            vm.setBaseMarker()
+
+            // on new position from server
+            vm.$socket.on('tracker:position', vm.onTrackerPosition)
+
+            // on pan to device
+            vm.$bus.$on('map.panToDevice', vm.panMapToDevice)
+
+            google.maps.event.addListener(vm.map, 'click', (ev) => {
+                const coordinateArray = []
+                _.forOwn(vm.markers.deviceMarkers, (value, key) => {
+                    coordinateArray.push({
+                        latitude: value.getPosition().lat(),
+                        longitude: value.getPosition().lng(),
+                        deviceId: parseInt(key)
+                    })
+                })
+                const nearestDistances = geolib.orderByDistance({
+                    latitude: ev.latLng.lat(),
+                    longitude: ev.latLng.lng()
+                }, coordinateArray)
+                if(nearestDistances.length){
+                    const result = coordinateArray[_.first(nearestDistances).key]
+                    const device = vm.$store.getters['entities/devices']().where('id',result.deviceId).first()
+                    console.log("Nearest device:", device.name)
+                    console.log("Distance:", (_.first(nearestDistances).distance / 1000) + ' km')
+                }
+            })
+        },
+        beforeDestroy(){
+            const vm = this
+            vm.$bus.$off('i-got-clicked', vm.panMapToDevice);
+            vm.$socket.removeListener('tracker:position', vm.onTrackerPosition)
         }
-    };
+    }
 </script>
 
 <style lang="scss" scoped>

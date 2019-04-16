@@ -3,6 +3,8 @@ import shortid from "shortid";
 import _ from "lodash";
 import moment from "moment";
 
+import ClientAddress from './ClientAddress'
+
 export default class Address extends Model {
   static entity = "addresses";
   static fields() {
@@ -16,6 +18,14 @@ export default class Address extends Model {
       dateUpdated: this.attr(null),
       dateCreated: this.attr(null),
       status: this.attr(null)
-    };
+    }
+  }
+  static beforeDelete (model) {
+    const clientAddressCount = ClientAddress.query().where(record => () => {
+        return record.addressId === model.id
+    }).count()
+    if(clientAddressCount > 1){
+        return false
+    }
   }
 }

@@ -60,7 +60,7 @@
 
             // Every VuexORM changes should be copied to STATE DB
 
-            vm.$store.subscribe((mutation, state) => {
+            /*vm.$store.subscribe((mutation, state) => {
                 if (
                     mutation.type.includes("entities") &&
                     !_.get(mutation.payload, "ignoreOfflineDBInsertion", false) &&
@@ -78,7 +78,7 @@
                         mutation.payload.result.data[mutation.payload.entity]
                     ))
                 }
-            })
+            })*/
         },
         mounted() {
             this.$nextTick(() => {

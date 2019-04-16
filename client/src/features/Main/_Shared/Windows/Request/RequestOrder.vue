@@ -1,58 +1,118 @@
 <template>
-    <app-perfect-scrollbar class="section__content">
-        <div class="section__content">
-            <div class="columns">
-                <div class="left-side">
-                    <div class="box">
-                        <table style="margin: 3px 0 12px 0;">
-                            <thead>
+    <div class="request__section" :class="{ active: request.requestUIState.activeTab === 'order' }">
+        <app-perfect-scrollbar v-if="request.requestUIState.activeTab === 'order' && hasValidRequestOrder" class="section__content">
+            <div class="section__content">
+                <div class="columns">
+                    <div class="left-side">
+                        <div class="box">
+                            <table style="margin: 3px 0 12px 0;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 300px;">Produto</th>
+                                        <th style="text-align: center; padding-right: 8px;">Qnt.</th>
+                                        <th style="text-align: right; padding-right: 8px;">Valor Un.</th>
+                                        <th style="text-align: right; padding-right: 8px;">Desc.</th>
+                                        <th style="text-align: right; padding-right: 8px;">Subtotal</th>
+                                        <th style="width: 20px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="requestOrderProduct in request.requestOrder.requestOrderProducts" :key="requestOrderProduct.id">
+                                        <td style="padding-right: 8px;">
+                                            <app-select :items="getSelectProducts" :value="requestOrderProduct.id" @input="selectOrderProduct(requestOrderProduct,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                                <input type="text" class="select readonly" style="margin-bottom: 0;" readonly
+                                                       :value="(_.has(requestOrderProduct,'product.name')) ? requestOrderProduct.product.name : '-- SELECIONE --'"/>
+                                                <template slot="item" slot-scope="slotProps">
+                                                    <span>{{ slotProps.text }}</span>
+                                                </template>
+                                            </app-select>
+                                        </td>
+                                        <td style="padding-right: 8px;">
+                                            <input class="input" type="text"
+                                                   @input.number="updateValue('requestOrderProducts','quantity',requestOrderProduct.id,parseInt($event.target.value))"
+                                                   :value="requestOrderProduct.quantity"
+                                                   style="width: 50px; margin-bottom: 0; text-align: center;" />
+                                        </td>
+                                        <td style="padding-right: 8px;">
+                                            <money class="input"
+                                                   @input.number.native="updateMoneyValue('requestOrderProducts','unitPrice',requestOrderProduct.id,$event)"
+                                                   :value="requestOrderProduct.unitPrice"
+                                                   style="margin-bottom: 0; text-align: right;"></money>
+                                        </td>
+                                        <td style="padding-right: 8px;">
+                                            <money class="input"
+                                                   @input.number.native="updateMoneyValue('requestOrderProducts','unitDiscount',requestOrderProduct.id,$event)"
+                                                   :value="requestOrderProduct.unitDiscount"
+                                                   style="margin-bottom: 0; text-align: right;"></money>
+                                        </td>
+                                        <td style="padding-right: 8px;">
+                                            <money class="input readonly" disabled
+                                                   :value="requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)"
+                                                   style="margin-bottom: 0; text-align: right;"></money>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; flex-direction: row;">
+                                                <a style="margin: 5px 0 0 0" :class="{ disabled: request.requestOrder.requestOrderProducts.length <= 1 }"
+                                                    @click="removeRequestOrderProduct(requestOrderProduct.id)">
+                                                    <i class="mi mi-close" style="font-size: 18px"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-top: 15px; padding-right: 8px;">
+                                            <a class="button" @click="addRequestOrderProduct()">INCLUIR PRODUTO</a>
+                                        </td>
+                                        <td style="padding-top: 15px; padding-right: 8px;" colspan="2"></td>
+                                        <td style="padding-top: 15px; padding-right: 8px; text-align: right;"></td>
+                                        <td style="padding-top: 15px; padding-right: 8px; text-align: right;">{{ getOrderTotalPrice }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="box">
+                            <table style="margin: 3px 0 12px 0;">
+                                <thead>
                                 <tr>
-                                    <th style="width: 300px;">Produto</th>
-                                    <th style="text-align: center; padding-right: 8px;">Qnt.</th>
-                                    <th style="text-align: right; padding-right: 8px;">Valor Un.</th>
-                                    <th style="text-align: right; padding-right: 8px;">Desc.</th>
-                                    <th style="text-align: right; padding-right: 8px;">Subtotal</th>
+                                    <th>Forma de pagamento</th>
+                                    <th style="width: 100px; text-align: center; padding-right: 8px;">Código</th>
+                                    <th style="width: 100px; text-align: right; padding-right: 8px;">Vencimento</th>
+                                    <th style="width: 100px; text-align: center;">Recebido</th>
+                                    <th style="width: 100px; text-align: right; padding-right: 8px;">Valor</th>
                                     <th style="width: 20px;"></th>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="requestOrderProduct in request.requestOrder.requestOrderProducts" :key="requestOrderProduct.id">
+                                </thead>
+                                <tbody>
+                                <tr v-for="requestPayment in request.requestPayments" :key="requestPayment.id">
                                     <td style="padding-right: 8px;">
-                                        <app-select :items="getSelectProducts" :value="requestOrderProduct.id" @input="selectOrderProduct(requestOrderProduct,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                            <input type="text" class="select readonly" style="margin-bottom: 0;" readonly
-                                                   :value="(_.has(requestOrderProduct,'product.name')) ? requestOrderProduct.product.name : '-- SELECIONE --'"/>
+                                        <app-select :items="getSelectPaymentMethods" :value="requestPayment.id" @input="updateValue('requestPayments','paymentMethodId',requestPayment.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                            <input type="text" class="select readonly" style="margin-bottom: 0;" readonly :value="(_.has(requestPayment,'paymentMethod.name')) ? requestPayment.paymentMethod.name : '-- SELECIONE --'" />
                                             <template slot="item" slot-scope="slotProps">
                                                 <span>{{ slotProps.text }}</span>
                                             </template>
                                         </app-select>
                                     </td>
                                     <td style="padding-right: 8px;">
-                                        <input class="input" type="text"
-                                               @input.number="updateValue('entities/requestOrderProducts/update','quantity',requestOrderProduct.id,parseInt($event.target.value))"
-                                               :value="requestOrderProduct.quantity"
-                                               style="width: 50px; margin-bottom: 0; text-align: center;" />
+                                        <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)" :value="requestPayment.code" @input="updateValue('requestPayments', 'code', requestPayment.id, $event.target.value, 'uppercase', $event)" type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
+                                        <input v-else type="text" class="input readonly" style="margin-bottom: 0; text-align: center;" disabled value="---" placeholder="---" />
                                     </td>
                                     <td style="padding-right: 8px;">
-                                        <money class="input"
-                                               @input.number.native="updateMoneyValue('entities/requestOrderProducts/update','unitPrice',requestOrderProduct.id,$event)"
-                                               :value="requestOrderProduct.unitPrice"
-                                               style="margin-bottom: 0; text-align: right;"></money>
+                                        <app-datetime-selector v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)" class="input no-margin-bottom align-right" :value="requestPayment.deadlineDatetime" @input="updateValue('requestPayments','deadlineDatetime',requestPayment.id,$event)" :config="datetimeSelectorConfig" placeholder="##/##/####">
+                                        </app-datetime-selector>
+                                        <input v-else type="text" class="input readonly" disabled style="margin-bottom: 0; text-align: right;" value="---" />
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; flex-direction: row; justify-content: center; margin-top: 7px;">
+                                            <app-switch :value="requestPayment.paid" @input="updateValue('requestPayments','paid',requestPayment.id,$event)"></app-switch>
+                                        </div>
                                     </td>
                                     <td style="padding-right: 8px;">
-                                        <money class="input"
-                                               @input.number.native="updateMoneyValue('entities/requestOrderProducts/update','unitDiscount',requestOrderProduct.id,$event)"
-                                               :value="requestOrderProduct.unitDiscount"
-                                               style="margin-bottom: 0; text-align: right;"></money>
-                                    </td>
-                                    <td style="padding-right: 8px;">
-                                        <money class="input readonly" disabled
-                                               :value="requestOrderProduct.quantity * (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount)"
-                                               style="margin-bottom: 0; text-align: right;"></money>
+                                        <money class="input" style="margin-bottom: 0; text-align: right;" :value="requestPayment.amount" @input.native="updateMoneyValue('requestPayments','amount',requestPayment.id,$event)"></money>
                                     </td>
                                     <td>
                                         <div style="display: flex; flex-direction: row;">
-                                            <a style="margin: 5px 0 0 0" :class="{ disabled: request.requestOrder.requestOrderProducts.length <= 1 }"
-                                                @click="removeRequestOrderProduct(requestOrderProduct.id)">
+                                            <a style="margin: 5px 0 0 0" :class="{ disabled: request.requestPayments.length <= 1 }"
+                                               @click="removeRequestPayment(requestPayment.id)">
                                                 <i class="mi mi-close" style="font-size: 18px"></i>
                                             </a>
                                         </div>
@@ -60,114 +120,63 @@
                                 </tr>
                                 <tr>
                                     <td style="padding-top: 15px; padding-right: 8px;">
-                                        <a class="button" @click="addRequestOrderProduct()">INCLUIR PRODUTO</a>
+                                        <a class="button" @click="addRequestPayment()">INCLUIR PAGAMENTO</a>
                                     </td>
-                                    <td style="padding-top: 15px; padding-right: 8px;" colspan="2"></td>
-                                    <td style="padding-top: 15px; padding-right: 8px; text-align: right;"></td>
-                                    <td style="padding-top: 15px; padding-right: 8px; text-align: right;">{{ getOrderTotalPrice }}</td>
+                                    <td colspan="4" style="padding-top: 15px; padding-right: 8px; text-align: right;">
+                                        {{ getOrderTotalPrice }} - {{ getOrderPaymentsTotalPrice }} = {{ getOrderLeftPrice }}
+                                    </td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="box">
-                        <table style="margin: 3px 0 12px 0;">
-                            <thead>
-                            <tr>
-                                <th>Forma de pagamento</th>
-                                <th style="width: 100px; text-align: center; padding-right: 8px;">Código</th>
-                                <th style="width: 100px; text-align: right; padding-right: 8px;">Vencimento</th>
-                                <th style="width: 100px; text-align: center;">Recebido</th>
-                                <th style="width: 100px; text-align: right; padding-right: 8px;">Valor</th>
-                                <th style="width: 20px;"></th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr v-for="requestPayment in request.requestPayments" :key="requestPayment.id">
-                                <td style="padding-right: 8px;">
-                                    <app-select :items="getSelectPaymentMethods" :value="requestPayment.id" @input="updateValue('entities/requestPayments/update','paymentMethodId',requestPayment.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                        <input type="text" class="select readonly" style="margin-bottom: 0;" readonly :value="(_.has(requestPayment,'paymentMethod.name')) ? requestPayment.paymentMethod.name : '-- SELECIONE --'" />
-                                        <template slot="item" slot-scope="slotProps">
-                                            <span>{{ slotProps.text }}</span>
-                                        </template>
-                                    </app-select>
-                                </td>
-                                <td style="padding-right: 8px;">
-                                    <input v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)" :value="requestPayment.code" @input="updateValue('entities/requestPayments/update', 'code', requestPayment.id, $event.target.value, 'uppercase', $event)" type="text" class="input" style="margin-bottom: 0; text-align: center;" placeholder="#######" />
-                                    <input v-else type="text" class="input readonly" style="margin-bottom: 0; text-align: center;" disabled value="---" placeholder="---" />
-                                </td>
-                                <td style="padding-right: 8px;">
-                                    <app-datetime-selector v-if="_.get(requestPayment,'paymentMethod.hasDeadline', false)" class="input no-margin-bottom align-right" :value="requestPayment.deadlineDatetime" @input="updateValue('entities/requestPayments/update','deadlineDatetime',requestPayment.id,$event)" :config="datetimeSelectorConfig" placeholder="##/##/####">
-                                    </app-datetime-selector>
-                                    <input v-else type="text" class="input readonly" disabled style="margin-bottom: 0; text-align: right;" value="---" />
-                                </td>
-                                <td>
-                                    <div style="display: flex; flex-direction: row; justify-content: center; margin-top: 7px;">
-                                        <app-switch :value="requestPayment.paid" @input="updateValue('entities/requestPayments/update','paid',requestPayment.id,$event)"></app-switch>
-                                    </div>
-                                </td>
-                                <td style="padding-right: 8px;">
-                                    <money class="input" style="margin-bottom: 0; text-align: right;" :value="requestPayment.amount" @input.native="updateMoneyValue('entities/requestPayments/update','amount',requestPayment.id,$event)"></money>
-                                </td>
-                                <td>
-                                    <div style="display: flex; flex-direction: row;">
-                                        <a style="margin: 5px 0 0 0" :class="{ disabled: request.requestPayments.length <= 1 }"
-                                           @click="removeRequestPayment(requestPayment.id)">
-                                            <i class="mi mi-close" style="font-size: 18px"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding-top: 15px; padding-right: 8px;">
-                                    <a class="button" @click="addRequestPayment()">INCLUIR PAGAMENTO</a>
-                                </td>
-                                <td colspan="4" style="padding-top: 15px; padding-right: 8px; text-align: right;">
-                                    {{ getOrderTotalPrice }} - {{ getOrderPaymentsTotalPrice }} = {{ getOrderLeftPrice }}
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
 
+                        </div>
                     </div>
-                </div>
-                <div class="right-side">
-                    <div><span></span></div>
-                    <div class="box" style="padding: 10px 12px;">
-                        <div class="box__item" style="display: flex; flex-direction: column;">
-                            <h3>Entrega</h3>
-                            <div style="display: flex; flex-direction: row; align-items: center;">
-                                <app-datetime-selector class="input" :value="request.deliveryDate" @input="onDeliveryDateChange($event)" :config="deliveryDateSelectorConfig" placeholder="EM 20 MINUTOS"></app-datetime-selector>
-                                <a class="btn btn--square" v-if="request.deliveryDate" @click="onDeliveryDateChange(null)" href="javascript:void(0)" style="margin-top: 5px; margin-left: 8px;"><i class="mi mi-clear"></i></a>
+                    <div class="right-side">
+                        <div><span></span></div>
+                        <div class="box" style="padding: 10px 12px;">
+                            <div class="box__item" style="display: flex; flex-direction: column;">
+                                <h3>Entrega</h3>
+                                <div style="display: flex; flex-direction: row; align-items: center;">
+                                    <app-datetime-selector class="input" :value="request.deliveryDate" @input="onDeliveryDateChange($event)" :config="deliveryDateSelectorConfig" placeholder="EM 20 MINUTOS"></app-datetime-selector>
+                                    <a class="btn btn--square" v-if="request.deliveryDate" @click="onDeliveryDateChange(null)" href="javascript:void(0)" style="margin-top: 5px; margin-left: 8px;"><i class="mi mi-clear"></i></a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="box" style="padding: 10px 12px;">
-                        <div class="box__item" style="display: flex; flex-direction: column;">
-                            <h3>Canal de divulgação</h3>
-                            <app-select :items="getSelectPromotionChannels" :value="request.requestOrder.promotionChannelId" @input="updateValue('entities/requestOrders/update','promotionChannelId',request.requestOrder.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
-                                <input type="text" class="readonly select" :value="(_.has(request,'requestOrder.promotionChannel.name')) ? request.requestOrder.promotionChannel.name : '-- SELECIONE --'"/>
-                                <template slot="item" slot-scope="slotProps">
-                                    <span>{{ slotProps.text }}</span>
-                                </template>
-                            </app-select>
+                        <div class="box" style="padding: 10px 12px;">
+                            <div class="box__item" style="display: flex; flex-direction: column;">
+                                <h3>Canal de divulgação</h3>
+                                <app-select :items="getSelectPromotionChannels" :value="request.requestOrder.promotionChannelId" @input="updateValue('requestOrders','promotionChannelId',request.requestOrder.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'bottom-start'}">
+                                    <input type="text" class="readonly select" :value="(_.has(request,'requestOrder.promotionChannel.name')) ? request.requestOrder.promotionChannel.name : '-- SELECIONE --'"/>
+                                    <template slot="item" slot-scope="slotProps">
+                                        <span>{{ slotProps.text }}</span>
+                                    </template>
+                                </app-select>
 
+                            </div>
                         </div>
-                    </div>
-                    <div class="box">
-                        <h3>Obs. do pedido</h3>
-                        <textarea-autosize
-                                class="input"
-                                style="flex-shrink: 0;"
-                                :min-height="30"
-                                :max-height="350"
-                                :value="request.obs"
-                                @input.native="updateValue('entities/requests/update','obs',request.id,$event.target.value.toUpperCase(),'uppercase',$event)"
-                        ></textarea-autosize>
+                        <div class="box">
+                            <h3>Obs. do pedido</h3>
+                            <textarea-autosize
+                                    class="input"
+                                    style="flex-shrink: 0;"
+                                    :min-height="30"
+                                    :max-height="350"
+                                    :value="request.obs"
+                                    @input.native="updateValue('requests','obs',request.id,$event.target.value.toUpperCase(),'uppercase',$event)"
+                            ></textarea-autosize>
+                        </div>
                     </div>
                 </div>
             </div>
+        </app-perfect-scrollbar>
+        <div class="section__summary" @click="activateTab()">
+            <div class="summary-radio" style="margin-right: 5px;">
+                <app-switch :readonly="true" :value="request.requestUIState.activeTab === 'order'"></app-switch>
+            </div>
+            <h3>Venda</h3>
+            <span class="push-both-sides"></span>
         </div>
-    </app-perfect-scrollbar>
+    </div>
 </template>
 
 <script>
@@ -177,11 +186,62 @@
     import Vue from 'vue'
     import ClientSearchComponent from '../_Shared/Search/ClientSearch'
     import { Portuguese } from 'flatpickr/dist/l10n/pt'
+    import RequestHelper from '../../../../../helpers/RequestHelper'
 
     export default {
         props: ['request'],
+        mixins: [RequestHelper],
         components: {
             'app-client-search': ClientSearchComponent
+        },
+        computed: {
+            ...mapState(['system']),
+            hasValidRequestOrder(){
+                return _.get(this.request,'requestOrder.requestOrderProducts',false) && _.get(this.request,'requestPayments',false)
+            },
+            getOrderTotalPrice(){
+                return this.utils.formatMoney(_.sumBy(this.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                    return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
+                }), 2, 'R$ ', '.', ',')
+            },
+            getOrderPaymentsTotalPrice(){
+                return this.utils.formatMoney(_.sumBy(this.request.requestPayments, (requestPayment) => {
+                    return parseFloat(requestPayment.amount)
+                }), 2, 'R$ ', '.', ',')
+            },
+            getOrderLeftPrice(){
+                const orderTotalPrice = _.sumBy(this.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
+                    return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
+                })
+                const orderPaymentsTotalPrice = _.sumBy(this.request.requestPayments, (requestPayment) => {
+                    return parseFloat(requestPayment.amount)
+                })
+                return this.utils.formatMoney(parseFloat(orderTotalPrice) - parseFloat(orderPaymentsTotalPrice), 2, 'R$ ', '.', ',')
+            },
+            getSelectProducts(){
+                return _.map(this.$store.getters['entities/products/all'](), (product) => {
+                    return {
+                        value: product.id,
+                        text: product.name
+                    }
+                })
+            },
+            getSelectPaymentMethods(){
+                return _.map(this.$store.getters['entities/paymentMethods/all'](), (paymentMethod) => {
+                    return {
+                        value: paymentMethod.id,
+                        text: paymentMethod.name
+                    }
+                })
+            },
+            getSelectPromotionChannels(){
+                return _.map(this.$store.getters['entities/promotionChannels/all'](), (promotionChannel) => {
+                    return {
+                        value: promotionChannel.id,
+                        text: promotionChannel.name
+                    }
+                })
+            }
         },
         data(){
             return {
@@ -234,59 +294,12 @@
                     return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
                 })
                 if(this.request.requestPayments.length === 1){
-                    this.updateValue('entities/requestPayments/update','amount',_.first(this.request.requestPayments).id,this.utils.getMoneyAsDecimal(orderTotalPrice))
+                    this.updateValue('requestPayments','amount',_.first(this.request.requestPayments).id,this.utils.getMoneyAsDecimal(orderTotalPrice))
                 }
             }
         },
-        computed: {
-            ...mapState(['system']),
-            getOrderTotalPrice(){
-                return this.utils.formatMoney(_.sumBy(this.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
-                    return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
-                }), 2, 'R$ ', '.', ',')
-            },
-            getOrderPaymentsTotalPrice(){
-                return this.utils.formatMoney(_.sumBy(this.request.requestPayments, (requestPayment) => {
-                    return parseFloat(requestPayment.amount)
-                }), 2, 'R$ ', '.', ',')
-            },
-            getOrderLeftPrice(){
-                const orderTotalPrice = _.sumBy(this.request.requestOrder.requestOrderProducts, (requestOrderProduct) => {
-                    return (requestOrderProduct.unitPrice - requestOrderProduct.unitDiscount) * requestOrderProduct.quantity
-                })
-                const orderPaymentsTotalPrice = _.sumBy(this.request.requestPayments, (requestPayment) => {
-                    return parseFloat(requestPayment.amount)
-                })
-                return this.utils.formatMoney(parseFloat(orderTotalPrice) - parseFloat(orderPaymentsTotalPrice), 2, 'R$ ', '.', ',')
-            },
-            getSelectProducts(){
-                return _.map(this.$store.getters['entities/products/all'](), (product) => {
-                    return {
-                        value: product.id,
-                        text: product.name
-                    }
-                })
-            },
-            getSelectPaymentMethods(){
-                return _.map(this.$store.getters['entities/paymentMethods/all'](), (paymentMethod) => {
-                    return {
-                        value: paymentMethod.id,
-                        text: paymentMethod.name
-                    }
-                })
-            },
-            getSelectPromotionChannels(){
-                return _.map(this.$store.getters['entities/promotionChannels/all'](), (promotionChannel) => {
-                    return {
-                        value: promotionChannel.id,
-                        text: promotionChannel.name
-                    }
-                })
-            }
-        },
         methods: {
-            updateValue(path, field, id, value, modifier = false, ev = false) {
-                const data = {};
+            updateValue(modelName, field, id, value, modifier = false, ev = false) {
                 let start, end
                 if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
                     start = ev.target.selectionStart
@@ -294,39 +307,44 @@
                 }
                 switch (modifier) {
                     case "uppercase":
-                        data[field] = value.toUpperCase();
+                        value = value.toUpperCase();
                         break;
-                    default:
-                        data[field] = value;
                 }
-                this.$store.dispatch(path, {where: id, data})
+                // this.$store.dispatch(path, {where: id, data})
+                this.stateHelper({
+                    modelName,
+                    action: 'update',
+                    persist: true,
+                    data: {
+                        id: id,
+                        [field]: value
+                    }
+                })
                 if((modifier === 'uppercase') && ev && ev.constructor.name === 'InputEvent'){
                     Vue.nextTick(() => {
                         ev.target.setSelectionRange(start,end);
                     })
                 }
             },
-            updateMoneyValue(path, field, id, event){
+            updateMoneyValue(modelName, field, id, event){
                 if(event.isTrusted){
-                    const data = {}
-                    data[field] = this.utils.getMoneyAsDecimal(event.target.value)
-                    this.$store.dispatch(path, {
-                        where: id,
-                        data
-                    })
+                    this.updateValue(modelName, field, id, this.utils.getMoneyAsDecimal(event.target.value))
                 }
             },
             onDeliveryDateChange(value){
                 if(value === "") value = null
-                this.updateValue('entities/requests/update','deliveryDate',this.request.id,value)
+                this.updateValue('requests','deliveryDate',this.request.id,value)
             },
             /* Order Product */
             selectOrderProduct(requestOrderProduct, productId){
-                this.updateValue('entities/requestOrderProducts/update','productId',requestOrderProduct.id,productId)
+                this.updateValue('requestOrderProducts','productId',requestOrderProduct.id,productId)
                 const product = this.$store.getters['entities/products/find'](productId)
-                this.$store.dispatch('entities/requestOrderProducts/update',{
-                    where: requestOrderProduct.id,
+                this.stateHelper({
+                    modelName: 'requestOrderProducts',
+                    action: 'update',
+                    persist: true,
                     data: {
+                        id: requestOrderProduct.id,
                         productId: product.id,
                         unitPrice: product.price
                     }
@@ -360,7 +378,20 @@
                     return;
                 }
                 this.$store.dispatch('entities/requestPayments/delete', requestPaymentId)
-            }
+            },
+
+            async activateTab() {
+                this.stateHelper({
+                    modelName: 'requestUIState',
+                    action: 'patch',
+                    persist: true,
+                    data: {
+                        id: this.request.requestUIState.id,
+                        activeTab: 'order'
+                    }
+                })
+                this.$emit('activate')
+            },
         }
     }
 </script>

@@ -16,6 +16,8 @@ import ClientAddress from "./models/ClientAddress";
 import PromotionChannel from "./models/PromotionChannel";
 import PaymentMethod from "./models/PaymentMethod";
 import Product from "./models/Product";
+import Device from "./models/Device";
+import Position from "./models/Position";
 import Request from "./models/Request";
 import RequestPayment from "./models/RequestPayment";
 import RequestChat from "./models/RequestChat";
@@ -39,6 +41,8 @@ import requests from "./orm-modules/requests";
 import promotionChannels from "./orm-modules/promotion-channels";
 import paymentMethods from "./orm-modules/payment-methods";
 import products from "./orm-modules/products";
+import devices from "./orm-modules/devices";
+import positions from "./orm-modules/positions";
 import requestChats from "./orm-modules/request-chats";
 import requestPayments from "./orm-modules/request-payments";
 import requestOrders from "./orm-modules/request-orders";
@@ -66,6 +70,8 @@ database.register(Call, calls);
 database.register(PromotionChannel, promotionChannels);
 database.register(PaymentMethod, paymentMethods);
 database.register(Product, products);
+database.register(Device, devices);
+database.register(Position, positions);
 database.register(RequestUIState, requestUIState);
 database.register(Request, requests);
 database.register(RequestChat, requestChats);
@@ -94,7 +100,8 @@ export default new Vuex.Store({
         },
         system: {
             initialized: false,
-            requestsLoaded: false
+            requestsLoaded: false,
+            isSearchReady: false
         },
         mainContentArea: {
             height: 0,

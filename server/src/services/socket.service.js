@@ -92,31 +92,19 @@ module.exports = server => {
                     // import necessary data
                     importPromises.push(server.mysql.User.findAll({ where }))
                     importPromises.push(server.mysql.Product.findAll({ where }))
+                    importPromises.push(server.mysql.Device.findAll({
+                        where,
+                        include: [{
+                            model: server.mysql.Position,
+                            as: 'positions',
+                            limit: 10,
+                            order: [['dateCreated', 'DESC']]
+                        }]
+                    }))
                     importPromises.push(server.mysql.PromotionChannel.findAll({ where }))
                     importPromises.push(server.mysql.PaymentMethod.findAll({ where }))
                     importPromises.push(server.mysql.ClientGroup.findAll({ where }))
                     importPromises.push(server.mysql.CustomField.findAll({ where }))
-
-                    //import positions
-                    const devices = await server.mysql.Device.findAll({
-                            where: {
-                                    companyId: ctx.params.companyId
-                            }
-                        })
-                    
-                    let promises = []
-
-                    devices.forEach((device) => {
-                        //{where: _.assign(where, {deviceId: device.id}), order: [['dateCreated', 'DESC']]}
-                        promises.push(server.mysql.Position.findOne({
-                            where: _.assign(where, {deviceId: device.id}),
-                            order: [['dateCreated', 'DESC']]                         
-                        }))
-                    })
-                    const positions = await Promise.all(promises)
-                    importPromises.push(positions)
-
-                    delete where.deviceId
 
                     // import addresses
 
@@ -145,12 +133,12 @@ module.exports = server => {
 
                         users,
                         products,
+                        devices,
                         promotionChannels,
                         paymentMethods,
                         clientGroups,
                         customFields,
 
-                        positions,
                         addresses
                     ]) => {
                         const fileName = shortid.generate()
@@ -169,12 +157,12 @@ module.exports = server => {
 
                             users,
                             products,
+                            devices,
                             promotionChannels,
                             paymentMethods,
                             clientGroups,
                             customFields,
 
-                            positions,
                             addresses
                         }))
 

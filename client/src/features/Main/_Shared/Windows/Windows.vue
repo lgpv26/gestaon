@@ -1,19 +1,19 @@
 <template>
-    <div class="app-windows" v-if="!isLoading">
+    <div class="app-windows">
         <!--<a class="btn btn--primary" @click="add()">Adicionar</a>
         <a class="btn btn--primary" @click="remove()">Remover</a>
         <a class="btn btn--primary" @click="getAll()">Pegar todos</a>-->
         <div class="windows__container">
-            <app-window v-for="window in $store.getters['entities/windows/query']().withAllRecursive(5).get()" :window="window"></app-window>
+            <app-window v-for="window in showingWindows" :key="window.id" :window="window"></app-window>
         </div>
     </div>
 </template>
 
 <script>
     import { mapMutations, mapState, mapActions } from 'vuex'
-    import Window from './Window'
-    import _ from 'lodash'
-    import shortid from 'shortid'
+
+    import Window from '../../../../vuex/models/Window'
+    import WindowComponent from './Window'
 
     export default {
         data(){
@@ -21,21 +21,26 @@
             }
         },
         components: {
-            'app-window': Window
+            'app-window': WindowComponent
         },
         computed: {
             ...mapState("request-board", ["isLoading"]),
+            showingWindows(){
+                return this.$store.getters[`entities/windows`]()
+                    .with('card.request.requestUIState')
+                    .with('card.request.client.clientPhones')
+                    .with('card.request.client.clientAddresses.address')
+                    .with('card.request.requestOrder.requestOrderProducts.product')
+                    .with('card.request.requestPayments.paymentMethod')
+                    .with('card.request.requestClientAddresses.clientAddress.address')
+                    .with('card.request.requestClientPhones.clientPhone')
+                    .get()
+            }
         },
         methods: {
             ...mapActions('morph-screen', ['createDraft']),
             ...mapMutations('morph-screen', ['ADD_DRAFT', 'SET_MS', 'SHOW_MS', 'SET_SEARCH_DATA']),
-            ...mapActions('toast', ['showError']),
-            remove(){
-                console.log("Remove")
-            },
-            getAll(){
-                console.log("Get All", this.$store.getters['entities/windows/all']())
-            }
+            ...mapActions('toast', ['showError'])
         }
     }
 </script>
