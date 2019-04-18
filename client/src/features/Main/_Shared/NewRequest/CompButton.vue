@@ -27,7 +27,8 @@ props:['tab'],
             flex-direction: column;    
             background: #23272B;
             height: 70px;
-            border: 0.5px solid #161A1D;
+            border-top: 1px solid #161A1D ;
+            border-bottom: 1px solid #161A1D ;
             padding: 6px 4px 6px 10px;
             flex-grow: 1; 
             }
@@ -43,6 +44,7 @@ props:['tab'],
             .new-menu__head{
             display: flex;
             flex-direction: row;
+            
             }
             .new-menu__text{
             font-family: Halton;

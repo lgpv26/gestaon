@@ -34,33 +34,11 @@
 
         <div class="new-form">
             <!-- parte 1 -->
-            <div>
-                <div style="display:flex;flex-direction:column;margin:0px 0px 15px 0px;">
-                <input type="text" value="Informação adicional (visível no histórico do contato)" style="">    
-                </div>
-                <div style="display:flex;flex-direction:row;margin:10px 0px 0px 0px;">
-                <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
-                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
-                </div>
-                <div style="display:flex;flex-direction:row;margin:20px 0px 0px 0px;">
-                <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
-                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
-                </div>
-                <div style="display:flex;flex-direction:row;margin:10px 0px 0px 0px;">
-                <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
-                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
-                </div><div style="display:flex;flex-direction:row;margin:10px 0px 0px 0px;">
-                <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
-                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
-                </div>
-                <div style="display:flex;flex-direction:row;margin:10px 0px 0px 0px;">
-                 <input type="text" style="flex-grow: 1; margin: 0px 5px 0px 0px;">
-                <input type="text" style="flex-grow: 1;  margin: 0px 0px 0px 5px;">
-                </div>
-            </div>
+            
             <!-- <new-cotato-part1></new-cotato-part1> -->
             <!-- <new-form></new-form> -->
             <!-- <new-addres></new-addres> -->
+            <new-card-detalhe></new-card-detalhe>
             <!-- parte 2 -->
            <!-- <new-contato></new-contato> -->
           <!-- <new-contato__button></new-contato__button> -->
@@ -77,6 +55,7 @@ import CompContato from "./CompContato.vue"
 import CompContatoPart1 from "./CompContatoPar1.vue"
 import CompAddres from "./CompAddres.vue"
 import CompContatoForm from "./CompContatoForm.vue"
+import CardDetalhe from "./CardDetalhe.vue"
 export default {
 components: {
     'new-contato__button' : CompContatoButton,
@@ -85,6 +64,7 @@ components: {
     'new-cotato-part1' : CompContatoPart1,
     'new-addres' : CompAddres,
     'new-form' : CompContatoForm,
+    'new-card-detalhe' : CardDetalhe,
 },
 }
 </script>
@@ -176,8 +156,9 @@ background: #161A1D;
 .new-form{
     height: auto;
     background: #23272B;
-    margin: 0px -10px 106px -10px;
+    margin: 0px -10px 50px -10px;
     padding: 10px;
+    border-radius: 2px;
 }
 
     span{
