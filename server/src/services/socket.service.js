@@ -202,7 +202,7 @@ module.exports = server => {
                         return new Promise((resolve, reject) => {
                             async function start() {
                                 try {
-                                    var stream = server.redisClient.scanStream({
+                                    const stream = server.redisClient.scanStream({
                                         match: "socket:*"
                                     })
                     

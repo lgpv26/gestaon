@@ -228,5 +228,4 @@ module.exports = class DependencyInjection {
             start()
         })
     }
-
 }

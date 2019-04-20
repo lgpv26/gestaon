@@ -25,6 +25,10 @@ module.exports = {
                 rule: {
                     type: Sequelize.STRING
                 },
+                businessDay: {
+                    type: Sequelize.BOOLEAN,
+                    default: false
+                },
                 tax: {
                     type: Sequelize.DECIMAL(10,2),
                     default: null

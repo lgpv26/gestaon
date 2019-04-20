@@ -1,5 +1,5 @@
 import _ from "lodash"
-import moment from "moment"
+import moment from "moment-business-days"
 const Op = require("sequelize").Op
 
 module.exports = server => {
@@ -22,16 +22,22 @@ module.exports = server => {
 
                             //request.status
 
+                            await vm.setBusinessDay()
+                            
                             if(ctx.params.editingRequest && request.status === "canceled") return resolve(ctx.params.data)
                             ctx.params.data = await vm.consultPaymentMethod(ctx.params.data)
 
                             const removedRequestPayments = await vm.checkRemovedRequestPayments(ctx.params.data, oldRequest, (client) ? client : null)
                                  
-                            const dataRequestPayments = await vm.checkChanges(ctx.params.data, request, client, oldRequest)
+                            let dataRequestPayments = await vm.checkChanges(ctx.params.data, request, client, oldRequest)
           
                             await vm.revertPayments(removedRequestPayments, dataRequestPayments, triggeredBy, transaction)
                             // await vm.clientLimit(client, removedRequestPayments, dataRequestPayments, oldRequest, transaction)
                       
+                            dataRequestPayments = await vm.setDeadlineDatetime(dataRequestPayments)
+
+                            console.log("aqui fora")
+
                             const requestPayments = await vm.requestPayments(dataRequestPayments, removedRequestPayments, request, triggeredBy, transaction)
          
                             // await vm.fakeConsult(ctx.params.oldRequest, transaction)  // APENAS PARA DEV - REMOVER DEPOIS
@@ -48,6 +54,18 @@ module.exports = server => {
             }
         },
         methods: {
+            setBusinessDay(){
+                return new Promise(async (resolve,reject) => {
+                    const holidays = await server.broker.call("utils.consultHolidays")
+                    if(!holidays || _.isEmpty(holidays)) return resolve()
+                    moment.updateLocale('br', {
+                        holidays,
+                        holidayFormat: 'DD-MM-YYYY'
+                     })
+                     return resolve()
+                })
+            },
+
             consultPaymentMethod(data){
                 return new Promise((resolve, reject) => {
                     let promises = []
@@ -404,6 +422,32 @@ module.exports = server => {
                 })
             },
 
+            setDeadlineDatetime(data) {
+                return new Promise(async (resolve, reject) => {
+                    let promises = []
+                    for(const [index, requestPayment] of data.entries()) {
+                        promises.push(new Promise((resolve, reject) => {
+                            const rule = parseInt(requestPayment.paymentMethod.rule)
+                            if(requestPayment.deadlineDatetime || requestPayment.oldDeadlineDatetime) return resolve()
+                            if(requestPayment.paymentMethod.autoPay && !rule) return resolve()
+
+                            if(rule){
+                                const date = moment().format('DD-MM-YYYY')
+                                const deadlineDatetime = (requestPayment.paymentMethod.businessDay) ? moment(date, 'DD-MM-YYYY').businessAdd(rule)._d : moment().add(rule, 'd').toDate()
+                                _.set(data[index], "deadlineDatetime", deadlineDatetime)      
+                                return resolve()                      
+                            }
+                            return reject()
+                        }))            
+                    }
+
+                    console.log("antes do await")
+                    await Promise.all(promises)
+                    console.log("depois do await")
+                    return resolve(data)
+                })
+            },
+            
             requestPayments(data, removedRequestPayments, request, triggeredBy, transaction) {
                 if(data.length && (data[0].changeStatus == 'canceled' || data[0].changeUser)) {
                     _.map(data, (requestPayment, index) => {

@@ -63,7 +63,6 @@ module.exports = {
                 settledDatetime: {
                     type: TIMESTAMP
                 },
-                
                 dateUpdated: {
                     type: TIMESTAMP
                 },
