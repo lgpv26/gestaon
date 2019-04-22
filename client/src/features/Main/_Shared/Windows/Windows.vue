@@ -27,9 +27,12 @@
             ...mapState("request-board", ["isLoading"]),
             showingWindows(){
                 return this.$store.getters[`entities/windows`]()
+                    .with('card.request.card')
                     .with('card.request.requestUIState')
+                    .with('card.request.client.clientGroup')
                     .with('card.request.client.clientPhones')
                     .with('card.request.client.clientAddresses.address')
+                    .with('card.request.requestOrder.promotionChannel')
                     .with('card.request.requestOrder.requestOrderProducts.product')
                     .with('card.request.requestPayments.paymentMethod')
                     .with('card.request.requestClientAddresses.clientAddress.address')

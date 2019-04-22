@@ -39,7 +39,7 @@
                         <span class="push-both-sides"></span>
                         <ul class="header__menu">
                             <li @click="checkAllState()"><i class="mi mi-notifications-none"></i></li>
-                            <li @click="addCard()">
+                            <li @click="addRequest()">
                                 <i class="mi mi-add-circle-outline"></i>
                             </li>
                             <li v-if="!isCallerIdDisabled" @click="isCallerIdDisabled ? activateCallerId() : disableCallerId()"
@@ -133,7 +133,6 @@
         },
         methods: {
             ...mapMutations(["setApp", "setSystemInitialized"]),
-            //...mapMutations('request-queue',["REMOVE_PROCESSED_QUEUE_ITEMS"]),
             ...mapActions(["setLastDataSyncedDate","setLastRequestsLoadedDate","setIsSearchReady"]),
             ...mapActions("auth", {
                 logoutAction: "logout",
@@ -176,14 +175,6 @@
                 'clearChatProcessingQueue': 'clearChatProcessingQueue',
                 'resetChatQueueState': 'resetState'
             }),
-            toggleCallerIdFunctionality() {
-                console.log(this.isCallerIdDisabled);
-                if (this.isCallerIdDisabled) {
-                    this.activateCallerId();
-                } else {
-                    this.disableCallerId();
-                }
-            },
             checkAllState(){
                 console.log(this.$store.getters[`entities/cards`]().get())
                 console.log(this.$store.getters[`entities/windows`]().get())
@@ -196,7 +187,7 @@
                 console.log(this.$store.getters[`entities/requestOrderProducts`]().get())
                 console.log(this.$store.getters[`entities/requestPayments`]().get())
             },
-            changeCompany(userCompany) {
+            changeCompany(userCompany){
                 const vm = this;
                 if (vm.company.id === userCompany.company.id) {
                     vm.showToast({
@@ -216,13 +207,17 @@
                     });
                 }, 1000);
             },
-            registerSoundEventListeners() {
+            registerSoundEventListeners(){
                 new Howl({
                     src: [alarmSound]
                 }).play();
             },
             pushToRequestQueueSyncAcumulator(ev){
                 this.requestQueueSyncAcumulator.push(ev)
+            },
+            async addRequest(){
+                let card = await this.addCard()
+                card = await this.clickCard(card.id)
             },
             async onRequestQueueSync(ev){
                 const vm = this
@@ -338,10 +333,7 @@
                     })
                 }
             },
-            onRequestChatItemSend(ev){
-                //console.log("Request chaat", ev)
-            },
-            async onSystemInitialized() {
+            async onSystemInitialized(){
                 const vm = this
                 console.log("System initialized")
 

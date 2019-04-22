@@ -728,6 +728,121 @@ export default {
 
         },
 
+        async discardDraft(windowId){
+            const vm = this
+
+            console.log(windowId)
+
+            const card = vm.utils.removeReactivity(vm.$store.getters[`entities/cards`]()
+                .where('windowId',windowId)
+                .with('request.requestUIState')
+                .with('request.client')
+                .with('request.client.clientPhones')
+                .with('request.client.clientAddresses.address')
+                .with('request.requestOrder')
+                .with('request.requestOrder.requestOrderProducts')
+                .with('request.requestPayments')
+                .with('request.requestClientAddresses.clientAddress.address')
+                .with('request.requestClientPhones.clientPhone')
+                .first())
+
+            const clientAddresses = card.request.client.clientAddresses
+            const clientPhones = card.request.client.clientPhones
+            const requestOrder = card.request.requestOrder
+            const requestOrderProducts = card.request.requestOrder.requestOrderProducts
+            const requestPayments = card.request.requestPayments
+
+            const requestId = card.requestId
+            const requestUIStateId = card.request.requestUIState.id
+            const clientId = card.request.clientId
+
+            vm.stateHelper({
+                modelName: 'windows',
+                persist: true,
+                action: 'delete',
+                data: windowId
+            })
+
+            vm.stateHelper({
+                modelName: 'requests',
+                persist: true,
+                action: 'delete',
+                data: requestId
+            })
+
+            vm.stateHelper({
+                modelName: 'requestUIState',
+                persist: true,
+                action: 'delete',
+                data: requestUIStateId
+            })
+
+            vm.stateHelper({
+                modelName: 'clients',
+                persist: true,
+                action: 'delete',
+                data: clientId
+            })
+
+            clientAddresses.forEach((clientAddress) => {
+                vm.stateHelper({
+                    modelName: 'clientAddresses',
+                    persist: true,
+                    action: 'delete',
+                    data: clientAddress.id
+                })
+                if(clientAddress.addressId){
+                    vm.stateHelper({
+                        modelName: 'addresses',
+                        persist: true,
+                        action: 'delete',
+                        data: clientAddress.addressId
+                    })
+                }
+            })
+
+            clientPhones.forEach((clientPhone) => {
+                vm.stateHelper({
+                    modelName: 'clientPhones',
+                    persist: true,
+                    action: 'delete',
+                    data: clientPhone.id
+                })
+            })
+
+            requestOrderProducts.forEach((requestOrderProduct) => {
+                vm.stateHelper({
+                    modelName: 'requestOrderProducts',
+                    persist: true,
+                    action: 'delete',
+                    data: requestOrderProduct.id
+                })
+            })
+
+            vm.stateHelper({
+                modelName: 'requestOrders',
+                persist: true,
+                action: 'delete',
+                data: requestOrder.id
+            })
+
+            requestPayments.forEach((requestPayment) => {
+                vm.stateHelper({
+                    modelName: 'requestPayments',
+                    persist: true,
+                    action: 'delete',
+                    data: requestPayment.id
+                })
+            })
+
+            vm.stateHelper({
+                modelName: 'cards',
+                persist: true,
+                action: 'delete',
+                data: card.id
+            })
+        },
+
         /**
          * remove a card from state and from state indexeddb
          * @param cardId

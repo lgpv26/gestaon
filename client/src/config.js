@@ -19,7 +19,7 @@ let config = {
 
 if (process.env.NODE_ENV !== "production") {
   try {
-    const developerConfig = require("./config.developer").default;
+    const developerConfig = require("./config.developer").default
     _.assign(config, developerConfig);
     // do stuff
   } catch (err) {

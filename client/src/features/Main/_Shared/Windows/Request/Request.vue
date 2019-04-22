@@ -20,7 +20,7 @@
             </div>
             <div class="request__footer">
                 <a class="button" v-if="Number.isInteger(request.id) && request.requestUIState.hasRequestChanges" @click="discardChanges()" style="display: flex; align-items: center; align-self: center; margin-left: 8px; text-transform: uppercase;">Descartar alterações</a>
-                <a class="button" v-if="!Number.isInteger(request.id)" @click="discardDraft()" style="display: flex; align-items: center; align-self: center; margin-left: 8px; text-transform: uppercase;">Descartar rascunho</a>
+                <a class="button" v-if="!Number.isInteger(request.id)" @click="discardDraft(request.card.windowId)" style="display: flex; align-items: center; align-self: center; margin-left: 8px; text-transform: uppercase;">Descartar rascunho</a>
                 <span class="push-both-sides"></span>
                 <app-select :items="getSelectUsers" :value="request.userId"
                         @input="updateValue('requests','userId',request.id,$event)" :popoverProps="{verticalOffset: 0, horizontalOffset: -15, placement: 'top-start'}">
@@ -102,7 +102,6 @@
                     thousands: ".",
                     precision: 2
                 },
-
                 selectStatusItems: [
                     {
                         text: "PENDENTE",
@@ -673,30 +672,6 @@
                         }
                     })
 
-                })
-
-            },
-            discardDraft(){
-                console.log("Discard draft", this.request)
-
-                this.$store.dispatch("entities/delete", {
-                    entity: "windows",
-                    where: this.request.card.windowId
-                })
-
-                this.$store.dispatch("entities/delete", {
-                    entity: "cards",
-                    where: this.request.card.id
-                })
-
-                this.$store.dispatch("entities/delete", {
-                    entity: "requestUIState",
-                    where: this.request.requestUIState.id
-                })
-
-                this.$store.dispatch("entities/delete", {
-                    entity: "requests",
-                    where: this.request.id
                 })
 
             }

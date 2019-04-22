@@ -338,9 +338,9 @@ export default {
                 window.setAppLoadingText(`Baixando banco de dados (${vm.currentImportedFileSize}/${vm.importFileSize}): ${pct}%`)
             })
             vm.stream.on("end", async () => {
-                window.setAppLoadingText(`Preparando dados...`);
+                window.setAppLoadingText(`Preparando dados...`)
 
-                const input = ss.Buffer.concat(arrayOfChunks);
+                const input = ss.Buffer.concat(arrayOfChunks)
                 let downloadedData = JSON.parse(pako.ungzip(input, {
                     to: "string"
                 }))
@@ -380,6 +380,7 @@ export default {
                         resolve(device)
                     })
                 }))
+                await vm.$db.devices.bulkPut(devices)
                 window.setAppLoadingText(`Importando canais de divulgação...`)
                 await vm.$db.promotionChannels.bulkPut(downloadedData.promotionChannels)
                 window.setAppLoadingText(`Importando grupos de clientes...`)
@@ -400,8 +401,8 @@ export default {
                 _.forEach(downloadedData.addresses, addresses => { addressesWithChanges.push(addresses.id) })
                 if(addressesWithChanges.length) console.log("Addresses with changes", addressesWithChanges)
                 const processChunkOfClients = (chunkOfClients) => {
-                    return new Promise((resolve, reject) => {
-                        const arrayToIndex = [];
+                    return new Promise((resolve) => {
+                        const arrayToIndex = []
                         async.each(chunkOfClients, (client, cb) => {
                             vm.$db.clientAddresses.where("clientId").equals(client.id).toArray().then(clientAddresses => {
                                 if (clientAddresses.length) {
